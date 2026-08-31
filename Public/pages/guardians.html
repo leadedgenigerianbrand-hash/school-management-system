@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Guardians Management</title>
+
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+
+    <div class="page-container">
+
+        <div class="page-header">
+
+            <div>
+                <h1>Guardians</h1>
+                <p>Manage parents and guardians connected to students.</p>
+            </div>
+
+            <button type="button" class="btn btn-primary" id="addGuardianButton">
+                + Add Guardian
+            </button>
+
+        </div>
+
+
+        <div class="stats-grid">
+
+            <div class="stat-card">
+                <span>Total Guardians</span>
+                <strong id="totalGuardians">0</strong>
+            </div>
+
+            <div class="stat-card">
+                <span>Active Guardians</span>
+                <strong id="activeGuardians">0</strong>
+            </div>
+
+            <div class="stat-card">
+                <span>Primary Guardians</span>
+                <strong id="primaryGuardians">0</strong>
+            </div>
+
+            <div class="stat-card">
+                <span>Linked Students</span>
+                <strong id="linkedStudents">0</strong>
+            </div>
+
+        </div>
+
+
+        <div class="content-card">
+
+            <div class="toolbar">
+
+                <input type="search" id="searchInput" placeholder="Search guardian, phone, email or student...">
+
+                <select id="statusFilter">
+
+                    <option value="">
+                        All Statuses
+                    </option>
+
+                    <option value="active">
+                        Active
+                    </option>
+
+                    <option value="inactive">
+                        Inactive
+                    </option>
+
+                </select>
+
+                <button type="button" class="btn btn-secondary" id="refreshButton">
+                    Refresh
+                </button>
+
+            </div>
+
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>Name</th>
+                            <th>Relationship</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            <th>Student</th>
+                            <th>Primary</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="guardiansTableBody">
+
+                        <tr>
+                            <td colspan="8">
+                                Loading guardians...
+                            </td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- GUARDIAN MODAL -->
+
+    <div id="guardianModal" class="modal" hidden>
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h2 id="guardianModalTitle">
+                    Add Guardian
+                </h2>
+
+                <button type="button" class="close-button" id="closeGuardianModal">
+                    ×
+                </button>
+
+            </div>
+
+
+            <form id="guardianForm">
+
+                <input type="hidden" id="guardianId">
+
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+
+                        <label for="firstName">
+                            First Name
+                        </label>
+
+                        <input type="text" id="firstName" required>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="lastName">
+                            Last Name
+                        </label>
+
+                        <input type="text" id="lastName" required>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="middleName">
+                            Middle Name
+                        </label>
+
+                        <input type="text" id="middleName">
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="relationship">
+                            Relationship
+                        </label>
+
+                        <select id="relationship" required>
+
+                            <option value="">
+                                Select Relationship
+                            </option>
+
+                            <option value="Father">
+                                Father
+                            </option>
+
+                            <option value="Mother">
+                                Mother
+                            </option>
+
+                            <option value="Guardian">
+                                Guardian
+                            </option>
+
+                            <option value="Uncle">
+                                Uncle
+                            </option>
+
+                            <option value="Aunt">
+                                Aunt
+                            </option>
+
+                            <option value="Grandfather">
+                                Grandfather
+                            </option>
+
+                            <option value="Grandmother">
+                                Grandmother
+                            </option>
+
+                            <option value="Other">
+                                Other
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="phone">
+                            Phone Number
+                        </label>
+
+                        <input type="tel" id="phone" required>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="email">
+                            Email Address
+                        </label>
+
+                        <input type="email" id="email">
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="occupation">
+                            Occupation
+                        </label>
+
+                        <input type="text" id="occupation">
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="studentId">
+                            Student ID
+                        </label>
+
+                        <input type="number" id="studentId">
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="isPrimary">
+                            Primary Guardian
+                        </label>
+
+                        <select id="isPrimary">
+
+                            <option value="false">
+                                No
+                            </option>
+
+                            <option value="true">
+                                Yes
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="status">
+                            Status
+                        </label>
+
+                        <select id="status">
+
+                            <option value="active">
+                                Active
+                            </option>
+
+                            <option value="inactive">
+                                Inactive
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-group full-width">
+
+                        <label for="address">
+                            Address
+                        </label>
+
+                        <textarea id="address" rows="3"></textarea>
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-actions">
+
+                    <button type="button" class="btn btn-secondary" id="cancelGuardianButton">
+                        Cancel
+                    </button>
+
+                    <button type="submit" class="btn btn-primary">
+                        Save Guardian
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <script src="../js/guardians.js"></script>
+
+</body>
+
+</html>

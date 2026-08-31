@@ -1,0 +1,1824 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Users Management</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f6f9;
+            color: #1f2937;
+        }
+
+        .page {
+            padding: 25px;
+            max-width: 1400px;
+            margin: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .header p {
+            margin: 7px 0 0;
+            color: #6b7280;
+        }
+
+        .btn {
+            border: none;
+            padding: 11px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn-success {
+            background: #16a34a;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #d97706;
+            color: white;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .stat-card span {
+            display: block;
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .stat-card strong {
+            font-size: 28px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            margin-bottom: 25px;
+        }
+
+        .toolbar {
+            padding: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 450px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 11px 13px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .search-box input:focus {
+            border-color: #2563eb;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        th,
+        td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f9fafb;
+            font-weight: 700;
+            color: #374151;
+        }
+
+        tr:hover td {
+            background: #f9fafb;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .role {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 5px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .actions {
+            display: flex;
+            gap: 7px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            border: none;
+            padding: 7px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .action-edit {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .action-activate {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .action-deactivate {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .action-delete {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 45px 20px;
+            color: #6b7280;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+        .message {
+            display: none;
+            padding: 13px 16px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .message.success {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .message.error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            width: 100%;
+            max-width: 650px;
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 22px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+        }
+
+        .close {
+            border: none;
+            background: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #6b7280;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            background: white;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #2563eb;
+        }
+
+        .password-note {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 25px;
+            padding-top: 18px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        @media (max-width: 900px) {
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 650px) {
+            .page {
+                padding: 15px;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                max-width: none;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group.full {
+                grid-column: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="page">
+
+        <div class="header">
+            <div>
+                <h1>Users Management</h1>
+                <p>Manage system users, accounts, roles and access.</p>
+            </div>
+
+            <button class="btn btn-primary" onclick="openCreateModal()">
+                + Add User
+            </button>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <div class="stats">
+
+            <div class="stat-card">
+                <span>Total Users</span>
+                <strong id="totalUsers">0</strong>
+            </div>
+
+            <div class="stat-card">
+                <span>Active Users</span>
+                <strong id="activeUsers">0</strong>
+            </div>
+
+            <div class="stat-card">
+                <span>Inactive Users</span>
+                <strong id="inactiveUsers">0</strong>
+            </div>
+
+            <div class="stat-card">
+                <span>Displayed</span>
+                <strong id="displayedUsers">0</strong>
+            </div>
+
+        </div>
+
+        <div class="card">
+
+            <div class="toolbar">
+
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search username, email, name or role..."
+                        oninput="filterUsers()">
+                </div>
+
+                <button class="btn btn-secondary" onclick="loadUsers()">
+                    Refresh
+                </button>
+
+            </div>
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>User</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Last Login</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="usersTableBody">
+
+                        <tr>
+                            <td colspan="9" class="loading">
+                                Loading users...
+                            </td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ============================================================= -->
+    <!-- USER MODAL -->
+    <!-- ============================================================= -->
+
+    <div id="userModal" class="modal">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h2 id="modalTitle">
+                    Add User
+                </h2>
+
+                <button class="close" onclick="closeModal()">
+                    &times;
+                </button>
+
+            </div>
+
+            <form id="userForm" onsubmit="saveUser(event)">
+
+                <input type="hidden" id="userId">
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+
+                        <label for="firstName">
+                            First Name
+                        </label>
+
+                        <input type="text" id="firstName" required>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="lastName">
+                            Last Name
+                        </label>
+
+                        <input type="text" id="lastName" required>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="username">
+                            Username
+                        </label>
+
+                        <input type="text" id="username" required>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="email">
+                            Email
+                        </label>
+
+                        <input type="email" id="email" required>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="phone">
+                            Phone
+                        </label>
+
+                        <input type="tel" id="phone" placeholder="08012345678">
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="roleId">
+                            Role
+                        </label>
+
+                        <select id="roleId" required>
+
+                            <option value="">
+                                Select Role
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-group full" id="passwordGroup">
+
+                        <label for="password">
+                            Password
+                        </label>
+
+                        <input type="password" id="password" minlength="6">
+
+                        <div class="password-note">
+                            Password is required when creating a new user.
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="modal-footer">
+
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">
+                        Cancel
+                    </button>
+
+                    <button type="submit" class="btn btn-primary" id="saveButton">
+                        Save User
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        const API_URL = "/api/users";
+        const ROLES_API_URL = "/api/roles";
+
+        let users = [];
+        let roles = [];
+        let editingUserId = null;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Authentication Headers
+        |--------------------------------------------------------------------------
+        */
+
+        function getHeaders() {
+
+            const token =
+                localStorage.getItem("token") ||
+                localStorage.getItem("authToken") ||
+                localStorage.getItem("accessToken");
+
+            const headers = {
+                "Content-Type": "application/json"
+            };
+
+            if (token) {
+                headers.Authorization = `Bearer ${token}`;
+            }
+
+            return headers;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Show Message
+        |--------------------------------------------------------------------------
+        */
+
+        function showMessage(
+            message,
+            type = "success"
+        ) {
+
+            const element =
+                document.getElementById("message");
+
+            element.textContent = message;
+
+            element.className =
+                `message ${type}`;
+
+            setTimeout(() => {
+
+                element.className = "message";
+
+            }, 4000);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Load Users
+        |--------------------------------------------------------------------------
+        */
+
+        async function loadUsers() {
+
+            const tbody =
+                document.getElementById(
+                    "usersTableBody"
+                );
+
+            tbody.innerHTML = `
+            <tr>
+                <td colspan="9" class="loading">
+                    Loading users...
+                </td>
+            </tr>
+        `;
+
+            try {
+
+                const response =
+                    await fetch(
+                        API_URL,
+                        {
+                            method: "GET",
+                            headers: getHeaders()
+                        }
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        `Failed to load users (${response.status})`
+                    );
+
+                }
+
+
+                const result =
+                    await response.json();
+
+
+                users =
+                    Array.isArray(result)
+                        ? result
+                        : (
+                            result.data ||
+                            result.users ||
+                            []
+                        );
+
+
+                renderUsers();
+
+                updateStatistics();
+
+            } catch (error) {
+
+                console.error(
+                    "Load users error:",
+                    error
+                );
+
+                tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="empty">
+                        Unable to load users.
+                    </td>
+                </tr>
+            `;
+
+                showMessage(
+                    error.message ||
+                    "Unable to load users.",
+                    "error"
+                );
+
+            }
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Load Roles
+        |--------------------------------------------------------------------------
+        */
+
+        async function loadRoles() {
+
+            try {
+
+                const response =
+                    await fetch(
+                        ROLES_API_URL,
+                        {
+                            method: "GET",
+                            headers: getHeaders()
+                        }
+                    );
+
+
+                if (!response.ok) {
+                    return;
+                }
+
+
+                const result =
+                    await response.json();
+
+
+                roles =
+                    Array.isArray(result)
+                        ? result
+                        : (
+                            result.data ||
+                            result.roles ||
+                            []
+                        );
+
+
+                populateRoles();
+
+            } catch (error) {
+
+                console.error(
+                    "Load roles error:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Populate Roles
+        |--------------------------------------------------------------------------
+        */
+
+        function populateRoles() {
+
+            const select =
+                document.getElementById("roleId");
+
+            select.innerHTML = `
+            <option value="">
+                Select Role
+            </option>
+        `;
+
+
+            roles.forEach(role => {
+
+                const option =
+                    document.createElement("option");
+
+                option.value =
+                    role.id;
+
+                option.textContent =
+                    role.role_name ||
+                    role.name ||
+                    role.roleName ||
+                    `Role ${role.id}`;
+
+                select.appendChild(option);
+
+            });
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Render Users
+        |--------------------------------------------------------------------------
+        */
+
+        function renderUsers(
+            filteredUsers = null
+        ) {
+
+            const tbody =
+                document.getElementById(
+                    "usersTableBody"
+                );
+
+
+            const list =
+                filteredUsers || users;
+
+
+            document.getElementById(
+                "displayedUsers"
+            ).textContent =
+                list.length;
+
+
+            if (!list.length) {
+
+                tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="empty">
+                        No users found.
+                    </td>
+                </tr>
+            `;
+
+                return;
+            }
+
+
+            tbody.innerHTML =
+                list.map(
+                    (user, index) => {
+
+                        const fullName =
+                            [
+                                user.first_name ||
+                                user.firstName ||
+                                "",
+
+                                user.last_name ||
+                                user.lastName ||
+                                ""
+                            ]
+                                .join(" ")
+                                .trim();
+
+
+                        const roleName =
+                            user.role_name ||
+                            user.roleName ||
+                            user.role ||
+                            "No Role";
+
+
+                        const active =
+                            user.is_active === true ||
+                            user.is_active === "true" ||
+                            user.is_active === 1;
+
+
+                        const lastLogin =
+                            formatDate(
+                                user.last_login_at ||
+                                user.lastLoginAt
+                            );
+
+
+                        return `
+                        <tr>
+
+                            <td>
+                                ${index + 1}
+                            </td>
+
+                            <td>
+                                <strong>
+                                    ${escapeHtml(
+                            fullName ||
+                            "Unnamed User"
+                        )}
+                                </strong>
+                            </td>
+
+                            <td>
+                                ${escapeHtml(
+                            user.username || ""
+                        )}
+                            </td>
+
+                            <td>
+                                ${escapeHtml(
+                            user.email || ""
+                        )}
+                            </td>
+
+                            <td>
+                                ${escapeHtml(
+                            user.phone || "-"
+                        )}
+                            </td>
+
+                            <td>
+                                <span class="role">
+                                    ${escapeHtml(
+                            roleName
+                        )}
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="status ${active
+                                ? "status-active"
+                                : "status-inactive"
+                            }">
+                                    ${active
+                                ? "Active"
+                                : "Inactive"
+                            }
+                                </span>
+                            </td>
+
+                            <td>
+                                ${lastLogin}
+                            </td>
+
+                            <td>
+
+                                <div class="actions">
+
+                                    <button
+                                        class="action-btn action-edit"
+                                        onclick="editUser('${user.id}')"
+                                    >
+                                        Edit
+                                    </button>
+
+                                    ${active
+                                ? `
+                                                <button
+                                                    class="action-btn action-deactivate"
+                                                    onclick="changeUserStatus('${user.id}', false)"
+                                                >
+                                                    Deactivate
+                                                </button>
+                                            `
+                                : `
+                                                <button
+                                                    class="action-btn action-activate"
+                                                    onclick="changeUserStatus('${user.id}', true)"
+                                                >
+                                                    Activate
+                                                </button>
+                                            `
+                            }
+
+                                    <button
+                                        class="action-btn action-delete"
+                                        onclick="deleteUser('${user.id}')"
+                                    >
+                                        Delete
+                                    </button>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+                    `;
+
+                    }
+                )
+                    .join("");
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Filter Users
+        |--------------------------------------------------------------------------
+        */
+
+        function filterUsers() {
+
+            const search =
+                document
+                    .getElementById("searchInput")
+                    .value
+                    .toLowerCase()
+                    .trim();
+
+
+            if (!search) {
+
+                renderUsers();
+
+                return;
+            }
+
+
+            const filtered =
+                users.filter(user => {
+
+                    const values = [
+
+                        user.username,
+
+                        user.email,
+
+                        user.first_name,
+
+                        user.last_name,
+
+                        user.firstName,
+
+                        user.lastName,
+
+                        user.phone,
+
+                        user.role_name,
+
+                        user.roleName
+
+                    ];
+
+
+                    return values.some(
+                        value =>
+                            String(
+                                value || ""
+                            )
+                                .toLowerCase()
+                                .includes(search)
+                    );
+
+                });
+
+
+            renderUsers(filtered);
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Statistics
+        |--------------------------------------------------------------------------
+        */
+
+        function updateStatistics() {
+
+            const active =
+                users.filter(user =>
+
+                    user.is_active === true ||
+                    user.is_active === "true" ||
+                    user.is_active === 1
+
+                ).length;
+
+
+            document.getElementById(
+                "totalUsers"
+            ).textContent =
+                users.length;
+
+
+            document.getElementById(
+                "activeUsers"
+            ).textContent =
+                active;
+
+
+            document.getElementById(
+                "inactiveUsers"
+            ).textContent =
+                users.length - active;
+
+
+            document.getElementById(
+                "displayedUsers"
+            ).textContent =
+                users.length;
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Open Create Modal
+        |--------------------------------------------------------------------------
+        */
+
+        function openCreateModal() {
+
+            editingUserId = null;
+
+            document.getElementById(
+                "modalTitle"
+            ).textContent =
+                "Add User";
+
+
+            document.getElementById(
+                "userForm"
+            ).reset();
+
+
+            document.getElementById(
+                "userId"
+            ).value = "";
+
+
+            document.getElementById(
+                "password"
+            ).required = true;
+
+
+            document.getElementById(
+                "passwordGroup"
+            ).style.display =
+                "flex";
+
+
+            document.getElementById(
+                "userModal"
+            ).classList.add("show");
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Edit User
+        |--------------------------------------------------------------------------
+        */
+
+        function editUser(userId) {
+
+            const user =
+                users.find(
+                    item =>
+                        String(item.id) ===
+                        String(userId)
+                );
+
+
+            if (!user) {
+
+                showMessage(
+                    "User not found.",
+                    "error"
+                );
+
+                return;
+            }
+
+
+            editingUserId =
+                userId;
+
+
+            document.getElementById(
+                "modalTitle"
+            ).textContent =
+                "Edit User";
+
+
+            document.getElementById(
+                "userId"
+            ).value =
+                user.id;
+
+
+            document.getElementById(
+                "firstName"
+            ).value =
+                user.first_name ||
+                user.firstName ||
+                "";
+
+
+            document.getElementById(
+                "lastName"
+            ).value =
+                user.last_name ||
+                user.lastName ||
+                "";
+
+
+            document.getElementById(
+                "username"
+            ).value =
+                user.username ||
+                "";
+
+
+            document.getElementById(
+                "email"
+            ).value =
+                user.email ||
+                "";
+
+
+            document.getElementById(
+                "phone"
+            ).value =
+                user.phone ||
+                "";
+
+
+            document.getElementById(
+                "roleId"
+            ).value =
+                user.role_id ||
+                user.roleId ||
+                "";
+
+
+            document.getElementById(
+                "password"
+            ).value = "";
+
+
+            document.getElementById(
+                "password"
+            ).required = false;
+
+
+            document.getElementById(
+                "passwordGroup"
+            ).style.display =
+                "none";
+
+
+            document.getElementById(
+                "userModal"
+            ).classList.add("show");
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Save User
+        |--------------------------------------------------------------------------
+        */
+
+        async function saveUser(event) {
+
+            event.preventDefault();
+
+
+            const firstName =
+                document.getElementById(
+                    "firstName"
+                ).value.trim();
+
+
+            const lastName =
+                document.getElementById(
+                    "lastName"
+                ).value.trim();
+
+
+            const username =
+                document.getElementById(
+                    "username"
+                ).value.trim();
+
+
+            const email =
+                document.getElementById(
+                    "email"
+                ).value.trim();
+
+
+            const phone =
+                document.getElementById(
+                    "phone"
+                ).value.trim();
+
+
+            const roleId =
+                document.getElementById(
+                    "roleId"
+                ).value;
+
+
+            const password =
+                document.getElementById(
+                    "password"
+                ).value;
+
+
+            const saveButton =
+                document.getElementById(
+                    "saveButton"
+                );
+
+
+            const payload = {
+
+                firstName,
+
+                lastName,
+
+                username,
+
+                email,
+
+                phone: phone || null,
+
+                roleId
+
+            };
+
+
+            if (!editingUserId) {
+
+                if (!password) {
+
+                    showMessage(
+                        "Password is required when creating a user.",
+                        "error"
+                    );
+
+                    return;
+                }
+
+
+                payload.password =
+                    password;
+
+            }
+
+
+            saveButton.disabled = true;
+
+            saveButton.textContent =
+                "Saving...";
+
+
+            try {
+
+                const url =
+                    editingUserId
+                        ? `${API_URL}/${editingUserId}`
+                        : API_URL;
+
+
+                const method =
+                    editingUserId
+                        ? "PUT"
+                        : "POST";
+
+
+                const response =
+                    await fetch(
+                        url,
+                        {
+                            method,
+                            headers: getHeaders(),
+                            body: JSON.stringify(
+                                payload
+                            )
+                        }
+                    );
+
+
+                const result =
+                    await response.json()
+                        .catch(() => ({}));
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        result.message ||
+                        result.error ||
+                        "Unable to save user."
+                    );
+
+                }
+
+
+                showMessage(
+                    editingUserId
+                        ? "User updated successfully."
+                        : "User created successfully."
+                );
+
+
+                closeModal();
+
+                await loadUsers();
+
+            } catch (error) {
+
+                console.error(
+                    "Save user error:",
+                    error
+                );
+
+                showMessage(
+                    error.message ||
+                    "Unable to save user.",
+                    "error"
+                );
+
+            } finally {
+
+                saveButton.disabled = false;
+
+                saveButton.textContent =
+                    "Save User";
+
+            }
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Change User Status
+        |--------------------------------------------------------------------------
+        */
+
+        async function changeUserStatus(
+            userId,
+            activate
+        ) {
+
+            const action =
+                activate
+                    ? "activate"
+                    : "deactivate";
+
+
+            const confirmed =
+                confirm(
+                    `Are you sure you want to ${action} this user?`
+                );
+
+
+            if (!confirmed) {
+                return;
+            }
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        `${API_URL}/${userId}/${action}`,
+                        {
+                            method: "PATCH",
+                            headers: getHeaders()
+                        }
+                    );
+
+
+                const result =
+                    await response.json()
+                        .catch(() => ({}));
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        result.message ||
+                        `Unable to ${action} user.`
+                    );
+
+                }
+
+
+                showMessage(
+                    `User ${action}d successfully.`
+                );
+
+
+                await loadUsers();
+
+            } catch (error) {
+
+                console.error(
+                    "Change user status error:",
+                    error
+                );
+
+                showMessage(
+                    error.message ||
+                    `Unable to ${action} user.`,
+                    "error"
+                );
+
+            }
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Delete User
+        |--------------------------------------------------------------------------
+        */
+
+        async function deleteUser(userId) {
+
+            const user =
+                users.find(
+                    item =>
+                        String(item.id) ===
+                        String(userId)
+                );
+
+
+            const username =
+                user?.username ||
+                "this user";
+
+
+            const confirmed =
+                confirm(
+                    `Are you sure you want to permanently delete ${username}?`
+                );
+
+
+            if (!confirmed) {
+                return;
+            }
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        `${API_URL}/${userId}`,
+                        {
+                            method: "DELETE",
+                            headers: getHeaders()
+                        }
+                    );
+
+
+                const result =
+                    await response.json()
+                        .catch(() => ({}));
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        result.message ||
+                        "Unable to delete user."
+                    );
+
+                }
+
+
+                showMessage(
+                    "User deleted successfully."
+                );
+
+
+                await loadUsers();
+
+            } catch (error) {
+
+                console.error(
+                    "Delete user error:",
+                    error
+                );
+
+                showMessage(
+                    error.message ||
+                    "Unable to delete user.",
+                    "error"
+                );
+
+            }
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Close Modal
+        |--------------------------------------------------------------------------
+        */
+
+        function closeModal() {
+
+            document.getElementById(
+                "userModal"
+            ).classList.remove("show");
+
+            editingUserId = null;
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Format Date
+        |--------------------------------------------------------------------------
+        */
+
+        function formatDate(value) {
+
+            if (!value) {
+                return "-";
+            }
+
+
+            const date =
+                new Date(value);
+
+
+            if (Number.isNaN(
+                date.getTime()
+            )) {
+
+                return "-";
+
+            }
+
+
+            return date.toLocaleString(
+                "en-NG",
+                {
+                    dateStyle: "medium",
+                    timeStyle: "short"
+                }
+            );
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Escape HTML
+        |--------------------------------------------------------------------------
+        */
+
+        function escapeHtml(value) {
+
+            return String(
+                value || ""
+            )
+                .replace(
+                    /&/g,
+                    "&amp;"
+                )
+                .replace(
+                    /</g,
+                    "&lt;"
+                )
+                .replace(
+                    />/g,
+                    "&gt;"
+                )
+                .replace(
+                    /"/g,
+                    "&quot;"
+                )
+                .replace(
+                    /'/g,
+                    "&#039;"
+                );
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Close Modal When Clicking Outside
+        |--------------------------------------------------------------------------
+        */
+
+        document
+            .getElementById("userModal")
+            .addEventListener(
+                "click",
+                function (event) {
+
+                    if (
+                        event.target ===
+                        this
+                    ) {
+
+                        closeModal();
+
+                    }
+
+                }
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Escape Key
+        |--------------------------------------------------------------------------
+        */
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key === "Escape"
+                ) {
+
+                    closeModal();
+
+                }
+
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Initial Load
+        |--------------------------------------------------------------------------
+        */
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            async function () {
+
+                await loadRoles();
+
+                await loadUsers();
+
+            }
+        );
+
+    </script>
+
+</body>
+
+</html>

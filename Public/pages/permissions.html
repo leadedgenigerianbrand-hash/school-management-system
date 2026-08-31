@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Permissions | School Management System</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f7fb;
+            color: #1f2937;
+        }
+
+        .page {
+            min-height: 100vh;
+        }
+
+        .header {
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .container {
+            padding: 30px;
+            max-width: 1400px;
+            margin: auto;
+        }
+
+        .toolbar {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            flex: 1;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: #2563eb;
+        }
+
+        button {
+            border: none;
+            border-radius: 6px;
+            padding: 11px 18px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: #ffffff;
+        }
+
+        .btn-edit {
+            background: #f59e0b;
+            color: #ffffff;
+        }
+
+        .table-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-header h2 {
+            font-size: 18px;
+        }
+
+        .count {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        th,
+        td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f9fafb;
+            color: #374151;
+            font-weight: 700;
+        }
+
+        tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .permission-name {
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .module-badge {
+            display: inline-block;
+            background: #eff6ff;
+            color: #1d4ed8;
+            padding: 5px 9px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .actions {
+            display: flex;
+            gap: 7px;
+            flex-wrap: wrap;
+        }
+
+        .actions button {
+            padding: 7px 11px;
+            font-size: 12px;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+        .message {
+            display: none;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .message.success {
+            display: block;
+            background: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+        }
+
+        .message.error {
+            display: block;
+            background: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            width: 100%;
+            max-width: 550px;
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+        }
+
+        .close {
+            background: transparent;
+            font-size: 25px;
+            padding: 0;
+            color: #6b7280;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 7px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        @media (max-width: 700px) {
+            .header {
+                padding: 18px;
+            }
+
+            .container {
+                padding: 18px;
+            }
+
+            .toolbar {
+                padding: 15px;
+            }
+
+            .search-box {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="page">
+
+        <header class="header">
+            <div>
+                <h1>Permissions</h1>
+                <p>Manage permissions available throughout the school management system.</p>
+            </div>
+
+            <button type="button" class="btn-primary" onclick="openCreateModal()">
+                + Add Permission
+            </button>
+        </header>
+
+
+        <main class="container">
+
+            <div id="message" class="message"></div>
+
+
+            <section class="toolbar">
+
+                <div class="search-box">
+
+                    <input type="text" id="searchInput" placeholder="Search permissions..." oninput="handleSearch()">
+
+                    <select id="moduleFilter" onchange="loadPermissions()">
+
+                        <option value="">All Modules</option>
+
+                    </select>
+
+                </div>
+
+                <button type="button" class="btn-secondary" onclick="loadPermissions()">
+                    Refresh
+                </button>
+
+            </section>
+
+
+            <section class="table-card">
+
+                <div class="table-header">
+
+                    <h2>Permission List</h2>
+
+                    <span class="count" id="permissionCount">
+                        0 permissions
+                    </span>
+
+                </div>
+
+
+                <div class="table-wrapper">
+
+                    <table>
+
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Permission</th>
+                                <th>Module</th>
+                                <th>Description</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="permissionsTable">
+
+                            <tr>
+                                <td colspan="6" class="loading">
+                                    Loading permissions...
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+
+    <!-- ============================================================
+     CREATE / EDIT MODAL
+     ============================================================ -->
+
+    <div class="modal" id="permissionModal">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h2 id="modalTitle">
+                    Add Permission
+                </h2>
+
+                <button type="button" class="close" onclick="closeModal()">
+                    &times;
+                </button>
+
+            </div>
+
+
+            <form id="permissionForm" onsubmit="savePermission(event)">
+
+                <input type="hidden" id="permissionId">
+
+
+                <div class="form-group">
+
+                    <label for="permissionName">
+                        Permission Name *
+                    </label>
+
+                    <input type="text" id="permissionName" placeholder="Example: students.view" required>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="permissionModule">
+                        Module
+                    </label>
+
+                    <input type="text" id="permissionModule" placeholder="Example: students">
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="permissionDescription">
+                        Description
+                    </label>
+
+                    <textarea id="permissionDescription" rows="4"
+                        placeholder="Describe what this permission allows."></textarea>
+
+                </div>
+
+
+                <div class="form-actions">
+
+                    <button type="button" class="btn-secondary" onclick="closeModal()">
+                        Cancel
+                    </button>
+
+                    <button type="submit" class="btn-primary">
+                        Save Permission
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        const API_URL = "/api/permissions";
+
+        let permissions = [];
+
+        let searchTimer = null;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Authentication Headers
+        |--------------------------------------------------------------------------
+        */
+
+        function getAuthHeaders() {
+
+            const token =
+                localStorage.getItem("token") ||
+                localStorage.getItem("accessToken") ||
+                sessionStorage.getItem("token") ||
+                sessionStorage.getItem("accessToken");
+
+            const headers = {
+                "Content-Type": "application/json"
+            };
+
+            if (token) {
+                headers.Authorization = `Bearer ${token}`;
+            }
+
+            return headers;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Show Message
+        |--------------------------------------------------------------------------
+        */
+
+        function showMessage(message, type = "success") {
+
+            const element =
+                document.getElementById("message");
+
+            element.textContent = message;
+
+            element.className =
+                `message ${type}`;
+
+            setTimeout(() => {
+
+                element.className = "message";
+
+                element.textContent = "";
+
+            }, 4000);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Load Permissions
+        |--------------------------------------------------------------------------
+        */
+
+        async function loadPermissions() {
+
+            const table =
+                document.getElementById("permissionsTable");
+
+            table.innerHTML = `
+            <tr>
+                <td colspan="6" class="loading">
+                    Loading permissions...
+                </td>
+            </tr>
+        `;
+
+            try {
+
+                const module =
+                    document.getElementById("moduleFilter").value;
+
+                let url = API_URL;
+
+                if (module) {
+
+                    url +=
+                        `?module=${encodeURIComponent(module)}`;
+
+                }
+
+
+                const response =
+                    await fetch(
+                        url,
+                        {
+                            method: "GET",
+                            headers: getAuthHeaders()
+                        }
+                    );
+
+
+                const result =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        result.message ||
+                        "Unable to load permissions."
+                    );
+
+                }
+
+
+                permissions =
+                    Array.isArray(result.data)
+                        ? result.data
+                        : [];
+
+
+                populateModules();
+
+                renderPermissions();
+
+            } catch (error) {
+
+                console.error(
+                    "Load permissions error:",
+                    error
+                );
+
+                table.innerHTML = `
+                <tr>
+                    <td colspan="6" class="empty">
+                        Unable to load permissions.
+                    </td>
+                </tr>
+            `;
+
+                showMessage(
+                    error.message ||
+                    "Unable to load permissions.",
+                    "error"
+                );
+
+            }
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Populate Module Filter
+        |--------------------------------------------------------------------------
+        */
+
+        function populateModules() {
+
+            const select =
+                document.getElementById("moduleFilter");
+
+            const currentValue =
+                select.value;
+
+            const modules =
+                [
+                    ...new Set(
+                        permissions
+                            .map(permission => permission.module)
+                            .filter(Boolean)
+                    )
+                ]
+                    .sort();
+
+
+            select.innerHTML =
+                `<option value="">All Modules</option>`;
+
+
+            modules.forEach(module => {
+
+                const option =
+                    document.createElement("option");
+
+                option.value = module;
+
+                option.textContent = module;
+
+                if (module === currentValue) {
+                    option.selected = true;
+                }
+
+                select.appendChild(option);
+
+            });
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Render Permissions
+        |--------------------------------------------------------------------------
+        */
+
+        function renderPermissions(
+            list = permissions
+        ) {
+
+            const table =
+                document.getElementById("permissionsTable");
+
+            const count =
+                document.getElementById("permissionCount");
+
+
+            count.textContent =
+                `${list.length} permission${list.length === 1 ? "" : "s"}`;
+
+
+            if (!list.length) {
+
+                table.innerHTML = `
+                <tr>
+                    <td colspan="6" class="empty">
+                        No permissions found.
+                    </td>
+                </tr>
+            `;
+
+                return;
+            }
+
+
+            table.innerHTML =
+                list.map(permission => {
+
+                    const id =
+                        permission.id ?? "";
+
+
+                    const name =
+                        escapeHtml(
+                            permission.name || ""
+                        );
+
+
+                    const module =
+                        permission.module
+                            ? `
+                            <span class="module-badge">
+                                ${escapeHtml(permission.module)}
+                            </span>
+                          `
+                            : "-";
+
+
+                    const description =
+                        escapeHtml(
+                            permission.description || "-"
+                        );
+
+
+                    const created =
+                        permission.created_at
+                            ? formatDate(permission.created_at)
+                            : "-";
+
+
+                    return `
+                    <tr>
+
+                        <td>
+                            ${escapeHtml(String(id))}
+                        </td>
+
+                        <td>
+                            <span class="permission-name">
+                                ${name}
+                            </span>
+                        </td>
+
+                        <td>
+                            ${module}
+                        </td>
+
+                        <td>
+                            ${description}
+                        </td>
+
+                        <td>
+                            ${created}
+                        </td>
+
+                        <td>
+
+                            <div class="actions">
+
+                                <button
+                                    type="button"
+                                    class="btn-edit"
+                                    onclick="editPermission('${escapeJs(String(id))}')">
+                                    Edit
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class="btn-danger"
+                                    onclick="deletePermission('${escapeJs(String(id))}')">
+                                    Delete
+                                </button>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+                `;
+
+                })
+                    .join("");
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Search
+        |--------------------------------------------------------------------------
+        */
+
+        function handleSearch() {
+
+            clearTimeout(searchTimer);
+
+            searchTimer =
+                setTimeout(
+                    searchPermissions,
+                    300
+                );
+
+        }
+
+
+        async function searchPermissions() {
+
+            const searchInput =
+                document.getElementById("searchInput");
+
+            const searchTerm =
+                searchInput.value.trim();
+
+
+            if (!searchTerm) {
+
+                renderPermissions();
+
+                return;
+
+            }
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        `${API_URL}/search?q=${encodeURIComponent(searchTerm)}`,
+                        {
+                            method: "GET",
+                            headers: getAuthHeaders()
+                        }
+                    );
+
+
+                const result =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        result.message ||
+                        "Search failed."
+                    );
+
+                }
+
+
+                const data =
+                    Array.isArray(result.data)
+                        ? result.data
+                        : [];
+
+
+                renderPermissions(data);
+
+            } catch (error) {
+
+                console.error(
+                    "Search permissions error:",
+                    error
+                );
+
+                /*
+                 * Fallback to client-side search if
+                 * the search endpoint is unavailable.
+                 */
+
+                const term =
+                    searchTerm.toLowerCase();
+
+                const filtered =
+                    permissions.filter(permission => {
+
+                        return (
+
+                            String(permission.name || "")
+                                .toLowerCase()
+                                .includes(term)
+
+                            ||
+
+                            String(permission.module || "")
+                                .toLowerCase()
+                                .includes(term)
+
+                            ||
+
+                            String(permission.description || "")
+                                .toLowerCase()
+                                .includes(term)
+
+                        );
+
+                    });
+
+
+                renderPermissions(filtered);
+
+            }
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Open Create Modal
+        |--------------------------------------------------------------------------
+        */
+
+        function openCreateModal() {
+
+            document.getElementById(
+                "permissionForm"
+            ).reset();
+
+            document.getElementById(
+                "permissionId"
+            ).value = "";
+
+            document.getElementById(
+                "modalTitle"
+            ).textContent =
+                "Add Permission";
+
+
+            document.getElementById(
+                "permissionModal"
+            ).classList.add("active");
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Close Modal
+        |--------------------------------------------------------------------------
+        */
+
+        function closeModal() {
+
+            document.getElementById(
+                "permissionModal"
+            ).classList.remove("active");
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Edit Permission
+        |--------------------------------------------------------------------------
+        */
+
+        async function editPermission(id) {
+
+            try {
+
+                const response =
+                    await fetch(
+                        `${API_URL}/${encodeURIComponent(id)}`,
+                        {
+                            method: "GET",
+                            headers: getAuthHeaders()
+                        }
+                    );
+
+
+                const result =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        result.message ||
+                        "Unable to load permission."
+                    );
+
+                }
+
+
+                const permission =
+                    result.data;
+
+
+                document.getElementById(
+                    "permissionId"
+                ).value =
+                    permission.id;
+
+
+                document.getElementById(
+                    "permissionName"
+                ).value =
+                    permission.name || "";
+
+
+                document.getElementById(
+                    "permissionModule"
+                ).value =
+                    permission.module || "";
+
+
+                document.getElementById(
+                    "permissionDescription"
+                ).value =
+                    permission.description || "";
+
+
+                document.getElementById(
+                    "modalTitle"
+                ).textContent =
+                    "Edit Permission";
+
+
+                document.getElementById(
+                    "permissionModal"
+                ).classList.add("active");
+
+            } catch (error) {
+
+                console.error(
+                    "Edit permission error:",
+                    error
+                );
+
+                showMessage(
+                    error.message ||
+                    "Unable to load permission.",
+                    "error"
+                );
+
+            }
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Save Permission
+        |--------------------------------------------------------------------------
+        */
+
+        async function savePermission(event) {
+
+            event.preventDefault();
+
+
+            const id =
+                document.getElementById(
+                    "permissionId"
+                ).value;
+
+
+            const name =
+                document.getElementById(
+                    "permissionName"
+                ).value.trim();
+
+
+            const module =
+                document.getElementById(
+                    "permissionModule"
+                ).value.trim();
+
+
+            const description =
+                document.getElementById(
+                    "permissionDescription"
+                ).value.trim();
+
+
+            if (!name) {
+
+                showMessage(
+                    "Permission name is required.",
+                    "error"
+                );
+
+                return;
+
+            }
+
+
+            const payload = {
+
+                name,
+
+                module:
+                    module || null,
+
+                description:
+                    description || null
+
+            };
+
+
+            try {
+
+                const method =
+                    id
+                        ? "PUT"
+                        : "POST";
+
+
+                const url =
+                    id
+                        ? `${API_URL}/${encodeURIComponent(id)}`
+                        : API_URL;
+
+
+                const response =
+                    await fetch(
+                        url,
+                        {
+                            method,
+                            headers: getAuthHeaders(),
+                            body: JSON.stringify(payload)
+                        }
+                    );
+
+
+                const result =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        result.message ||
+                        "Unable to save permission."
+                    );
+
+                }
+
+
+                showMessage(
+                    id
+                        ? "Permission updated successfully."
+                        : "Permission created successfully.",
+                    "success"
+                );
+
+
+                closeModal();
+
+                await loadPermissions();
+
+            } catch (error) {
+
+                console.error(
+                    "Save permission error:",
+                    error
+                );
+
+                showMessage(
+                    error.message ||
+                    "Unable to save permission.",
+                    "error"
+                );
+
+            }
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Delete Permission
+        |--------------------------------------------------------------------------
+        */
+
+        async function deletePermission(id) {
+
+            const permission =
+                permissions.find(
+                    item =>
+                        String(item.id) === String(id)
+                );
+
+
+            const name =
+                permission
+                    ? permission.name
+                    : "this permission";
+
+
+            const confirmed =
+                window.confirm(
+                    `Are you sure you want to delete "${name}"?`
+                );
+
+
+            if (!confirmed) {
+                return;
+            }
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        `${API_URL}/${encodeURIComponent(id)}`,
+                        {
+                            method: "DELETE",
+                            headers: getAuthHeaders()
+                        }
+                    );
+
+
+                const result =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        result.message ||
+                        "Unable to delete permission."
+                    );
+
+                }
+
+
+                showMessage(
+                    "Permission deleted successfully.",
+                    "success"
+                );
+
+
+                await loadPermissions();
+
+            } catch (error) {
+
+                console.error(
+                    "Delete permission error:",
+                    error
+                );
+
+                showMessage(
+                    error.message ||
+                    "Unable to delete permission.",
+                    "error"
+                );
+
+            }
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Format Date
+        |--------------------------------------------------------------------------
+        */
+
+        function formatDate(value) {
+
+            const date =
+                new Date(value);
+
+            if (Number.isNaN(date.getTime())) {
+                return "-";
+            }
+
+            return date.toLocaleDateString(
+                "en-NG",
+                {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric"
+                }
+            );
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Escape HTML
+        |--------------------------------------------------------------------------
+        */
+
+        function escapeHtml(value) {
+
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Escape JavaScript String
+        |--------------------------------------------------------------------------
+        */
+
+        function escapeJs(value) {
+
+            return String(value)
+                .replace(/\\/g, "\\\\")
+                .replace(/'/g, "\\'");
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Close Modal When Clicking Outside
+        |--------------------------------------------------------------------------
+        */
+
+        document.getElementById(
+            "permissionModal"
+        ).addEventListener(
+            "click",
+            function (event) {
+
+                if (event.target === this) {
+                    closeModal();
+                }
+
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Initial Load
+        |--------------------------------------------------------------------------
+        */
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+
+                loadPermissions();
+
+            }
+        );
+
+    </script>
+
+</body>
+
+</html>

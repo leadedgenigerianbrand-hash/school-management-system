@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Classes | School Management System
+    </title>
+
+
+    <link rel="stylesheet" href="../css/style.css">
+
+    <link rel="stylesheet" href="../css/dashboard.css">
+
+    <link rel="stylesheet" href="../css/responsive.css">
+
+    <link rel="stylesheet" href="../css/students.css">
+
+</head>
+
+
+<body>
+
+
+    <!-- =========================================================
+         SIDEBAR
+    ========================================================== -->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-header">
+
+            <div class="logo">
+                SMS
+            </div>
+
+            <div class="sidebar-title">
+
+                <strong>
+                    School Management
+                </strong>
+
+                <small>
+                    System
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <a href="dashboard.html">
+                Dashboard
+            </a>
+
+            <a href="students.html">
+                Students
+            </a>
+
+            <a href="attendance.html">
+                Attendance
+            </a>
+
+            <a href="classes.html" class="active">
+                Classes
+            </a>
+
+            <a href="subjects.html">
+                Subjects
+            </a>
+
+            <a href="results.html">
+                Results
+            </a>
+
+            <a href="fees.html">
+                Fees
+            </a>
+
+            <a href="guardians.html">
+                Guardians
+            </a>
+
+            <a href="staff.html">
+                Staff
+            </a>
+
+            <a href="settings.html">
+                Settings
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-footer">
+
+            <button type="button" id="logoutButton">
+                Logout
+            </button>
+
+        </div>
+
+    </aside>
+
+
+
+    <!-- =========================================================
+         MAIN CONTENT
+    ========================================================== -->
+
+    <main class="main-content">
+
+
+        <!-- TOP BAR -->
+
+        <header class="topbar">
+
+            <div>
+
+                <h1>
+                    Classes
+                </h1>
+
+                <p>
+                    Manage school classes and class arms.
+                </p>
+
+            </div>
+
+
+            <div class="topbar-user">
+
+                <span id="userName">
+                    User
+                </span>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- =====================================================
+             PAGE CONTENT
+        ====================================================== -->
+
+        <section class="students-page">
+
+
+            <!-- =================================================
+                 CLASS MANAGEMENT
+            ================================================== -->
+
+            <div class="students-table-card">
+
+
+                <div class="students-header">
+
+                    <div>
+
+                        <h2>
+                            Classes
+                        </h2>
+
+                        <p>
+                            Create and manage school classes.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- CLASS FORM -->
+
+                <form id="classForm" data-class-form style="padding:20px;">
+
+                    <div style="
+                            display:grid;
+                            grid-template-columns:
+                                repeat(auto-fit,minmax(200px,1fr));
+                            gap:16px;
+                        ">
+
+
+                        <!-- CLASS NAME -->
+
+                        <div>
+
+                            <label for="className">
+                                Class Name
+                            </label>
+
+                            <input type="text" id="className" name="name" placeholder="e.g. JSS 1" required>
+
+                        </div>
+
+
+
+                        <!-- CLASS CODE -->
+
+                        <div>
+
+                            <label for="classCode">
+                                Class Code
+                            </label>
+
+                            <input type="text" id="classCode" name="code" placeholder="e.g. JSS1" required>
+
+                        </div>
+
+
+
+                        <!-- DESCRIPTION -->
+
+                        <div>
+
+                            <label for="classDescription">
+                                Description
+                            </label>
+
+                            <input type="text" id="classDescription" name="description" placeholder="Class description">
+
+                        </div>
+
+                    </div>
+
+
+                    <div style="
+                            display:flex;
+                            gap:10px;
+                            justify-content:flex-end;
+                            margin-top:20px;
+                            flex-wrap:wrap;
+                        ">
+
+                        <button type="button" id="resetClassButton" onclick="ClassesPage.resetClassForm()">
+                            Reset
+                        </button>
+
+
+                        <button type="submit">
+                            Save Class
+                        </button>
+
+                    </div>
+
+                </form>
+
+
+
+                <!-- CLASS SEARCH -->
+
+                <div class="students-toolbar" style="padding:0 20px 20px;">
+
+                    <div class="students-search">
+
+                        <input type="search" id="classSearch" name="class_search" placeholder="Search classes..."
+                            autocomplete="off">
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- CLASS TABLE -->
+
+                <div class="students-table-wrapper">
+
+                    <table class="students-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Class Name
+                                </th>
+
+                                <th>
+                                    Code
+                                </th>
+
+                                <th>
+                                    Description
+                                </th>
+
+                                <th>
+                                    Class Arms
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                                <th>
+                                    Actions
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody id="classesTableBody" data-classes-body>
+
+                            <tr>
+
+                                <td colspan="6">
+
+                                    <div class="students-loading">
+
+                                        <div class="students-loading-spinner"></div>
+
+                                        <p>
+                                            Loading classes...
+                                        </p>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 CLASS ARM MANAGEMENT
+            ================================================== -->
+
+            <div class="students-table-card" style="margin-top:30px;">
+
+
+                <div class="students-header">
+
+                    <div>
+
+                        <h2>
+                            Class Arms
+                        </h2>
+
+                        <p>
+                            Manage arms such as A, B, C and their
+                            classrooms.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- CLASS ARM FORM -->
+
+                <form id="classArmForm" data-class-arm-form style="padding:20px;">
+
+
+                    <div style="
+                            display:grid;
+                            grid-template-columns:
+                                repeat(auto-fit,minmax(200px,1fr));
+                            gap:16px;
+                        ">
+
+
+                        <!-- CLASS -->
+
+                        <div>
+
+                            <label for="classId">
+                                Class
+                            </label>
+
+                            <select id="classId" name="class_id" required>
+
+                                <option value="">
+                                    Select class
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+
+                        <!-- ARM NAME -->
+
+                        <div>
+
+                            <label for="classArmName">
+                                Arm Name
+                            </label>
+
+                            <input type="text" id="classArmName" name="name" placeholder="e.g. A" required>
+
+                        </div>
+
+
+
+                        <!-- CAPACITY -->
+
+                        <div>
+
+                            <label for="capacity">
+                                Capacity
+                            </label>
+
+                            <input type="number" id="capacity" name="capacity" min="0" placeholder="e.g. 40">
+
+                        </div>
+
+
+
+                        <!-- ROOM -->
+
+                        <div>
+
+                            <label for="room">
+                                Room
+                            </label>
+
+                            <input type="text" id="room" name="room" placeholder="e.g. Block A - Room 2">
+
+                        </div>
+
+                    </div>
+
+
+                    <div style="
+                            display:flex;
+                            gap:10px;
+                            justify-content:flex-end;
+                            margin-top:20px;
+                            flex-wrap:wrap;
+                        ">
+
+                        <button type="button" onclick="ClassesPage.resetArmForm()">
+                            Reset
+                        </button>
+
+
+                        <button type="submit">
+                            Save Class Arm
+                        </button>
+
+                    </div>
+
+                </form>
+
+
+
+                <!-- CLASS ARM TABLE -->
+
+                <div class="students-table-wrapper">
+
+                    <table class="students-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Class
+                                </th>
+
+                                <th>
+                                    Arm
+                                </th>
+
+                                <th>
+                                    Capacity
+                                </th>
+
+                                <th>
+                                    Room
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                                <th>
+                                    Actions
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody id="classArmsTableBody">
+
+                            <tr>
+
+                                <td colspan="6">
+
+                                    <div class="students-loading">
+
+                                        <div class="students-loading-spinner"></div>
+
+                                        <p>
+                                            Loading class arms...
+                                        </p>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+
+        </section>
+
+    </main>
+
+
+
+    <!-- =========================================================
+         NOTIFICATION CONTAINER
+    ========================================================== -->
+
+    <div id="notification-container" aria-live="polite"></div>
+
+
+
+    <!-- =========================================================
+         JAVASCRIPT
+    ========================================================== -->
+
+    <script src="../js/api.js"></script>
+
+    <script src="../js/app.js"></script>
+
+    <script src="../js/auth.js"></script>
+
+    <script src="../js/classes.js"></script>
+
+
+</body>
+
+</html>

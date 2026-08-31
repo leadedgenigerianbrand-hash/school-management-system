@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Attendance | School Management System
+    </title>
+
+
+    <!-- Main styles -->
+
+    <link rel="stylesheet" href="../css/style.css">
+
+    <link rel="stylesheet" href="../css/dashboard.css">
+
+    <link rel="stylesheet" href="../css/responsive.css">
+
+    <link rel="stylesheet" href="../css/students.css">
+
+</head>
+
+
+<body>
+
+
+    <!-- =========================================================
+         SIDEBAR
+    ========================================================== -->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-header">
+
+            <div class="logo">
+                SMS
+            </div>
+
+            <div class="sidebar-title">
+
+                <strong>
+                    School Management
+                </strong>
+
+                <small>
+                    System
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <a href="dashboard.html">
+                Dashboard
+            </a>
+
+            <a href="students.html">
+                Students
+            </a>
+
+            <a href="attendance.html" class="active">
+                Attendance
+            </a>
+
+            <a href="classes.html">
+                Classes
+            </a>
+
+            <a href="subjects.html">
+                Subjects
+            </a>
+
+            <a href="results.html">
+                Results
+            </a>
+
+            <a href="fees.html">
+                Fees
+            </a>
+
+            <a href="guardians.html">
+                Guardians
+            </a>
+
+            <a href="staff.html">
+                Staff
+            </a>
+
+            <a href="settings.html">
+                Settings
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-footer">
+
+            <button type="button" id="logoutButton">
+                Logout
+            </button>
+
+        </div>
+
+    </aside>
+
+
+
+    <!-- =========================================================
+         MAIN CONTENT
+    ========================================================== -->
+
+    <main class="main-content">
+
+
+        <!-- TOP BAR -->
+
+        <header class="topbar">
+
+            <div>
+
+                <h1>
+                    Attendance
+                </h1>
+
+                <p>
+                    Record and manage student attendance.
+                </p>
+
+            </div>
+
+
+            <div class="topbar-user">
+
+                <span id="userName">
+                    User
+                </span>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- =====================================================
+             ATTENDANCE PAGE
+        ====================================================== -->
+
+        <section class="students-page">
+
+
+            <!-- PAGE HEADER -->
+
+            <div class="students-header">
+
+                <div>
+
+                    <h1>
+                        Student Attendance
+                    </h1>
+
+                    <p>
+                        Select a date and class, then record
+                        attendance for your students.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 ATTENDANCE CONTROLS
+            ================================================== -->
+
+            <div class="students-table-card">
+
+
+                <div class="students-toolbar" style="padding:20px 20px 0;">
+
+
+                    <!-- DATE -->
+
+                    <div>
+
+                        <label for="attendanceDate" style="
+                                display:block;
+                                margin-bottom:6px;
+                                font-size:13px;
+                                font-weight:600;
+                            ">
+                            Attendance Date
+                        </label>
+
+                        <input type="date" id="attendanceDate" name="attendance_date" style="
+                                height:44px;
+                                padding:0 12px;
+                                border:1px solid #d1d5db;
+                                border-radius:8px;
+                                background:#fff;
+                            ">
+
+                    </div>
+
+
+
+                    <!-- CLASS -->
+
+                    <div>
+
+                        <label for="classId" style="
+                                display:block;
+                                margin-bottom:6px;
+                                font-size:13px;
+                                font-weight:600;
+                            ">
+                            Class
+                        </label>
+
+                        <select id="classId" name="class_id" style="
+                                height:44px;
+                                min-width:180px;
+                                padding:0 12px;
+                                border:1px solid #d1d5db;
+                                border-radius:8px;
+                                background:#fff;
+                            ">
+
+                            <option value="">
+                                All Classes
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+
+                    <!-- SEARCH -->
+
+                    <div class="students-search">
+
+                        <input type="search" id="attendanceSearch" name="search" placeholder="Search student..."
+                            autocomplete="off">
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- =================================================
+                     ATTENDANCE ACTIONS
+                ================================================== -->
+
+                <div style="
+                        display:flex;
+                        justify-content:flex-end;
+                        gap:10px;
+                        flex-wrap:wrap;
+                        padding:20px;
+                    ">
+
+                    <button type="button" data-mark-all-present>
+                        Mark All Present
+                    </button>
+
+
+                    <button type="button" data-reset-attendance>
+                        Reset
+                    </button>
+
+
+                    <button type="submit" form="attendanceForm" data-save-attendance>
+                        Save Attendance
+                    </button>
+
+                </div>
+
+
+
+                <!-- =================================================
+                     ATTENDANCE FORM
+                ================================================== -->
+
+                <form id="attendanceForm" data-attendance-form>
+
+
+                    <div class="students-table-wrapper">
+
+
+                        <table class="students-table attendance-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        Student
+                                    </th>
+
+                                    <th>
+                                        Admission No.
+                                    </th>
+
+                                    <th>
+                                        Class
+                                    </th>
+
+                                    <th>
+                                        Status
+                                    </th>
+
+                                    <th>
+                                        Remarks
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody id="attendanceTableBody" data-attendance-body>
+
+                                <tr>
+
+                                    <td colspan="8">
+
+                                        <div class="students-loading">
+
+                                            <div class="students-loading-spinner"></div>
+
+                                            <p>
+                                                Loading attendance...
+                                            </p>
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+
+                </form>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+
+    <!-- =========================================================
+         NOTIFICATIONS
+    ========================================================== -->
+
+    <div id="notification-container" aria-live="polite"></div>
+
+
+
+    <!-- =========================================================
+         JAVASCRIPT
+    ========================================================== -->
+
+    <script src="../js/api.js"></script>
+
+    <script src="../js/app.js"></script>
+
+    <script src="../js/auth.js"></script>
+
+    <script src="../js/attendance.js"></script>
+
+
+</body>
+
+</html>

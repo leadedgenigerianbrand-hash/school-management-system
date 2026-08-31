@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Student Results | School Management System
+    </title>
+
+    <link rel="stylesheet" href="../css/style.css">
+
+    <link rel="stylesheet" href="../css/students.css">
+
+</head>
+
+
+<body>
+
+    <div class="page-container">
+
+
+        <div class="page-header">
+
+            <div>
+
+                <h1>
+                    Student Results
+                </h1>
+
+                <p id="studentSubtitle">
+                    Loading student information...
+                </p>
+
+            </div>
+
+
+            <button type="button" class="btn btn-secondary" onclick="goBackToProfile()">
+                ← Student Profile
+            </button>
+
+        </div>
+
+
+        <div id="pageMessage" class="message"></div>
+
+
+        <!-- RESULT SUMMARY -->
+
+        <div class="stats-grid">
+
+            <div class="stat-card">
+
+                <span>
+                    Subjects
+                </span>
+
+                <strong id="subjectCount">
+                    0
+                </strong>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <span>
+                    Average Score
+                </span>
+
+                <strong id="averageScore">
+                    0%
+                </strong>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <span>
+                    Highest Score
+                </span>
+
+                <strong id="highestScore">
+                    0
+                </strong>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <span>
+                    Lowest Score
+                </span>
+
+                <strong id="lowestScore">
+                    0
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <!-- RESULTS -->
+
+        <div class="content-card">
+
+            <div class="toolbar">
+
+                <h2 style="margin:0;">
+                    Academic Results
+                </h2>
+
+
+                <button type="button" class="btn btn-secondary" id="refreshButton">
+                    Refresh
+                </button>
+
+            </div>
+
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>#</th>
+
+                            <th>Subject</th>
+
+                            <th>CA</th>
+
+                            <th>Exam</th>
+
+                            <th>Total</th>
+
+                            <th>Grade</th>
+
+                            <th>Remark</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="resultsTableBody">
+
+                        <tr>
+
+                            <td colspan="7" class="loading-cell">
+                                Loading results...
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+
+
+    <script>
+
+        "use strict";
+
+
+        const studentId =
+            new URLSearchParams(
+                window.location.search
+            ).get("id");
+
+
+        const resultsTableBody =
+            document.getElementById(
+                "resultsTableBody"
+            );
+
+
+        const studentSubtitle =
+            document.getElementById(
+                "studentSubtitle"
+            );
+
+
+        const pageMessage =
+            document.getElementById(
+                "pageMessage"
+            );
+
+
+        function escapeHtml(value) {
+
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+
+        }
+
+
+        function showMessage(
+            message,
+            type = "error"
+        ) {
+
+            pageMessage.textContent =
+                message;
+
+            pageMessage.className =
+                "message " + type;
+
+        }
+
+
+        function getScore(record, field) {
+
+            return Number(
+                record[field] ||
+                0
+            );
+
+        }
+
+
+        function getGrade(score) {
+
+            if (score >= 75) {
+                return "A";
+            }
+
+            if (score >= 65) {
+                return "B";
+            }
+
+            if (score >= 55) {
+                return "C";
+            }
+
+            if (score >= 45) {
+                return "D";
+            }
+
+            if (score >= 40) {
+                return "E";
+            }
+
+            return "F";
+
+        }
+
+
+        function getRemark(score) {
+
+            if (score >= 75) {
+                return "Excellent";
+            }
+
+            if (score >= 65) {
+                return "Very Good";
+            }
+
+            if (score >= 55) {
+                return "Good";
+            }
+
+            if (score >= 45) {
+                return "Fair";
+            }
+
+            if (score >= 40) {
+                return "Pass";
+            }
+
+            return "Fail";
+
+        }
+
+
+        function gradeClass(score) {
+
+            if (score >= 50) {
+
+                return "status status-active";
+
+            }
+
+            return "status status-inactive";
+
+        }
+
+
+        async function loadStudent() {
+
+            if (!studentId) {
+
+                studentSubtitle.textContent =
+                    "Student ID was not provided.";
+
+                return;
+
+            }
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/students/" +
+                        encodeURIComponent(studentId)
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Unable to load student."
+                    );
+
+                }
+
+
+                const data =
+                    await response.json();
+
+
+                const student =
+                    data.student ||
+                    data.data ||
+                    data;
+
+
+                const name =
+                    student.name ||
+                    [
+                        student.first_name,
+                        student.middle_name,
+                        student.last_name
+                    ]
+                        .filter(Boolean)
+                        .join(" ");
+
+
+                studentSubtitle.textContent =
+                    name
+                        ? "Academic results for " + name
+                        : "Student academic results";
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                studentSubtitle.textContent =
+                    "Student academic results";
+
+            }
+
+        }
+
+
+        async function loadResults() {
+
+            if (!studentId) {
+
+                resultsTableBody.innerHTML = `
+            <tr>
+                <td colspan="7" class="empty-cell">
+                    Student ID was not provided.
+                </td>
+            </tr>
+        `;
+
+                return;
+
+            }
+
+
+            resultsTableBody.innerHTML = `
+        <tr>
+            <td colspan="7" class="loading-cell">
+                Loading results...
+            </td>
+        </tr>
+    `;
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/results/student/" +
+                        encodeURIComponent(studentId)
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Unable to load student results."
+                    );
+
+                }
+
+
+                const data =
+                    await response.json();
+
+
+                const records =
+                    Array.isArray(data)
+                        ? data
+                        : (
+                            data.results ||
+                            data.data ||
+                            data.rows ||
+                            []
+                        );
+
+
+                renderResults(records);
+
+
+            } catch (error) {
+
+                console.error(
+                    "Results error:",
+                    error
+                );
+
+
+                resultsTableBody.innerHTML = `
+            <tr>
+                <td colspan="7" class="empty-cell">
+                    Unable to load student results.
+                </td>
+            </tr>
+        `;
+
+
+                showMessage(
+                    error.message ||
+                    "Unable to load results.",
+                    "error"
+                );
+
+            }
+
+        }
+
+
+        function renderResults(records) {
+
+            const scores =
+                records.map(
+                    record => {
+
+                        const ca =
+                            Number(
+                                record.ca_score ||
+                                record.caScore ||
+                                record.ca ||
+                                record.continuous_assessment ||
+                                0
+                            );
+
+
+                        const exam =
+                            Number(
+                                record.exam_score ||
+                                record.examScore ||
+                                record.exam ||
+                                0
+                            );
+
+
+                        return ca + exam;
+
+                    }
+                );
+
+
+            document.getElementById(
+                "subjectCount"
+            ).textContent =
+                records.length;
+
+
+            if (!records.length) {
+
+                document.getElementById(
+                    "averageScore"
+                ).textContent =
+                    "0%";
+
+
+                document.getElementById(
+                    "highestScore"
+                ).textContent =
+                    "0";
+
+
+                document.getElementById(
+                    "lowestScore"
+                ).textContent =
+                    "0";
+
+
+                resultsTableBody.innerHTML = `
+            <tr>
+                <td colspan="7" class="empty-cell">
+                    No academic results found.
+                </td>
+            </tr>
+        `;
+
+                return;
+
+            }
+
+
+            const total =
+                scores.reduce(
+                    (sum, score) =>
+                        sum + score,
+                    0
+                );
+
+
+            const average =
+                total /
+                scores.length;
+
+
+            const highest =
+                Math.max(...scores);
+
+
+            const lowest =
+                Math.min(...scores);
+
+
+            document.getElementById(
+                "averageScore"
+            ).textContent =
+                average.toFixed(1) + "%";
+
+
+            document.getElementById(
+                "highestScore"
+            ).textContent =
+                highest;
+
+
+            document.getElementById(
+                "lowestScore"
+            ).textContent =
+                lowest;
+
+
+            resultsTableBody.innerHTML =
+                records.map(
+                    (record, index) => {
+
+                        const ca =
+                            Number(
+                                record.ca_score ||
+                                record.caScore ||
+                                record.ca ||
+                                record.continuous_assessment ||
+                                0
+                            );
+
+
+                        const exam =
+                            Number(
+                                record.exam_score ||
+                                record.examScore ||
+                                record.exam ||
+                                0
+                            );
+
+
+                        const score =
+                            ca + exam;
+
+
+                        const grade =
+                            record.grade ||
+                            getGrade(score);
+
+
+                        const remark =
+                            record.remark ||
+                            record.remarks ||
+                            getRemark(score);
+
+
+                        const subject =
+                            record.subject_name ||
+                            record.subjectName ||
+                            record.subject ||
+                            "Unknown Subject";
+
+
+                        return `
+                    <tr>
+
+                        <td>
+                            ${index + 1}
+                        </td>
+
+                        <td>
+                            <strong>
+                                ${escapeHtml(subject)}
+                            </strong>
+                        </td>
+
+                        <td>
+                            ${ca}
+                        </td>
+
+                        <td>
+                            ${exam}
+                        </td>
+
+                        <td>
+                            <strong>
+                                ${score}
+                            </strong>
+                        </td>
+
+                        <td>
+
+                            <span
+                                class="${gradeClass(score)}"
+                            >
+                                ${escapeHtml(grade)}
+                            </span>
+
+                        </td>
+
+                        <td>
+                            ${escapeHtml(remark)}
+                        </td>
+
+                    </tr>
+                `;
+
+                    }
+                )
+                    .join("");
+
+        }
+
+
+        function goBackToProfile() {
+
+            if (!studentId) {
+
+                window.location.href =
+                    "/pages/students.html";
+
+                return;
+
+            }
+
+
+            window.location.href =
+                "/pages/student-profile.html?id=" +
+                encodeURIComponent(studentId);
+
+        }
+
+
+        document
+            .getElementById("refreshButton")
+            .addEventListener(
+                "click",
+                loadResults
+            );
+
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            async function () {
+
+                if (
+                    typeof protectPage ===
+                    "function"
+                ) {
+
+                    await protectPage();
+
+                }
+
+                await loadStudent();
+
+                await loadResults();
+
+            }
+        );
+
+    </script>
+
+</body>
+
+</html>

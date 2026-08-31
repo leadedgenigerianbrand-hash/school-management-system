@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Student Attendance | School Management System</title>
+
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/students.css">
+
+</head>
+
+<body>
+
+    <div class="page-container">
+
+        <div class="page-header">
+
+            <div>
+
+                <h1>Student Attendance</h1>
+
+                <p id="studentSubtitle">
+                    Loading student information...
+                </p>
+
+            </div>
+
+            <div>
+
+                <button type="button" class="btn btn-secondary" onclick="goBackToProfile()">
+                    ← Student Profile
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div id="pageMessage" class="message"></div>
+
+
+        <!-- STUDENT SUMMARY -->
+
+        <div class="stats-grid">
+
+            <div class="stat-card">
+
+                <span>Total Days</span>
+
+                <strong id="totalDays">
+                    0
+                </strong>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <span>Present</span>
+
+                <strong id="presentDays">
+                    0
+                </strong>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <span>Absent</span>
+
+                <strong id="absentDays">
+                    0
+                </strong>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <span>Attendance Rate</span>
+
+                <strong id="attendanceRate">
+                    0%
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <!-- ATTENDANCE -->
+
+        <div class="content-card">
+
+            <div class="toolbar">
+
+                <h2 style="margin:0;">
+                    Attendance Record
+                </h2>
+
+                <button type="button" class="btn btn-secondary" id="refreshButton">
+                    Refresh
+                </button>
+
+            </div>
+
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>#</th>
+
+                            <th>Date</th>
+
+                            <th>Session</th>
+
+                            <th>Term</th>
+
+                            <th>Status</th>
+
+                            <th>Remark</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="attendanceTableBody">
+
+                        <tr>
+
+                            <td colspan="6" class="loading-cell">
+                                Loading attendance...
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+
+    <script>
+
+        "use strict";
+
+
+        const studentId =
+            new URLSearchParams(
+                window.location.search
+            ).get("id");
+
+
+        const attendanceTableBody =
+            document.getElementById(
+                "attendanceTableBody"
+            );
+
+
+        const studentSubtitle =
+            document.getElementById(
+                "studentSubtitle"
+            );
+
+
+        const pageMessage =
+            document.getElementById(
+                "pageMessage"
+            );
+
+
+        function escapeHtml(value) {
+
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+
+        }
+
+
+        function showMessage(message, type = "error") {
+
+            pageMessage.textContent =
+                message;
+
+            pageMessage.className =
+                "message " + type;
+
+        }
+
+
+        function formatDate(value) {
+
+            if (!value) {
+                return "—";
+            }
+
+            const date =
+                new Date(value);
+
+            if (
+                Number.isNaN(
+                    date.getTime()
+                )
+            ) {
+
+                return value;
+
+            }
+
+            return new Intl.DateTimeFormat(
+                "en-NG",
+                {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric"
+                }
+            ).format(date);
+
+        }
+
+
+        function getStatusClass(status) {
+
+            const value =
+                String(
+                    status || ""
+                ).toLowerCase();
+
+            if (value === "present") {
+                return "status status-active";
+            }
+
+            if (value === "absent") {
+                return "status status-inactive";
+            }
+
+            return "status status-pending";
+
+        }
+
+
+        async function loadStudent() {
+
+            if (!studentId) {
+
+                studentSubtitle.textContent =
+                    "Student ID was not provided.";
+
+                return;
+
+            }
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/students/" +
+                        encodeURIComponent(studentId)
+                    );
+
+                if (!response.ok) {
+                    throw new Error(
+                        "Unable to load student information."
+                    );
+                }
+
+                const data =
+                    await response.json();
+
+                const student =
+                    data.student ||
+                    data.data ||
+                    data;
+
+                const name =
+                    student.name ||
+                    [
+                        student.first_name,
+                        student.middle_name,
+                        student.last_name
+                    ]
+                        .filter(Boolean)
+                        .join(" ");
+
+                studentSubtitle.textContent =
+                    name
+                        ? "Attendance record for " + name
+                        : "Student attendance record";
+
+            } catch (error) {
+
+                console.error(error);
+
+                studentSubtitle.textContent =
+                    "Student attendance record";
+
+            }
+
+        }
+
+
+        async function loadAttendance() {
+
+            if (!studentId) {
+
+                attendanceTableBody.innerHTML = `
+            <tr>
+                <td colspan="6" class="empty-cell">
+                    Student ID was not provided.
+                </td>
+            </tr>
+        `;
+
+                return;
+
+            }
+
+
+            attendanceTableBody.innerHTML = `
+        <tr>
+            <td colspan="6" class="loading-cell">
+                Loading attendance...
+            </td>
+        </tr>
+    `;
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/attendance/student/" +
+                        encodeURIComponent(studentId)
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Unable to load attendance."
+                    );
+
+                }
+
+
+                const data =
+                    await response.json();
+
+
+                const records =
+                    Array.isArray(data)
+                        ? data
+                        : (
+                            data.attendance ||
+                            data.data ||
+                            data.rows ||
+                            []
+                        );
+
+
+                renderAttendance(records);
+
+
+            } catch (error) {
+
+                console.error(
+                    "Attendance error:",
+                    error
+                );
+
+
+                attendanceTableBody.innerHTML = `
+            <tr>
+                <td colspan="6" class="empty-cell">
+                    Unable to load attendance records.
+                </td>
+            </tr>
+        `;
+
+
+                showMessage(
+                    error.message ||
+                    "Unable to load attendance.",
+                    "error"
+                );
+
+            }
+
+        }
+
+
+        function renderAttendance(records) {
+
+            let present = 0;
+            let absent = 0;
+
+
+            records.forEach(
+                record => {
+
+                    const status =
+                        String(
+                            record.status || ""
+                        ).toLowerCase();
+
+                    if (status === "present") {
+                        present++;
+                    }
+
+                    if (status === "absent") {
+                        absent++;
+                    }
+
+                }
+            );
+
+
+            const total =
+                records.length;
+
+
+            const rate =
+                total > 0
+                    ? Math.round(
+                        (present / total) * 100
+                    )
+                    : 0;
+
+
+            document.getElementById(
+                "totalDays"
+            ).textContent = total;
+
+
+            document.getElementById(
+                "presentDays"
+            ).textContent = present;
+
+
+            document.getElementById(
+                "absentDays"
+            ).textContent = absent;
+
+
+            document.getElementById(
+                "attendanceRate"
+            ).textContent = rate + "%";
+
+
+            if (!records.length) {
+
+                attendanceTableBody.innerHTML = `
+            <tr>
+                <td colspan="6" class="empty-cell">
+                    No attendance records found.
+                </td>
+            </tr>
+        `;
+
+                return;
+
+            }
+
+
+            attendanceTableBody.innerHTML =
+                records.map(
+                    (record, index) => {
+
+                        const status =
+                            record.status ||
+                            "Unknown";
+
+
+                        return `
+                    <tr>
+
+                        <td>
+                            ${index + 1}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                            formatDate(
+                                record.date ||
+                                record.attendance_date ||
+                                record.attendanceDate
+                            )
+                        )}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                            record.session_name ||
+                            record.sessionName ||
+                            record.session ||
+                            "—"
+                        )}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                            record.term_name ||
+                            record.termName ||
+                            record.term ||
+                            "—"
+                        )}
+                        </td>
+
+                        <td>
+
+                            <span class="${getStatusClass(status)}">
+
+                                ${escapeHtml(status)}
+
+                            </span>
+
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                            record.remark ||
+                            record.remarks ||
+                            "—"
+                        )}
+                        </td>
+
+                    </tr>
+                `;
+
+                    }
+                )
+                    .join("");
+
+        }
+
+
+        function goBackToProfile() {
+
+            if (!studentId) {
+
+                window.location.href =
+                    "/pages/students.html";
+
+                return;
+
+            }
+
+            window.location.href =
+                "/pages/student-profile.html?id=" +
+                encodeURIComponent(studentId);
+
+        }
+
+
+        document
+            .getElementById("refreshButton")
+            .addEventListener(
+                "click",
+                loadAttendance
+            );
+
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            async function () {
+
+                if (
+                    typeof protectPage ===
+                    "function"
+                ) {
+
+                    await protectPage();
+
+                }
+
+                await loadStudent();
+
+                await loadAttendance();
+
+            }
+        );
+
+    </script>
+
+</body>
+
+</html>

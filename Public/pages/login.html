@@ -1,0 +1,909 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Login | School Management System
+    </title>
+
+
+    <!-- Bootstrap 5 -->
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+
+    <!-- Bootstrap Icons -->
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+
+    <style>
+        :root {
+
+            --sms-primary: #1e3a8a;
+
+            --sms-primary-light: #2563eb;
+
+            --sms-bg: #f4f7fb;
+
+            --sms-text: #172033;
+
+            --sms-muted: #6b7280;
+
+        }
+
+
+        * {
+
+            box-sizing: border-box;
+
+        }
+
+
+        body {
+
+            min-height: 100vh;
+
+            margin: 0;
+
+            background: var(--sms-bg);
+
+            font-family:
+                Inter,
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+
+        }
+
+
+        /* LOGIN PAGE */
+
+        .login-page {
+
+            min-height: 100vh;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            padding: 30px 15px;
+
+        }
+
+
+        .login-container {
+
+            width: 100%;
+
+            max-width: 1050px;
+
+        }
+
+
+        /* LOGIN CARD */
+
+        .login-card {
+
+            overflow: hidden;
+
+            border: 0;
+
+            border-radius: 22px;
+
+            background: #ffffff;
+
+            box-shadow:
+                0 20px 60px rgba(15, 23, 42, 0.12);
+
+        }
+
+
+        /* BRANDING PANEL */
+
+        .branding-panel {
+
+            min-height: 620px;
+
+            padding: 50px;
+
+            color: #ffffff;
+
+            background:
+                linear-gradient(145deg,
+                    #172554 0%,
+                    #1e3a8a 50%,
+                    #2563eb 100%);
+
+            display: flex;
+
+            flex-direction: column;
+
+            justify-content: center;
+
+        }
+
+
+        .brand-logo {
+
+            width: 78px;
+
+            height: 78px;
+
+            border-radius: 20px;
+
+            background:
+                rgba(255, 255, 255, 0.15);
+
+            border:
+                1px solid rgba(255, 255, 255, 0.25);
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 30px;
+
+            font-weight: 800;
+
+            margin-bottom: 28px;
+
+        }
+
+
+        .branding-panel h1 {
+
+            font-size: 38px;
+
+            line-height: 1.15;
+
+            font-weight: 800;
+
+            margin-bottom: 18px;
+
+        }
+
+
+        .branding-panel p {
+
+            color:
+                rgba(255, 255, 255, 0.82);
+
+            font-size: 16px;
+
+            line-height: 1.7;
+
+            max-width: 430px;
+
+        }
+
+
+        /* FEATURES */
+
+        .feature-list {
+
+            margin-top: 30px;
+
+        }
+
+
+        .feature-item {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            margin-bottom: 16px;
+
+            color:
+                rgba(255, 255, 255, 0.92);
+
+        }
+
+
+        .feature-icon {
+
+            width: 34px;
+
+            height: 34px;
+
+            flex-shrink: 0;
+
+            border-radius: 10px;
+
+            background:
+                rgba(255, 255, 255, 0.12);
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+        }
+
+
+        /* LOGIN PANEL */
+
+        .login-panel {
+
+            padding: 55px 50px;
+
+        }
+
+
+        .login-heading {
+
+            margin-bottom: 35px;
+
+        }
+
+
+        .login-heading h2 {
+
+            color: var(--sms-text);
+
+            font-weight: 800;
+
+            font-size: 30px;
+
+            margin-bottom: 8px;
+
+        }
+
+
+        .login-heading p {
+
+            color: var(--sms-muted);
+
+            margin: 0;
+
+        }
+
+
+        /* FORM */
+
+        .form-label {
+
+            color: #374151;
+
+            font-weight: 600;
+
+            margin-bottom: 8px;
+
+        }
+
+
+        .input-group-text {
+
+            background: #f8fafc;
+
+            border-color: #dbe1ea;
+
+            color: #64748b;
+
+        }
+
+
+        .form-control {
+
+            border-color: #dbe1ea;
+
+            padding: 13px 14px;
+
+            min-height: 50px;
+
+        }
+
+
+        .form-control:focus {
+
+            border-color:
+                var(--sms-primary-light);
+
+            box-shadow:
+                0 0 0 0.2rem rgba(37, 99, 235, 0.12);
+
+        }
+
+
+        .input-group:focus-within .input-group-text {
+
+            border-color:
+                var(--sms-primary-light);
+
+            color:
+                var(--sms-primary-light);
+
+        }
+
+
+        /* PASSWORD */
+
+        .password-toggle {
+
+            border-color: #dbe1ea;
+
+            background: #f8fafc;
+
+            color: #64748b;
+
+        }
+
+
+        .password-toggle:hover {
+
+            color:
+                var(--sms-primary-light);
+
+            background: #f1f5f9;
+
+        }
+
+
+        /* REMEMBER */
+
+        .form-check-label {
+
+            color: #64748b;
+
+            font-size: 14px;
+
+        }
+
+
+        /* FORGOT PASSWORD */
+
+        .forgot-link {
+
+            color:
+                var(--sms-primary-light);
+
+            text-decoration: none;
+
+            font-size: 14px;
+
+            font-weight: 600;
+
+        }
+
+
+        .forgot-link:hover {
+
+            text-decoration: underline;
+
+        }
+
+
+        /* LOGIN BUTTON */
+
+        .login-button {
+
+            min-height: 52px;
+
+            border: 0;
+
+            border-radius: 10px;
+
+            background:
+                var(--sms-primary-light);
+
+            font-weight: 700;
+
+            font-size: 16px;
+
+            transition: 0.2s ease;
+
+        }
+
+
+        .login-button:hover {
+
+            background:
+                var(--sms-primary);
+
+            transform:
+                translateY(-1px);
+
+        }
+
+
+        .login-button:disabled {
+
+            opacity: 0.75;
+
+            transform: none;
+
+        }
+
+
+        /* MESSAGE */
+
+        .alert {
+
+            border-radius: 10px;
+
+            font-size: 14px;
+
+        }
+
+
+        /* FOOTER */
+
+        .login-footer {
+
+            text-align: center;
+
+            color: #94a3b8;
+
+            font-size: 13px;
+
+            margin-top: 30px;
+
+        }
+
+
+        /* MOBILE */
+
+        @media (max-width: 767.98px) {
+
+            .login-page {
+
+                padding: 15px;
+
+            }
+
+
+            .branding-panel {
+
+                display: none;
+
+            }
+
+
+            .login-panel {
+
+                padding: 35px 25px;
+
+            }
+
+
+            .login-heading h2 {
+
+                font-size: 26px;
+
+            }
+
+
+            .login-card {
+
+                border-radius: 16px;
+
+            }
+
+        }
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <main class="login-page">
+
+        <div class="login-container">
+
+            <div class="card login-card">
+
+                <div class="row g-0">
+
+
+                    <!-- =====================================================
+                         BRANDING PANEL
+                    ====================================================== -->
+
+                    <div class="col-md-6">
+
+                        <div class="branding-panel">
+
+
+                            <div class="brand-logo">
+
+                                SMS
+
+                            </div>
+
+
+                            <h1>
+
+                                School Management System
+
+                            </h1>
+
+
+                            <p>
+
+                                A modern platform for managing
+                                students, staff, classes,
+                                attendance, results, fees
+                                and other school information.
+
+                            </p>
+
+
+                            <div class="feature-list">
+
+
+                                <div class="feature-item">
+
+                                    <div class="feature-icon">
+
+                                        <i class="bi bi-people"></i>
+
+                                    </div>
+
+                                    <span>
+
+                                        Manage students and staff
+
+                                    </span>
+
+                                </div>
+
+
+                                <div class="feature-item">
+
+                                    <div class="feature-icon">
+
+                                        <i class="bi bi-journal-check"></i>
+
+                                    </div>
+
+                                    <span>
+
+                                        Track attendance and results
+
+                                    </span>
+
+                                </div>
+
+
+                                <div class="feature-item">
+
+                                    <div class="feature-icon">
+
+                                        <i class="bi bi-cash-stack"></i>
+
+                                    </div>
+
+                                    <span>
+
+                                        Manage school fees and payments
+
+                                    </span>
+
+                                </div>
+
+
+                                <div class="feature-item">
+
+                                    <div class="feature-icon">
+
+                                        <i class="bi bi-shield-check"></i>
+
+                                    </div>
+
+                                    <span>
+
+                                        Secure role-based access
+
+                                    </span>
+
+                                </div>
+
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =====================================================
+                         LOGIN PANEL
+                    ====================================================== -->
+
+                    <div class="col-md-6">
+
+                        <div class="login-panel">
+
+
+                            <div class="login-heading">
+
+                                <h2>
+
+                                    Welcome back
+
+                                </h2>
+
+                                <p>
+
+                                    Sign in to continue to your dashboard.
+
+                                </p>
+
+                            </div>
+
+
+                            <!-- =================================================
+                                 LOGIN MESSAGE
+                            ================================================== -->
+
+                            <div id="loginMessage" class="alert d-none" role="alert" aria-live="polite"></div>
+
+
+                            <!-- =================================================
+                                 LOGIN FORM
+                            ================================================== -->
+
+                            <form id="loginForm" novalidate>
+
+
+                                <!-- USERNAME / EMAIL -->
+
+                                <div class="mb-4">
+
+                                    <label for="identifier" class="form-label">
+
+                                        Username or Email
+
+                                    </label>
+
+
+                                    <div class="input-group">
+
+                                        <span class="input-group-text">
+
+                                            <i class="bi bi-person"></i>
+
+                                        </span>
+
+
+                                        <input type="text" id="identifier" name="identifier" class="form-control"
+                                            placeholder="Enter username or email" autocomplete="username" required>
+
+                                    </div>
+
+                                </div>
+
+
+                                <!-- PASSWORD -->
+
+                                <div class="mb-3">
+
+                                    <label for="password" class="form-label">
+
+                                        Password
+
+                                    </label>
+
+
+                                    <div class="input-group">
+
+                                        <span class="input-group-text">
+
+                                            <i class="bi bi-lock"></i>
+
+                                        </span>
+
+
+                                        <input type="password" id="password" name="password" class="form-control"
+                                            placeholder="Enter your password" autocomplete="current-password" required>
+
+
+                                        <button type="button" class="btn password-toggle" id="togglePassword"
+                                            aria-label="Show password">
+
+                                            <i class="bi bi-eye" id="passwordIcon"></i>
+
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+
+                                <!-- OPTIONS -->
+
+                                <div class="d-flex
+                                           justify-content-between
+                                           align-items-center
+                                           mb-4">
+
+
+                                    <div class="form-check">
+
+                                        <input class="form-check-input" type="checkbox" id="rememberMe"
+                                            name="rememberMe">
+
+
+                                        <label class="form-check-label" for="rememberMe">
+
+                                            Remember me
+
+                                        </label>
+
+                                    </div>
+
+
+                                    <a href="#" class="forgot-link" id="forgotPassword">
+
+                                        Forgot password?
+
+                                    </a>
+
+                                </div>
+
+
+                                <!-- LOGIN BUTTON -->
+
+                                <button type="submit" class="btn btn-primary w-100 login-button" id="loginButton">
+
+                                    <span id="loginButtonText">
+
+                                        Sign In
+
+                                    </span>
+
+
+                                    <span id="loginSpinner" class="spinner-border
+                                               spinner-border-sm
+                                               ms-2
+                                               d-none" role="status" aria-hidden="true"></span>
+
+                                </button>
+
+
+                            </form>
+
+
+                            <!-- =================================================
+                                 FOOTER
+                            ================================================== -->
+
+                            <div class="login-footer">
+
+                                School Management System
+
+                                <br>
+
+                                <span>
+
+                                    Secure school administration platform
+
+                                </span>
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <!-- Bootstrap JS -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+    <!-- ================================================================
+         AUTHENTICATION JAVASCRIPT
+    ================================================================= -->
+
+    <script src="../js/auth.js"></script>
+
+
+    <!-- ================================================================
+         PASSWORD VISIBILITY
+    ================================================================= -->
+
+    <script>
+
+        "use strict";
+
+
+        const togglePassword =
+            document.getElementById(
+                "togglePassword"
+            );
+
+
+        const password =
+            document.getElementById(
+                "password"
+            );
+
+
+        const passwordIcon =
+            document.getElementById(
+                "passwordIcon"
+            );
+
+
+        if (
+            togglePassword &&
+            password &&
+            passwordIcon
+        ) {
+
+            togglePassword.addEventListener(
+                "click",
+                function () {
+
+                    if (
+                        password.type ===
+                        "password"
+                    ) {
+
+                        password.type =
+                            "text";
+
+                        passwordIcon.className =
+                            "bi bi-eye-slash";
+
+                        togglePassword.setAttribute(
+                            "aria-label",
+                            "Hide password"
+                        );
+
+                    } else {
+
+                        password.type =
+                            "password";
+
+                        passwordIcon.className =
+                            "bi bi-eye";
+
+                        togglePassword.setAttribute(
+                            "aria-label",
+                            "Show password"
+                        );
+
+                    }
+
+                }
+            );
+
+        }
+
+    </script>
+
+
+</body>
+
+</html>
+```

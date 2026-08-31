@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="description" content="School Management System">
+
+    <title>School Management System</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+
+    <link rel="stylesheet" href="/css/responsive.css">
+</head>
+
+
+<body>
+
+    <!-- =========================================================
+         APPLICATION LOADING SCREEN
+    ========================================================== -->
+
+    <div id="appLoading" class="app-loading">
+
+        <div class="loading-spinner"></div>
+
+        <p>
+            Loading School Management System...
+        </p>
+
+    </div>
+
+
+    <!-- =========================================================
+         APPLICATION
+    ========================================================== -->
+
+    <div id="app" class="app" hidden>
+
+
+        <!-- =====================================================
+             SIDEBAR
+        ====================================================== -->
+
+        <aside id="sidebar" class="sidebar">
+
+            <div class="sidebar-header">
+
+                <div class="school-logo-wrapper">
+
+                    <img id="schoolLogo" src="/assets/school-logo.png" alt="School Logo" class="school-logo">
+
+                </div>
+
+                <div class="school-brand">
+
+                    <h2 id="schoolName">
+                        School Management
+                    </h2>
+
+                    <span id="schoolCode">
+                        School
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- Navigation -->
+
+            <nav class="sidebar-navigation">
+
+                <a href="/pages/dashboard.html" class="nav-item active" data-page="dashboard">
+
+                    <span class="nav-icon">▣</span>
+
+                    <span class="nav-text">
+                        Dashboard
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/students.html" class="nav-item" data-page="students">
+
+                    <span class="nav-icon">♙</span>
+
+                    <span class="nav-text">
+                        Students
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/attendance.html" class="nav-item" data-page="attendance">
+
+                    <span class="nav-icon">✓</span>
+
+                    <span class="nav-text">
+                        Attendance
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/results.html" class="nav-item" data-page="results">
+
+                    <span class="nav-icon">▤</span>
+
+                    <span class="nav-text">
+                        Results
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/fees.html" class="nav-item" data-page="fees">
+
+                    <span class="nav-icon">₦</span>
+
+                    <span class="nav-text">
+                        Fees & Payments
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/guardians.html" class="nav-item" data-page="guardians">
+
+                    <span class="nav-icon">♧</span>
+
+                    <span class="nav-text">
+                        Parents & Guardians
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/staff.html" class="nav-item" data-page="staff">
+
+                    <span class="nav-icon">♟</span>
+
+                    <span class="nav-text">
+                        Staff
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/classes.html" class="nav-item" data-page="classes">
+
+                    <span class="nav-icon">▦</span>
+
+                    <span class="nav-text">
+                        Classes
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/subjects.html" class="nav-item" data-page="subjects">
+
+                    <span class="nav-icon">▥</span>
+
+                    <span class="nav-text">
+                        Subjects
+                    </span>
+
+                </a>
+
+
+                <div class="navigation-divider"></div>
+
+
+                <a href="/pages/settings.html" class="nav-item" data-page="settings">
+
+                    <span class="nav-icon">⚙</span>
+
+                    <span class="nav-text">
+                        Settings
+                    </span>
+
+                </a>
+
+            </nav>
+
+
+            <!-- Sidebar Footer -->
+
+            <div class="sidebar-footer">
+
+                <div class="user-mini-profile">
+
+                    <div id="userInitials" class="user-avatar">
+                        U
+                    </div>
+
+                    <div class="user-mini-info">
+
+                        <strong id="sidebarUserName">
+                            User
+                        </strong>
+
+                        <span id="sidebarUserRole">
+                            Administrator
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <button id="sidebarLogout" type="button" class="logout-button">
+
+                    <span>
+                        ⇥
+                    </span>
+
+                    Logout
+
+                </button>
+
+            </div>
+
+        </aside>
+
+
+        <!-- =====================================================
+             MAIN CONTENT
+        ====================================================== -->
+
+        <main class="main-content">
+
+
+            <!-- =================================================
+                 TOP HEADER
+            ================================================== -->
+
+            <header class="top-header">
+
+                <div class="header-left">
+
+                    <button id="sidebarToggle" type="button" class="sidebar-toggle" aria-label="Toggle sidebar">
+                        ☰
+                    </button>
+
+                    <div>
+
+                        <h1 id="pageTitle">
+                            Dashboard
+                        </h1>
+
+                        <p id="pageSubtitle">
+                            Welcome to your school management system
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="header-right">
+
+                    <button id="notificationButton" type="button" class="header-button" aria-label="Notifications">
+
+                        <span>
+                            ♢
+                        </span>
+
+                        <span id="notificationCount" class="notification-badge" hidden>
+                            0
+                        </span>
+
+                    </button>
+
+
+                    <div class="header-user">
+
+                        <div id="headerUserInitials" class="user-avatar">
+                            U
+                        </div>
+
+                        <div class="header-user-info">
+
+                            <strong id="headerUserName">
+                                User
+                            </strong>
+
+                            <span id="headerUserRole">
+                                Administrator
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </header>
+
+
+            <!-- =================================================
+                 PAGE CONTENT
+            ================================================== -->
+
+            <section id="pageContent" class="page-content">
+
+                <!-- Dynamic page content will load here -->
+
+                <div class="content-loading">
+
+                    <div class="loading-spinner"></div>
+
+                    <p>
+                        Loading...
+                    </p>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 FOOTER
+            ================================================== -->
+
+            <footer class="main-footer">
+
+                <div>
+
+                    <strong>
+                        School Management System
+                    </strong>
+
+                    <span>
+                        &copy;
+                        <span id="currentYear"></span>
+                    </span>
+
+                </div>
+
+                <span>
+                    Secure School Administration Platform
+                </span>
+
+            </footer>
+
+        </main>
+
+    </div>
+
+
+    <!-- =========================================================
+         GLOBAL NOTIFICATION CONTAINER
+    ========================================================== -->
+
+    <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true">
+    </div>
+
+
+    <!-- =========================================================
+         CONFIRMATION MODAL
+    ========================================================== -->
+
+    <div id="confirmModal" class="modal" hidden>
+
+        <div class="modal-overlay"></div>
+
+        <div class="modal-dialog" role="dialog" aria-modal="true">
+
+            <div class="modal-header">
+
+                <h2 id="confirmTitle">
+                    Confirm Action
+                </h2>
+
+                <button type="button" id="confirmClose" class="modal-close" aria-label="Close">
+                    ×
+                </button>
+
+            </div>
+
+
+            <div class="modal-body">
+
+                <p id="confirmMessage">
+                    Are you sure you want to continue?
+                </p>
+
+            </div>
+
+
+            <div class="modal-footer">
+
+                <button type="button" id="confirmCancel" class="button button-secondary">
+                    Cancel
+                </button>
+
+                <button type="button" id="confirmProceed" class="button button-danger">
+                    Continue
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         GLOBAL SCRIPTS
+    ========================================================== -->
+
+    <script src="/js/api.js"></script>
+
+    <script src="/js/auth.js"></script>
+
+    <script src="/js/app.js"></script>
+
+
+</body>
+
+</html>

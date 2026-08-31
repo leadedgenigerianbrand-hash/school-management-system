@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Staff Management | School Management System</title>
+
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+
+    <div class="page-container">
+
+        <!-- PAGE HEADER -->
+
+        <div class="page-header">
+
+            <div>
+                <h1>Staff Management</h1>
+
+                <p>
+                    Manage teachers, administrators and other school staff.
+                </p>
+            </div>
+
+            <button type="button" class="btn btn-primary" id="addStaffButton">
+                + Add Staff
+            </button>
+
+        </div>
+
+
+        <!-- STATISTICS -->
+
+        <div class="stats-grid">
+
+            <div class="stat-card">
+                <span>Total Staff</span>
+                <strong id="totalStaff">0</strong>
+            </div>
+
+            <div class="stat-card">
+                <span>Active Staff</span>
+                <strong id="activeStaff">0</strong>
+            </div>
+
+            <div class="stat-card">
+                <span>Teachers</span>
+                <strong id="teacherCount">0</strong>
+            </div>
+
+            <div class="stat-card">
+                <span>Departments</span>
+                <strong id="departmentCount">0</strong>
+            </div>
+
+        </div>
+
+
+        <!-- STAFF TABLE -->
+
+        <div class="content-card">
+
+            <div class="toolbar">
+
+                <input type="search" id="searchInput" placeholder="Search staff name, number, phone or email...">
+
+
+                <select id="statusFilter">
+
+                    <option value="">
+                        All Statuses
+                    </option>
+
+                    <option value="active">
+                        Active
+                    </option>
+
+                    <option value="inactive">
+                        Inactive
+                    </option>
+
+                </select>
+
+
+                <select id="staffTypeFilter">
+
+                    <option value="">
+                        All Staff Types
+                    </option>
+
+                    <option value="teacher">
+                        Teacher
+                    </option>
+
+                    <option value="administrator">
+                        Administrator
+                    </option>
+
+                    <option value="accountant">
+                        Accountant
+                    </option>
+
+                    <option value="librarian">
+                        Librarian
+                    </option>
+
+                    <option value="support">
+                        Support Staff
+                    </option>
+
+                    <option value="other">
+                        Other
+                    </option>
+
+                </select>
+
+
+                <button type="button" class="btn btn-secondary" id="refreshButton">
+                    Refresh
+                </button>
+
+            </div>
+
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Staff No.</th>
+
+                            <th>Name</th>
+
+                            <th>Gender</th>
+
+                            <th>Staff Type</th>
+
+                            <th>Department</th>
+
+                            <th>Phone</th>
+
+                            <th>Email</th>
+
+                            <th>Status</th>
+
+                            <th>Actions</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="staffTableBody">
+
+                        <tr>
+
+                            <td colspan="9" class="empty-message">
+                                Loading staff...
+
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- STAFF MODAL -->
+
+    <div id="staffModal" class="modal" hidden>
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h2 id="staffModalTitle">
+                    Add Staff
+                </h2>
+
+
+                <button type="button" class="close-button" id="closeStaffModal">
+                    ×
+                </button>
+
+            </div>
+
+
+            <form id="staffForm">
+
+                <input type="hidden" id="staffId">
+
+
+                <div class="form-grid">
+
+                    <!-- STAFF NUMBER -->
+
+                    <div class="form-group">
+
+                        <label for="staffNumber">
+                            Staff Number
+                        </label>
+
+                        <input type="text" id="staffNumber" placeholder="e.g. STF001" required>
+
+                    </div>
+
+
+                    <!-- FIRST NAME -->
+
+                    <div class="form-group">
+
+                        <label for="firstName">
+                            First Name
+                        </label>
+
+                        <input type="text" id="firstName" required>
+
+                    </div>
+
+
+                    <!-- MIDDLE NAME -->
+
+                    <div class="form-group">
+
+                        <label for="middleName">
+                            Middle Name
+                        </label>
+
+                        <input type="text" id="middleName">
+
+                    </div>
+
+
+                    <!-- LAST NAME -->
+
+                    <div class="form-group">
+
+                        <label for="lastName">
+                            Last Name
+                        </label>
+
+                        <input type="text" id="lastName" required>
+
+                    </div>
+
+
+                    <!-- GENDER -->
+
+                    <div class="form-group">
+
+                        <label for="gender">
+                            Gender
+                        </label>
+
+                        <select id="gender">
+
+                            <option value="">
+                                Select Gender
+                            </option>
+
+                            <option value="male">
+                                Male
+                            </option>
+
+                            <option value="female">
+                                Female
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- DATE OF BIRTH -->
+
+                    <div class="form-group">
+
+                        <label for="dateOfBirth">
+                            Date of Birth
+                        </label>
+
+                        <input type="date" id="dateOfBirth">
+
+                    </div>
+
+
+                    <!-- STAFF TYPE -->
+
+                    <div class="form-group">
+
+                        <label for="staffType">
+                            Staff Type
+                        </label>
+
+                        <select id="staffType" required>
+
+                            <option value="">
+                                Select Staff Type
+                            </option>
+
+                            <option value="teacher">
+                                Teacher
+                            </option>
+
+                            <option value="administrator">
+                                Administrator
+                            </option>
+
+                            <option value="accountant">
+                                Accountant
+                            </option>
+
+                            <option value="librarian">
+                                Librarian
+                            </option>
+
+                            <option value="support">
+                                Support Staff
+                            </option>
+
+                            <option value="other">
+                                Other
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- DEPARTMENT -->
+
+                    <div class="form-group">
+
+                        <label for="departmentId">
+                            Department ID
+                        </label>
+
+                        <input type="number" id="departmentId" placeholder="Department ID">
+
+                    </div>
+
+
+                    <!-- PHONE -->
+
+                    <div class="form-group">
+
+                        <label for="phone">
+                            Phone Number
+                        </label>
+
+                        <input type="tel" id="phone" placeholder="08012345678">
+
+                    </div>
+
+
+                    <!-- EMAIL -->
+
+                    <div class="form-group">
+
+                        <label for="email">
+                            Email Address
+                        </label>
+
+                        <input type="email" id="email" placeholder="staff@example.com">
+
+                    </div>
+
+
+                    <!-- EMPLOYMENT DATE -->
+
+                    <div class="form-group">
+
+                        <label for="employmentDate">
+                            Employment Date
+                        </label>
+
+                        <input type="date" id="employmentDate">
+
+                    </div>
+
+
+                    <!-- QUALIFICATION -->
+
+                    <div class="form-group">
+
+                        <label for="qualification">
+                            Qualification
+                        </label>
+
+                        <input type="text" id="qualification" placeholder="e.g. B.Ed">
+
+                    </div>
+
+
+                    <!-- STATUS -->
+
+                    <div class="form-group">
+
+                        <label for="status">
+                            Status
+                        </label>
+
+                        <select id="status">
+
+                            <option value="active">
+                                Active
+                            </option>
+
+                            <option value="inactive">
+                                Inactive
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- ADDRESS -->
+
+                    <div class="form-group full-width">
+
+                        <label for="address">
+                            Address
+                        </label>
+
+                        <textarea id="address" rows="3" placeholder="Staff residential address"></textarea>
+
+                    </div>
+
+
+                    <!-- NOTES -->
+
+                    <div class="form-group full-width">
+
+                        <label for="notes">
+                            Notes
+                        </label>
+
+                        <textarea id="notes" rows="3" placeholder="Additional information"></textarea>
+
+                    </div>
+
+                </div>
+
+
+                <!-- FORM ACTIONS -->
+
+                <div class="form-actions">
+
+                    <button type="button" class="btn btn-secondary" id="cancelStaffButton">
+                        Cancel
+                    </button>
+
+
+                    <button type="submit" class="btn btn-primary">
+                        Save Staff
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- PAGE STYLES -->
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f7fb;
+            color: #1f2937;
+        }
+
+
+        .page-container {
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 25px;
+        }
+
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+
+        .page-header h1 {
+            margin: 0 0 8px;
+            font-size: 28px;
+        }
+
+
+        .page-header p {
+            margin: 0;
+            color: #6b7280;
+        }
+
+
+        .btn {
+            border: none;
+            border-radius: 6px;
+            padding: 11px 17px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+
+        .btn-primary {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+
+        .btn-secondary {
+            background: #6b7280;
+            color: #ffffff;
+        }
+
+
+        .btn-danger {
+            background: #dc2626;
+            color: #ffffff;
+        }
+
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+
+        .stat-card {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow:
+                0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+
+        .stat-card span {
+            display: block;
+            margin-bottom: 10px;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+
+        .stat-card strong {
+            font-size: 25px;
+        }
+
+
+        .content-card {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow:
+                0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+
+        .toolbar input,
+        .toolbar select {
+            padding: 11px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+
+        .toolbar input {
+            flex: 1;
+            min-width: 250px;
+        }
+
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+
+        table {
+            width: 100%;
+            min-width: 1100px;
+            border-collapse: collapse;
+        }
+
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+
+
+        th {
+            background: #f9fafb;
+            font-size: 13px;
+        }
+
+
+        .empty-message {
+            text-align: center;
+            padding: 30px;
+            color: #6b7280;
+        }
+
+
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+
+        .status-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+
+        .status-inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+
+        .modal[hidden] {
+            display: none;
+        }
+
+
+        .modal-content {
+            width: 100%;
+            max-width: 750px;
+            max-height: 90vh;
+            overflow-y: auto;
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 25px;
+        }
+
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+
+        .modal-header h2 {
+            margin: 0;
+        }
+
+
+        .close-button {
+            border: none;
+            background: transparent;
+            color: #374151;
+            font-size: 28px;
+            cursor: pointer;
+        }
+
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+
+        .form-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+        }
+
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #2563eb;
+            box-shadow:
+                0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+
+        .form-group textarea {
+            resize: vertical;
+        }
+
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+
+        .action-button {
+            border: none;
+            border-radius: 5px;
+            padding: 7px 10px;
+            cursor: pointer;
+            margin-right: 5px;
+            font-size: 12px;
+        }
+
+
+        .edit-button {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+
+        .delete-button {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+
+        @media (max-width: 900px) {
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+        }
+
+
+        @media (max-width: 600px) {
+
+            .page-container {
+                padding: 15px;
+            }
+
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+
+            .form-group.full-width {
+                grid-column: auto;
+            }
+
+        }
+    </style>
+
+
+    <!-- STAFF JAVASCRIPT -->
+
+    <script src="../js/staff.js"></script>
+
+</body>
+
+</html>

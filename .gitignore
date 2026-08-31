@@ -1,0 +1,62 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.*
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Build output
+dist/
+build/
+
+# Uploaded files
+uploads/students/*
+uploads/staff/*
+uploads/documents/*
+
+# Keep upload folders
+!uploads/students/.gitkeep
+!uploads/staff/.gitkeep
+!uploads/documents/.gitkeep
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# VS Code local settings
+.vscode/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# PostgreSQL local dumps/backups
+*.sql.backup
+*.dump
+*.backup
+
+# Generated reports
+reports/generated/
+
+# Test coverage
+.nyc_output/

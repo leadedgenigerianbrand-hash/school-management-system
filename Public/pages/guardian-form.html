@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Guardian Form | School Management System</title>
+
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f6f9;
+            color: #1f2937;
+        }
+
+        .page-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 30px 20px 50px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .page-header h1 {
+            margin: 0 0 6px;
+            font-size: 28px;
+        }
+
+        .page-header p {
+            margin: 0;
+            color: #6b7280;
+        }
+
+        .back-button {
+            text-decoration: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            background: #6b7280;
+            color: white;
+            font-size: 14px;
+        }
+
+        .back-button:hover {
+            background: #4b5563;
+        }
+
+        .form-card {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            margin: 0 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 19px;
+            color: #111827;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            margin-bottom: 7px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #374151;
+        }
+
+        label .required {
+            color: #dc2626;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #ffffff;
+            color: #111827;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .help-text {
+            margin-top: 5px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 6px;
+            padding: 11px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .message {
+            display: none;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .message.success {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .message.error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .loading {
+            display: none;
+            margin-bottom: 20px;
+            padding: 12px;
+            text-align: center;
+            color: #4b5563;
+            background: #f9fafb;
+            border-radius: 6px;
+        }
+
+        @media (max-width: 700px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .form-card {
+                padding: 20px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group.full-width {
+                grid-column: auto;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="page-container">
+
+        <div class="page-header">
+            <div>
+                <h1 id="pageTitle">Add Guardian</h1>
+                <p id="pageSubtitle">
+                    Add a parent or guardian to the school management system.
+                </p>
+            </div>
+
+            <a href="guardians.html" class="back-button">
+                Back to Guardians
+            </a>
+        </div>
+
+
+        <div id="message" class="message"></div>
+
+        <div id="loading" class="loading">
+            Loading guardian information...
+        </div>
+
+
+        <form id="guardianForm" class="form-card">
+
+            <!-- BASIC INFORMATION -->
+
+            <div class="section">
+
+                <h2 class="section-title">
+                    Guardian Information
+                </h2>
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+
+                        <label for="firstName">
+                            First Name <span class="required">*</span>
+                        </label>
+
+                        <input type="text" id="firstName" name="firstName" placeholder="Enter first name" required>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="lastName">
+                            Last Name <span class="required">*</span>
+                        </label>
+
+                        <input type="text" id="lastName" name="lastName" placeholder="Enter last name" required>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="otherName">
+                            Other Name
+                        </label>
+
+                        <input type="text" id="otherName" name="otherName" placeholder="Enter other name">
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="relationship">
+                            Relationship <span class="required">*</span>
+                        </label>
+
+                        <select id="relationship" name="relationship" required>
+
+                            <option value="">
+                                Select relationship
+                            </option>
+
+                            <option value="Father">
+                                Father
+                            </option>
+
+                            <option value="Mother">
+                                Mother
+                            </option>
+
+                            <option value="Guardian">
+                                Guardian
+                            </option>
+
+                            <option value="Grandfather">
+                                Grandfather
+                            </option>
+
+                            <option value="Grandmother">
+                                Grandmother
+                            </option>
+
+                            <option value="Uncle">
+                                Uncle
+                            </option>
+
+                            <option value="Aunt">
+                                Aunt
+                            </option>
+
+                            <option value="Brother">
+                                Brother
+                            </option>
+
+                            <option value="Sister">
+                                Sister
+                            </option>
+
+                            <option value="Other">
+                                Other
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="occupation">
+                            Occupation
+                        </label>
+
+                        <input type="text" id="occupation" name="occupation" placeholder="Enter occupation">
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="nationalId">
+                            National ID
+                        </label>
+
+                        <input type="text" id="nationalId" name="nationalId" placeholder="Enter national ID">
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- CONTACT INFORMATION -->
+
+            <div class="section">
+
+                <h2 class="section-title">
+                    Contact Information
+                </h2>
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+
+                        <label for="phone">
+                            Phone Number <span class="required">*</span>
+                        </label>
+
+                        <input type="tel" id="phone" name="phone" placeholder="e.g. 08012345678" required>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="alternativePhone">
+                            Alternative Phone
+                        </label>
+
+                        <input type="tel" id="alternativePhone" name="alternativePhone"
+                            placeholder="Enter alternative phone">
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="email">
+                            Email Address
+                        </label>
+
+                        <input type="email" id="email" name="email" placeholder="guardian@example.com">
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="preferredContact">
+                            Preferred Contact Method
+                        </label>
+
+                        <select id="preferredContact" name="preferredContact">
+
+                            <option value="">
+                                Select method
+                            </option>
+
+                            <option value="phone">
+                                Phone
+                            </option>
+
+                            <option value="email">
+                                Email
+                            </option>
+
+                            <option value="sms">
+                                SMS
+                            </option>
+
+                            <option value="whatsapp">
+                                WhatsApp
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ADDRESS -->
+
+            <div class="section">
+
+                <h2 class="section-title">
+                    Address
+                </h2>
+
+                <div class="form-grid">
+
+                    <div class="form-group full-width">
+
+                        <label for="address">
+                            Address
+                        </label>
+
+                        <textarea id="address" name="address" placeholder="Enter residential address"></textarea>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="city">
+                            City
+                        </label>
+
+                        <input type="text" id="city" name="city" placeholder="Enter city">
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="state">
+                            State
+                        </label>
+
+                        <input type="text" id="state" name="state" placeholder="Enter state">
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="country">
+                            Country
+                        </label>
+
+                        <input type="text" id="country" name="country" value="Nigeria">
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- STATUS -->
+
+            <div class="section">
+
+                <h2 class="section-title">
+                    Account Status
+                </h2>
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+
+                        <label for="status">
+                            Status
+                        </label>
+
+                        <select id="status" name="status">
+
+                            <option value="active">
+                                Active
+                            </option>
+
+                            <option value="inactive">
+                                Inactive
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-group full-width">
+
+                        <label for="notes">
+                            Notes
+                        </label>
+
+                        <textarea id="notes" name="notes"
+                            placeholder="Additional information about the guardian"></textarea>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ACTIONS -->
+
+            <div class="form-actions">
+
+                <button type="button" class="btn btn-secondary" id="cancelButton">
+                    Cancel
+                </button>
+
+                <button type="submit" class="btn btn-primary" id="submitButton">
+                    Save Guardian
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+
+    <script>
+
+        const API_BASE = "/api/guardians";
+
+        const form =
+            document.getElementById("guardianForm");
+
+        const message =
+            document.getElementById("message");
+
+        const loading =
+            document.getElementById("loading");
+
+        const submitButton =
+            document.getElementById("submitButton");
+
+        const cancelButton =
+            document.getElementById("cancelButton");
+
+
+        const params =
+            new URLSearchParams(window.location.search);
+
+        const guardianId =
+            params.get("id");
+
+
+        function showMessage(
+            text,
+            type = "success"
+        ) {
+
+            message.textContent = text;
+
+            message.className =
+                "message " + type;
+
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+        }
+
+
+        function clearMessage() {
+
+            message.textContent = "";
+
+            message.className =
+                "message";
+
+        }
+
+
+        function setLoading(
+            state
+        ) {
+
+            loading.style.display =
+                state ? "block" : "none";
+
+            submitButton.disabled =
+                state;
+
+        }
+
+
+        function getToken() {
+
+            return (
+                localStorage.getItem("token") ||
+
+                localStorage.getItem("accessToken") ||
+
+                sessionStorage.getItem("token") ||
+
+                sessionStorage.getItem("accessToken") ||
+
+                ""
+            );
+
+        }
+
+
+        function getHeaders() {
+
+            const headers = {
+
+                "Content-Type":
+                    "application/json"
+
+            };
+
+
+            const token =
+                getToken();
+
+
+            if (token) {
+
+                headers.Authorization =
+                    `Bearer ${token}`;
+
+            }
+
+
+            return headers;
+
+        }
+
+
+        function getInputValue(
+            id
+        ) {
+
+            const element =
+                document.getElementById(id);
+
+            return element
+                ? element.value.trim()
+                : "";
+
+        }
+
+
+        function setInputValue(
+            id,
+            value
+        ) {
+
+            const element =
+                document.getElementById(id);
+
+            if (element) {
+
+                element.value =
+                    value ?? "";
+
+            }
+
+        }
+
+
+        async function loadGuardian() {
+
+            if (!guardianId) {
+
+                return;
+
+            }
+
+
+            document.getElementById(
+                "pageTitle"
+            ).textContent =
+                "Edit Guardian";
+
+
+            document.getElementById(
+                "pageSubtitle"
+            ).textContent =
+                "Update guardian information.";
+
+
+            submitButton.textContent =
+                "Update Guardian";
+
+
+            setLoading(true);
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        `${API_BASE}/${guardianId}`,
+                        {
+                            method: "GET",
+                            headers: getHeaders()
+                        }
+                    );
+
+
+                const result =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        result.message ||
+                        "Unable to load guardian."
+                    );
+
+                }
+
+
+                const guardian =
+                    result.data ||
+                    result.guardian ||
+                    result;
+
+
+                setInputValue(
+                    "firstName",
+                    guardian.first_name ??
+                    guardian.firstName
+                );
+
+
+                setInputValue(
+                    "lastName",
+                    guardian.last_name ??
+                    guardian.lastName
+                );
+
+
+                setInputValue(
+                    "otherName",
+                    guardian.other_name ??
+                    guardian.otherName
+                );
+
+
+                setInputValue(
+                    "relationship",
+                    guardian.relationship
+                );
+
+
+                setInputValue(
+                    "occupation",
+                    guardian.occupation
+                );
+
+
+                setInputValue(
+                    "nationalId",
+                    guardian.national_id ??
+                    guardian.nationalId
+                );
+
+
+                setInputValue(
+                    "phone",
+                    guardian.phone
+                );
+
+
+                setInputValue(
+                    "alternativePhone",
+                    guardian.alternative_phone ??
+                    guardian.alternativePhone
+                );
+
+
+                setInputValue(
+                    "email",
+                    guardian.email
+                );
+
+
+                setInputValue(
+                    "preferredContact",
+                    guardian.preferred_contact ??
+                    guardian.preferredContact
+                );
+
+
+                setInputValue(
+                    "address",
+                    guardian.address
+                );
+
+
+                setInputValue(
+                    "city",
+                    guardian.city
+                );
+
+
+                setInputValue(
+                    "state",
+                    guardian.state
+                );
+
+
+                setInputValue(
+                    "country",
+                    guardian.country ||
+                    "Nigeria"
+                );
+
+
+                setInputValue(
+                    "status",
+                    guardian.status ||
+                    "active"
+                );
+
+
+                setInputValue(
+                    "notes",
+                    guardian.notes
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "Load guardian error:",
+                    error
+                );
+
+
+                showMessage(
+                    error.message ||
+                    "Unable to load guardian.",
+                    "error"
+                );
+
+
+            } finally {
+
+                setLoading(false);
+
+            }
+
+        }
+
+
+        function buildPayload() {
+
+            return {
+
+                firstName:
+                    getInputValue("firstName"),
+
+                lastName:
+                    getInputValue("lastName"),
+
+                otherName:
+                    getInputValue("otherName") ||
+                    null,
+
+                relationship:
+                    getInputValue("relationship"),
+
+                occupation:
+                    getInputValue("occupation") ||
+                    null,
+
+                nationalId:
+                    getInputValue("nationalId") ||
+                    null,
+
+                phone:
+                    getInputValue("phone"),
+
+                alternativePhone:
+                    getInputValue("alternativePhone") ||
+                    null,
+
+                email:
+                    getInputValue("email") ||
+                    null,
+
+                preferredContact:
+                    getInputValue("preferredContact") ||
+                    null,
+
+                address:
+                    getInputValue("address") ||
+                    null,
+
+                city:
+                    getInputValue("city") ||
+                    null,
+
+                state:
+                    getInputValue("state") ||
+                    null,
+
+                country:
+                    getInputValue("country") ||
+                    "Nigeria",
+
+                status:
+                    getInputValue("status") ||
+                    "active",
+
+                notes:
+                    getInputValue("notes") ||
+                    null
+
+            };
+
+        }
+
+
+        form.addEventListener(
+            "submit",
+            async function (event) {
+
+                event.preventDefault();
+
+                clearMessage();
+
+
+                const payload =
+                    buildPayload();
+
+
+                if (
+                    !payload.firstName ||
+                    !payload.lastName
+                ) {
+
+                    showMessage(
+                        "First name and last name are required.",
+                        "error"
+                    );
+
+                    return;
+
+                }
+
+
+                if (!payload.relationship) {
+
+                    showMessage(
+                        "Please select the guardian relationship.",
+                        "error"
+                    );
+
+                    return;
+
+                }
+
+
+                if (!payload.phone) {
+
+                    showMessage(
+                        "Phone number is required.",
+                        "error"
+                    );
+
+                    return;
+
+                }
+
+
+                const isEditing =
+                    Boolean(guardianId);
+
+
+                const url =
+                    isEditing
+                        ? `${API_BASE}/${guardianId}`
+                        : API_BASE;
+
+
+                const method =
+                    isEditing
+                        ? "PUT"
+                        : "POST";
+
+
+                submitButton.disabled =
+                    true;
+
+
+                submitButton.textContent =
+                    isEditing
+                        ? "Updating..."
+                        : "Saving...";
+
+
+                try {
+
+                    const response =
+                        await fetch(
+                            url,
+                            {
+                                method,
+                                headers: getHeaders(),
+                                body:
+                                    JSON.stringify(
+                                        payload
+                                    )
+                            }
+                        );
+
+
+                    const result =
+                        await response.json();
+
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            result.message ||
+                            "Unable to save guardian."
+                        );
+
+                    }
+
+
+                    showMessage(
+                        result.message ||
+                        (
+                            isEditing
+                                ? "Guardian updated successfully."
+                                : "Guardian created successfully."
+                        ),
+                        "success"
+                    );
+
+
+                    if (!isEditing) {
+
+                        form.reset();
+
+                        setInputValue(
+                            "country",
+                            "Nigeria"
+                        );
+
+                        setInputValue(
+                            "status",
+                            "active"
+                        );
+
+
+                        setTimeout(
+                            function () {
+
+                                window.location.href =
+                                    "guardians.html";
+
+                            },
+                            1200
+                        );
+
+                    } else {
+
+                        setTimeout(
+                            function () {
+
+                                window.location.href =
+                                    "guardians.html";
+
+                            },
+                            1200
+                        );
+
+                    }
+
+
+                } catch (error) {
+
+                    console.error(
+                        "Save guardian error:",
+                        error
+                    );
+
+
+                    showMessage(
+                        error.message ||
+                        "Unable to save guardian.",
+                        "error"
+                    );
+
+
+                } finally {
+
+                    submitButton.disabled =
+                        false;
+
+
+                    submitButton.textContent =
+                        isEditing
+                            ? "Update Guardian"
+                            : "Save Guardian";
+
+                }
+
+            }
+        );
+
+
+        cancelButton.addEventListener(
+            "click",
+            function () {
+
+                window.location.href =
+                    "guardians.html";
+
+            }
+        );
+
+
+        loadGuardian();
+
+    </script>
+
+</body>
+
+</html>

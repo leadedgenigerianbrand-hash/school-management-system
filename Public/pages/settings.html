@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Settings | School Management System</title>
+
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f7fb;
+            color: #1f2937;
+        }
+
+        .page-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 25px;
+        }
+
+        .page-header {
+            margin-bottom: 25px;
+        }
+
+        .page-header h1 {
+            margin: 0 0 8px;
+            font-size: 28px;
+        }
+
+        .page-header p {
+            margin: 0;
+            color: #6b7280;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: 20px;
+        }
+
+        .settings-menu,
+        .settings-content {
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .settings-menu {
+            padding: 10px;
+            height: fit-content;
+        }
+
+        .settings-tab {
+            width: 100%;
+            border: none;
+            background: transparent;
+            text-align: left;
+            padding: 12px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #374151;
+            margin-bottom: 4px;
+        }
+
+        .settings-tab:hover {
+            background: #f3f4f6;
+        }
+
+        .settings-tab.active {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .settings-content {
+            padding: 25px;
+        }
+
+        .settings-section {
+            display: none;
+        }
+
+        .settings-section.active {
+            display: block;
+        }
+
+        .section-header {
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 15px;
+            margin-bottom: 22px;
+        }
+
+        .section-header h2 {
+            margin: 0 0 7px;
+            font-size: 21px;
+        }
+
+        .section-header p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 0;
+        }
+
+        .checkbox-row input {
+            width: auto;
+        }
+
+        .checkbox-row label {
+            font-size: 14px;
+            color: #374151;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 6px;
+            padding: 11px 17px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: #ffffff;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: #ffffff;
+        }
+
+        .message {
+            display: none;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .message.success {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .message.error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .danger-zone {
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 25px;
+            background: #fffafa;
+        }
+
+        .danger-zone h3 {
+            margin: 0 0 8px;
+            color: #991b1b;
+        }
+
+        .danger-zone p {
+            color: #6b7280;
+            font-size: 14px;
+            margin: 0 0 15px;
+        }
+
+        @media (max-width: 800px) {
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .settings-menu {
+                display: flex;
+                overflow-x: auto;
+                gap: 5px;
+            }
+
+            .settings-tab {
+                min-width: max-content;
+                width: auto;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .page-container {
+                padding: 15px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group.full-width {
+                grid-column: auto;
+            }
+
+            .settings-content {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="page-container">
+
+        <div class="page-header">
+            <h1>Settings</h1>
+            <p>Manage your school system configuration and preferences.</p>
+        </div>
+
+
+        <div id="settingsMessage" class="message"></div>
+
+
+        <div class="settings-grid">
+
+            <!-- SETTINGS MENU -->
+
+            <div class="settings-menu">
+
+                <button type="button" class="settings-tab active" data-section="school">
+                    School Information
+                </button>
+
+                <button type="button" class="settings-tab" data-section="academic">
+                    Academic Settings
+                </button>
+
+                <button type="button" class="settings-tab" data-section="notifications">
+                    Notifications
+                </button>
+
+                <button type="button" class="settings-tab" data-section="security">
+                    Security
+                </button>
+
+            </div>
+
+
+            <!-- SETTINGS CONTENT -->
+
+            <div class="settings-content">
+
+
+                <!-- SCHOOL INFORMATION -->
+
+                <section id="school" class="settings-section active">
+
+                    <div class="section-header">
+
+                        <h2>School Information</h2>
+
+                        <p>
+                            Update your school's basic information.
+                        </p>
+
+                    </div>
+
+
+                    <form id="schoolSettingsForm">
+
+                        <div class="form-grid">
+
+                            <div class="form-group full-width">
+
+                                <label for="schoolName">
+                                    School Name
+                                </label>
+
+                                <input type="text" id="schoolName" name="schoolName" placeholder="Enter school name">
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="schoolCode">
+                                    School Code
+                                </label>
+
+                                <input type="text" id="schoolCode" name="schoolCode" placeholder="e.g. SCH001">
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="schoolEmail">
+                                    School Email
+                                </label>
+
+                                <input type="email" id="schoolEmail" name="schoolEmail"
+                                    placeholder="school@example.com">
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="schoolPhone">
+                                    Phone Number
+                                </label>
+
+                                <input type="tel" id="schoolPhone" name="schoolPhone" placeholder="School phone number">
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="schoolWebsite">
+                                    Website
+                                </label>
+
+                                <input type="url" id="schoolWebsite" name="schoolWebsite"
+                                    placeholder="https://example.com">
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="schoolAddress">
+                                    Address
+                                </label>
+
+                                <textarea id="schoolAddress" name="schoolAddress"
+                                    placeholder="School address"></textarea>
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="schoolState">
+                                    State
+                                </label>
+
+                                <select id="schoolState" name="schoolState">
+
+                                    <option value="">
+                                        Select State
+                                    </option>
+
+                                    <option value="Abia">Abia</option>
+                                    <option value="Adamawa">Adamawa</option>
+                                    <option value="Akwa Ibom">Akwa Ibom</option>
+                                    <option value="Anambra">Anambra</option>
+                                    <option value="Bauchi">Bauchi</option>
+                                    <option value="Bayelsa">Bayelsa</option>
+                                    <option value="Benue">Benue</option>
+                                    <option value="Borno">Borno</option>
+                                    <option value="Cross River">Cross River</option>
+                                    <option value="Delta">Delta</option>
+                                    <option value="Ebonyi">Ebonyi</option>
+                                    <option value="Edo">Edo</option>
+                                    <option value="Ekiti">Ekiti</option>
+                                    <option value="Enugu">Enugu</option>
+                                    <option value="Gombe">Gombe</option>
+                                    <option value="Imo">Imo</option>
+                                    <option value="Jigawa">Jigawa</option>
+                                    <option value="Kaduna">Kaduna</option>
+                                    <option value="Kano">Kano</option>
+                                    <option value="Katsina">Katsina</option>
+                                    <option value="Kebbi">Kebbi</option>
+                                    <option value="Kogi">Kogi</option>
+                                    <option value="Kwara">Kwara</option>
+                                    <option value="Lagos">Lagos</option>
+                                    <option value="Nasarawa">Nasarawa</option>
+                                    <option value="Niger">Niger</option>
+                                    <option value="Ogun">Ogun</option>
+                                    <option value="Ondo">Ondo</option>
+                                    <option value="Osun">Osun</option>
+                                    <option value="Oyo">Oyo</option>
+                                    <option value="Plateau">Plateau</option>
+                                    <option value="Rivers">Rivers</option>
+                                    <option value="Sokoto">Sokoto</option>
+                                    <option value="Taraba">Taraba</option>
+                                    <option value="Yobe">Yobe</option>
+                                    <option value="Zamfara">Zamfara</option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="form-actions">
+
+                            <button type="button" class="btn btn-secondary" id="resetSchoolButton">
+                                Reset
+                            </button>
+
+                            <button type="submit" class="btn btn-primary">
+                                Save Changes
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </section>
+
+
+                <!-- ACADEMIC SETTINGS -->
+
+                <section id="academic" class="settings-section">
+
+                    <div class="section-header">
+
+                        <h2>Academic Settings</h2>
+
+                        <p>
+                            Configure the academic structure of your school.
+                        </p>
+
+                    </div>
+
+
+                    <form id="academicSettingsForm">
+
+                        <div class="form-grid">
+
+                            <div class="form-group">
+
+                                <label for="currentSession">
+                                    Current Academic Session
+                                </label>
+
+                                <input type="text" id="currentSession" placeholder="2026/2027">
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="currentTerm">
+                                    Current Term
+                                </label>
+
+                                <select id="currentTerm">
+
+                                    <option value="">
+                                        Select Term
+                                    </option>
+
+                                    <option value="First Term">
+                                        First Term
+                                    </option>
+
+                                    <option value="Second Term">
+                                        Second Term
+                                    </option>
+
+                                    <option value="Third Term">
+                                        Third Term
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="gradingSystem">
+                                    Grading System
+                                </label>
+
+                                <select id="gradingSystem">
+
+                                    <option value="standard">
+                                        Standard Nigerian Grading
+                                    </option>
+
+                                    <option value="custom">
+                                        Custom
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="passMark">
+                                    Pass Mark (%)
+                                </label>
+
+                                <input type="number" id="passMark" min="0" max="100" value="40">
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="form-actions">
+
+                            <button type="submit" class="btn btn-primary">
+                                Save Academic Settings
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </section>
+
+
+                <!-- NOTIFICATIONS -->
+
+                <section id="notifications" class="settings-section">
+
+                    <div class="section-header">
+
+                        <h2>Notification Settings</h2>
+
+                        <p>
+                            Choose which notifications the school system sends.
+                        </p>
+
+                    </div>
+
+
+                    <form id="notificationSettingsForm">
+
+                        <div class="checkbox-row">
+
+                            <input type="checkbox" id="notifyFees" checked>
+
+                            <label for="notifyFees">
+                                Send notifications for fee payments and outstanding fees.
+                            </label>
+
+                        </div>
+
+
+                        <div class="checkbox-row">
+
+                            <input type="checkbox" id="notifyResults" checked>
+
+                            <label for="notifyResults">
+                                Notify parents when student results are published.
+                            </label>
+
+                        </div>
+
+
+                        <div class="checkbox-row">
+
+                            <input type="checkbox" id="notifyAttendance" checked>
+
+                            <label for="notifyAttendance">
+                                Send student attendance notifications.
+                            </label>
+
+                        </div>
+
+
+                        <div class="checkbox-row">
+
+                            <input type="checkbox" id="notifyAnnouncements" checked>
+
+                            <label for="notifyAnnouncements">
+                                Send important school announcements.
+                            </label>
+
+                        </div>
+
+
+                        <div class="form-actions">
+
+                            <button type="submit" class="btn btn-primary">
+                                Save Notification Settings
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </section>
+
+
+                <!-- SECURITY -->
+
+                <section id="security" class="settings-section">
+
+                    <div class="section-header">
+
+                        <h2>Security</h2>
+
+                        <p>
+                            Manage account and system security preferences.
+                        </p>
+
+                    </div>
+
+
+                    <form id="securitySettingsForm">
+
+                        <div class="checkbox-row">
+
+                            <input type="checkbox" id="requireStrongPassword" checked>
+
+                            <label for="requireStrongPassword">
+                                Require strong passwords for user accounts.
+                            </label>
+
+                        </div>
+
+
+                        <div class="checkbox-row">
+
+                            <input type="checkbox" id="sessionTimeout" checked>
+
+                            <label for="sessionTimeout">
+                                Automatically sign users out after inactivity.
+                            </label>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="timeoutMinutes">
+                                Session Timeout (Minutes)
+                            </label>
+
+                            <input type="number" id="timeoutMinutes" min="5" value="30">
+
+                        </div>
+
+
+                        <div class="form-actions">
+
+                            <button type="submit" class="btn btn-primary">
+                                Save Security Settings
+                            </button>
+
+                        </div>
+
+                    </form>
+
+
+                    <div class="danger-zone">
+
+                        <h3>Danger Zone</h3>
+
+                        <p>
+                            These actions can affect your school system.
+                            Proceed carefully.
+                        </p>
+
+                        <button type="button" class="btn btn-danger" id="logoutButton">
+                            Sign Out
+                        </button>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <script src="../js/settings.js"></script>
+
+    <script>
+
+        const settingsTabs =
+            document.querySelectorAll(
+                ".settings-tab"
+            );
+
+        const settingsSections =
+            document.querySelectorAll(
+                ".settings-section"
+            );
+
+
+        settingsTabs.forEach(
+            function (tab) {
+
+                tab.addEventListener(
+                    "click",
+                    function () {
+
+                        const sectionId =
+                            tab.dataset.section;
+
+
+                        settingsTabs.forEach(
+                            function (item) {
+
+                                item.classList.remove(
+                                    "active"
+                                );
+
+                            }
+                        );
+
+
+                        settingsSections.forEach(
+                            function (section) {
+
+                                section.classList.remove(
+                                    "active"
+                                );
+
+                            }
+                        );
+
+
+                        tab.classList.add(
+                            "active"
+                        );
+
+
+                        const section =
+                            document.getElementById(
+                                sectionId
+                            );
+
+
+                        if (section) {
+
+                            section.classList.add(
+                                "active"
+                            );
+
+                        }
+
+                    }
+                );
+
+            }
+        );
+
+
+        const logoutButton =
+            document.getElementById(
+                "logoutButton"
+            );
+
+
+        if (logoutButton) {
+
+            logoutButton.addEventListener(
+                "click",
+                function () {
+
+                    const confirmed =
+                        window.confirm(
+                            "Are you sure you want to sign out?"
+                        );
+
+
+                    if (!confirmed) {
+                        return;
+                    }
+
+
+                    localStorage.removeItem(
+                        "token"
+                    );
+
+                    localStorage.removeItem(
+                        "accessToken"
+                    );
+
+                    localStorage.removeItem(
+                        "user"
+                    );
+
+
+                    window.location.href =
+                        "/pages/login.html";
+
+                }
+            );
+
+        }
+
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Student Fees | School Management System
+    </title>
+
+    <link rel="stylesheet" href="../css/style.css">
+
+    <link rel="stylesheet" href="../css/students.css">
+
+</head>
+
+
+<body>
+
+    <div class="page-container">
+
+
+        <div class="page-header">
+
+            <div>
+
+                <h1>
+                    Student Fees
+                </h1>
+
+                <p id="studentSubtitle">
+                    Loading student information...
+                </p>
+
+            </div>
+
+
+            <button type="button" class="btn btn-secondary" onclick="goBackToProfile()">
+                ← Student Profile
+            </button>
+
+        </div>
+
+
+        <div id="pageMessage" class="message"></div>
+
+
+        <!-- FINANCIAL SUMMARY -->
+
+        <div class="stats-grid">
+
+            <div class="stat-card">
+
+                <span>
+                    Total Fees
+                </span>
+
+                <strong id="totalFees">
+                    ₦0
+                </strong>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <span>
+                    Amount Paid
+                </span>
+
+                <strong id="amountPaid">
+                    ₦0
+                </strong>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <span>
+                    Balance
+                </span>
+
+                <strong id="balance">
+                    ₦0
+                </strong>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <span>
+                    Payment Status
+                </span>
+
+                <strong id="paymentStatus">
+                    —
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <!-- FEES -->
+
+        <div class="content-card">
+
+
+            <div class="toolbar">
+
+                <h2 style="margin:0;">
+                    Fee Records
+                </h2>
+
+
+                <button type="button" class="btn btn-secondary" id="refreshButton">
+                    Refresh
+                </button>
+
+            </div>
+
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>#</th>
+
+                            <th>Session</th>
+
+                            <th>Term</th>
+
+                            <th>Fee Type</th>
+
+                            <th>Amount</th>
+
+                            <th>Paid</th>
+
+                            <th>Balance</th>
+
+                            <th>Status</th>
+
+                            <th>Date</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="feesTableBody">
+
+                        <tr>
+
+                            <td colspan="9" class="loading-cell">
+                                Loading fee records...
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+
+
+    <script>
+
+        "use strict";
+
+
+        const studentId =
+            new URLSearchParams(
+                window.location.search
+            ).get("id");
+
+
+        const feesTableBody =
+            document.getElementById(
+                "feesTableBody"
+            );
+
+
+        const studentSubtitle =
+            document.getElementById(
+                "studentSubtitle"
+            );
+
+
+        const pageMessage =
+            document.getElementById(
+                "pageMessage"
+            );
+
+
+        function escapeHtml(value) {
+
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+
+        }
+
+
+        function showMessage(
+            message,
+            type = "error"
+        ) {
+
+            pageMessage.textContent =
+                message;
+
+            pageMessage.className =
+                "message " + type;
+
+        }
+
+
+        function formatMoney(value) {
+
+            const amount =
+                Number(value || 0);
+
+            return new Intl.NumberFormat(
+                "en-NG",
+                {
+                    style: "currency",
+                    currency: "NGN",
+                    minimumFractionDigits: 2
+                }
+            ).format(amount);
+
+        }
+
+
+        function formatDate(value) {
+
+            if (!value) {
+                return "—";
+            }
+
+            const date =
+                new Date(value);
+
+            if (
+                Number.isNaN(
+                    date.getTime()
+                )
+            ) {
+
+                return value;
+
+            }
+
+            return new Intl.DateTimeFormat(
+                "en-NG",
+                {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric"
+                }
+            ).format(date);
+
+        }
+
+
+        function statusClass(status) {
+
+            const value =
+                String(
+                    status || ""
+                ).toLowerCase();
+
+
+            if (
+                value === "paid" ||
+                value === "completed"
+            ) {
+
+                return "status status-active";
+
+            }
+
+
+            if (
+                value === "unpaid" ||
+                value === "overdue"
+            ) {
+
+                return "status status-inactive";
+
+            }
+
+
+            return "status status-pending";
+
+        }
+
+
+        async function loadStudent() {
+
+            if (!studentId) {
+
+                studentSubtitle.textContent =
+                    "Student ID was not provided.";
+
+                return;
+
+            }
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/students/" +
+                        encodeURIComponent(studentId)
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Unable to load student."
+                    );
+
+                }
+
+
+                const data =
+                    await response.json();
+
+
+                const student =
+                    data.student ||
+                    data.data ||
+                    data;
+
+
+                const name =
+                    student.name ||
+                    [
+                        student.first_name,
+                        student.middle_name,
+                        student.last_name
+                    ]
+                        .filter(Boolean)
+                        .join(" ");
+
+
+                studentSubtitle.textContent =
+                    name
+                        ? "Fee records for " + name
+                        : "Student fee records";
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                studentSubtitle.textContent =
+                    "Student fee records";
+
+            }
+
+        }
+
+
+        async function loadFees() {
+
+            if (!studentId) {
+
+                feesTableBody.innerHTML = `
+            <tr>
+                <td colspan="9" class="empty-cell">
+                    Student ID was not provided.
+                </td>
+            </tr>
+        `;
+
+                return;
+
+            }
+
+
+            feesTableBody.innerHTML = `
+        <tr>
+            <td colspan="9" class="loading-cell">
+                Loading fee records...
+            </td>
+        </tr>
+    `;
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/fees/student/" +
+                        encodeURIComponent(studentId)
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Unable to load fee records."
+                    );
+
+                }
+
+
+                const data =
+                    await response.json();
+
+
+                const records =
+                    Array.isArray(data)
+                        ? data
+                        : (
+                            data.fees ||
+                            data.data ||
+                            data.rows ||
+                            []
+                        );
+
+
+                renderFees(records);
+
+
+            } catch (error) {
+
+                console.error(
+                    "Fees error:",
+                    error
+                );
+
+
+                feesTableBody.innerHTML = `
+            <tr>
+                <td colspan="9" class="empty-cell">
+                    Unable to load fee records.
+                </td>
+            </tr>
+        `;
+
+
+                showMessage(
+                    error.message ||
+                    "Unable to load fee records.",
+                    "error"
+                );
+
+            }
+
+        }
+
+
+        function renderFees(records) {
+
+            let totalFees = 0;
+            let paid = 0;
+
+
+            records.forEach(
+                record => {
+
+                    totalFees += Number(
+                        record.amount ||
+                        record.total_amount ||
+                        record.totalAmount ||
+                        0
+                    );
+
+
+                    paid += Number(
+                        record.amount_paid ||
+                        record.amountPaid ||
+                        record.paid ||
+                        0
+                    );
+
+                }
+            );
+
+
+            const balance =
+                Math.max(
+                    0,
+                    totalFees - paid
+                );
+
+
+            document.getElementById(
+                "totalFees"
+            ).textContent =
+                formatMoney(totalFees);
+
+
+            document.getElementById(
+                "amountPaid"
+            ).textContent =
+                formatMoney(paid);
+
+
+            document.getElementById(
+                "balance"
+            ).textContent =
+                formatMoney(balance);
+
+
+            document.getElementById(
+                "paymentStatus"
+            ).textContent =
+                balance <= 0
+                    ? "Paid"
+                    : "Outstanding";
+
+
+            if (!records.length) {
+
+                feesTableBody.innerHTML = `
+            <tr>
+                <td colspan="9" class="empty-cell">
+                    No fee records found.
+                </td>
+            </tr>
+        `;
+
+                return;
+
+            }
+
+
+            feesTableBody.innerHTML =
+                records.map(
+                    (record, index) => {
+
+                        const amount =
+                            Number(
+                                record.amount ||
+                                record.total_amount ||
+                                record.totalAmount ||
+                                0
+                            );
+
+
+                        const amountPaid =
+                            Number(
+                                record.amount_paid ||
+                                record.amountPaid ||
+                                record.paid ||
+                                0
+                            );
+
+
+                        const recordBalance =
+                            Math.max(
+                                0,
+                                amount - amountPaid
+                            );
+
+
+                        const status =
+                            record.status ||
+                            (
+                                recordBalance <= 0
+                                    ? "Paid"
+                                    : "Outstanding"
+                            );
+
+
+                        return `
+                    <tr>
+
+                        <td>
+                            ${index + 1}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                            record.session_name ||
+                            record.sessionName ||
+                            record.session ||
+                            "—"
+                        )}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                            record.term_name ||
+                            record.termName ||
+                            record.term ||
+                            "—"
+                        )}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                            record.fee_type ||
+                            record.feeType ||
+                            record.type ||
+                            "School Fees"
+                        )}
+                        </td>
+
+                        <td>
+                            ${formatMoney(amount)}
+                        </td>
+
+                        <td>
+                            ${formatMoney(amountPaid)}
+                        </td>
+
+                        <td>
+                            ${formatMoney(recordBalance)}
+                        </td>
+
+                        <td>
+
+                            <span class="${statusClass(status)}">
+
+                                ${escapeHtml(status)}
+
+                            </span>
+
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                            formatDate(
+                                record.payment_date ||
+                                record.paymentDate ||
+                                record.date
+                            )
+                        )}
+                        </td>
+
+                    </tr>
+                `;
+
+                    }
+                )
+                    .join("");
+
+        }
+
+
+        function goBackToProfile() {
+
+            if (!studentId) {
+
+                window.location.href =
+                    "/pages/students.html";
+
+                return;
+
+            }
+
+
+            window.location.href =
+                "/pages/student-profile.html?id=" +
+                encodeURIComponent(studentId);
+
+        }
+
+
+        document
+            .getElementById("refreshButton")
+            .addEventListener(
+                "click",
+                loadFees
+            );
+
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            async function () {
+
+                if (
+                    typeof protectPage ===
+                    "function"
+                ) {
+
+                    await protectPage();
+
+                }
+
+                await loadStudent();
+
+                await loadFees();
+
+            }
+        );
+
+    </script>
+
+</body>
+
+</html>
