@@ -21,16 +21,8 @@ const PORT = process.env.PORT || 4000;
 
 /*
 |--------------------------------------------------------------------------
-| RENDER ADMIN SETUP
+| AUTOMATIC ADMINISTRATOR SETUP
 |--------------------------------------------------------------------------
-|
-| Creates or resets the main administrator account.
-|
-| Username: admin
-| Password: Admin@123
-|
-| This runs automatically when the server starts.
-|
 */
 
 async function setupAdministrator() {
@@ -61,13 +53,12 @@ async function setupAdministrator() {
         if (!schoolResult.rows.length) {
 
             throw new Error(
-                "No school exists in the database."
+                "No school exists in the Render database."
             );
 
         }
 
-        const school =
-            schoolResult.rows[0];
+        const school = schoolResult.rows[0];
 
 
         /*
@@ -88,18 +79,17 @@ async function setupAdministrator() {
         if (!roleResult.rows.length) {
 
             throw new Error(
-                "Administrator role does not exist."
+                "Administrator role does not exist in the Render database."
             );
 
         }
 
-        const role =
-            roleResult.rows[0];
+        const role = roleResult.rows[0];
 
 
         /*
         |--------------------------------------------------------------------------
-        | CREATE PASSWORD HASH
+        | CREATE SECURE PASSWORD HASH
         |--------------------------------------------------------------------------
         */
 
@@ -112,84 +102,83 @@ async function setupAdministrator() {
 
         /*
         |--------------------------------------------------------------------------
-        | CHECK ADMIN USER
+        | FIND EXISTING ADMIN
         |--------------------------------------------------------------------------
         */
 
-        const existingUser =
-            await query(`
-                SELECT
-                    id,
-                    username,
-                    email
-                FROM users
-                WHERE LOWER(username) = 'admin'
-                LIMIT 1
-            `);
+        const existingAdmin = await query(`
+            SELECT
+                id,
+                username,
+                email
+            FROM users
+            WHERE LOWER(username) = 'admin'
+            LIMIT 1
+        `);
 
 
         /*
         |--------------------------------------------------------------------------
-        | CREATE ADMIN IF IT DOES NOT EXIST
+        | CREATE ADMIN
         |--------------------------------------------------------------------------
         */
 
-        if (!existingUser.rows.length) {
+        if (!existingAdmin.rows.length) {
 
-            const created =
-                await query(`
-                    INSERT INTO users (
-                        school_id,
-                        role_id,
-                        first_name,
-                        last_name,
-                        email,
-                        username,
-                        password_hash,
-                        is_active
-                    )
+            const createdAdmin = await query(`
+                INSERT INTO users (
+                    school_id,
+                    role_id,
+                    first_name,
+                    last_name,
+                    email,
+                    username,
+                    password_hash,
+                    is_active
+                )
 
-                    VALUES (
-                        $1,
-                        $2,
-                        'System',
-                        'Administrator',
-                        'admin@leadedgecollege.local',
-                        'admin',
-                        $3,
-                        TRUE
-                    )
+                VALUES (
+                    $1,
+                    $2,
+                    'System',
+                    'Administrator',
+                    'admin@leadedgecollege.local',
+                    'admin',
+                    $3,
+                    TRUE
+                )
 
-                    RETURNING
-                        id,
-                        username,
-                        email,
-                        is_active
-                `,
-                [
-                    school.id,
-                    role.id,
-                    passwordHash
-                ]);
+                RETURNING
+                    id,
+                    username,
+                    email,
+                    is_active
+            `,
+            [
+                school.id,
+                role.id,
+                passwordHash
+            ]);
 
 
             console.log("");
             console.log("ADMINISTRATOR CREATED SUCCESSFULLY");
             console.log("----------------------------------------------");
             console.log(
-                `Username: ${created.rows[0].username}`
+                `Username: ${createdAdmin.rows[0].username}`
             );
             console.log(
                 "Password: Admin@123"
             );
             console.log(
-                `Email: ${created.rows[0].email}`
+                `Email: ${createdAdmin.rows[0].email}`
             );
             console.log(
                 "Status: ACTIVE"
             );
 
         }
+
 
         /*
         |--------------------------------------------------------------------------
@@ -200,7 +189,7 @@ async function setupAdministrator() {
         else {
 
             const adminId =
-                existingUser.rows[0].id;
+                existingAdmin.rows[0].id;
 
 
             await query(`
@@ -227,13 +216,13 @@ async function setupAdministrator() {
             console.log("ADMINISTRATOR ACCOUNT RESET SUCCESSFULLY");
             console.log("----------------------------------------------");
             console.log(
-                `Username: ${existingUser.rows[0].username}`
+                `Username: ${existingAdmin.rows[0].username}`
             );
             console.log(
                 "Password: Admin@123"
             );
             console.log(
-                `Email: ${existingUser.rows[0].email}`
+                `Email: ${existingAdmin.rows[0].email}`
             );
             console.log(
                 "Status: ACTIVE"
@@ -241,6 +230,12 @@ async function setupAdministrator() {
 
         }
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | FINAL CONFIRMATION
+        |--------------------------------------------------------------------------
+        */
 
         console.log("");
         console.log("SCHOOL:");
@@ -268,6 +263,8 @@ async function setupAdministrator() {
         console.log("==============================================");
         console.log("");
 
+        return true;
+
     } catch (error) {
 
         console.error("");
@@ -278,11 +275,7 @@ async function setupAdministrator() {
         console.error("==============================================");
         console.error("");
 
-        /*
-        |--------------------------------------------------------------------------
-        | Do not prevent the application from starting.
-        |--------------------------------------------------------------------------
-        */
+        throw error;
 
     }
 
@@ -583,7 +576,7 @@ app.get(
 
 /*
 |--------------------------------------------------------------------------
-| 404 API HANDLER
+| API 404
 |--------------------------------------------------------------------------
 */
 
@@ -606,7 +599,7 @@ app.use(
 
 /*
 |--------------------------------------------------------------------------
-| GENERAL ERROR HANDLER
+| ERROR HANDLER
 |--------------------------------------------------------------------------
 */
 
@@ -646,7 +639,7 @@ async function startServer() {
 
         /*
         |--------------------------------------------------------------------------
-        | Test PostgreSQL
+        | TEST DATABASE
         |--------------------------------------------------------------------------
         */
 
@@ -655,7 +648,7 @@ async function startServer() {
 
         /*
         |--------------------------------------------------------------------------
-        | Create/reset administrator
+        | CREATE / RESET ADMIN
         |--------------------------------------------------------------------------
         */
 
@@ -664,7 +657,7 @@ async function startServer() {
 
         /*
         |--------------------------------------------------------------------------
-        | Start Express
+        | START EXPRESS
         |--------------------------------------------------------------------------
         */
 
