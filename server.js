@@ -477,4 +477,164 @@ async function startServer() {
 |--------------------------------------------------------------------------
 */
 
+/*
+|--------------------------------------------------------------------------
+| TEMPORARY RENDER ADMIN SETUP
+|--------------------------------------------------------------------------
+*/
+
+app.get("/api/setup-render-admin", async (req, res) => {
+
+    try {
+
+        const bcrypt = require("bcryptjs");
+        const { query } = require("./config/database");
+
+        const passwordHash = await bcrypt.hash(
+            "Admin@123",
+            10
+        );
+
+        const schoolResult = await query(`
+            SELECT id
+            FROM schools
+            WHERE school_code = 'LMC001'
+            LIMIT 1
+        `);
+
+        if (!schoolResult.rows.length) {
+
+            return res.status(500).json({
+                success: false,
+                message: "School LMC001 does not exist in Render database."
+            });
+
+        }
+
+        const roleResult = await query(`
+            SELECT id
+            FROM roles
+            WHERE LOWER(role_name) = 'administrator'
+            LIMIT 1
+        `);
+
+        if (!roleResult.rows.length) {
+
+            return res.status(500).json({
+                success: false,
+                message: "Administrator role does not exist in Render database."
+            });
+
+        }
+
+        const existingUser = await query(`
+            SELECT id
+            FROM users
+            WHERE LOWER(username) = 'admin'
+            LIMIT 1
+        `);
+
+        let result;
+
+        if (existingUser.rows.length) {
+
+            result = await query(`
+                UPDATE users
+                SET
+                    school_id = $1,
+                    role_id = $2,
+                    first_name = 'System',
+                    last_name = 'Administrator',
+                    email = 'admin@leadedgecollege.local',
+                    password_hash = $3,
+                    is_active = TRUE,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = $4
+                RETURNING
+                    id,
+                    username,
+                    email,
+                    is_active
+            `, [
+                schoolResult.rows[0].id,
+                roleResult.rows[0].id,
+                passwordHash,
+                existingUser.rows[0].id
+            ]);
+
+        } else {
+
+            result = await query(`
+                INSERT INTO users (
+                    school_id,
+                    role_id,
+                    first_name,
+                    last_name,
+                    email,
+                    username,
+                    password_hash,
+                    is_active
+                )
+                VALUES (
+                    $1,
+                    $2,
+                    'System',
+                    'Administrator',
+                    'admin@leadedgecollege.local',
+                    'admin',
+                    $3,
+                    TRUE
+                )
+                RETURNING
+                    id,
+                    username,
+                    email,
+                    is_active
+            `, [
+                schoolResult.rows[0].id,
+                roleResult.rows[0].id,
+                passwordHash
+            ]);
+
+        }
+
+        return res.status(200).json({
+
+            success: true,
+
+            message:
+                "Render administrator account is ready.",
+
+            login: {
+                username: "admin",
+                password: "Admin@123"
+            },
+
+            user: result.rows[0]
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Render admin setup error:",
+            error
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "Render administrator setup failed.",
+
+            error:
+                error.message
+
+        });
+
+    }
+
+});
+
 startServer();
