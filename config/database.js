@@ -1,38 +1,9 @@
+"use strict";
+
 const { Pool } = require("pg");
 const dotenv = require("dotenv");
 
 dotenv.config();
-
-
-/*
-|--------------------------------------------------------------------------
-| Validate Database Environment
-|--------------------------------------------------------------------------
-*/
-
-const requiredEnvironmentVariables = [
-    "DB_HOST",
-    "DB_PORT",
-    "DB_NAME",
-    "DB_USER",
-    "DB_PASSWORD"
-];
-
-
-for (const variable of requiredEnvironmentVariables) {
-
-    if (
-        process.env[variable] === undefined ||
-        process.env[variable] === ""
-    ) {
-
-        console.error(
-            `ERROR: ${variable} is not configured in .env`
-        );
-
-    }
-
-}
 
 
 /*
@@ -65,6 +36,33 @@ const databaseConfig = {
     connectionTimeoutMillis: 5000
 
 };
+
+
+/*
+|--------------------------------------------------------------------------
+| SSL
+|--------------------------------------------------------------------------
+|
+| Local PostgreSQL:
+| DB_SSL is normally absent/false.
+|
+| Render PostgreSQL:
+| DB_SSL=true enables SSL.
+|
+|--------------------------------------------------------------------------
+*/
+
+if (
+    String(process.env.DB_SSL || "")
+        .toLowerCase()
+        === "true"
+) {
+
+    databaseConfig.ssl = {
+        rejectUnauthorized: false
+    };
+
+}
 
 
 /*
@@ -132,15 +130,9 @@ async function testDatabaseConnection() {
 
         const result = await client.query(`
             SELECT
-
-                current_database()
-                    AS database,
-
-                current_user
-                    AS user,
-
-                NOW()
-                    AS server_time
+                current_database() AS database,
+                current_user AS user,
+                NOW() AS server_time
         `);
 
 
@@ -324,7 +316,7 @@ async function closeDatabase() {
 
 /*
 |--------------------------------------------------------------------------
-| Export
+| EXPORT
 |--------------------------------------------------------------------------
 */
 
