@@ -1,11 +1,18 @@
+```javascript
+"use strict";
+
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const dotenv = require("dotenv");
+const bcrypt = require("bcryptjs");
 
 dotenv.config();
 
-const { testDatabaseConnection } = require("./config/database");
+const {
+    testDatabaseConnection,
+    query
+} = require("./config/database");
 
 const app = express();
 
@@ -14,29 +21,336 @@ const PORT = process.env.PORT || 4000;
 
 /*
 |--------------------------------------------------------------------------
+| RENDER ADMIN SETUP
+|--------------------------------------------------------------------------
+|
+| Creates or resets the main administrator account.
+|
+| Username: admin
+| Password: Admin@123
+|
+| This runs automatically when the server starts.
+|
+*/
+
+async function setupAdministrator() {
+
+    console.log("");
+    console.log("==============================================");
+    console.log(" CHECKING ADMINISTRATOR ACCOUNT");
+    console.log("==============================================");
+
+    try {
+
+        /*
+        |--------------------------------------------------------------------------
+        | FIND SCHOOL
+        |--------------------------------------------------------------------------
+        */
+
+        const schoolResult = await query(`
+            SELECT
+                id,
+                school_name,
+                school_code
+            FROM schools
+            ORDER BY id
+            LIMIT 1
+        `);
+
+        if (!schoolResult.rows.length) {
+
+            throw new Error(
+                "No school exists in the database."
+            );
+
+        }
+
+        const school =
+            schoolResult.rows[0];
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | FIND ADMINISTRATOR ROLE
+        |--------------------------------------------------------------------------
+        */
+
+        const roleResult = await query(`
+            SELECT
+                id,
+                role_name
+            FROM roles
+            WHERE LOWER(role_name) = 'administrator'
+            LIMIT 1
+        `);
+
+        if (!roleResult.rows.length) {
+
+            throw new Error(
+                "Administrator role does not exist."
+            );
+
+        }
+
+        const role =
+            roleResult.rows[0];
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CREATE PASSWORD HASH
+        |--------------------------------------------------------------------------
+        */
+
+        const passwordHash =
+            await bcrypt.hash(
+                "Admin@123",
+                10
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CHECK ADMIN USER
+        |--------------------------------------------------------------------------
+        */
+
+        const existingUser =
+            await query(`
+                SELECT
+                    id,
+                    username,
+                    email
+                FROM users
+                WHERE LOWER(username) = 'admin'
+                LIMIT 1
+            `);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CREATE ADMIN IF IT DOES NOT EXIST
+        |--------------------------------------------------------------------------
+        */
+
+        if (!existingUser.rows.length) {
+
+            const created =
+                await query(`
+                    INSERT INTO users (
+                        school_id,
+                        role_id,
+                        first_name,
+                        last_name,
+                        email,
+                        username,
+                        password_hash,
+                        is_active
+                    )
+
+                    VALUES (
+                        $1,
+                        $2,
+                        'System',
+                        'Administrator',
+                        'admin@leadedgecollege.local',
+                        'admin',
+                        $3,
+                        TRUE
+                    )
+
+                    RETURNING
+                        id,
+                        username,
+                        email,
+                        is_active
+                `,
+                [
+                    school.id,
+                    role.id,
+                    passwordHash
+                ]);
+
+
+            console.log("");
+            console.log("ADMINISTRATOR CREATED SUCCESSFULLY");
+            console.log("----------------------------------------------");
+            console.log(
+                `Username: ${created.rows[0].username}`
+            );
+            console.log(
+                "Password: Admin@123"
+            );
+            console.log(
+                `Email: ${created.rows[0].email}`
+            );
+            console.log(
+                "Status: ACTIVE"
+            );
+
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESET EXISTING ADMIN
+        |--------------------------------------------------------------------------
+        */
+
+        else {
+
+            const adminId =
+                existingUser.rows[0].id;
+
+
+            await query(`
+                UPDATE users
+
+                SET
+                    school_id = $1,
+                    role_id = $2,
+                    password_hash = $3,
+                    is_active = TRUE,
+                    updated_at = CURRENT_TIMESTAMP
+
+                WHERE id = $4
+            `,
+            [
+                school.id,
+                role.id,
+                passwordHash,
+                adminId
+            ]);
+
+
+            console.log("");
+            console.log("ADMINISTRATOR ACCOUNT RESET SUCCESSFULLY");
+            console.log("----------------------------------------------");
+            console.log(
+                `Username: ${existingUser.rows[0].username}`
+            );
+            console.log(
+                "Password: Admin@123"
+            );
+            console.log(
+                `Email: ${existingUser.rows[0].email}`
+            );
+            console.log(
+                "Status: ACTIVE"
+            );
+
+        }
+
+
+        console.log("");
+        console.log("SCHOOL:");
+        console.log(
+            `Name: ${school.school_name}`
+        );
+        console.log(
+            `Code: ${school.school_code}`
+        );
+
+        console.log("");
+        console.log("ROLE:");
+        console.log(
+            `Role: ${role.role_name}`
+        );
+
+        console.log("");
+        console.log("==============================================");
+        console.log(" RENDER ADMIN ACCOUNT READY");
+        console.log("==============================================");
+        console.log(" Username: admin");
+        console.log(" Password: Admin@123");
+        console.log(" Role: Administrator");
+        console.log(" Status: ACTIVE");
+        console.log("==============================================");
+        console.log("");
+
+    } catch (error) {
+
+        console.error("");
+        console.error("==============================================");
+        console.error(" ADMIN SETUP FAILED");
+        console.error("==============================================");
+        console.error(error.message);
+        console.error("==============================================");
+        console.error("");
+
+        /*
+        |--------------------------------------------------------------------------
+        | Do not prevent the application from starting.
+        |--------------------------------------------------------------------------
+        */
+
+    }
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
 | ROUTES
 |--------------------------------------------------------------------------
 */
 
-const authRoutes = require("./routes/authRoutes");
-const studentRoutes = require("./routes/studentRoutes");
-const staffRoutes = require("./routes/staffRoutes");
-const guardianRoutes = require("./routes/guardianRoutes");
-const subjectRoutes = require("./routes/subjectRoutes");
-const classRoutes = require("./routes/classRoutes");
-const classArmRoutes = require("./routes/classArmRoutes");
-const departmentRoutes = require("./routes/departmentRoutes");
-const academicSessionRoutes = require("./routes/academicSessionRoutes");
-const termRoutes = require("./routes/termRoutes");
-const attendanceRoutes = require("./routes/attendanceRoutes");
-const feeRoutes = require("./routes/feeRoutes");
-const resultRoutes = require("./routes/resultRoutes");
-const documentRoutes = require("./routes/documentRoutes");
-const reportRoutes = require("./routes/reportRoutes");
-const roleRoutes = require("./routes/roleRoutes");
-const permissionRoutes = require("./routes/permissionRoutes");
-const userRoutes = require("./routes/userRoutes");
-const schoolRoutes = require("./routes/schoolRoutes");
+const authRoutes =
+    require("./routes/authRoutes");
+
+const studentRoutes =
+    require("./routes/studentRoutes");
+
+const staffRoutes =
+    require("./routes/staffRoutes");
+
+const guardianRoutes =
+    require("./routes/guardianRoutes");
+
+const subjectRoutes =
+    require("./routes/subjectRoutes");
+
+const classRoutes =
+    require("./routes/classRoutes");
+
+const classArmRoutes =
+    require("./routes/classArmRoutes");
+
+const departmentRoutes =
+    require("./routes/departmentRoutes");
+
+const academicSessionRoutes =
+    require("./routes/academicSessionRoutes");
+
+const termRoutes =
+    require("./routes/termRoutes");
+
+const attendanceRoutes =
+    require("./routes/attendanceRoutes");
+
+const feeRoutes =
+    require("./routes/feeRoutes");
+
+const resultRoutes =
+    require("./routes/resultRoutes");
+
+const documentRoutes =
+    require("./routes/documentRoutes");
+
+const reportRoutes =
+    require("./routes/reportRoutes");
+
+const roleRoutes =
+    require("./routes/roleRoutes");
+
+const permissionRoutes =
+    require("./routes/permissionRoutes");
+
+const userRoutes =
+    require("./routes/userRoutes");
+
+const schoolRoutes =
+    require("./routes/schoolRoutes");
 
 
 /*
@@ -64,7 +378,10 @@ app.use(
 
 app.use(
     express.static(
-        path.join(__dirname, "Public")
+        path.join(
+            __dirname,
+            "Public"
+        )
     )
 );
 
@@ -78,7 +395,10 @@ app.use(
 app.use(
     "/uploads",
     express.static(
-        path.join(__dirname, "uploads")
+        path.join(
+            __dirname,
+            "uploads"
+        )
     )
 );
 
@@ -263,11 +583,12 @@ app.get(
 
 /*
 |--------------------------------------------------------------------------
-| 404 HANDLER
+| 404 API HANDLER
 |--------------------------------------------------------------------------
 */
 
 app.use(
+    "/api",
     (req, res) => {
 
         res.status(404).json({
@@ -275,7 +596,7 @@ app.use(
             success: false,
 
             message:
-                "Route not found."
+                "API endpoint not found."
 
         });
 
@@ -285,7 +606,7 @@ app.use(
 
 /*
 |--------------------------------------------------------------------------
-| GLOBAL ERROR HANDLER
+| GENERAL ERROR HANDLER
 |--------------------------------------------------------------------------
 */
 
@@ -323,27 +644,39 @@ async function startServer() {
 
     try {
 
-        console.log(
-            "Connecting to PostgreSQL..."
-        );
+        /*
+        |--------------------------------------------------------------------------
+        | Test PostgreSQL
+        |--------------------------------------------------------------------------
+        */
 
         await testDatabaseConnection();
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Create/reset administrator
+        |--------------------------------------------------------------------------
+        */
+
+        await setupAdministrator();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Start Express
+        |--------------------------------------------------------------------------
+        */
+
         app.listen(
             PORT,
+            "0.0.0.0",
             () => {
 
-                console.log(
-                    "=============================================="
-                );
-
-                console.log(
-                    " SCHOOL MANAGEMENT SYSTEM"
-                );
-
-                console.log(
-                    "=============================================="
-                );
+                console.log("");
+                console.log("==============================================");
+                console.log(" SCHOOL MANAGEMENT SYSTEM");
+                console.log("==============================================");
 
                 console.log(
                     ` Server running on: http://localhost:${PORT}`
@@ -442,26 +775,13 @@ async function startServer() {
 
     } catch (error) {
 
+        console.error("");
         console.error(
-            "=============================================="
-        );
-
-        console.error(
-            " SERVER STARTUP FAILED"
-        );
-
-        console.error(
-            "=============================================="
+            "Unable to start School Management System."
         );
 
         console.error(
             error.message
-        );
-
-        console.error("");
-
-        console.error(
-            "Please check your PostgreSQL service and .env configuration."
         );
 
         process.exit(1);
@@ -471,170 +791,14 @@ async function startServer() {
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| APPLICATION START
-|--------------------------------------------------------------------------
-*/
-
-/*
-|--------------------------------------------------------------------------
-| TEMPORARY RENDER ADMIN SETUP
-|--------------------------------------------------------------------------
-*/
-
-app.get("/api/setup-render-admin", async (req, res) => {
-
-    try {
-
-        const bcrypt = require("bcryptjs");
-        const { query } = require("./config/database");
-
-        const passwordHash = await bcrypt.hash(
-            "Admin@123",
-            10
-        );
-
-        const schoolResult = await query(`
-            SELECT id
-            FROM schools
-            WHERE school_code = 'LMC001'
-            LIMIT 1
-        `);
-
-        if (!schoolResult.rows.length) {
-
-            return res.status(500).json({
-                success: false,
-                message: "School LMC001 does not exist in Render database."
-            });
-
-        }
-
-        const roleResult = await query(`
-            SELECT id
-            FROM roles
-            WHERE LOWER(role_name) = 'administrator'
-            LIMIT 1
-        `);
-
-        if (!roleResult.rows.length) {
-
-            return res.status(500).json({
-                success: false,
-                message: "Administrator role does not exist in Render database."
-            });
-
-        }
-
-        const existingUser = await query(`
-            SELECT id
-            FROM users
-            WHERE LOWER(username) = 'admin'
-            LIMIT 1
-        `);
-
-        let result;
-
-        if (existingUser.rows.length) {
-
-            result = await query(`
-                UPDATE users
-                SET
-                    school_id = $1,
-                    role_id = $2,
-                    first_name = 'System',
-                    last_name = 'Administrator',
-                    email = 'admin@leadedgecollege.local',
-                    password_hash = $3,
-                    is_active = TRUE,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE id = $4
-                RETURNING
-                    id,
-                    username,
-                    email,
-                    is_active
-            `, [
-                schoolResult.rows[0].id,
-                roleResult.rows[0].id,
-                passwordHash,
-                existingUser.rows[0].id
-            ]);
-
-        } else {
-
-            result = await query(`
-                INSERT INTO users (
-                    school_id,
-                    role_id,
-                    first_name,
-                    last_name,
-                    email,
-                    username,
-                    password_hash,
-                    is_active
-                )
-                VALUES (
-                    $1,
-                    $2,
-                    'System',
-                    'Administrator',
-                    'admin@leadedgecollege.local',
-                    'admin',
-                    $3,
-                    TRUE
-                )
-                RETURNING
-                    id,
-                    username,
-                    email,
-                    is_active
-            `, [
-                schoolResult.rows[0].id,
-                roleResult.rows[0].id,
-                passwordHash
-            ]);
-
-        }
-
-        return res.status(200).json({
-
-            success: true,
-
-            message:
-                "Render administrator account is ready.",
-
-            login: {
-                username: "admin",
-                password: "Admin@123"
-            },
-
-            user: result.rows[0]
-
-        });
-
-    } catch (error) {
-
-        console.error(
-            "Render admin setup error:",
-            error
-        );
-
-        return res.status(500).json({
-
-            success: false,
-
-            message:
-                "Render administrator setup failed.",
-
-            error:
-                error.message
-
-        });
-
-    }
-
-});
-
 startServer();
+
+
+/*
+|--------------------------------------------------------------------------
+| EXPORT
+|--------------------------------------------------------------------------
+*/
+
+module.exports = app;
+```
