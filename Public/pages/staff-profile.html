@@ -1,129 +1,132 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    ```
     <title>Staff Profile | School Management System</title>
 
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
         body {
-            font-family: Arial, Helvetica, sans-serif;
-            background: #f4f6f9;
+            background: #f5f7fb;
             color: #1f2937;
         }
 
-        .page-container {
+        .app-sidebar {
+            width: 260px;
+            min-height: 100vh;
+            background: #172033;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 1040;
+            overflow-y: auto;
+        }
+
+        .sidebar-brand {
+            padding: 22px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+        }
+
+        .sidebar-brand-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: #2563eb;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 21px;
+        }
+
+        .sidebar-section {
+            padding: 18px 15px 5px;
+            color: #7f8ba3;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 2px 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: #c7cfdd;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .sidebar-link:hover,
+        .sidebar-link.active {
+            background: #2563eb;
+            color: #fff;
+        }
+
+        .sidebar-link i {
+            width: 20px;
+            font-size: 16px;
+        }
+
+        .main-wrapper {
+            margin-left: 260px;
             min-height: 100vh;
         }
 
         .topbar {
-            background: #1f4e78;
-            color: white;
-            padding: 15px 25px;
+            height: 70px;
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: center;
-            gap: 20px;
+            padding: 0 28px;
+            position: sticky;
+            top: 0;
+            z-index: 1030;
         }
 
-        .topbar h1 {
-            font-size: 22px;
+        .page-content {
+            padding: 28px;
+            max-width: 1450px;
+            margin: auto;
         }
 
-        .topbar-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .btn {
-            border: none;
-            border-radius: 6px;
-            padding: 10px 15px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .btn-primary {
-            background: #1f4e78;
-            color: white;
-        }
-
-        .btn-secondary {
-            background: #e5e7eb;
-            color: #1f2937;
-        }
-
-        .btn-danger {
-            background: #dc2626;
-            color: white;
-        }
-
-        .btn-success {
-            background: #15803d;
-            color: white;
-        }
-
-        .btn:hover {
-            opacity: 0.9;
-        }
-
-        .content {
-            max-width: 1200px;
-            margin: 25px auto;
-            padding: 0 20px;
-        }
-
-        .back-link {
-            display: inline-block;
-            margin-bottom: 20px;
-            color: #1f4e78;
-            text-decoration: none;
-            font-weight: 600;
+        .profile-card {
+            border: 0;
+            box-shadow: 0 4px 18px rgba(15, 23, 42, .06);
         }
 
         .profile-header {
-            background: white;
-            border-radius: 10px;
-            padding: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 25px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-
-        .profile-main {
-            display: flex;
-            align-items: center;
-            gap: 20px;
+            background: linear-gradient(135deg, #1e3a8a, #2563eb);
+            color: #fff;
+            border-radius: 12px 12px 0 0;
+            padding: 30px;
         }
 
         .profile-photo {
-            width: 100px;
-            height: 100px;
+            width: 110px;
+            height: 110px;
             border-radius: 50%;
-            background: #dbeafe;
-            color: #1f4e78;
+            background: rgba(255, 255, 255, .18);
+            border: 4px solid rgba(255, 255, 255, .55);
             display: flex;
-            justify-content: center;
             align-items: center;
-            font-size: 34px;
-            font-weight: bold;
+            justify-content: center;
             overflow: hidden;
             flex-shrink: 0;
+            font-size: 34px;
+            font-weight: 700;
         }
 
         .profile-photo img {
@@ -132,23 +135,14 @@
             object-fit: cover;
         }
 
-        .profile-info h2 {
-            font-size: 26px;
-            margin-bottom: 7px;
-        }
-
-        .profile-info p {
-            color: #6b7280;
-            margin-bottom: 4px;
-        }
-
         .status-badge {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 11px;
+            border-radius: 50px;
             font-size: 12px;
-            font-weight: bold;
-            margin-top: 7px;
+            font-weight: 700;
         }
 
         .status-active {
@@ -166,486 +160,376 @@
             color: #92400e;
         }
 
-        .actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
+        .info-card {
+            border: 0;
+            box-shadow: 0 3px 15px rgba(15, 23, 42, .05);
+            height: 100%;
         }
 
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 20px;
+        .info-card .card-header {
+            background: #fff;
+            border-bottom: 1px solid #eef0f4;
+            padding: 18px 20px;
         }
 
-        .card {
-            background: white;
-            border-radius: 10px;
-            padding: 22px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        .info-card .card-body {
+            padding: 20px;
         }
 
-        .card.full {
-            grid-column: 1 / -1;
-        }
-
-        .card h3 {
-            font-size: 18px;
-            color: #1f4e78;
-            margin-bottom: 18px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .details-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 15px 25px;
-        }
-
-        .detail-item label {
-            display: block;
+        .detail-label {
             color: #6b7280;
-            font-size: 12px;
-            margin-bottom: 5px;
+            font-size: 11px;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.4px;
+            letter-spacing: .05em;
+            margin-bottom: 4px;
         }
 
-        .detail-item span {
-            font-size: 15px;
+        .detail-value {
+            color: #1f2937;
+            font-size: 14px;
             font-weight: 600;
             word-break: break-word;
         }
 
-        .loading {
-            text-align: center;
-            padding: 60px 20px;
-            color: #6b7280;
-            font-size: 16px;
-        }
-
-        .error {
-            background: #fee2e2;
-            color: #991b1b;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
-        }
-
-        .empty {
-            color: #6b7280;
-            padding: 15px 0;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            padding: 20px;
-            overflow-y: auto;
+        .empty-value {
+            color: #9ca3af;
         }
 
         .modal-content {
-            background: white;
-            max-width: 700px;
-            margin: 40px auto;
-            border-radius: 10px;
-            padding: 25px;
+            border: 0;
+            border-radius: 14px;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, .18);
         }
 
         .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
+            border-bottom: 1px solid #eef0f4;
         }
 
-        .modal-header h2 {
-            color: #1f4e78;
+        .modal-footer {
+            border-top: 1px solid #eef0f4;
         }
 
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 28px;
-            cursor: pointer;
-            color: #6b7280;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 15px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group.full {
-            grid-column: 1 / -1;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-size: 14px;
+        .form-label {
+            font-size: 13px;
             font-weight: 600;
         }
 
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 14px;
-            outline: none;
+        .form-control,
+        .form-select {
+            border-color: #d9dee8;
+            min-height: 42px;
         }
 
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            border-color: #1f4e78;
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 .2rem rgba(37, 99, 235, .12);
         }
 
-        .form-group textarea {
-            min-height: 90px;
-            resize: vertical;
-        }
-
-        .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .toast {
-            position: fixed;
-            right: 20px;
-            bottom: 20px;
-            padding: 14px 18px;
-            border-radius: 7px;
-            color: white;
-            display: none;
+        #toast {
             z-index: 2000;
-            max-width: 350px;
         }
 
-        .toast.success {
-            background: #15803d;
+        #sidebarOverlay {
+            display: none;
         }
 
-        .toast.error {
-            background: #dc2626;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        @media (max-width: 800px) {
-            .profile-header {
-                flex-direction: column;
-                align-items: flex-start;
+        @media (max-width: 991.98px) {
+            .app-sidebar {
+                transform: translateX(-100%);
+                transition: transform .25s ease;
             }
 
-            .grid {
-                grid-template-columns: 1fr;
+            .app-sidebar.show {
+                transform: translateX(0);
             }
 
-            .details-grid,
-            .form-grid {
-                grid-template-columns: 1fr;
+            .main-wrapper {
+                margin-left: 0;
             }
 
-            .card.full {
-                grid-column: auto;
+            #sidebarOverlay.show {
+                display: block;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, .45);
+                z-index: 1035;
+            }
+
+            .page-content {
+                padding: 20px;
             }
         }
 
-        @media (max-width: 550px) {
+        @media (max-width: 575.98px) {
             .topbar {
-                flex-direction: column;
-                align-items: flex-start;
+                padding: 0 16px;
+            }
+
+            .page-content {
+                padding: 15px;
+            }
+
+            .profile-header {
+                padding: 22px;
             }
 
             .profile-main {
                 flex-direction: column;
-                align-items: flex-start;
+                align-items: flex-start !important;
             }
 
-            .actions {
+            .profile-photo {
+                width: 90px;
+                height: 90px;
+            }
+
+            .profile-actions {
                 width: 100%;
             }
 
-            .actions .btn {
-                flex: 1;
-            }
-
-            .content {
-                padding: 0 12px;
+            .profile-actions .btn {
+                width: 100%;
+                margin-bottom: 8px;
             }
         }
     </style>
-    ```
-
 </head>
 
 <body>
 
-    <div class="page-container">
+    <div id="sidebarOverlay"></div>
 
-        ```
-        <header class="topbar">
-            <h1>Staff Profile</h1>
+    <aside id="sidebar" class="app-sidebar">
 
-            <div class="topbar-actions">
-                <button class="btn btn-secondary" onclick="goBack()">
-                    Back
-                </button>
+        <div class="sidebar-brand">
+            <div class="d-flex align-items-center gap-3">
+                <div class="sidebar-brand-icon">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
+
+                <div>
+                    <div class="text-white fw-bold">School Management</div>
+                    <small class="text-secondary">Administration System</small>
+                </div>
             </div>
+        </div>
+
+        <div class="sidebar-section">Main</div>
+
+        <a href="dashboard.html" class="sidebar-link">
+            <i class="bi bi-grid-1x2-fill"></i>
+            <span>Dashboard</span>
+        </a>
+
+        <a href="students.html" class="sidebar-link">
+            <i class="bi bi-people-fill"></i>
+            <span>Students</span>
+        </a>
+
+        <a href="staff.html" class="sidebar-link active">
+            <i class="bi bi-person-badge-fill"></i>
+            <span>Staff</span>
+        </a>
+
+        <a href="guardians.html" class="sidebar-link">
+            <i class="bi bi-person-hearts"></i>
+            <span>Guardians</span>
+        </a>
+
+        <div class="sidebar-section">Academic</div>
+
+        <a href="classes.html" class="sidebar-link">
+            <i class="bi bi-building"></i>
+            <span>Classes</span>
+        </a>
+
+        <a href="class-arms.html" class="sidebar-link">
+            <i class="bi bi-diagram-3-fill"></i>
+            <span>Class Arms</span>
+        </a>
+
+        <a href="departments.html" class="sidebar-link">
+            <i class="bi bi-diagram-2-fill"></i>
+            <span>Departments</span>
+        </a>
+
+        <a href="subjects.html" class="sidebar-link">
+            <i class="bi bi-book-fill"></i>
+            <span>Subjects</span>
+        </a>
+
+        <a href="academic-sessions.html" class="sidebar-link">
+            <i class="bi bi-calendar3"></i>
+            <span>Sessions</span>
+        </a>
+
+        <a href="terms.html" class="sidebar-link">
+            <i class="bi bi-calendar-event"></i>
+            <span>Terms</span>
+        </a>
+
+        <a href="attendance.html" class="sidebar-link">
+            <i class="bi bi-calendar-check-fill"></i>
+            <span>Attendance</span>
+        </a>
+
+        <a href="results.html" class="sidebar-link">
+            <i class="bi bi-bar-chart-fill"></i>
+            <span>Results</span>
+        </a>
+
+        <div class="sidebar-section">Finance & Records</div>
+
+        <a href="fees.html" class="sidebar-link">
+            <i class="bi bi-cash-stack"></i>
+            <span>Fees</span>
+        </a>
+
+        <a href="documents.html" class="sidebar-link">
+            <i class="bi bi-folder-fill"></i>
+            <span>Documents</span>
+        </a>
+
+        <a href="reports.html" class="sidebar-link">
+            <i class="bi bi-file-earmark-bar-graph-fill"></i>
+            <span>Reports</span>
+        </a>
+
+        <div class="sidebar-section">Administration</div>
+
+        <a href="users.html" class="sidebar-link">
+            <i class="bi bi-person-gear"></i>
+            <span>Users</span>
+        </a>
+
+        <a href="roles.html" class="sidebar-link">
+            <i class="bi bi-shield-lock-fill"></i>
+            <span>Roles</span>
+        </a>
+
+        <a href="permissions.html" class="sidebar-link">
+            <i class="bi bi-key-fill"></i>
+            <span>Permissions</span>
+        </a>
+
+        <a href="profile.html" class="sidebar-link">
+            <i class="bi bi-person-circle"></i>
+            <span>My Profile</span>
+        </a>
+
+        <a href="settings.html" class="sidebar-link">
+            <i class="bi bi-gear-fill"></i>
+            <span>Settings</span>
+        </a>
+
+    </aside>
+
+
+    <div class="main-wrapper">
+
+        <header class="topbar">
+
+            <div class="d-flex align-items-center gap-3">
+                <button id="sidebarToggle" class="btn btn-light d-lg-none" type="button">
+                    <i class="bi bi-list fs-5"></i>
+                </button>
+
+                <div>
+                    <h1 class="h5 mb-0 fw-bold">Staff Profile</h1>
+                    <small class="text-muted">
+                        View and manage staff information
+                    </small>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <a href="staff.html" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Back to Staff
+                </a>
+            </div>
+
         </header>
 
-        <main class="content">
 
-            <a href="staff.html" class="back-link">
-                ← Back to Staff
-            </a>
+        <main class="page-content">
 
-            <div id="errorMessage" class="error"></div>
-
-            <div id="loading" class="loading">
-                Loading staff profile...
+            <div id="errorMessage" class="alert alert-danger d-none">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <span></span>
             </div>
 
-            <div id="profileContainer" class="hidden">
 
-                <section class="profile-header">
+            <div id="loading" class="text-center py-5">
 
-                    <div class="profile-main">
+                <div class="spinner-border text-primary mb-3" role="status"></div>
 
-                        <div class="profile-photo" id="profilePhoto">
-                            <span id="initials">ST</span>
-                        </div>
+                <div class="text-muted">
+                    Loading staff profile...
+                </div>
 
-                        <div class="profile-info">
-
-                            <h2 id="staffName">
-                                Staff Member
-                            </h2>
-
-                            <p id="staffNumber">
-                                Staff Number
-                            </p>
-
-                            <p id="staffPosition">
-                                Position
-                            </p>
-
-                            <span id="statusBadge" class="status-badge status-active">
-                                Active
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                    <div class="actions">
-
-                        <button class="btn btn-primary" onclick="openEditModal()">
-                            Edit Profile
-                        </button>
-
-                        <button id="activateButton" class="btn btn-success" onclick="changeStatus('active')">
-                            Activate
-                        </button>
-
-                        <button id="deactivateButton" class="btn btn-danger" onclick="changeStatus('inactive')">
-                            Deactivate
-                        </button>
-
-                    </div>
-
-                </section>
+            </div>
 
 
-                <section class="grid">
+            <div id="profileContainer" class="d-none">
 
-                    <div class="card">
+                <section class="card profile-card mb-4">
 
-                        <h3>Personal Information</h3>
+                    <div class="profile-header">
 
-                        <div class="details-grid">
+                        <div class="d-flex align-items-center justify-content-between gap-4 flex-wrap">
 
-                            <div class="detail-item">
-                                <label>First Name</label>
-                                <span id="firstName">—</span>
+                            <div class="profile-main d-flex align-items-center gap-4">
+
+                                <div id="profilePhoto" class="profile-photo">
+                                    <span id="initials">ST</span>
+                                </div>
+
+                                <div>
+
+                                    <h2 id="staffName" class="h3 fw-bold mb-2">
+                                        Staff Member
+                                    </h2>
+
+                                    <div id="staffNumber" class="mb-1 opacity-75">
+                                        Staff Number: —
+                                    </div>
+
+                                    <div id="staffPosition" class="mb-3 opacity-75">
+                                        Position: —
+                                    </div>
+
+                                    <span id="statusBadge" class="status-badge status-active">
+                                        <i class="bi bi-check-circle-fill"></i>
+                                        Active
+                                    </span>
+
+                                </div>
+
                             </div>
 
-                            <div class="detail-item">
-                                <label>Last Name</label>
-                                <span id="lastName">—</span>
-                            </div>
 
-                            <div class="detail-item">
-                                <label>Middle Name</label>
-                                <span id="middleName">—</span>
-                            </div>
+                            <div class="profile-actions d-flex gap-2 flex-wrap">
 
-                            <div class="detail-item">
-                                <label>Gender</label>
-                                <span id="gender">—</span>
-                            </div>
+                                <button class="btn btn-light" type="button" onclick="openEditModal()">
+                                    <i class="bi bi-pencil-square me-1"></i>
+                                    Edit Profile
+                                </button>
 
-                            <div class="detail-item">
-                                <label>Date of Birth</label>
-                                <span id="dateOfBirth">—</span>
-                            </div>
+                                <button id="activateButton" class="btn btn-success" type="button"
+                                    onclick="changeStatus('active')">
+                                    <i class="bi bi-check-circle me-1"></i>
+                                    Activate
+                                </button>
 
-                            <div class="detail-item">
-                                <label>Phone</label>
-                                <span id="phone">—</span>
-                            </div>
+                                <button id="deactivateButton" class="btn btn-danger" type="button"
+                                    onclick="changeStatus('inactive')">
+                                    <i class="bi bi-person-x me-1"></i>
+                                    Deactivate
+                                </button>
 
-                            <div class="detail-item">
-                                <label>Email</label>
-                                <span id="email">—</span>
-                            </div>
-
-                            <div class="detail-item">
-                                <label>Nationality</label>
-                                <span id="nationality">—</span>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="card">
-
-                        <h3>Employment Information</h3>
-
-                        <div class="details-grid">
-
-                            <div class="detail-item">
-                                <label>Staff Number</label>
-                                <span id="employmentStaffNumber">—</span>
-                            </div>
-
-                            <div class="detail-item">
-                                <label>Position</label>
-                                <span id="position">—</span>
-                            </div>
-
-                            <div class="detail-item">
-                                <label>Department</label>
-                                <span id="department">—</span>
-                            </div>
-
-                            <div class="detail-item">
-                                <label>Employment Type</label>
-                                <span id="employmentType">—</span>
-                            </div>
-
-                            <div class="detail-item">
-                                <label>Date Employed</label>
-                                <span id="dateEmployed">—</span>
-                            </div>
-
-                            <div class="detail-item">
-                                <label>Qualification</label>
-                                <span id="qualification">—</span>
-                            </div>
-
-                            <div class="detail-item">
-                                <label>Status</label>
-                                <span id="employmentStatus">—</span>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="card">
-
-                        <h3>Address Information</h3>
-
-                        <div class="details-grid">
-
-                            <div class="detail-item">
-                                <label>Address</label>
-                                <span id="address">—</span>
-                            </div>
-
-                            <div class="detail-item">
-                                <label>City</label>
-                                <span id="city">—</span>
-                            </div>
-
-                            <div class="detail-item">
-                                <label>State</label>
-                                <span id="state">—</span>
-                            </div>
-
-                            <div class="detail-item">
-                                <label>Country</label>
-                                <span id="country">—</span>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="card">
-
-                        <h3>Emergency Contact</h3>
-
-                        <div class="details-grid">
-
-                            <div class="detail-item">
-                                <label>Name</label>
-                                <span id="emergencyName">—</span>
-                            </div>
-
-                            <div class="detail-item">
-                                <label>Relationship</label>
-                                <span id="emergencyRelationship">—</span>
-                            </div>
-
-                            <div class="detail-item">
-                                <label>Phone</label>
-                                <span id="emergencyPhone">—</span>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="card full">
-
-                        <h3>Additional Information</h3>
-
-                        <div class="details-grid">
-
-                            <div class="detail-item">
-                                <label>Created</label>
-                                <span id="createdAt">—</span>
-                            </div>
-
-                            <div class="detail-item">
-                                <label>Last Updated</label>
-                                <span id="updatedAt">—</span>
                             </div>
 
                         </div>
@@ -653,245 +537,477 @@
                     </div>
 
                 </section>
+
+
+                <div class="row g-4">
+
+                    <div class="col-lg-6">
+
+                        <section class="card info-card">
+
+                            <div class="card-header">
+                                <h3 class="h6 mb-0 fw-bold">
+                                    <i class="bi bi-person-vcard text-primary me-2"></i>
+                                    Personal Information
+                                </h3>
+                            </div>
+
+                            <div class="card-body">
+
+                                <div class="row g-4">
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">First Name</div>
+                                        <div id="firstName" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Last Name</div>
+                                        <div id="lastName" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Middle Name</div>
+                                        <div id="middleName" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Gender</div>
+                                        <div id="gender" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Date of Birth</div>
+                                        <div id="dateOfBirth" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Phone</div>
+                                        <div id="phone" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Email</div>
+                                        <div id="email" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Nationality</div>
+                                        <div id="nationality" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </section>
+
+                    </div>
+
+
+                    <div class="col-lg-6">
+
+                        <section class="card info-card">
+
+                            <div class="card-header">
+                                <h3 class="h6 mb-0 fw-bold">
+                                    <i class="bi bi-briefcase-fill text-primary me-2"></i>
+                                    Employment Information
+                                </h3>
+                            </div>
+
+                            <div class="card-body">
+
+                                <div class="row g-4">
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Staff Number</div>
+                                        <div id="employmentStaffNumber" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Position</div>
+                                        <div id="position" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Department</div>
+                                        <div id="department" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Employment Type</div>
+                                        <div id="employmentType" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Date Employed</div>
+                                        <div id="dateEmployed" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Qualification</div>
+                                        <div id="qualification" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Status</div>
+                                        <div id="employmentStatus" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </section>
+
+                    </div>
+
+
+                    <div class="col-lg-6">
+
+                        <section class="card info-card">
+
+                            <div class="card-header">
+                                <h3 class="h6 mb-0 fw-bold">
+                                    <i class="bi bi-geo-alt-fill text-primary me-2"></i>
+                                    Address Information
+                                </h3>
+                            </div>
+
+                            <div class="card-body">
+
+                                <div class="row g-4">
+
+                                    <div class="col-12">
+                                        <div class="detail-label">Address</div>
+                                        <div id="address" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-4">
+                                        <div class="detail-label">City</div>
+                                        <div id="city" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-4">
+                                        <div class="detail-label">State</div>
+                                        <div id="state" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-4">
+                                        <div class="detail-label">Country</div>
+                                        <div id="country" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </section>
+
+                    </div>
+
+
+                    <div class="col-lg-6">
+
+                        <section class="card info-card">
+
+                            <div class="card-header">
+                                <h3 class="h6 mb-0 fw-bold">
+                                    <i class="bi bi-telephone-forward-fill text-primary me-2"></i>
+                                    Emergency Contact
+                                </h3>
+                            </div>
+
+                            <div class="card-body">
+
+                                <div class="row g-4">
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Name</div>
+                                        <div id="emergencyName" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Relationship</div>
+                                        <div id="emergencyRelationship" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Phone</div>
+                                        <div id="emergencyPhone" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </section>
+
+                    </div>
+
+
+                    <div class="col-12">
+
+                        <section class="card info-card">
+
+                            <div class="card-header">
+                                <h3 class="h6 mb-0 fw-bold">
+                                    <i class="bi bi-clock-history text-primary me-2"></i>
+                                    Record Information
+                                </h3>
+                            </div>
+
+                            <div class="card-body">
+
+                                <div class="row g-4">
+
+                                    <div class="col-md-6">
+                                        <div class="detail-label">Created</div>
+                                        <div id="createdAt" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="detail-label">Last Updated</div>
+                                        <div id="updatedAt" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </section>
+
+                    </div>
+
+                </div>
 
             </div>
 
         </main>
-        ```
 
     </div>
 
-    <div id="editModal" class="modal">
 
-        ```
-        <div class="modal-content">
+    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
 
-            <div class="modal-header">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
 
-                <h2>Edit Staff Profile</h2>
+            <div class="modal-content">
 
-                <button class="close-btn" onclick="closeEditModal()">
-                    ×
-                </button>
+                <div class="modal-header">
+
+                    <div>
+                        <h2 id="editModalLabel" class="modal-title h5 fw-bold mb-1">
+                            Edit Staff Profile
+                        </h2>
+
+                        <small class="text-muted">
+                            Update staff information
+                        </small>
+                    </div>
+
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+                </div>
+
+
+                <form id="editForm">
+
+                    <div class="modal-body">
+
+                        <div class="row g-3">
+
+                            <div class="col-md-4">
+                                <label for="editFirstName" class="form-label">
+                                    First Name
+                                </label>
+                                <input type="text" id="editFirstName" class="form-control" required>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="editLastName" class="form-label">
+                                    Last Name
+                                </label>
+                                <input type="text" id="editLastName" class="form-control" required>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="editMiddleName" class="form-label">
+                                    Middle Name
+                                </label>
+                                <input type="text" id="editMiddleName" class="form-control">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="editGender" class="form-label">
+                                    Gender
+                                </label>
+                                <select id="editGender" class="form-select">
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="editDateOfBirth" class="form-label">
+                                    Date of Birth
+                                </label>
+                                <input type="date" id="editDateOfBirth" class="form-control">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="editPhone" class="form-label">
+                                    Phone
+                                </label>
+                                <input type="text" id="editPhone" class="form-control">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="editEmail" class="form-label">
+                                    Email
+                                </label>
+                                <input type="email" id="editEmail" class="form-control">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="editPosition" class="form-label">
+                                    Position
+                                </label>
+                                <input type="text" id="editPosition" class="form-control">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="editEmploymentType" class="form-label">
+                                    Employment Type
+                                </label>
+                                <input type="text" id="editEmploymentType" class="form-control">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="editDateEmployed" class="form-label">
+                                    Date Employed
+                                </label>
+                                <input type="date" id="editDateEmployed" class="form-control">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="editQualification" class="form-label">
+                                    Qualification
+                                </label>
+                                <input type="text" id="editQualification" class="form-control">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="editNationality" class="form-label">
+                                    Nationality
+                                </label>
+                                <input type="text" id="editNationality" class="form-control">
+                            </div>
+
+                            <div class="col-12">
+                                <label for="editAddress" class="form-label">
+                                    Address
+                                </label>
+                                <textarea id="editAddress" class="form-control" rows="3"></textarea>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="editCity" class="form-label">
+                                    City
+                                </label>
+                                <input type="text" id="editCity" class="form-control">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="editState" class="form-label">
+                                    State
+                                </label>
+                                <input type="text" id="editState" class="form-control">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="editCountry" class="form-label">
+                                    Country
+                                </label>
+                                <input type="text" id="editCountry" class="form-control">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="editEmergencyName" class="form-label">
+                                    Emergency Contact Name
+                                </label>
+                                <input type="text" id="editEmergencyName" class="form-control">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="editEmergencyRelationship" class="form-label">
+                                    Emergency Relationship
+                                </label>
+                                <input type="text" id="editEmergencyRelationship" class="form-control">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="editEmergencyPhone" class="form-label">
+                                    Emergency Phone
+                                </label>
+                                <input type="text" id="editEmergencyPhone" class="form-control">
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="modal-footer">
+
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check2-circle me-1"></i>
+                            Save Changes
+                        </button>
+
+                    </div>
+
+                </form>
 
             </div>
 
-            <form id="editForm">
-
-                <div class="form-grid">
-
-                    <div class="form-group">
-                        <label for="editFirstName">
-                            First Name
-                        </label>
-
-                        <input type="text" id="editFirstName" required>
-                    </div>
-
-
-                    <div class="form-group">
-                        <label for="editLastName">
-                            Last Name
-                        </label>
-
-                        <input type="text" id="editLastName" required>
-                    </div>
-
-
-                    <div class="form-group">
-                        <label for="editMiddleName">
-                            Middle Name
-                        </label>
-
-                        <input type="text" id="editMiddleName">
-                    </div>
-
-
-                    <div class="form-group">
-                        <label for="editGender">
-                            Gender
-                        </label>
-
-                        <select id="editGender">
-                            <option value="">Select Gender</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                        </select>
-                    </div>
-
-
-                    <div class="form-group">
-                        <label for="editDateOfBirth">
-                            Date of Birth
-                        </label>
-
-                        <input type="date" id="editDateOfBirth">
-                    </div>
-
-
-                    <div class="form-group">
-                        <label for="editPhone">
-                            Phone
-                        </label>
-
-                        <input type="text" id="editPhone">
-                    </div>
-
-
-                    <div class="form-group">
-                        <label for="editEmail">
-                            Email
-                        </label>
-
-                        <input type="email" id="editEmail">
-                    </div>
-
-
-                    <div class="form-group">
-                        <label for="editPosition">
-                            Position
-                        </label>
-
-                        <input type="text" id="editPosition">
-                    </div>
-
-
-                    <div class="form-group">
-                        <label for="editEmploymentType">
-                            Employment Type
-                        </label>
-
-                        <input type="text" id="editEmploymentType">
-                    </div>
-
-
-                    <div class="form-group">
-                        <label for="editDateEmployed">
-                            Date Employed
-                        </label>
-
-                        <input type="date" id="editDateEmployed">
-                    </div>
-
-
-                    <div class="form-group">
-                        <label for="editQualification">
-                            Qualification
-                        </label>
-
-                        <input type="text" id="editQualification">
-                    </div>
-
-
-                    <div class="form-group">
-                        <label for="editNationality">
-                            Nationality
-                        </label>
-
-                        <input type="text" id="editNationality">
-                    </div>
-
-
-                    <div class="form-group full">
-                        <label for="editAddress">
-                            Address
-                        </label>
-
-                        <textarea id="editAddress"></textarea>
-                    </div>
-
-
-                    <div class="form-group">
-                        <label for="editCity">
-                            City
-                        </label>
-
-                        <input type="text" id="editCity">
-                    </div>
-
-
-                    <div class="form-group">
-                        <label for="editState">
-                            State
-                        </label>
-
-                        <input type="text" id="editState">
-                    </div>
-
-
-                    <div class="form-group">
-                        <label for="editCountry">
-                            Country
-                        </label>
-
-                        <input type="text" id="editCountry">
-                    </div>
-
-
-                    <div class="form-group">
-                        <label for="editEmergencyName">
-                            Emergency Contact Name
-                        </label>
-
-                        <input type="text" id="editEmergencyName">
-                    </div>
-
-
-                    <div class="form-group">
-                        <label for="editEmergencyRelationship">
-                            Emergency Relationship
-                        </label>
-
-                        <input type="text" id="editEmergencyRelationship">
-                    </div>
-
-
-                    <div class="form-group">
-                        <label for="editEmergencyPhone">
-                            Emergency Phone
-                        </label>
-
-                        <input type="text" id="editEmergencyPhone">
-                    </div>
-
-                </div>
-
-
-                <div class="modal-actions">
-
-                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">
-                        Cancel
-                    </button>
-
-                    <button type="submit" class="btn btn-primary">
-                        Save Changes
-                    </button>
-
-                </div>
-
-            </form>
-
         </div>
-        ```
 
     </div>
 
-    <div id="toast" class="toast"></div>
+
+    <div id="toast" class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-4"
+        role="alert" aria-live="assertive" aria-atomic="true">
+
+        <div class="d-flex">
+
+            <div class="toast-body"></div>
+
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                aria-label="Close"></button>
+
+        </div>
+
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-
         const API_BASE = "/api";
 
         let staffId = null;
         let currentStaff = null;
-
+        let editModalInstance = null;
 
         function getStaffId() {
-
-            const params =
-                new URLSearchParams(
-                    window.location.search
-                );
+            const params = new URLSearchParams(window.location.search);
 
             return (
                 params.get("id") ||
@@ -899,10 +1015,10 @@
             );
         }
 
-
         function getToken() {
-
             return (
+                localStorage.getItem("school_management_token") ||
+                sessionStorage.getItem("school_management_token") ||
                 localStorage.getItem("token") ||
                 localStorage.getItem("accessToken") ||
                 sessionStorage.getItem("token") ||
@@ -910,9 +1026,7 @@
             );
         }
 
-
         function authHeaders() {
-
             const token = getToken();
 
             const headers = {
@@ -920,36 +1034,13 @@
             };
 
             if (token) {
-
-                headers.Authorization =
-                    `Bearer ${token}`;
-
+                headers.Authorization = `Bearer ${token}`;
             }
 
             return headers;
         }
 
-
-        function escapeHtml(value) {
-
-            if (
-                value === null ||
-                value === undefined
-            ) {
-                return "";
-            }
-
-            return String(value)
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
-
-
         function displayValue(value) {
-
             if (
                 value === null ||
                 value === undefined ||
@@ -958,12 +1049,10 @@
                 return "—";
             }
 
-            return escapeHtml(value);
+            return value;
         }
 
-
         function formatDate(value) {
-
             if (!value) {
                 return "—";
             }
@@ -984,22 +1073,15 @@
             );
         }
 
-
         function formatDateInput(value) {
-
             if (!value) {
                 return "";
             }
 
-            return String(value).substring(
-                0,
-                10
-            );
+            return String(value).substring(0, 10);
         }
 
-
         function getName(staff) {
-
             const first =
                 staff.first_name ||
                 staff.firstName ||
@@ -1025,9 +1107,7 @@
                 .trim();
         }
 
-
         function getInitials(name) {
-
             if (!name) {
                 return "ST";
             }
@@ -1050,17 +1130,13 @@
             ).toUpperCase();
         }
 
-
         function getStatusClass(status) {
-
             const normalized =
                 String(status || "")
                     .toLowerCase()
                     .replace(/\s+/g, "_");
 
-            if (
-                normalized === "inactive"
-            ) {
+            if (normalized === "inactive") {
                 return "status-inactive";
             }
 
@@ -1074,9 +1150,7 @@
             return "status-active";
         }
 
-
         function formatStatus(status) {
-
             if (!status) {
                 return "Unknown";
             }
@@ -1088,96 +1162,91 @@
                 );
         }
 
-
         function setText(id, value) {
-
-            const element =
-                document.getElementById(id);
+            const element = document.getElementById(id);
 
             if (!element) {
                 return;
             }
 
-            element.textContent =
+            const finalValue =
                 value === null ||
                     value === undefined ||
                     value === ""
                     ? "—"
                     : value;
-        }
 
+            element.textContent = finalValue;
+
+            element.classList.toggle(
+                "empty-value",
+                finalValue === "—"
+            );
+        }
 
         function showError(message) {
-
             const element =
-                document.getElementById(
-                    "errorMessage"
-                );
+                document.getElementById("errorMessage");
 
-            element.textContent =
+            element.querySelector("span").textContent =
                 message || "An error occurred.";
 
-            element.style.display = "block";
+            element.classList.remove("d-none");
         }
-
 
         function hideError() {
-
-            const element =
-                document.getElementById(
-                    "errorMessage"
-                );
-
-            element.style.display = "none";
+            document
+                .getElementById("errorMessage")
+                .classList.add("d-none");
         }
-
 
         function showToast(
             message,
             type = "success"
         ) {
+            const toastElement =
+                document.getElementById("toast");
+
+            toastElement.classList.remove(
+                "text-bg-success",
+                "text-bg-danger"
+            );
+
+            toastElement.classList.add(
+                type === "error"
+                    ? "text-bg-danger"
+                    : "text-bg-success"
+            );
+
+            toastElement.querySelector(
+                ".toast-body"
+            ).textContent = message;
 
             const toast =
-                document.getElementById(
-                    "toast"
+                bootstrap.Toast.getOrCreateInstance(
+                    toastElement,
+                    {
+                        delay: 3500
+                    }
                 );
 
-            toast.textContent = message;
-
-            toast.className =
-                `toast ${type}`;
-
-            toast.style.display =
-                "block";
-
-            setTimeout(() => {
-
-                toast.style.display =
-                    "none";
-
-            }, 3500);
+            toast.show();
         }
 
-
         function getField(staff, ...names) {
-
             for (const name of names) {
-
                 if (
                     staff[name] !== undefined &&
                     staff[name] !== null
                 ) {
                     return staff[name];
                 }
-
             }
 
             return "";
         }
 
-
         function renderProfile(staff) {
-
             currentStaff = staff;
 
             const fullName =
@@ -1222,11 +1291,7 @@
                     "photo"
                 );
 
-
-            setText(
-                "staffName",
-                fullName
-            );
+            setText("staffName", fullName);
 
             setText(
                 "staffNumber",
@@ -1269,10 +1334,7 @@
 
             setText(
                 "gender",
-                getField(
-                    staff,
-                    "gender"
-                )
+                getField(staff, "gender")
             );
 
             setText(
@@ -1299,18 +1361,12 @@
 
             setText(
                 "email",
-                getField(
-                    staff,
-                    "email"
-                )
+                getField(staff, "email")
             );
 
             setText(
                 "nationality",
-                getField(
-                    staff,
-                    "nationality"
-                )
+                getField(staff, "nationality")
             );
 
             setText(
@@ -1377,26 +1433,17 @@
 
             setText(
                 "city",
-                getField(
-                    staff,
-                    "city"
-                )
+                getField(staff, "city")
             );
 
             setText(
                 "state",
-                getField(
-                    staff,
-                    "state"
-                )
+                getField(staff, "state")
             );
 
             setText(
                 "country",
-                getField(
-                    staff,
-                    "country"
-                )
+                getField(staff, "country")
             );
 
             setText(
@@ -1448,28 +1495,20 @@
                 )
             );
 
-
-            const initials =
-                document.getElementById(
-                    "initials"
-                );
-
-            initials.textContent =
+            document.getElementById(
+                "initials"
+            ).textContent =
                 getInitials(fullName);
 
-
             if (photo) {
-
                 const profilePhoto =
                     document.getElementById(
                         "profilePhoto"
                     );
 
                 profilePhoto.innerHTML =
-                    `<img src="${escapeHtml(photo)}" alt="${escapeHtml(fullName)}">`;
-
+                    `<img src="${String(photo).replace(/"/g, "&quot;")}" alt="${String(fullName).replace(/"/g, "&quot;")}">`;
             }
-
 
             const statusBadge =
                 document.getElementById(
@@ -1481,7 +1520,6 @@
 
             statusBadge.className =
                 `status-badge ${getStatusClass(status)}`;
-
 
             const activateButton =
                 document.getElementById(
@@ -1507,28 +1545,24 @@
                     ? "none"
                     : "inline-block";
 
+            document
+                .getElementById("loading")
+                .classList.add("d-none");
 
-            document.getElementById(
-                "loading"
-            ).classList.add("hidden");
-
-            document.getElementById(
-                "profileContainer"
-            ).classList.remove("hidden");
+            document
+                .getElementById("profileContainer")
+                .classList.remove("d-none");
         }
 
-
         async function loadStaff() {
-
             hideError();
 
             staffId = getStaffId();
 
             if (!staffId) {
-
-                document.getElementById(
-                    "loading"
-                ).classList.add("hidden");
+                document
+                    .getElementById("loading")
+                    .classList.add("d-none");
 
                 showError(
                     "No staff ID was provided."
@@ -1537,9 +1571,7 @@
                 return;
             }
 
-
             try {
-
                 const response =
                     await fetch(
                         `${API_BASE}/staff/${encodeURIComponent(staffId)}`,
@@ -1549,11 +1581,7 @@
                         }
                     );
 
-
-                if (
-                    response.status === 401
-                ) {
-
+                if (response.status === 401) {
                     showError(
                         "Your session has expired. Please log in again."
                     );
@@ -1561,51 +1589,41 @@
                     return;
                 }
 
-
                 const result =
                     await response.json();
 
-
                 if (!response.ok) {
-
                     throw new Error(
                         result.message ||
                         "Unable to load staff profile."
                     );
                 }
 
-
                 const staff =
                     result.data ||
                     result.staff ||
                     result;
 
-
                 renderProfile(staff);
 
             } catch (error) {
-
                 console.error(
                     "Load staff error:",
                     error
                 );
 
-                document.getElementById(
-                    "loading"
-                ).classList.add("hidden");
+                document
+                    .getElementById("loading")
+                    .classList.add("d-none");
 
                 showError(
                     error.message ||
                     "Unable to load staff profile."
                 );
-
             }
-
         }
 
-
         function fillEditForm(staff) {
-
             document.getElementById(
                 "editFirstName"
             ).value =
@@ -1783,9 +1801,7 @@
                 );
         }
 
-
         function openEditModal() {
-
             if (!currentStaff) {
                 showToast(
                     "Staff profile is not loaded.",
@@ -1795,35 +1811,30 @@
                 return;
             }
 
-            fillEditForm(
-                currentStaff
-            );
+            fillEditForm(currentStaff);
 
-            document.getElementById(
-                "editModal"
-            ).style.display = "block";
+            editModalInstance =
+                bootstrap.Modal.getOrCreateInstance(
+                    document.getElementById("editModal")
+                );
+
+            editModalInstance.show();
         }
-
 
         function closeEditModal() {
-
-            document.getElementById(
-                "editModal"
-            ).style.display = "none";
+            if (editModalInstance) {
+                editModalInstance.hide();
+            }
         }
 
-
         async function updateStaff(event) {
-
             event.preventDefault();
 
             if (!staffId) {
                 return;
             }
 
-
             const payload = {
-
                 firstName:
                     document.getElementById(
                         "editFirstName"
@@ -1918,47 +1929,35 @@
                     document.getElementById(
                         "editEmergencyPhone"
                     ).value.trim()
-
             };
 
-
             try {
-
                 const response =
                     await fetch(
                         `${API_BASE}/staff/${encodeURIComponent(staffId)}`,
                         {
                             method: "PUT",
                             headers: authHeaders(),
-                            body: JSON.stringify(
-                                payload
-                            )
+                            body: JSON.stringify(payload)
                         }
                     );
-
 
                 const result =
                     await response.json();
 
-
                 if (!response.ok) {
-
                     throw new Error(
                         result.message ||
                         "Unable to update staff profile."
                     );
                 }
 
-
                 const updatedStaff =
                     result.data ||
                     result.staff ||
                     result;
 
-
-                renderProfile(
-                    updatedStaff
-                );
+                renderProfile(updatedStaff);
 
                 closeEditModal();
 
@@ -1967,7 +1966,6 @@
                 );
 
             } catch (error) {
-
                 console.error(
                     "Update staff error:",
                     error
@@ -1978,38 +1976,29 @@
                     "Unable to update staff profile.",
                     "error"
                 );
-
             }
-
         }
 
-
         async function changeStatus(status) {
-
             if (!staffId) {
                 return;
             }
-
 
             const action =
                 status === "active"
                     ? "activate"
                     : "deactivate";
 
-
             const confirmed =
                 window.confirm(
                     `Are you sure you want to ${action} this staff member?`
                 );
 
-
             if (!confirmed) {
                 return;
             }
 
-
             try {
-
                 const response =
                     await fetch(
                         `${API_BASE}/staff/${encodeURIComponent(staffId)}`,
@@ -2022,44 +2011,31 @@
                         }
                     );
 
-
                 const result =
                     await response.json();
 
-
                 if (!response.ok) {
-
                     throw new Error(
                         result.message ||
                         `Unable to ${action} staff member.`
                     );
                 }
 
-
                 const updatedStaff =
                     result.data ||
                     result.staff;
 
-
                 if (updatedStaff) {
-
-                    renderProfile(
-                        updatedStaff
-                    );
-
+                    renderProfile(updatedStaff);
                 } else {
-
                     await loadStaff();
-
                 }
-
 
                 showToast(
                     `Staff member ${action}d successfully.`
                 );
 
             } catch (error) {
-
                 console.error(
                     "Change staff status error:",
                     error
@@ -2070,30 +2046,12 @@
                     `Unable to ${action} staff member.`,
                     "error"
                 );
-
             }
-
         }
-
 
         function goBack() {
-
-            if (
-                document.referrer &&
-                document.referrer.includes(
-                    window.location.host
-                )
-            ) {
-
-                window.history.back();
-
-                return;
-            }
-
-            window.location.href =
-                "staff.html";
+            window.location.href = "staff.html";
         }
-
 
         document
             .getElementById("editForm")
@@ -2102,47 +2060,40 @@
                 updateStaff
             );
 
-
         document
-            .getElementById("editModal")
+            .getElementById("sidebarToggle")
             .addEventListener(
                 "click",
-                function (event) {
+                function () {
+                    document
+                        .getElementById("sidebar")
+                        .classList.toggle("show");
 
-                    if (
-                        event.target ===
-                        this
-                    ) {
-                        closeEditModal();
-                    }
-
+                    document
+                        .getElementById("sidebarOverlay")
+                        .classList.toggle("show");
                 }
             );
 
+        document
+            .getElementById("sidebarOverlay")
+            .addEventListener(
+                "click",
+                function () {
+                    document
+                        .getElementById("sidebar")
+                        .classList.remove("show");
 
-        document.addEventListener(
-            "keydown",
-            function (event) {
-
-                if (
-                    event.key === "Escape"
-                ) {
-                    closeEditModal();
+                    this.classList.remove("show");
                 }
-
-            }
-        );
-
+            );
 
         document.addEventListener(
             "DOMContentLoaded",
             function () {
-
                 loadStaff();
-
             }
         );
-
     </script>
 
 </body>

@@ -7,530 +7,423 @@
 
     <title>Reports | School Management System</title>
 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
     <style>
+        :root {
+            --sidebar-width: 260px;
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --page-bg: #f5f7fb;
+            --border: #e5e7eb;
+            --text: #1f2937;
+            --muted: #6b7280;
+        }
+
         * {
             box-sizing: border-box;
-            margin: 0;
-            padding: 0;
         }
 
         body {
-            font-family: Arial, Helvetica, sans-serif;
-            background: #f5f7fb;
-            color: #1f2937;
+            margin: 0;
+            background: var(--page-bg);
+            color: var(--text);
+            font-family: Inter, Arial, Helvetica, sans-serif;
         }
 
-        button,
-        input,
-        select {
-            font-family: inherit;
-        }
-
-        button {
-            cursor: pointer;
-            border: none;
-        }
-
-        .page-container {
+        .app-layout {
             min-height: 100vh;
         }
 
-        /* HEADER */
+        .sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            width: var(--sidebar-width);
+            background: #111827;
+            color: #fff;
+            z-index: 1040;
+            overflow-y: auto;
+        }
 
-        .page-header {
-            background: #ffffff;
-            border-bottom: 1px solid #e5e7eb;
-            padding: 22px 30px;
+        .sidebar-brand {
+            padding: 22px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+        }
 
+        .sidebar-brand-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: var(--primary);
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            gap: 20px;
+            justify-content: center;
+            font-size: 21px;
         }
 
-        .page-title h1 {
-            font-size: 26px;
-            margin-bottom: 6px;
+        .sidebar-brand small {
+            color: #9ca3af;
         }
 
-        .page-title p {
+        .sidebar-section {
+            padding: 18px 12px 6px;
             color: #6b7280;
-            font-size: 14px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .09em;
+            text-transform: uppercase;
         }
 
-        .header-actions {
+        .sidebar .nav-link {
+            color: #d1d5db;
+            border-radius: 8px;
+            padding: 10px 13px;
+            margin: 2px 8px;
             display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
+            align-items: center;
+            gap: 11px;
+            font-size: 13px;
         }
 
-        .btn {
-            padding: 10px 16px;
-            border-radius: 7px;
-            font-size: 14px;
-            font-weight: 600;
+        .sidebar .nav-link i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
         }
 
-        .btn-primary {
-            background: #2563eb;
-            color: #ffffff;
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            color: #fff;
+            background: rgba(37, 99, 235, .9);
         }
 
-        .btn-primary:hover {
-            background: #1d4ed8;
+        .main-wrapper {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
         }
 
-        .btn-secondary {
-            background: #e5e7eb;
-            color: #374151;
+        .topbar {
+            height: 70px;
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
 
-        .btn-secondary:hover {
-            background: #d1d5db;
-        }
-
-        /* CONTENT */
-
-        .content {
-            padding: 25px 30px;
-        }
-
-        /* ALERT */
-
-        .alert {
+        .mobile-toggle {
             display: none;
-            padding: 13px 16px;
-            margin-bottom: 20px;
-            border-radius: 7px;
+        }
+
+        .page-content {
+            padding: 28px;
+        }
+
+        .page-heading h1 {
+            font-size: 25px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .page-heading p {
+            color: var(--muted);
+            margin: 0;
             font-size: 14px;
         }
 
-        .alert.show {
-            display: block;
+        .card {
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 8px rgba(15, 23, 42, .03);
         }
-
-        .alert-success {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .alert-error {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        /* FILTER CARD */
 
         .filter-card {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 25px;
+            border-radius: 12px;
         }
 
-        .filter-card h2 {
-            font-size: 17px;
-            margin-bottom: 18px;
+        .section-heading {
+            font-size: 18px;
+            font-weight: 700;
         }
 
-        .filter-grid {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 15px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 7px;
-        }
-
-        .form-group label {
+        .form-label {
             font-size: 13px;
             font-weight: 600;
             color: #374151;
         }
 
-        .form-group input,
-        .form-group select {
-            height: 42px;
-            border: 1px solid #d1d5db;
-            border-radius: 7px;
-            padding: 0 12px;
+        .form-control,
+        .form-select {
+            min-height: 42px;
+            border-color: #d1d5db;
             font-size: 14px;
-            outline: none;
-            background: #ffffff;
         }
 
-        .form-group input:focus,
-        .form-group select:focus {
-            border-color: #2563eb;
-        }
-
-        .filter-actions {
-            display: flex;
-            align-items: flex-end;
-            gap: 10px;
-        }
-
-        /* REPORT CARDS */
-
-        .section-title {
-            margin-bottom: 15px;
-            font-size: 18px;
-        }
-
-        .reports-grid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 18px;
-            margin-bottom: 25px;
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 .2rem rgba(37, 99, 235, .12);
         }
 
         .report-card {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 10px;
-            padding: 20px;
-            transition: box-shadow 0.2s ease,
-                transform 0.2s ease;
+            height: 100%;
+            border-radius: 12px;
+            transition: transform .2s ease, box-shadow .2s ease;
         }
 
         .report-card:hover {
-            box-shadow:
-                0 8px 20px rgba(0, 0, 0, 0.08);
-
-            transform: translateY(-2px);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(15, 23, 42, .08);
         }
 
         .report-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 9px;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
             background: #dbeafe;
-            color: #1d4ed8;
-
+            color: var(--primary);
             display: flex;
             align-items: center;
             justify-content: center;
-
-            font-size: 20px;
-            margin-bottom: 15px;
+            font-size: 22px;
         }
 
         .report-card h3 {
             font-size: 16px;
-            margin-bottom: 7px;
+            font-weight: 700;
         }
 
         .report-card p {
-            color: #6b7280;
+            color: var(--muted);
             font-size: 13px;
-            line-height: 1.5;
-            margin-bottom: 17px;
+            line-height: 1.6;
+            min-height: 62px;
         }
-
-        .report-card .btn {
-            width: 100%;
-        }
-
-        /* RESULTS */
 
         .results-card {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 10px;
+            border-radius: 12px;
             overflow: hidden;
         }
 
         .results-header {
             padding: 18px 20px;
-            border-bottom: 1px solid #e5e7eb;
-
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 15px;
-        }
-
-        .results-header h2 {
-            font-size: 17px;
-        }
-
-        .results-header span {
-            color: #6b7280;
-            font-size: 13px;
+            background: #fff;
+            border-bottom: 1px solid var(--border);
         }
 
         .results-body {
             padding: 20px;
-        }
-
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 15px;
+            background: #fff;
         }
 
         .summary-item {
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
             padding: 16px;
+            height: 100%;
         }
 
         .summary-item span {
             display: block;
-            color: #6b7280;
+            color: var(--muted);
             font-size: 12px;
             margin-bottom: 7px;
         }
 
         .summary-item strong {
             display: block;
-            font-size: 22px;
+            font-size: 21px;
         }
 
-        /* TABLE */
-
-        .table-wrapper {
-            width: 100%;
-            overflow-x: auto;
+        .table-responsive {
+            border: 1px solid var(--border);
+            border-radius: 9px;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 850px;
+        .dynamic-table {
+            min-width: 800px;
+            margin-bottom: 0;
         }
 
-        th,
-        td {
-            padding: 13px 15px;
-            text-align: left;
-            border-bottom: 1px solid #e5e7eb;
-            font-size: 13px;
-        }
-
-        th {
+        .dynamic-table th {
             background: #f9fafb;
             color: #374151;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
-
-        tbody tr:hover {
-            background: #f9fafb;
-        }
-
-        .status {
-            display: inline-block;
-            padding: 5px 9px;
-            border-radius: 20px;
             font-size: 11px;
-            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            white-space: nowrap;
         }
 
-        .status-success {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .status-warning {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .status-danger {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .status-neutral {
-            background: #f3f4f6;
-            color: #374151;
+        .dynamic-table td {
+            font-size: 13px;
+            vertical-align: middle;
         }
 
         .empty-state {
             text-align: center;
-            padding: 50px 20px;
-            color: #6b7280;
+            padding: 55px 20px;
+            color: var(--muted);
         }
 
-        .empty-state h3 {
-            color: #374151;
-            margin-bottom: 7px;
+        .empty-state-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            background: #eff6ff;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 25px;
+        }
+
+        .report-message {
+            background: #f9fafb;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            padding: 18px;
+            font-size: 14px;
+            line-height: 1.7;
         }
 
         .loading {
             text-align: center;
-            padding: 40px;
-            color: #6b7280;
+            padding: 45px;
+            color: var(--muted);
         }
 
-        /* MODAL */
-
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.45);
-
-            display: none;
-            align-items: center;
-            justify-content: center;
-
-            padding: 20px;
-            z-index: 1000;
+        .loading .spinner-border {
+            width: 2rem;
+            height: 2rem;
         }
 
-        .modal-overlay.show {
-            display: flex;
-        }
-
-        .modal {
-            width: 100%;
-            max-width: 650px;
-            max-height: 90vh;
-            overflow-y: auto;
-
-            background: #ffffff;
-            border-radius: 12px;
-
-            box-shadow:
-                0 20px 50px rgba(0, 0, 0, 0.2);
+        .modal-content {
+            border: 0;
+            border-radius: 14px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .2);
         }
 
         .modal-header {
-            padding: 20px;
-            border-bottom: 1px solid #e5e7eb;
-
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .modal-header h2 {
-            font-size: 19px;
-        }
-
-        .close-btn {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            background: #f3f4f6;
-            color: #374151;
-            font-size: 20px;
-        }
-
-        .modal-body {
-            padding: 20px;
+            border-bottom-color: var(--border);
         }
 
         .modal-footer {
-            padding: 18px 20px;
-            border-top: 1px solid #e5e7eb;
+            border-top-color: var(--border);
+        }
 
+        #alert {
+            display: none;
+        }
+
+        #alert.show {
+            display: block;
+        }
+
+        .user-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #dbeafe;
+            color: var(--primary);
             display: flex;
-            justify-content: flex-end;
-            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
         }
 
-        .report-message {
-            padding: 20px;
-            border-radius: 8px;
-            background: #f9fafb;
-            color: #374151;
-            line-height: 1.6;
-            font-size: 14px;
+        #sidebarOverlay {
+            display: none;
         }
 
-        /* PRINT */
+        @media (max-width: 991.98px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform .25s ease;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-wrapper {
+                margin-left: 0;
+            }
+
+            .mobile-toggle {
+                display: inline-flex;
+            }
+
+            #sidebarOverlay.show {
+                display: block;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, .45);
+                z-index: 1030;
+            }
+
+            .topbar {
+                padding: 0 18px;
+            }
+
+            .page-content {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .page-content {
+                padding: 16px;
+            }
+
+            .topbar {
+                height: 62px;
+            }
+
+            .page-heading h1 {
+                font-size: 22px;
+            }
+
+            .report-card p {
+                min-height: auto;
+            }
+        }
 
         @media print {
 
-            .page-header,
+            .sidebar,
+            .topbar,
             .filter-card,
-            .reports-grid,
-            .alert,
-            .header-actions {
+            .reports-section,
+            .no-print,
+            #alert {
                 display: none !important;
             }
 
-            .content {
+            .main-wrapper {
+                margin-left: 0;
+            }
+
+            .page-content {
                 padding: 0;
             }
 
             .results-card {
-                border: none;
+                border: 0;
+                box-shadow: none;
+            }
+
+            .results-body {
+                padding: 0;
             }
 
             body {
-                background: #ffffff;
-            }
-        }
-
-        /* RESPONSIVE */
-
-        @media (max-width: 1000px) {
-
-            .filter-grid {
-                grid-template-columns:
-                    repeat(2,
-                        minmax(0, 1fr));
-            }
-
-            .reports-grid {
-                grid-template-columns:
-                    repeat(2,
-                        minmax(0, 1fr));
-            }
-
-            .summary-grid {
-                grid-template-columns:
-                    repeat(2,
-                        minmax(0, 1fr));
-            }
-        }
-
-        @media (max-width: 650px) {
-
-            .page-header {
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 18px;
-            }
-
-            .header-actions {
-                width: 100%;
-            }
-
-            .header-actions .btn {
-                flex: 1;
-            }
-
-            .content {
-                padding: 18px;
-            }
-
-            .filter-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .reports-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .summary-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .filter-actions {
-                align-items: stretch;
-            }
-
-            .filter-actions .btn {
-                width: 100%;
+                background: #fff;
             }
         }
     </style>
@@ -538,120 +431,273 @@
 
 <body>
 
-    <div class="page-container">
+    <div id="sidebarOverlay"></div>
 
-        <!-- HEADER -->
+    <aside class="sidebar" id="sidebar">
 
-        <header class="page-header">
-
-            <div class="page-title">
-
-                <h1>Reports</h1>
-
-                <p>
-                    Generate and review school management reports.
-                </p>
-
+        <div class="sidebar-brand">
+            <div class="d-flex align-items-center gap-3">
+                <div class="sidebar-brand-icon">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
+                <div>
+                    <div class="fw-bold">School Management</div>
+                    <small>Administration System</small>
+                </div>
             </div>
+        </div>
 
-            <div class="header-actions">
+        <nav class="py-2">
 
-                <button type="button" class="btn btn-secondary" onclick="window.print()">
-                    Print
+            <div class="sidebar-section">Main</div>
+
+            <a class="nav-link" href="dashboard.html">
+                <i class="bi bi-grid-1x2-fill"></i>
+                Dashboard
+            </a>
+
+            <a class="nav-link" href="students.html">
+                <i class="bi bi-people-fill"></i>
+                Students
+            </a>
+
+            <a class="nav-link" href="staff.html">
+                <i class="bi bi-person-badge-fill"></i>
+                Staff
+            </a>
+
+            <a class="nav-link" href="guardians.html">
+                <i class="bi bi-person-hearts"></i>
+                Guardians
+            </a>
+
+            <div class="sidebar-section">Academic</div>
+
+            <a class="nav-link" href="classes.html">
+                <i class="bi bi-building"></i>
+                Classes
+            </a>
+
+            <a class="nav-link" href="class-arms.html">
+                <i class="bi bi-diagram-3-fill"></i>
+                Class Arms
+            </a>
+
+            <a class="nav-link" href="departments.html">
+                <i class="bi bi-diagram-2-fill"></i>
+                Departments
+            </a>
+
+            <a class="nav-link" href="subjects.html">
+                <i class="bi bi-book-fill"></i>
+                Subjects
+            </a>
+
+            <a class="nav-link" href="academic-sessions.html">
+                <i class="bi bi-calendar3"></i>
+                Sessions
+            </a>
+
+            <a class="nav-link" href="terms.html">
+                <i class="bi bi-calendar2-week-fill"></i>
+                Terms
+            </a>
+
+            <a class="nav-link" href="attendance.html">
+                <i class="bi bi-calendar-check-fill"></i>
+                Attendance
+            </a>
+
+            <a class="nav-link" href="results.html">
+                <i class="bi bi-journal-check"></i>
+                Results
+            </a>
+
+            <div class="sidebar-section">Finance & Records</div>
+
+            <a class="nav-link" href="fees.html">
+                <i class="bi bi-cash-stack"></i>
+                Fees
+            </a>
+
+            <a class="nav-link" href="documents.html">
+                <i class="bi bi-folder-fill"></i>
+                Documents
+            </a>
+
+            <a class="nav-link active" href="reports.html">
+                <i class="bi bi-bar-chart-fill"></i>
+                Reports
+            </a>
+
+            <div class="sidebar-section">Administration</div>
+
+            <a class="nav-link" href="users.html">
+                <i class="bi bi-person-gear"></i>
+                Users
+            </a>
+
+            <a class="nav-link" href="roles.html">
+                <i class="bi bi-shield-lock-fill"></i>
+                Roles
+            </a>
+
+            <a class="nav-link" href="permissions.html">
+                <i class="bi bi-key-fill"></i>
+                Permissions
+            </a>
+
+            <a class="nav-link" href="profile.html">
+                <i class="bi bi-person-circle"></i>
+                Profile
+            </a>
+
+            <a class="nav-link" href="settings.html">
+                <i class="bi bi-gear-fill"></i>
+                Settings
+            </a>
+
+        </nav>
+    </aside>
+
+    <div class="main-wrapper">
+
+        <header class="topbar">
+
+            <div class="d-flex align-items-center gap-3">
+                <button type="button" class="btn btn-light mobile-toggle" id="sidebarToggle">
+                    <i class="bi bi-list fs-5"></i>
                 </button>
 
-                <button type="button" class="btn btn-primary" onclick="refreshReports()">
-                    Refresh
+                <div class="d-none d-md-block">
+                    <span class="fw-semibold">Reports</span>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+
+                <div class="user-avatar">
+                    <i class="bi bi-person-fill"></i>
+                </div>
+
+                <div class="d-none d-sm-block">
+                    <div class="fw-semibold small" id="userName">Administrator</div>
+                    <div class="text-muted" style="font-size:11px;">
+                        School Administrator
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="logoutButton">
+                    <i class="bi bi-box-arrow-right me-1"></i>
+                    Logout
                 </button>
 
             </div>
 
         </header>
 
+        <main class="page-content">
 
-        <!-- CONTENT -->
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
 
-        <main class="content">
+                <div class="page-heading">
+                    <h1>Reports</h1>
+                    <p>Generate and review school management reports.</p>
+                </div>
 
-            <!-- ALERT -->
+                <div class="d-flex gap-2 no-print">
 
-            <div id="alert" class="alert"></div>
+                    <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
+                        <i class="bi bi-printer me-1"></i>
+                        Print
+                    </button>
 
+                    <button type="button" class="btn btn-primary" onclick="refreshReports()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>
+                        Refresh
+                    </button>
 
-            <!-- FILTER -->
+                </div>
 
-            <section class="filter-card">
+            </div>
 
-                <h2>
-                    Report Filters
-                </h2>
+            <div id="alert" class="alert mb-4" role="alert"></div>
 
-                <div class="filter-grid">
+            <section class="card filter-card mb-4 no-print">
 
-                    <div class="form-group">
+                <div class="card-body p-4">
 
-                        <label for="reportType">
-                            Report Type
-                        </label>
-
-                        <select id="reportType">
-
-                            <option value="overview">
-                                School Overview
-                            </option>
-
-                            <option value="students">
-                                Student Report
-                            </option>
-
-                            <option value="attendance">
-                                Attendance Report
-                            </option>
-
-                            <option value="results">
-                                Academic Results
-                            </option>
-
-                            <option value="fees">
-                                Fees Report
-                            </option>
-
-                            <option value="staff">
-                                Staff Report
-                            </option>
-
-                        </select>
-
+                    <div class="d-flex align-items-center gap-2 mb-4">
+                        <i class="bi bi-funnel-fill text-primary"></i>
+                        <h2 class="section-heading mb-0">Report Filters</h2>
                     </div>
 
+                    <div class="row g-3">
 
-                    <div class="form-group">
+                        <div class="col-12 col-md-4">
 
-                        <label for="sessionId">
-                            Academic Session
-                        </label>
+                            <label class="form-label" for="reportType">
+                                Report Type
+                            </label>
 
-                        <input type="text" id="sessionId" placeholder="Session ID">
+                            <select id="reportType" class="form-select">
 
-                    </div>
+                                <option value="overview">
+                                    School Overview
+                                </option>
 
+                                <option value="students">
+                                    Student Report
+                                </option>
 
-                    <div class="form-group">
+                                <option value="attendance">
+                                    Attendance Report
+                                </option>
 
-                        <label for="termId">
-                            Term
-                        </label>
+                                <option value="results">
+                                    Academic Results
+                                </option>
 
-                        <input type="text" id="termId" placeholder="Term ID">
+                                <option value="fees">
+                                    Fees Report
+                                </option>
 
-                    </div>
+                                <option value="staff">
+                                    Staff Report
+                                </option>
 
+                            </select>
 
-                    <div class="filter-actions">
+                        </div>
 
-                        <button type="button" class="btn btn-primary" onclick="generateSelectedReport()">
-                            Generate Report
-                        </button>
+                        <div class="col-12 col-md-4">
+
+                            <label class="form-label" for="sessionId">
+                                Academic Session
+                            </label>
+
+                            <input type="text" id="sessionId" class="form-control" placeholder="Session ID">
+
+                        </div>
+
+                        <div class="col-12 col-md-4">
+
+                            <label class="form-label" for="termId">
+                                Term
+                            </label>
+
+                            <input type="text" id="termId" class="form-control" placeholder="Term ID">
+
+                        </div>
+
+                        <div class="col-12">
+
+                            <button type="button" class="btn btn-primary" onclick="generateSelectedReport()">
+                                <i class="bi bi-file-earmark-bar-graph me-1"></i>
+                                Generate Report
+                            </button>
+
+                        </div>
 
                     </div>
 
@@ -659,196 +705,204 @@
 
             </section>
 
+            <section class="reports-section mb-4">
 
-            <!-- REPORT TYPES -->
-
-            <h2 class="section-title">
-                Available Reports
-            </h2>
-
-
-            <section class="reports-grid">
-
-                <!-- OVERVIEW -->
-
-                <div class="report-card">
-
-                    <div class="report-icon">
-                        📊
-                    </div>
-
-                    <h3>
-                        School Overview
-                    </h3>
-
-                    <p>
-                        View a summary of students,
-                        staff, classes, subjects and
-                        other important school information.
-                    </p>
-
-                    <button class="btn btn-primary" onclick="generateReport('overview')">
-                        Generate
-                    </button>
-
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-files text-primary"></i>
+                    <h2 class="section-heading mb-0">
+                        Available Reports
+                    </h2>
                 </div>
 
+                <div class="row g-3">
 
-                <!-- STUDENTS -->
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="card report-card">
+                            <div class="card-body p-4">
 
-                <div class="report-card">
+                                <div class="report-icon mb-3">
+                                    <i class="bi bi-bar-chart-fill"></i>
+                                </div>
 
-                    <div class="report-icon">
-                        🎓
+                                <h3>School Overview</h3>
+
+                                <p>
+                                    View a summary of students, staff,
+                                    classes, subjects and other important
+                                    school information.
+                                </p>
+
+                                <button class="btn btn-primary w-100" onclick="generateReport('overview')">
+                                    <i class="bi bi-play-fill me-1"></i>
+                                    Generate
+                                </button>
+
+                            </div>
+                        </div>
                     </div>
 
-                    <h3>
-                        Student Report
-                    </h3>
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="card report-card">
+                            <div class="card-body p-4">
 
-                    <p>
-                        View student numbers and
-                        student information for the
-                        selected academic period.
-                    </p>
+                                <div class="report-icon mb-3">
+                                    <i class="bi bi-mortarboard-fill"></i>
+                                </div>
 
-                    <button class="btn btn-primary" onclick="generateReport('students')">
-                        Generate
-                    </button>
+                                <h3>Student Report</h3>
 
-                </div>
+                                <p>
+                                    View student numbers and student
+                                    information for the selected
+                                    academic period.
+                                </p>
 
+                                <button class="btn btn-primary w-100" onclick="generateReport('students')">
+                                    <i class="bi bi-play-fill me-1"></i>
+                                    Generate
+                                </button>
 
-                <!-- ATTENDANCE -->
-
-                <div class="report-card">
-
-                    <div class="report-icon">
-                        📅
+                            </div>
+                        </div>
                     </div>
 
-                    <h3>
-                        Attendance Report
-                    </h3>
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="card report-card">
+                            <div class="card-body p-4">
 
-                    <p>
-                        Review attendance records,
-                        attendance rates and student
-                        attendance performance.
-                    </p>
+                                <div class="report-icon mb-3">
+                                    <i class="bi bi-calendar-check-fill"></i>
+                                </div>
 
-                    <button class="btn btn-primary" onclick="generateReport('attendance')">
-                        Generate
-                    </button>
+                                <h3>Attendance Report</h3>
 
-                </div>
+                                <p>
+                                    Review attendance records, attendance
+                                    rates and student attendance
+                                    performance.
+                                </p>
 
+                                <button class="btn btn-primary w-100" onclick="generateReport('attendance')">
+                                    <i class="bi bi-play-fill me-1"></i>
+                                    Generate
+                                </button>
 
-                <!-- RESULTS -->
-
-                <div class="report-card">
-
-                    <div class="report-icon">
-                        📝
+                            </div>
+                        </div>
                     </div>
 
-                    <h3>
-                        Academic Results
-                    </h3>
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="card report-card">
+                            <div class="card-body p-4">
 
-                    <p>
-                        Review academic results,
-                        grades, averages and student
-                        academic performance.
-                    </p>
+                                <div class="report-icon mb-3">
+                                    <i class="bi bi-journal-check"></i>
+                                </div>
 
-                    <button class="btn btn-primary" onclick="generateReport('results')">
-                        Generate
-                    </button>
+                                <h3>Academic Results</h3>
 
-                </div>
+                                <p>
+                                    Review academic results, grades,
+                                    averages and student academic
+                                    performance.
+                                </p>
 
+                                <button class="btn btn-primary w-100" onclick="generateReport('results')">
+                                    <i class="bi bi-play-fill me-1"></i>
+                                    Generate
+                                </button>
 
-                <!-- FEES -->
-
-                <div class="report-card">
-
-                    <div class="report-icon">
-                        💰
+                            </div>
+                        </div>
                     </div>
 
-                    <h3>
-                        Fees Report
-                    </h3>
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="card report-card">
+                            <div class="card-body p-4">
 
-                    <p>
-                        Review fee collections,
-                        outstanding balances and
-                        payment information.
-                    </p>
+                                <div class="report-icon mb-3">
+                                    <i class="bi bi-cash-stack"></i>
+                                </div>
 
-                    <button class="btn btn-primary" onclick="generateReport('fees')">
-                        Generate
-                    </button>
+                                <h3>Fees Report</h3>
 
-                </div>
+                                <p>
+                                    Review fee collections, outstanding
+                                    balances and payment information.
+                                </p>
 
+                                <button class="btn btn-primary w-100" onclick="generateReport('fees')">
+                                    <i class="bi bi-play-fill me-1"></i>
+                                    Generate
+                                </button>
 
-                <!-- STAFF -->
-
-                <div class="report-card">
-
-                    <div class="report-icon">
-                        👨‍🏫
+                            </div>
+                        </div>
                     </div>
 
-                    <h3>
-                        Staff Report
-                    </h3>
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="card report-card">
+                            <div class="card-body p-4">
 
-                    <p>
-                        Review staff numbers,
-                        departments and staff
-                        information.
-                    </p>
+                                <div class="report-icon mb-3">
+                                    <i class="bi bi-person-badge-fill"></i>
+                                </div>
 
-                    <button class="btn btn-primary" onclick="generateReport('staff')">
-                        Generate
-                    </button>
+                                <h3>Staff Report</h3>
+
+                                <p>
+                                    Review staff numbers, departments
+                                    and staff information.
+                                </p>
+
+                                <button class="btn btn-primary w-100" onclick="generateReport('staff')">
+                                    <i class="bi bi-play-fill me-1"></i>
+                                    Generate
+                                </button>
+
+                            </div>
+                        </div>
+                    </div>
 
                 </div>
 
             </section>
 
-
-            <!-- REPORT RESULT -->
-
-            <section class="results-card">
+            <section class="card results-card">
 
                 <div class="results-header">
 
-                    <h2 id="resultsTitle">
-                        Report Results
-                    </h2>
+                    <div class="d-flex flex-column flex-sm-row justify-content-between gap-2">
 
-                    <span id="resultsDate">
-                        No report generated
-                    </span>
+                        <div>
+                            <h2 id="resultsTitle" class="h5 fw-bold mb-1">
+                                Report Results
+                            </h2>
+
+                            <div id="resultsDate" class="text-muted small">
+                                No report generated
+                            </div>
+                        </div>
+
+                    </div>
 
                 </div>
-
 
                 <div id="resultsBody" class="results-body">
 
                     <div class="empty-state">
 
-                        <h3>
+                        <div class="empty-state-icon">
+                            <i class="bi bi-file-earmark-bar-graph"></i>
+                        </div>
+
+                        <h3 class="h5 fw-bold text-dark">
                             No report generated yet
                         </h3>
 
-                        <p>
-                            Select a report above to view
-                            your school's information.
+                        <p class="mb-0">
+                            Select a report above to view your school's
+                            information.
                         </p>
 
                     </div>
@@ -861,44 +915,43 @@
 
     </div>
 
+    <div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
 
-    <!-- REPORT MODAL -->
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
 
-    <div id="reportModal" class="modal-overlay">
+            <div class="modal-content">
 
-        <div class="modal">
+                <div class="modal-header">
 
-            <div class="modal-header">
+                    <h2 id="modalTitle" class="modal-title fs-5 fw-bold">
+                        Report
+                    </h2>
 
-                <h2 id="modalTitle">
-                    Report
-                </h2>
+                    <button type="button" class="btn-close" onclick="closeModal()" aria-label="Close">
+                    </button>
 
-                <button type="button" class="close-btn" onclick="closeModal()">
-                    ×
-                </button>
-
-            </div>
-
-
-            <div class="modal-body">
-
-                <div id="modalContent" class="report-message">
-                    Loading report...
                 </div>
 
-            </div>
+                <div class="modal-body">
 
+                    <div id="modalContent" class="report-message">
+                        Loading report...
+                    </div>
 
-            <div class="modal-footer">
+                </div>
 
-                <button type="button" class="btn btn-secondary" onclick="closeModal()">
-                    Close
-                </button>
+                <div class="modal-footer">
 
-                <button type="button" class="btn btn-primary" onclick="window.print()">
-                    Print Report
-                </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">
+                        Close
+                    </button>
+
+                    <button type="button" class="btn btn-primary" onclick="window.print()">
+                        <i class="bi bi-printer me-1"></i>
+                        Print Report
+                    </button>
+
+                </div>
 
             </div>
 
@@ -906,232 +959,112 @@
 
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-
-        /*
-        |--------------------------------------------------------------------------
-        | Configuration
-        |--------------------------------------------------------------------------
-        */
-
         const API_URL = "/api/reports";
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Application State
-        |--------------------------------------------------------------------------
-        */
-
         let currentReport = null;
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Authentication
-        |--------------------------------------------------------------------------
-        */
+        let reportModalInstance = null;
 
         function getAuthToken() {
-
             return (
+                localStorage.getItem("school_management_token") ||
+                sessionStorage.getItem("school_management_token") ||
                 localStorage.getItem("token") ||
-
+                sessionStorage.getItem("token") ||
                 localStorage.getItem("authToken") ||
-
+                sessionStorage.getItem("authToken") ||
                 localStorage.getItem("accessToken") ||
-
+                sessionStorage.getItem("accessToken") ||
                 ""
             );
-
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | API Request
-        |--------------------------------------------------------------------------
-        */
-
-        async function apiRequest(
-            url,
-            options = {}
-        ) {
-
-            const token =
-                getAuthToken();
-
+        async function apiRequest(url, options = {}) {
+            const token = getAuthToken();
 
             const headers = {
-
-                "Content-Type":
-                    "application/json",
-
+                "Content-Type": "application/json",
                 ...(options.headers || {})
-
             };
 
-
             if (token) {
-
-                headers.Authorization =
-                    `Bearer ${token}`;
-
+                headers.Authorization = `Bearer ${token}`;
             }
 
-
-            const response =
-                await fetch(
-                    url,
-                    {
-                        ...options,
-                        headers
-                    }
-                );
-
+            const response = await fetch(url, {
+                ...options,
+                headers
+            });
 
             let data = null;
 
-
             try {
-
-                data =
-                    await response.json();
-
-            } catch (error) {
-
+                data = await response.json();
+            } catch {
                 data = null;
-
             }
 
-
             if (!response.ok) {
-
                 throw new Error(
                     data?.message ||
                     "Unable to retrieve report."
                 );
-
             }
 
-
             return data;
-
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Generate Selected Report
-        |--------------------------------------------------------------------------
-        */
 
         function generateSelectedReport() {
-
             const reportType =
-                document.getElementById(
-                    "reportType"
-                ).value;
+                document.getElementById("reportType").value;
 
-
-            generateReport(
-                reportType
-            );
-
+            generateReport(reportType);
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Generate Report
-        |--------------------------------------------------------------------------
-        */
-
-        async function generateReport(
-            reportType
-        ) {
-
+        async function generateReport(reportType) {
             const sessionId =
-                document.getElementById(
-                    "sessionId"
-                ).value.trim();
-
+                document.getElementById("sessionId").value.trim();
 
             const termId =
-                document.getElementById(
-                    "termId"
-                ).value.trim();
+                document.getElementById("termId").value.trim();
 
-
-            showAlert(
-                "Generating report...",
-                "success"
-            );
-
+            showAlert("Generating report...", "success");
 
             const resultsBody =
-                document.getElementById(
-                    "resultsBody"
-                );
-
+                document.getElementById("resultsBody");
 
             resultsBody.innerHTML = `
-
-            <div class="loading">
-                Generating report...
-            </div>
-
-        `;
-
+                <div class="loading">
+                    <div class="spinner-border text-primary mb-3"
+                         role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <div>Generating report...</div>
+                </div>
+            `;
 
             try {
+                const params = new URLSearchParams();
 
-                const params =
-                    new URLSearchParams();
-
-
-                params.set(
-                    "type",
-                    reportType
-                );
-
+                params.set("type", reportType);
 
                 if (sessionId) {
-
-                    params.set(
-                        "sessionId",
-                        sessionId
-                    );
-
+                    params.set("sessionId", sessionId);
                 }
-
 
                 if (termId) {
-
-                    params.set(
-                        "termId",
-                        termId
-                    );
-
+                    params.set("termId", termId);
                 }
 
-
-                const response =
-                    await apiRequest(
-                        `${API_URL}?${params.toString()}`
-                    );
-
-
-                currentReport =
-                    response;
-
-
-                renderReport(
-                    reportType,
-                    response
+                const response = await apiRequest(
+                    `${API_URL}?${params.toString()}`
                 );
 
+                currentReport = response;
+
+                renderReport(reportType, response);
 
                 showAlert(
                     "Report generated successfully.",
@@ -1139,677 +1072,341 @@
                 );
 
             } catch (error) {
-
                 console.error(
                     "Generate report error:",
                     error
                 );
 
-
                 resultsBody.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon bg-danger-subtle text-danger">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                        </div>
 
-                <div class="empty-state">
+                        <h3 class="h5 fw-bold text-dark">
+                            Unable to generate report
+                        </h3>
 
-                    <h3>
-                        Unable to generate report
-                    </h3>
+                        <p class="mb-0">
+                            ${escapeHtml(error.message)}
+                        </p>
+                    </div>
+                `;
 
-                    <p>
-                        ${escapeHtml(
-                    error.message
-                )}
-                    </p>
-
-                </div>
-
-            `;
-
-
-                showAlert(
-                    error.message,
-                    "error"
-                );
-
+                showAlert(error.message, "danger");
             }
-
         }
 
+        function renderReport(reportType, response) {
+            const title = getReportTitle(reportType);
 
-        /*
-        |--------------------------------------------------------------------------
-        | Render Report
-        |--------------------------------------------------------------------------
-        */
+            document.getElementById("resultsTitle").textContent = title;
 
-        function renderReport(
-            reportType,
-            response
-        ) {
-
-            const title =
-                getReportTitle(
-                    reportType
-                );
-
-
-            document.getElementById(
-                "resultsTitle"
-            ).textContent =
-                title;
-
-
-            document.getElementById(
-                "resultsDate"
-            ).textContent =
-                new Date().toLocaleString(
-                    "en-NG"
-                );
-
+            document.getElementById("resultsDate").textContent =
+                new Date().toLocaleString("en-NG");
 
             const data =
                 response?.data ??
                 response?.report ??
                 response;
 
-
             const resultsBody =
-                document.getElementById(
-                    "resultsBody"
-                );
-
+                document.getElementById("resultsBody");
 
             if (!data) {
-
                 resultsBody.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="bi bi-database-x"></i>
+                        </div>
 
-                <div class="empty-state">
+                        <h3 class="h5 fw-bold text-dark">
+                            No data available
+                        </h3>
 
-                    <h3>
-                        No data available
-                    </h3>
-
-                    <p>
-                        No information was returned for this report.
-                    </p>
-
-                </div>
-
-            `;
-
-                return;
-
-            }
-
-
-            if (
-                Array.isArray(data)
-            ) {
-
-                renderArrayReport(
-                    resultsBody,
-                    data
-                );
+                        <p class="mb-0">
+                            No information was returned for this report.
+                        </p>
+                    </div>
+                `;
 
                 return;
-
             }
 
-
-            if (
-                typeof data === "object"
-            ) {
-
-                renderObjectReport(
-                    resultsBody,
-                    data
-                );
-
+            if (Array.isArray(data)) {
+                renderArrayReport(resultsBody, data);
                 return;
-
             }
 
+            if (typeof data === "object") {
+                renderObjectReport(resultsBody, data);
+                return;
+            }
 
             resultsBody.innerHTML = `
-
-            <div class="report-message">
-
-                ${escapeHtml(
-                String(data)
-            )}
-
-            </div>
-
-        `;
-
+                <div class="report-message">
+                    ${escapeHtml(String(data))}
+                </div>
+            `;
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Render Object Report
-        |--------------------------------------------------------------------------
-        */
-
-        function renderObjectReport(
-            container,
-            data
-        ) {
-
-            const entries =
-                Object.entries(data);
-
+        function renderObjectReport(container, data) {
+            const entries = Object.entries(data);
 
             if (!entries.length) {
-
                 container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="bi bi-database-x"></i>
+                        </div>
 
-                <div class="empty-state">
+                        <h3 class="h5 fw-bold text-dark">
+                            No data available
+                        </h3>
 
-                    <h3>
-                        No data available
-                    </h3>
-
-                    <p>
-                        The report returned no information.
-                    </p>
-
-                </div>
-
-            `;
+                        <p class="mb-0">
+                            The report returned no information.
+                        </p>
+                    </div>
+                `;
 
                 return;
-
             }
 
+            const summaryEntries = entries.filter(
+                ([, value]) => isSimpleValue(value)
+            );
 
-            const summaryEntries =
-                entries.filter(
-                    ([key, value]) =>
-                        isSimpleValue(value)
-                );
-
-
-            const complexEntries =
-                entries.filter(
-                    ([key, value]) =>
-                        !isSimpleValue(value)
-                );
-
+            const complexEntries = entries.filter(
+                ([, value]) => !isSimpleValue(value)
+            );
 
             let html = "";
 
-
             if (summaryEntries.length) {
-
                 html += `
+                    <div class="row g-3">
+                        ${summaryEntries.map(
+                    ([key, value]) => `
+                                <div class="col-12 col-sm-6 col-xl-3">
+                                    <div class="summary-item">
+                                        <span>
+                                            ${escapeHtml(
+                        formatLabel(key)
+                    )}
+                                        </span>
 
-                <div class="summary-grid">
-
-                    ${summaryEntries
-                        .map(
-                            ([key, value]) => `
-
-                                <div class="summary-item">
-
-                                    <span>
-                                        ${escapeHtml(
-                                formatLabel(key)
-                            )}
-                                    </span>
-
-                                    <strong>
-                                        ${escapeHtml(
-                                formatValue(value)
-                            )}
-                                    </strong>
-
+                                        <strong>
+                                            ${escapeHtml(
+                        formatValue(value)
+                    )}
+                                        </strong>
+                                    </div>
                                 </div>
-
                             `
-                        )
-                        .join("")}
-
-                </div>
-
-            `;
-
+                ).join("")}
+                    </div>
+                `;
             }
 
-
-            complexEntries.forEach(
-                ([key, value]) => {
-
-                    if (
-                        Array.isArray(value)
-                    ) {
-
-                        html += `
-
-                        <div style="margin-top:25px;">
-
-                            <h3
-                                style="
-                                    margin-bottom:12px;
-                                    font-size:16px;
-                                "
-                            >
-                                ${escapeHtml(
-                            formatLabel(key)
-                        )}
+            complexEntries.forEach(([key, value]) => {
+                if (Array.isArray(value)) {
+                    html += `
+                        <div class="mt-4">
+                            <h3 class="h6 fw-bold mb-3">
+                                ${escapeHtml(formatLabel(key))}
                             </h3>
 
-                            ${renderDynamicTable(
-                            value
-                        )}
-
+                            ${renderDynamicTable(value)}
                         </div>
-
                     `;
-
-                    } else {
-
-                        html += `
-
-                        <div
-                            class="report-message"
-                            style="margin-top:15px;"
-                        >
-
+                } else {
+                    html += `
+                        <div class="report-message mt-3">
                             <strong>
-                                ${escapeHtml(
-                            formatLabel(key)
-                        )}
+                                ${escapeHtml(formatLabel(key))}
                             </strong>
 
-                            <pre
-                                style="
-                                    margin-top:10px;
-                                    white-space:pre-wrap;
-                                "
-                            >${escapeHtml(
-                            JSON.stringify(
-                                value,
-                                null,
-                                2
-                            )
-                        )}</pre>
+                            <pre class="mt-3 mb-0"
+                                 style="white-space:pre-wrap;">${escapeHtml(
+                        JSON.stringify(
+                            value,
+                            null,
+                            2
+                        )
+                    )}</pre>
+                        </div>
+                    `;
+                }
+            });
 
+            container.innerHTML = html;
+        }
+
+        function renderArrayReport(container, data) {
+            if (!data.length) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="bi bi-inbox"></i>
                         </div>
 
-                    `;
+                        <h3 class="h5 fw-bold text-dark">
+                            No records found
+                        </h3>
 
-                    }
-
-                }
-            );
-
-
-            container.innerHTML =
-                html;
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Render Array Report
-        |--------------------------------------------------------------------------
-        */
-
-        function renderArrayReport(
-            container,
-            data
-        ) {
-
-            if (!data.length) {
-
-                container.innerHTML = `
-
-                <div class="empty-state">
-
-                    <h3>
-                        No records found
-                    </h3>
-
-                    <p>
-                        No records are available for the selected report.
-                    </p>
-
-                </div>
-
-            `;
+                        <p class="mb-0">
+                            No records are available for the selected report.
+                        </p>
+                    </div>
+                `;
 
                 return;
-
             }
 
-
-            container.innerHTML =
-                renderDynamicTable(
-                    data
-                );
-
+            container.innerHTML = renderDynamicTable(data);
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Dynamic Table
-        |--------------------------------------------------------------------------
-        */
-
-        function renderDynamicTable(
-            rows
-        ) {
-
-            if (
-                !Array.isArray(rows) ||
-                !rows.length
-            ) {
-
+        function renderDynamicTable(rows) {
+            if (!Array.isArray(rows) || !rows.length) {
                 return `
-
-                <div class="empty-state">
-                    No records found.
-                </div>
-
-            `;
-
+                    <div class="empty-state py-4">
+                        No records found.
+                    </div>
+                `;
             }
 
-
-            const columns =
-                [
-                    ...new Set(
-                        rows.flatMap(
-                            row =>
-                                typeof row === "object" &&
-                                    row !== null
-                                    ?
-                                    Object.keys(row)
-                                    :
-                                    []
-                        )
+            const columns = [
+                ...new Set(
+                    rows.flatMap(row =>
+                        typeof row === "object" &&
+                            row !== null
+                            ? Object.keys(row)
+                            : []
                     )
-                ];
-
+                )
+            ];
 
             if (!columns.length) {
-
                 return `
-
-                <div class="report-message">
-
-                    ${rows
-                        .map(
-                            row =>
-                                escapeHtml(
-                                    String(row)
-                                )
+                    <div class="report-message">
+                        ${rows
+                        .map(row =>
+                            escapeHtml(String(row))
                         )
                         .join("<br>")}
-
-                </div>
-
-            `;
-
+                    </div>
+                `;
             }
-
 
             return `
-
-            <div class="table-wrapper">
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-
-                            ${columns
-                    .map(
-                        column => `
-
+                <div class="table-responsive">
+                    <table class="table table-hover dynamic-table align-middle">
+                        <thead>
+                            <tr>
+                                ${columns.map(
+                column => `
                                         <th>
                                             ${escapeHtml(
-                            formatLabel(
-                                column
-                            )
-                        )}
+                    formatLabel(column)
+                )}
                                         </th>
-
                                     `
-                    )
-                    .join("")}
+            ).join("")}
+                            </tr>
+                        </thead>
 
-                        </tr>
-
-                    </thead>
-
-                    <tbody>
-
-                        ${rows
-                    .map(
-                        row => `
-
+                        <tbody>
+                            ${rows.map(
+                row => `
                                     <tr>
-
-                                        ${columns
-                                .map(
-                                    column => `
-
-                                                    <td>
-                                                        ${formatTableValue(
-                                        row[column]
-                                    )}
-                                                    </td>
-
-                                                `
-                                )
-                                .join("")}
-
+                                        ${columns.map(
+                    column => `
+                                                <td>
+                                                    ${formatTableValue(
+                        row[column]
+                    )}
+                                                </td>
+                                            `
+                ).join("")}
                                     </tr>
-
                                 `
-                    )
-                    .join("")}
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        `;
-
+            ).join("")}
+                        </tbody>
+                    </table>
+                </div>
+            `;
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Refresh Reports
-        |--------------------------------------------------------------------------
-        */
 
         function refreshReports() {
-
             if (currentReport) {
-
                 generateSelectedReport();
-
             } else {
-
                 location.reload();
-
             }
-
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Report Title
-        |--------------------------------------------------------------------------
-        */
-
-        function getReportTitle(
-            reportType
-        ) {
-
+        function getReportTitle(reportType) {
             const titles = {
-
-                overview:
-                    "School Overview Report",
-
-                students:
-                    "Student Report",
-
-                attendance:
-                    "Attendance Report",
-
-                results:
-                    "Academic Results Report",
-
-                fees:
-                    "Fees Report",
-
-                staff:
-                    "Staff Report"
-
+                overview: "School Overview Report",
+                students: "Student Report",
+                attendance: "Attendance Report",
+                results: "Academic Results Report",
+                fees: "Fees Report",
+                staff: "Staff Report"
             };
 
-
-            return (
-                titles[reportType] ||
-                "School Report"
-            );
-
+            return titles[reportType] || "School Report";
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Format Label
-        |--------------------------------------------------------------------------
-        */
-
-        function formatLabel(
-            value
-        ) {
-
+        function formatLabel(value) {
             return String(value || "")
-                .replace(
-                    /_/g,
-                    " "
-                )
-                .replace(
-                    /([a-z])([A-Z])/g,
-                    "$1 $2"
-                )
-                .replace(
-                    /\b\w/g,
-                    letter =>
-                        letter.toUpperCase()
+                .replace(/_/g, " ")
+                .replace(/([a-z])([A-Z])/g, "$1 $2")
+                .replace(/\b\w/g, letter =>
+                    letter.toUpperCase()
                 );
-
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Format Value
-        |--------------------------------------------------------------------------
-        */
-
-        function formatValue(
-            value
-        ) {
-
+        function formatValue(value) {
             if (
                 value === null ||
                 value === undefined
             ) {
-
                 return "-";
-
             }
 
-
-            if (
-                typeof value === "boolean"
-            ) {
-
-                return value
-                    ? "Yes"
-                    : "No";
-
+            if (typeof value === "boolean") {
+                return value ? "Yes" : "No";
             }
 
-
-            if (
-                typeof value === "number"
-            ) {
-
-                return value.toLocaleString(
-                    "en-NG"
-                );
-
+            if (typeof value === "number") {
+                return value.toLocaleString("en-NG");
             }
-
 
             return String(value);
-
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Format Table Value
-        |--------------------------------------------------------------------------
-        */
-
-        function formatTableValue(
-            value
-        ) {
-
+        function formatTableValue(value) {
             if (
                 value === null ||
                 value === undefined
             ) {
-
                 return "-";
-
             }
 
-
-            if (
-                typeof value === "object"
-            ) {
-
+            if (typeof value === "object") {
                 return escapeHtml(
                     JSON.stringify(value)
                 );
-
             }
-
 
             return escapeHtml(
                 formatValue(value)
             );
-
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Simple Value Check
-        |--------------------------------------------------------------------------
-        */
-
-        function isSimpleValue(
-            value
-        ) {
-
+        function isSimpleValue(value) {
             return (
                 value === null ||
                 value === undefined ||
@@ -1817,176 +1414,166 @@
                 typeof value === "number" ||
                 typeof value === "boolean"
             );
-
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Alert
-        |--------------------------------------------------------------------------
-        */
-
-        function showAlert(
-            message,
-            type = "success"
-        ) {
-
+        function showAlert(message, type = "success") {
             const alert =
-                document.getElementById(
-                    "alert"
-                );
+                document.getElementById("alert");
 
-
-            alert.textContent =
-                message;
-
+            alert.textContent = message;
 
             alert.className =
                 `alert show alert-${type}`;
 
-
-            setTimeout(
-                () => {
-
-                    alert.classList.remove(
-                        "show"
-                    );
-
-                },
-                5000
+            window.clearTimeout(
+                showAlert.timeout
             );
 
+            showAlert.timeout = window.setTimeout(() => {
+                alert.classList.remove("show");
+            }, 5000);
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Modal
-        |--------------------------------------------------------------------------
-        */
-
-        function openModal(
-            title,
-            content
-        ) {
-
-            document.getElementById(
-                "modalTitle"
-            ).textContent =
+        function openModal(title, content) {
+            document.getElementById("modalTitle").textContent =
                 title;
 
-
-            document.getElementById(
-                "modalContent"
-            ).innerHTML =
+            document.getElementById("modalContent").innerHTML =
                 content;
 
+            const modalElement =
+                document.getElementById("reportModal");
 
-            document.getElementById(
-                "reportModal"
-            ).classList.add(
-                "show"
-            );
-
-        }
-
-
-        function closeModal() {
-
-            document.getElementById(
-                "reportModal"
-            ).classList.remove(
-                "show"
-            );
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Escape HTML
-        |--------------------------------------------------------------------------
-        */
-
-        function escapeHtml(
-            value
-        ) {
-
-            return String(
-                value ?? ""
-            )
-                .replace(
-                    /&/g,
-                    "&amp;"
-                )
-                .replace(
-                    /</g,
-                    "&lt;"
-                )
-                .replace(
-                    />/g,
-                    "&gt;"
-                )
-                .replace(
-                    /"/g,
-                    "&quot;"
-                )
-                .replace(
-                    /'/g,
-                    "&#039;"
+            reportModalInstance =
+                bootstrap.Modal.getOrCreateInstance(
+                    modalElement
                 );
 
+            reportModalInstance.show();
         }
 
+        function closeModal() {
+            const modalElement =
+                document.getElementById("reportModal");
 
-        /*
-        |--------------------------------------------------------------------------
-        | Close Modal When Clicking Outside
-        |--------------------------------------------------------------------------
-        */
+            const instance =
+                bootstrap.Modal.getInstance(
+                    modalElement
+                );
 
-        document
-            .getElementById(
-                "reportModal"
-            )
-            .addEventListener(
-                "click",
-                function (event) {
-
-                    if (
-                        event.target === this
-                    ) {
-
-                        closeModal();
-
-                    }
-
-                }
-            );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Escape Key
-        |--------------------------------------------------------------------------
-        */
-
-        document.addEventListener(
-            "keydown",
-            function (event) {
-
-                if (
-                    event.key === "Escape"
-                ) {
-
-                    closeModal();
-
-                }
-
+            if (instance) {
+                instance.hide();
             }
-        );
+        }
 
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+
+            const sidebar =
+                document.getElementById("sidebar");
+
+            const sidebarToggle =
+                document.getElementById("sidebarToggle");
+
+            const sidebarOverlay =
+                document.getElementById("sidebarOverlay");
+
+            function closeSidebar() {
+                sidebar.classList.remove("show");
+                sidebarOverlay.classList.remove("show");
+            }
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener("click", () => {
+                    sidebar.classList.toggle("show");
+                    sidebarOverlay.classList.toggle("show");
+                });
+            }
+
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener(
+                    "click",
+                    closeSidebar
+                );
+            }
+
+            document.querySelectorAll(".sidebar .nav-link")
+                .forEach(link => {
+                    link.addEventListener(
+                        "click",
+                        closeSidebar
+                    );
+                });
+
+            const logoutButton =
+                document.getElementById("logoutButton");
+
+            if (logoutButton) {
+                logoutButton.addEventListener(
+                    "click",
+                    () => {
+                        localStorage.removeItem(
+                            "school_management_token"
+                        );
+
+                        sessionStorage.removeItem(
+                            "school_management_token"
+                        );
+
+                        localStorage.removeItem(
+                            "school_management_user"
+                        );
+
+                        sessionStorage.removeItem(
+                            "school_management_user"
+                        );
+
+                        localStorage.removeItem("token");
+                        localStorage.removeItem("authToken");
+                        localStorage.removeItem("accessToken");
+
+                        sessionStorage.removeItem("token");
+                        sessionStorage.removeItem("authToken");
+                        sessionStorage.removeItem("accessToken");
+
+                        window.location.href =
+                            "login.html";
+                    }
+                );
+            }
+
+            try {
+                const storedUser =
+                    JSON.parse(
+                        localStorage.getItem(
+                            "school_management_user"
+                        ) || "{}"
+                    );
+
+                if (storedUser?.name) {
+                    document.getElementById(
+                        "userName"
+                    ).textContent =
+                        storedUser.name;
+                } else if (storedUser?.username) {
+                    document.getElementById(
+                        "userName"
+                    ).textContent =
+                        storedUser.username;
+                }
+            } catch {
+                // Ignore malformed stored user data.
+            }
+
+        });
     </script>
 
 </body>

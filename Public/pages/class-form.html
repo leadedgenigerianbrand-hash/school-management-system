@@ -1,23 +1,21 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    ```
     <title>Class Form | School Management System</title>
 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css">
 
     <style>
-        * {
-            box-sizing: border-box;
-        }
-
         body {
-            margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            background: #f4f6f9;
+            background: #f5f7fb;
             color: #1f2937;
         }
 
@@ -27,738 +25,482 @@
         }
 
         .page-container {
-            max-width: 900px;
+            max-width: 950px;
             margin: 0 auto;
         }
 
         .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 20px;
             margin-bottom: 25px;
         }
 
-        .page-title h1 {
-            margin: 0 0 7px;
-            font-size: 28px;
-        }
-
-        .page-title p {
-            margin: 0;
-            color: #6b7280;
-            font-size: 14px;
-        }
-
-        .back-button {
-            text-decoration: none;
-            background: #374151;
-            color: #ffffff;
-            padding: 11px 18px;
-            border-radius: 7px;
-            font-size: 14px;
-        }
-
-        .back-button:hover {
-            background: #1f2937;
-        }
-
         .form-card {
-            background: #ffffff;
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-        }
-
-        .form-section {
-            margin-bottom: 30px;
+            border: 0;
+            border-radius: 16px;
+            box-shadow: 0 5px 22px rgba(15, 23, 42, .07);
         }
 
         .section-title {
-            margin: 0 0 18px;
-            padding-bottom: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1f2937;
+            padding-bottom: 12px;
             border-bottom: 1px solid #e5e7eb;
-            font-size: 18px;
+            margin-bottom: 22px;
         }
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .form-group.full-width {
-            grid-column: 1 / -1;
-        }
-
-        label {
-            margin-bottom: 7px;
-            font-size: 14px;
+        .form-label {
+            font-size: .84rem;
             font-weight: 600;
-        }
-
-        .required {
-            color: #dc2626;
-        }
-
-        input,
-        select,
-        textarea {
-            width: 100%;
-            padding: 11px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 7px;
-            font-size: 14px;
-            font-family: inherit;
-            background: #ffffff;
-            color: #111827;
-            outline: none;
-        }
-
-        input:focus,
-        select:focus,
-        textarea:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-
-        textarea {
-            min-height: 110px;
-            resize: vertical;
-        }
-
-        .help-text {
-            margin-top: 5px;
-            color: #6b7280;
-            font-size: 12px;
-        }
-
-        .form-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            padding-top: 25px;
-            border-top: 1px solid #e5e7eb;
-        }
-
-        .button {
-            border: none;
-            border-radius: 7px;
-            padding: 11px 20px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .button-secondary {
-            background: #e5e7eb;
             color: #374151;
         }
 
-        .button-secondary:hover {
-            background: #d1d5db;
+        .form-control,
+        .form-select {
+            border-radius: 9px;
+            padding: .68rem .8rem;
         }
 
-        .button-primary {
-            background: #2563eb;
-            color: #ffffff;
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 .2rem rgba(37, 99, 235, .12);
         }
 
-        .button-primary:hover {
-            background: #1d4ed8;
-        }
-
-        .button-primary:disabled {
-            background: #93c5fd;
-            cursor: not-allowed;
-        }
-
-        .message {
-            display: none;
-            margin-bottom: 20px;
-            padding: 12px 15px;
-            border-radius: 7px;
-            font-size: 14px;
-        }
-
-        .message.success {
-            display: block;
-            background: #dcfce7;
-            color: #166534;
-            border: 1px solid #bbf7d0;
-        }
-
-        .message.error {
-            display: block;
-            background: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #fecaca;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
+        .help-text {
             color: #6b7280;
-            font-size: 13px;
-            margin-top: 10px;
+            font-size: .75rem;
+            margin-top: 5px;
         }
 
         .mode-badge {
-            display: inline-block;
-            margin-left: 8px;
-            padding: 4px 9px;
-            border-radius: 20px;
-            background: #dbeafe;
-            color: #1d4ed8;
-            font-size: 11px;
-            font-weight: 600;
+            font-size: .72rem;
             vertical-align: middle;
         }
 
-        @media (max-width: 700px) {
+        .form-actions {
+            border-top: 1px solid #e5e7eb;
+            margin-top: 10px;
+            padding-top: 22px;
+        }
+
+        .loading {
+            font-size: .85rem;
+            color: #6b7280;
+        }
+
+        @media (max-width: 767.98px) {
             .page-wrapper {
-                padding: 15px;
+                padding: 20px 15px;
             }
 
             .page-header {
-                flex-direction: column;
-                align-items: flex-start;
+                align-items: flex-start !important;
             }
 
-            .form-card {
-                padding: 20px;
+            .page-header .btn {
+                width: 100%;
             }
 
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .form-group.full-width {
-                grid-column: auto;
-            }
-
-            .form-actions {
-                flex-direction: column-reverse;
-            }
-
-            .button {
+            .form-actions .btn {
                 width: 100%;
             }
         }
     </style>
+    ```
+
 </head>
 
 <body>
 
     <div class="page-wrapper">
 
+        ```
         <div class="page-container">
 
-            <header class="page-header">
+            <!-- PAGE HEADER -->
+            <header class="page-header d-flex justify-content-between align-items-center gap-3 flex-wrap">
 
-                <div class="page-title">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <i class="bi bi-building text-primary fs-4"></i>
 
-                    <h1>
-                        <span id="pageTitle">Add Class</span>
+                        <h1 class="h3 fw-bold mb-0">
+                            <span id="pageTitle">Add Class</span>
 
-                        <span id="modeBadge" class="mode-badge" style="display: none;">
-                            Editing
-                        </span>
-                    </h1>
+                            <span id="modeBadge" class="badge rounded-pill bg-primary-subtle text-primary mode-badge"
+                                style="display: none;">
+                                Editing
+                            </span>
+                        </h1>
+                    </div>
 
-                    <p>
+                    <p class="text-secondary mb-0">
                         Create or update a class in the school management system.
                     </p>
-
                 </div>
 
-                <a href="classes.html" class="back-button">
-                    ← Back to Classes
+                <a href="classes.html" class="btn btn-light border px-3">
+                    <i class="bi bi-arrow-left me-2"></i>
+                    Back to Classes
                 </a>
 
             </header>
 
 
-            <div id="message" class="message"></div>
+            <!-- MESSAGE -->
+            <div id="message" class="alert d-none" role="alert"></div>
 
 
-            <div class="form-card">
+            <!-- FORM -->
+            <div class="card form-card">
 
-                <form id="classForm" novalidate>
+                <div class="card-body p-4 p-md-5">
 
-                    <section class="form-section">
+                    <form id="classForm" novalidate>
 
-                        <h2 class="section-title">
-                            Class Information
-                        </h2>
+                        <!-- CLASS INFORMATION -->
+                        <section>
 
-                        <div class="form-grid">
+                            <h2 class="section-title">
+                                <i class="bi bi-info-circle me-2 text-primary"></i>
+                                Class Information
+                            </h2>
 
-                            <div class="form-group">
+                            <div class="row g-4">
 
-                                <label for="className">
-                                    Class Name
-                                    <span class="required">*</span>
-                                </label>
+                                <!-- CLASS NAME -->
+                                <div class="col-12 col-md-6">
 
-                                <input type="text" id="className" name="className" placeholder="e.g. JSS 1"
-                                    maxlength="150" required>
+                                    <label for="className" class="form-label">
+                                        Class Name
+                                        <span class="text-danger">*</span>
+                                    </label>
 
-                                <div class="help-text">
-                                    Enter the name of the class.
+                                    <input type="text" id="className" name="className" class="form-control"
+                                        placeholder="e.g. JSS 1" maxlength="150" required>
+
+                                    <div class="help-text">
+                                        Enter the name of the class.
+                                    </div>
+
+                                </div>
+
+
+                                <!-- CLASS CODE -->
+                                <div class="col-12 col-md-6">
+
+                                    <label for="classCode" class="form-label">
+                                        Class Code
+                                    </label>
+
+                                    <input type="text" id="classCode" name="classCode" class="form-control"
+                                        placeholder="e.g. JSS1" maxlength="50">
+
+                                    <div class="help-text">
+                                        Optional unique code for the class.
+                                    </div>
+
+                                </div>
+
+
+                                <!-- CLASS LEVEL -->
+                                <div class="col-12 col-md-6">
+
+                                    <label for="classLevel" class="form-label">
+                                        Class Level
+                                    </label>
+
+                                    <input type="text" id="classLevel" name="classLevel" class="form-control"
+                                        placeholder="e.g. Junior Secondary" maxlength="100">
+
+                                    <div class="help-text">
+                                        Example: Nursery, Primary, Junior Secondary or Senior Secondary.
+                                    </div>
+
+                                </div>
+
+
+                                <!-- DEPARTMENT -->
+                                <div class="col-12 col-md-6">
+
+                                    <label for="departmentId" class="form-label">
+                                        Department
+                                    </label>
+
+                                    <select id="departmentId" name="departmentId" class="form-select">
+                                        <option value="">
+                                            Select Department
+                                        </option>
+                                    </select>
+
+                                    <div class="help-text">
+                                        Select a department if applicable.
+                                    </div>
+
+                                </div>
+
+
+                                <!-- CAPACITY -->
+                                <div class="col-12 col-md-6">
+
+                                    <label for="capacity" class="form-label">
+                                        Student Capacity
+                                    </label>
+
+                                    <input type="number" id="capacity" name="capacity" class="form-control" min="0"
+                                        max="10000" placeholder="e.g. 40">
+
+                                    <div class="help-text">
+                                        Maximum number of students allowed in the class.
+                                    </div>
+
+                                </div>
+
+
+                                <!-- STATUS -->
+                                <div class="col-12 col-md-6">
+
+                                    <label for="status" class="form-label">
+                                        Status
+                                        <span class="text-danger">*</span>
+                                    </label>
+
+                                    <select id="status" name="status" class="form-select" required>
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                    </select>
+
+                                </div>
+
+
+                                <!-- DESCRIPTION -->
+                                <div class="col-12">
+
+                                    <label for="description" class="form-label">
+                                        Description
+                                    </label>
+
+                                    <textarea id="description" name="description" class="form-control" rows="5"
+                                        maxlength="1000" placeholder="Enter a description of the class..."></textarea>
+
+                                    <div class="help-text">
+                                        Optional description.
+                                    </div>
+
                                 </div>
 
                             </div>
 
-
-                            <div class="form-group">
-
-                                <label for="classCode">
-                                    Class Code
-                                </label>
-
-                                <input type="text" id="classCode" name="classCode" placeholder="e.g. JSS1"
-                                    maxlength="50">
-
-                                <div class="help-text">
-                                    Optional unique code for the class.
-                                </div>
-
-                            </div>
+                        </section>
 
 
-                            <div class="form-group">
+                        <!-- ACTIONS -->
+                        <div class="form-actions">
 
-                                <label for="classLevel">
-                                    Class Level
-                                </label>
+                            <div class="d-flex flex-column flex-md-row justify-content-end gap-2">
 
-                                <input type="text" id="classLevel" name="classLevel" placeholder="e.g. Junior Secondary"
-                                    maxlength="100">
+                                <button type="button" class="btn btn-light border px-4" id="cancelButton">
+                                    <i class="bi bi-x-lg me-2"></i>
+                                    Cancel
+                                </button>
 
-                                <div class="help-text">
-                                    Example: Nursery, Primary, Junior Secondary or Senior Secondary.
-                                </div>
+                                <button type="submit" class="btn btn-primary px-4" id="submitButton">
+                                    <i class="bi bi-check2-circle me-2"></i>
+                                    Save Class
+                                </button>
 
                             </div>
 
-
-                            <div class="form-group">
-
-                                <label for="departmentId">
-                                    Department
-                                </label>
-
-                                <select id="departmentId" name="departmentId">
-                                    <option value="">
-                                        Select Department
-                                    </option>
-                                </select>
-
-                                <div class="help-text">
-                                    Select a department if applicable.
-                                </div>
-
-                            </div>
-
-
-                            <div class="form-group">
-
-                                <label for="capacity">
-                                    Student Capacity
-                                </label>
-
-                                <input type="number" id="capacity" name="capacity" min="0" max="10000"
-                                    placeholder="e.g. 40">
-
-                                <div class="help-text">
-                                    Maximum number of students allowed in the class.
-                                </div>
-
-                            </div>
-
-
-                            <div class="form-group">
-
-                                <label for="status">
-                                    Status
-                                    <span class="required">*</span>
-                                </label>
-
-                                <select id="status" name="status" required>
-                                    <option value="active">
-                                        Active
-                                    </option>
-
-                                    <option value="inactive">
-                                        Inactive
-                                    </option>
-                                </select>
-
-                            </div>
-
-
-                            <div class="form-group full-width">
-
-                                <label for="description">
-                                    Description
-                                </label>
-
-                                <textarea id="description" name="description"
-                                    placeholder="Enter a description of the class..." maxlength="1000"></textarea>
-
-                                <div class="help-text">
-                                    Optional description.
-                                </div>
-
+                            <div id="loading" class="loading text-center mt-3" style="display: none;">
+                                <span class="spinner-border spinner-border-sm text-primary me-2"></span>
+                                Saving class...
                             </div>
 
                         </div>
 
-                    </section>
+                    </form>
 
-
-                    <div class="form-actions">
-
-                        <button type="button" class="button button-secondary" id="cancelButton">
-                            Cancel
-                        </button>
-
-                        <button type="submit" class="button button-primary" id="submitButton">
-                            Save Class
-                        </button>
-
-                    </div>
-
-                    <div id="loading" class="loading">
-                        Saving class...
-                    </div>
-
-                </form>
+                </div>
 
             </div>
 
         </div>
+        ```
 
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-
         "use strict";
-
 
         const API_BASE_URL = "/api";
 
-
-        const classForm =
-            document.getElementById("classForm");
-
-        const classNameInput =
-            document.getElementById("className");
-
-        const classCodeInput =
-            document.getElementById("classCode");
-
-        const classLevelInput =
-            document.getElementById("classLevel");
-
-        const departmentSelect =
-            document.getElementById("departmentId");
-
-        const capacityInput =
-            document.getElementById("capacity");
-
-        const descriptionInput =
-            document.getElementById("description");
-
-        const statusSelect =
-            document.getElementById("status");
-
-        const submitButton =
-            document.getElementById("submitButton");
-
-        const cancelButton =
-            document.getElementById("cancelButton");
-
-        const messageBox =
-            document.getElementById("message");
-
-        const loadingBox =
-            document.getElementById("loading");
-
-        const pageTitle =
-            document.getElementById("pageTitle");
-
-        const modeBadge =
-            document.getElementById("modeBadge");
-
+        const classForm = document.getElementById("classForm");
+        const classNameInput = document.getElementById("className");
+        const classCodeInput = document.getElementById("classCode");
+        const classLevelInput = document.getElementById("classLevel");
+        const departmentSelect = document.getElementById("departmentId");
+        const capacityInput = document.getElementById("capacity");
+        const descriptionInput = document.getElementById("description");
+        const statusSelect = document.getElementById("status");
+        const submitButton = document.getElementById("submitButton");
+        const cancelButton = document.getElementById("cancelButton");
+        const messageBox = document.getElementById("message");
+        const loadingBox = document.getElementById("loading");
+        const pageTitle = document.getElementById("pageTitle");
+        const modeBadge = document.getElementById("modeBadge");
 
         let editingClassId = null;
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | TOKEN
-        |--------------------------------------------------------------------------
-        */
-
+        /* TOKEN */
         function getToken() {
-
             return (
+                localStorage.getItem("school_management_token") ||
                 localStorage.getItem("token") ||
                 localStorage.getItem("accessToken") ||
+                sessionStorage.getItem("school_management_token") ||
                 sessionStorage.getItem("token") ||
                 sessionStorage.getItem("accessToken") ||
                 null
             );
-
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | HEADERS
-        |--------------------------------------------------------------------------
-        */
-
+        /* HEADERS */
         function getHeaders() {
-
-            const token =
-                getToken();
+            const token = getToken();
 
             const headers = {
                 "Content-Type": "application/json"
             };
 
             if (token) {
-
-                headers.Authorization =
-                    `Bearer ${token}`;
-
+                headers.Authorization = `Bearer ${token}`;
             }
 
             return headers;
-
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | MESSAGE
-        |--------------------------------------------------------------------------
-        */
-
-        function showMessage(
-            message,
-            type = "error"
-        ) {
-
-            messageBox.textContent =
-                message;
-
-            messageBox.className =
-                `message ${type}`;
+        /* MESSAGE */
+        function showMessage(message, type = "danger") {
+            messageBox.textContent = message;
+            messageBox.className = `alert alert-${type}`;
 
             window.scrollTo({
                 top: 0,
                 behavior: "smooth"
             });
-
         }
 
 
         function clearMessage() {
-
             messageBox.textContent = "";
-
-            messageBox.className =
-                "message";
-
+            messageBox.className = "alert d-none";
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | LOADING
-        |--------------------------------------------------------------------------
-        */
+        /* LOADING */
+        function setLoading(loading) {
+            submitButton.disabled = loading;
+            loadingBox.style.display = loading ? "block" : "none";
 
-        function setLoading(
-            loading
-        ) {
-
-            submitButton.disabled =
-                loading;
-
-            loadingBox.style.display =
-                loading
-                    ? "block"
-                    : "none";
-
-            submitButton.textContent =
-                loading
-                    ? (
-                        editingClassId
-                            ? "Updating..."
-                            : "Saving..."
-                    )
-                    : (
-                        editingClassId
-                            ? "Update Class"
-                            : "Save Class"
-                    );
-
+            submitButton.innerHTML = loading
+                ? '<span class="spinner-border spinner-border-sm me-2"></span>Saving...'
+                : (
+                    editingClassId
+                        ? '<i class="bi bi-check2-circle me-2"></i>Update Class'
+                        : '<i class="bi bi-check2-circle me-2"></i>Save Class'
+                );
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | API REQUEST
-        |--------------------------------------------------------------------------
-        */
+        /* API REQUEST */
+        async function apiRequest(url, options = {}) {
 
-        async function apiRequest(
-            url,
-            options = {}
-        ) {
-
-            const response =
-                await fetch(
-                    `${API_BASE_URL}${url}`,
-                    {
-                        ...options,
-                        headers: {
-                            ...getHeaders(),
-                            ...(options.headers || {})
-                        }
+            const response = await fetch(
+                `${API_BASE_URL}${url}`,
+                {
+                    ...options,
+                    headers: {
+                        ...getHeaders(),
+                        ...(options.headers || {})
                     }
-                );
+                }
+            );
 
-
-            const contentType =
-                response.headers.get(
-                    "content-type"
-                );
-
+            const contentType = response.headers.get("content-type");
 
             let data;
 
-
             if (
                 contentType &&
-                contentType.includes(
-                    "application/json"
-                )
+                contentType.includes("application/json")
             ) {
-
-                data =
-                    await response.json();
-
+                data = await response.json();
             } else {
-
-                const text =
-                    await response.text();
+                const text = await response.text();
 
                 data = {
                     message: text
                 };
-
             }
-
 
             if (!response.ok) {
 
-                const error =
-                    new Error(
-                        data?.message ||
-                        "Request failed."
-                    );
+                const error = new Error(
+                    data?.message ||
+                    "Request failed."
+                );
 
-                error.status =
-                    response.status;
-
-                error.data =
-                    data;
+                error.status = response.status;
+                error.data = data;
 
                 throw error;
-
             }
 
-
             return data;
-
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | LOAD DEPARTMENTS
-        |--------------------------------------------------------------------------
-        */
-
+        /* LOAD DEPARTMENTS */
         async function loadDepartments() {
 
             try {
 
                 const result =
-                    await apiRequest(
-                        "/departments"
-                    );
-
+                    await apiRequest("/departments");
 
                 const departments =
                     result.data ||
                     result.departments ||
                     result;
 
-
-                if (
-                    !Array.isArray(
-                        departments
-                    )
-                ) {
-
+                if (!Array.isArray(departments)) {
                     return;
-
                 }
 
-
                 departmentSelect.innerHTML =
-                    `<option value="">Select Department</option>`;
+                    '<option value="">Select Department</option>';
 
+                departments.forEach(department => {
 
-                departments.forEach(
-                    department => {
+                    const option =
+                        document.createElement("option");
 
-                        const option =
-                            document.createElement(
-                                "option"
-                            );
+                    option.value =
+                        department.id;
 
+                    option.textContent =
+                        department.department_name ||
+                        department.departmentName ||
+                        department.name ||
+                        `Department ${department.id}`;
 
-                        option.value =
-                            department.id;
-
-
-                        option.textContent =
-                            department.department_name ||
-                            department.departmentName ||
-                            department.name ||
-                            `Department ${department.id}`;
-
-
-                        departmentSelect.appendChild(
-                            option
-                        );
-
-                    }
-                );
+                    departmentSelect.appendChild(option);
+                });
 
             } catch (error) {
 
@@ -766,47 +508,32 @@
                     "Load departments error:",
                     error
                 );
-
             }
-
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | LOAD CLASS
-        |--------------------------------------------------------------------------
-        */
-
-        async function loadClass(
-            classId
-        ) {
+        /* LOAD CLASS */
+        async function loadClass(classId) {
 
             try {
 
                 setLoading(true);
-
 
                 const result =
                     await apiRequest(
                         `/classes/${encodeURIComponent(classId)}`
                     );
 
-
                 const classData =
                     result.data ||
                     result.class ||
                     result;
 
-
                 if (!classData) {
-
                     throw new Error(
                         "Class data was not returned."
                     );
-
                 }
-
 
                 classNameInput.value =
                     classData.class_name ||
@@ -814,12 +541,10 @@
                     classData.name ||
                     "";
 
-
                 classCodeInput.value =
                     classData.class_code ||
                     classData.classCode ||
                     "";
-
 
                 classLevelInput.value =
                     classData.class_level ||
@@ -827,35 +552,26 @@
                     classData.level ||
                     "";
 
-
                 descriptionInput.value =
                     classData.description ||
                     "";
-
 
                 capacityInput.value =
                     classData.capacity ??
                     classData.student_capacity ??
                     "";
 
-
                 statusSelect.value =
                     classData.status ||
                     "active";
-
 
                 if (
                     classData.department_id !== null &&
                     classData.department_id !== undefined
                 ) {
-
                     departmentSelect.value =
-                        String(
-                            classData.department_id
-                        );
-
+                        String(classData.department_id);
                 }
-
 
                 pageTitle.textContent =
                     "Edit Class";
@@ -863,9 +579,8 @@
                 modeBadge.style.display =
                     "inline-block";
 
-                submitButton.textContent =
-                    "Update Class";
-
+                submitButton.innerHTML =
+                    '<i class="bi bi-check2-circle me-2"></i>Update Class';
 
             } catch (error) {
 
@@ -882,23 +597,15 @@
             } finally {
 
                 setLoading(false);
-
             }
-
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | VALIDATE
-        |--------------------------------------------------------------------------
-        */
-
+        /* VALIDATE */
         function validateForm() {
 
             const className =
                 classNameInput.value.trim();
-
 
             if (!className) {
 
@@ -909,13 +616,9 @@
                 classNameInput.focus();
 
                 return false;
-
             }
 
-
-            if (
-                className.length > 150
-            ) {
+            if (className.length > 150) {
 
                 showMessage(
                     "Class name cannot exceed 150 characters."
@@ -924,24 +627,18 @@
                 classNameInput.focus();
 
                 return false;
-
             }
-
 
             const capacity =
                 capacityInput.value.trim();
-
 
             if (capacity !== "") {
 
                 const capacityNumber =
                     Number(capacity);
 
-
                 if (
-                    !Number.isInteger(
-                        capacityNumber
-                    ) ||
+                    !Number.isInteger(capacityNumber) ||
                     capacityNumber < 0
                 ) {
 
@@ -952,23 +649,14 @@
                     capacityInput.focus();
 
                     return false;
-
                 }
-
             }
 
-
             return true;
-
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | SUBMIT
-        |--------------------------------------------------------------------------
-        */
-
+        /* SUBMIT */
         classForm.addEventListener(
             "submit",
             async function (event) {
@@ -977,17 +665,12 @@
 
                 clearMessage();
 
-
                 if (!validateForm()) {
-
                     return;
-
                 }
-
 
                 const capacityValue =
                     capacityInput.value.trim();
-
 
                 const payload = {
 
@@ -1018,17 +701,13 @@
                     status:
                         statusSelect.value ||
                         "active"
-
                 };
-
 
                 try {
 
                     setLoading(true);
 
-
                     let result;
-
 
                     if (editingClassId) {
 
@@ -1038,9 +717,7 @@
                                 {
                                     method: "PUT",
                                     body:
-                                        JSON.stringify(
-                                            payload
-                                        )
+                                        JSON.stringify(payload)
                                 }
                             );
 
@@ -1052,14 +729,10 @@
                                 {
                                     method: "POST",
                                     body:
-                                        JSON.stringify(
-                                            payload
-                                        )
+                                        JSON.stringify(payload)
                                 }
                             );
-
                     }
-
 
                     showMessage(
                         result.message ||
@@ -1071,17 +744,10 @@
                         "success"
                     );
 
-
-                    setTimeout(
-                        function () {
-
-                            window.location.href =
-                                "classes.html";
-
-                        },
-                        900
-                    );
-
+                    setTimeout(() => {
+                        window.location.href =
+                            "classes.html";
+                    }, 900);
 
                 } catch (error) {
 
@@ -1090,32 +756,23 @@
                         error
                     );
 
-
-                    if (
-                        error.status === 401
-                    ) {
+                    if (error.status === 401) {
 
                         showMessage(
                             "Your session has expired. Please log in again."
                         );
 
                         return;
-
                     }
 
-
-                    if (
-                        error.status === 403
-                    ) {
+                    if (error.status === 403) {
 
                         showMessage(
                             "You do not have permission to manage classes."
                         );
 
                         return;
-
                     }
-
 
                     showMessage(
                         error.message ||
@@ -1125,36 +782,23 @@
                 } finally {
 
                     setLoading(false);
-
                 }
-
             }
         );
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | CANCEL
-        |--------------------------------------------------------------------------
-        */
-
+        /* CANCEL */
         cancelButton.addEventListener(
             "click",
             function () {
 
                 window.location.href =
                     "classes.html";
-
             }
         );
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | GET ID FROM URL
-        |--------------------------------------------------------------------------
-        */
-
+        /* GET ID */
         function getClassIdFromUrl() {
 
             const params =
@@ -1162,27 +806,19 @@
                     window.location.search
                 );
 
-
             return (
                 params.get("id") ||
                 params.get("classId") ||
                 null
             );
-
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | INITIALIZE
-        |--------------------------------------------------------------------------
-        */
-
+        /* INITIALIZE */
         async function initialize() {
 
             editingClassId =
                 getClassIdFromUrl();
-
 
             if (editingClassId) {
 
@@ -1192,28 +828,19 @@
                 modeBadge.style.display =
                     "inline-block";
 
-                submitButton.textContent =
-                    "Update Class";
-
+                submitButton.innerHTML =
+                    '<i class="bi bi-check2-circle me-2"></i>Update Class';
             }
-
 
             await loadDepartments();
 
-
             if (editingClassId) {
-
-                await loadClass(
-                    editingClassId
-                );
-
+                await loadClass(editingClassId);
             }
-
         }
 
 
         initialize();
-
     </script>
 
 </body>

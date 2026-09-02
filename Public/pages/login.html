@@ -1,15 +1,19 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
+
 
     <meta charset="UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>
-        Login | School Management System
-    </title>
+    <meta name="description" content="Secure login portal for the School Management System.">
+
+    <meta name="theme-color" content="#1e3a8a">
+
+    <title>Login | School Management System</title>
 
 
     <!-- Bootstrap 5 -->
@@ -19,21 +23,18 @@
 
     <!-- Bootstrap Icons -->
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
 
     <style>
         :root {
 
             --sms-primary: #1e3a8a;
-
             --sms-primary-light: #2563eb;
-
             --sms-bg: #f4f7fb;
-
             --sms-text: #172033;
-
             --sms-muted: #6b7280;
+            --sms-border: #dbe1ea;
 
         }
 
@@ -51,7 +52,11 @@
 
             margin: 0;
 
-            background: var(--sms-bg);
+            background:
+                linear-gradient(135deg,
+                    #eef4ff 0%,
+                    #f8fafc 50%,
+                    #eef2ff 100%);
 
             font-family:
                 Inter,
@@ -64,7 +69,9 @@
         }
 
 
-        /* LOGIN PAGE */
+        /* =========================================================
+       LOGIN PAGE
+    ========================================================== */
 
         .login-page {
 
@@ -85,12 +92,14 @@
 
             width: 100%;
 
-            max-width: 1050px;
+            max-width: 1080px;
 
         }
 
 
-        /* LOGIN CARD */
+        /* =========================================================
+       LOGIN CARD
+    ========================================================== */
 
         .login-card {
 
@@ -98,30 +107,32 @@
 
             border: 0;
 
-            border-radius: 22px;
+            border-radius: 24px;
 
             background: #ffffff;
 
             box-shadow:
-                0 20px 60px rgba(15, 23, 42, 0.12);
+                0 25px 70px rgba(15, 23, 42, 0.14);
 
         }
 
 
-        /* BRANDING PANEL */
+        /* =========================================================
+       BRANDING PANEL
+    ========================================================== */
 
         .branding-panel {
 
-            min-height: 620px;
+            min-height: 640px;
 
-            padding: 50px;
+            padding: 55px;
 
             color: #ffffff;
 
             background:
                 linear-gradient(145deg,
                     #172554 0%,
-                    #1e3a8a 50%,
+                    #1e3a8a 52%,
                     #2563eb 100%);
 
             display: flex;
@@ -130,19 +141,76 @@
 
             justify-content: center;
 
+            position: relative;
+
+            overflow: hidden;
+
+        }
+
+
+        .branding-panel::before {
+
+            content: "";
+
+            position: absolute;
+
+            width: 260px;
+
+            height: 260px;
+
+            border-radius: 50%;
+
+            background:
+                rgba(255, 255, 255, 0.06);
+
+            top: -90px;
+
+            right: -90px;
+
+        }
+
+
+        .branding-panel::after {
+
+            content: "";
+
+            position: absolute;
+
+            width: 190px;
+
+            height: 190px;
+
+            border-radius: 50%;
+
+            background:
+                rgba(255, 255, 255, 0.05);
+
+            bottom: -70px;
+
+            left: -70px;
+
+        }
+
+
+        .branding-content {
+
+            position: relative;
+
+            z-index: 1;
+
         }
 
 
         .brand-logo {
 
-            width: 78px;
+            width: 82px;
 
-            height: 78px;
+            height: 82px;
 
-            border-radius: 20px;
+            border-radius: 22px;
 
             background:
-                rgba(255, 255, 255, 0.15);
+                rgba(255, 255, 255, 0.14);
 
             border:
                 1px solid rgba(255, 255, 255, 0.25);
@@ -153,11 +221,13 @@
 
             justify-content: center;
 
-            font-size: 30px;
+            font-size: 25px;
 
             font-weight: 800;
 
-            margin-bottom: 28px;
+            letter-spacing: 1px;
+
+            margin-bottom: 30px;
 
         }
 
@@ -184,16 +254,18 @@
 
             line-height: 1.7;
 
-            max-width: 430px;
+            max-width: 440px;
 
         }
 
 
-        /* FEATURES */
+        /* =========================================================
+       FEATURES
+    ========================================================== */
 
         .feature-list {
 
-            margin-top: 30px;
+            margin-top: 32px;
 
         }
 
@@ -216,9 +288,9 @@
 
         .feature-icon {
 
-            width: 34px;
+            width: 36px;
 
-            height: 34px;
+            height: 36px;
 
             flex-shrink: 0;
 
@@ -236,11 +308,13 @@
         }
 
 
-        /* LOGIN PANEL */
+        /* =========================================================
+       LOGIN PANEL
+    ========================================================== */
 
         .login-panel {
 
-            padding: 55px 50px;
+            padding: 60px 52px;
 
         }
 
@@ -274,7 +348,9 @@
         }
 
 
-        /* FORM */
+        /* =========================================================
+       FORM
+    ========================================================== */
 
         .form-label {
 
@@ -289,9 +365,13 @@
 
         .input-group-text {
 
+            min-width: 48px;
+
+            justify-content: center;
+
             background: #f8fafc;
 
-            border-color: #dbe1ea;
+            border-color: var(--sms-border);
 
             color: #64748b;
 
@@ -300,7 +380,7 @@
 
         .form-control {
 
-            border-color: #dbe1ea;
+            border-color: var(--sms-border);
 
             padding: 13px 14px;
 
@@ -331,11 +411,13 @@
         }
 
 
-        /* PASSWORD */
+        /* =========================================================
+       PASSWORD TOGGLE
+    ========================================================== */
 
         .password-toggle {
 
-            border-color: #dbe1ea;
+            border-color: var(--sms-border);
 
             background: #f8fafc;
 
@@ -354,7 +436,9 @@
         }
 
 
-        /* REMEMBER */
+        /* =========================================================
+       REMEMBER ME
+    ========================================================== */
 
         .form-check-label {
 
@@ -365,30 +449,20 @@
         }
 
 
-        /* FORGOT PASSWORD */
+        .form-check-input:checked {
 
-        .forgot-link {
-
-            color:
+            background-color:
                 var(--sms-primary-light);
 
-            text-decoration: none;
-
-            font-size: 14px;
-
-            font-weight: 600;
+            border-color:
+                var(--sms-primary-light);
 
         }
 
 
-        .forgot-link:hover {
-
-            text-decoration: underline;
-
-        }
-
-
-        /* LOGIN BUTTON */
+        /* =========================================================
+       LOGIN BUTTON
+    ========================================================== */
 
         .login-button {
 
@@ -430,7 +504,9 @@
         }
 
 
-        /* MESSAGE */
+        /* =========================================================
+       MESSAGE
+    ========================================================== */
 
         .alert {
 
@@ -441,7 +517,9 @@
         }
 
 
-        /* FOOTER */
+        /* =========================================================
+       FOOTER
+    ========================================================== */
 
         .login-footer {
 
@@ -453,10 +531,14 @@
 
             margin-top: 30px;
 
+            line-height: 1.6;
+
         }
 
 
-        /* MOBILE */
+        /* =========================================================
+       MOBILE
+    ========================================================== */
 
         @media (max-width: 767.98px) {
 
@@ -476,7 +558,7 @@
 
             .login-panel {
 
-                padding: 35px 25px;
+                padding: 40px 25px;
 
             }
 
@@ -490,19 +572,19 @@
 
             .login-card {
 
-                border-radius: 16px;
+                border-radius: 18px;
 
             }
 
         }
     </style>
+    ```
 
 </head>
 
-
 <body>
 
-
+    ```
     <main class="login-page">
 
         <div class="login-container">
@@ -512,109 +594,104 @@
                 <div class="row g-0">
 
 
-                    <!-- =====================================================
-                         BRANDING PANEL
-                    ====================================================== -->
+                    <!-- =================================================
+                     BRANDING
+                ================================================== -->
 
                     <div class="col-md-6">
 
                         <div class="branding-panel">
 
-
-                            <div class="brand-logo">
-
-                                SMS
-
-                            </div>
+                            <div class="branding-content">
 
 
-                            <h1>
+                                <div class="brand-logo">
 
-                                School Management System
-
-                            </h1>
-
-
-                            <p>
-
-                                A modern platform for managing
-                                students, staff, classes,
-                                attendance, results, fees
-                                and other school information.
-
-                            </p>
-
-
-                            <div class="feature-list">
-
-
-                                <div class="feature-item">
-
-                                    <div class="feature-icon">
-
-                                        <i class="bi bi-people"></i>
-
-                                    </div>
-
-                                    <span>
-
-                                        Manage students and staff
-
-                                    </span>
+                                    SMS
 
                                 </div>
 
 
-                                <div class="feature-item">
+                                <h1>
 
-                                    <div class="feature-icon">
+                                    School Management System
 
-                                        <i class="bi bi-journal-check"></i>
-
-                                    </div>
-
-                                    <span>
-
-                                        Track attendance and results
-
-                                    </span>
-
-                                </div>
+                                </h1>
 
 
-                                <div class="feature-item">
+                                <p>
 
-                                    <div class="feature-icon">
+                                    A modern platform for managing
+                                    students, staff, academics,
+                                    attendance, results, fees
+                                    and school administration.
 
-                                        <i class="bi bi-cash-stack"></i>
-
-                                    </div>
-
-                                    <span>
-
-                                        Manage school fees and payments
-
-                                    </span>
-
-                                </div>
+                                </p>
 
 
-                                <div class="feature-item">
+                                <div class="feature-list">
 
-                                    <div class="feature-icon">
 
-                                        <i class="bi bi-shield-check"></i>
+                                    <div class="feature-item">
+
+                                        <div class="feature-icon">
+
+                                            <i class="bi bi-people-fill"></i>
+
+                                        </div>
+
+                                        <span>
+                                            Manage students and staff
+                                        </span>
 
                                     </div>
 
-                                    <span>
 
-                                        Secure role-based access
+                                    <div class="feature-item">
 
-                                    </span>
+                                        <div class="feature-icon">
+
+                                            <i class="bi bi-journal-check"></i>
+
+                                        </div>
+
+                                        <span>
+                                            Track attendance and results
+                                        </span>
+
+                                    </div>
+
+
+                                    <div class="feature-item">
+
+                                        <div class="feature-icon">
+
+                                            <i class="bi bi-cash-stack"></i>
+
+                                        </div>
+
+                                        <span>
+                                            Manage fees and payments
+                                        </span>
+
+                                    </div>
+
+
+                                    <div class="feature-item">
+
+                                        <div class="feature-icon">
+
+                                            <i class="bi bi-shield-check"></i>
+
+                                        </div>
+
+                                        <span>
+                                            Secure role-based access
+                                        </span>
+
+                                    </div>
 
                                 </div>
-
 
                             </div>
 
@@ -623,9 +700,9 @@
                     </div>
 
 
-                    <!-- =====================================================
-                         LOGIN PANEL
-                    ====================================================== -->
+                    <!-- =================================================
+                     LOGIN
+                ================================================== -->
 
                     <div class="col-md-6">
 
@@ -635,30 +712,23 @@
                             <div class="login-heading">
 
                                 <h2>
-
                                     Welcome back
-
                                 </h2>
 
                                 <p>
-
                                     Sign in to continue to your dashboard.
-
                                 </p>
 
                             </div>
 
 
-                            <!-- =================================================
-                                 LOGIN MESSAGE
-                            ================================================== -->
+                            <!-- LOGIN MESSAGE -->
 
-                            <div id="loginMessage" class="alert d-none" role="alert" aria-live="polite"></div>
+                            <div id="loginMessage" class="alert d-none" role="alert" aria-live="polite">
+                            </div>
 
 
-                            <!-- =================================================
-                                 LOGIN FORM
-                            ================================================== -->
+                            <!-- LOGIN FORM -->
 
                             <form id="loginForm" novalidate>
 
@@ -718,7 +788,8 @@
                                         <button type="button" class="btn password-toggle" id="togglePassword"
                                             aria-label="Show password">
 
-                                            <i class="bi bi-eye" id="passwordIcon"></i>
+                                            <i class="bi bi-eye" id="passwordIcon">
+                                            </i>
 
                                         </button>
 
@@ -730,16 +801,15 @@
                                 <!-- OPTIONS -->
 
                                 <div class="d-flex
-                                           justify-content-between
-                                           align-items-center
-                                           mb-4">
+                                        justify-content-between
+                                        align-items-center
+                                        mb-4">
 
 
                                     <div class="form-check">
 
                                         <input class="form-check-input" type="checkbox" id="rememberMe"
                                             name="rememberMe">
-
 
                                         <label class="form-check-label" for="rememberMe">
 
@@ -750,11 +820,12 @@
                                     </div>
 
 
-                                    <a href="#" class="forgot-link" id="forgotPassword">
+                                    <button type="button" class="btn btn-link p-0 forgot-link text-decoration-none"
+                                        id="forgotPassword">
 
                                         Forgot password?
 
-                                    </a>
+                                    </button>
 
                                 </div>
 
@@ -764,38 +835,32 @@
                                 <button type="submit" class="btn btn-primary w-100 login-button" id="loginButton">
 
                                     <span id="loginButtonText">
-
                                         Sign In
-
                                     </span>
 
 
                                     <span id="loginSpinner" class="spinner-border
-                                               spinner-border-sm
-                                               ms-2
-                                               d-none" role="status" aria-hidden="true"></span>
+                                           spinner-border-sm
+                                           ms-2
+                                           d-none" role="status" aria-hidden="true">
+                                    </span>
 
                                 </button>
-
 
                             </form>
 
 
-                            <!-- =================================================
-                                 FOOTER
-                            ================================================== -->
+                            <!-- FOOTER -->
 
                             <div class="login-footer">
 
-                                School Management System
+                                <strong>
+                                    School Management System
+                                </strong>
 
                                 <br>
 
-                                <span>
-
-                                    Secure school administration platform
-
-                                </span>
+                                Secure school administration platform
 
                             </div>
 
@@ -803,7 +868,6 @@
                         </div>
 
                     </div>
-
 
                 </div>
 
@@ -814,21 +878,23 @@
     </main>
 
 
-    <!-- Bootstrap JS -->
+    <!-- Bootstrap JavaScript -->
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+    </script>
 
 
-    <!-- ================================================================
-         AUTHENTICATION JAVASCRIPT
-    ================================================================= -->
+    <!-- Central API -->
+
+    <script src="../js/api.js"></script>
+
+
+    <!-- Authentication -->
 
     <script src="../js/auth.js"></script>
 
 
-    <!-- ================================================================
-         PASSWORD VISIBILITY
-    ================================================================= -->
+    <!-- Password Visibility -->
 
     <script>
 
@@ -836,21 +902,15 @@
 
 
         const togglePassword =
-            document.getElementById(
-                "togglePassword"
-            );
+            document.getElementById("togglePassword");
 
 
         const password =
-            document.getElementById(
-                "password"
-            );
+            document.getElementById("password");
 
 
         const passwordIcon =
-            document.getElementById(
-                "passwordIcon"
-            );
+            document.getElementById("passwordIcon");
 
 
         if (
@@ -863,36 +923,62 @@
                 "click",
                 function () {
 
-                    if (
-                        password.type ===
-                        "password"
-                    ) {
+                    const showing =
+                        password.type === "text";
 
-                        password.type =
-                            "text";
 
-                        passwordIcon.className =
-                            "bi bi-eye-slash";
+                    password.type =
+                        showing ? "password" : "text";
 
-                        togglePassword.setAttribute(
-                            "aria-label",
-                            "Hide password"
-                        );
 
-                    } else {
+                    passwordIcon.className =
+                        showing
+                            ? "bi bi-eye"
+                            : "bi bi-eye-slash";
 
-                        password.type =
-                            "password";
 
-                        passwordIcon.className =
-                            "bi bi-eye";
+                    togglePassword.setAttribute(
+                        "aria-label",
+                        showing
+                            ? "Show password"
+                            : "Hide password"
+                    );
 
-                        togglePassword.setAttribute(
-                            "aria-label",
-                            "Show password"
-                        );
+                }
+            );
 
+        }
+
+
+        /* =========================================================
+           FORGOT PASSWORD
+        ========================================================== */
+
+        const forgotPassword =
+            document.getElementById("forgotPassword");
+
+
+        if (forgotPassword) {
+
+            forgotPassword.addEventListener(
+                "click",
+                function () {
+
+                    const message =
+                        document.getElementById("loginMessage");
+
+
+                    if (!message) {
+                        return;
                     }
+
+
+                    message.className =
+                        "alert alert-info";
+
+
+                    message.textContent =
+                        "Please contact your school administrator to reset your password.";
 
                 }
             );

@@ -4,176 +4,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Permissions | School Management System</title>
 
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
+    <style>
         body {
-            font-family: Arial, Helvetica, sans-serif;
             background: #f5f7fb;
             color: #1f2937;
         }
 
-        .page {
+        .sidebar {
+            width: 260px;
+            min-height: 100vh;
+            position: fixed;
+            inset: 0 auto 0 0;
+            background: #111827;
+            color: #fff;
+            z-index: 1040;
+            overflow-y: auto;
+            transition: transform .25s ease;
+        }
+
+        .sidebar-brand {
+            padding: 22px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+        }
+
+        .sidebar-brand i {
+            font-size: 1.7rem;
+        }
+
+        .sidebar-section {
+            padding: 18px 14px 6px;
+            color: #9ca3af;
+            font-size: .72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+        }
+
+        .sidebar .nav-link {
+            color: #d1d5db;
+            border-radius: 8px;
+            margin: 2px 10px;
+            padding: 10px 12px;
+            font-size: .9rem;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: #2563eb;
+            color: #fff;
+        }
+
+        .sidebar .nav-link i {
+            width: 22px;
+            margin-right: 7px;
+        }
+
+        .main-content {
+            margin-left: 260px;
             min-height: 100vh;
         }
 
-        .header {
-            background: #ffffff;
+        .topbar {
+            background: #fff;
             border-bottom: 1px solid #e5e7eb;
-            padding: 20px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 20px;
+            padding: 16px 28px;
         }
 
-        .header h1 {
-            font-size: 24px;
-            margin-bottom: 5px;
+        .page-content {
+            padding: 28px;
         }
 
-        .header p {
-            color: #6b7280;
-            font-size: 14px;
-        }
-
-        .container {
-            padding: 30px;
-            max-width: 1400px;
-            margin: auto;
+        .content-card,
+        .stat-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 3px 12px rgba(15, 23, 42, .04);
         }
 
         .toolbar {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .search-box {
-            display: flex;
-            gap: 10px;
-            flex: 1;
-            min-width: 250px;
-        }
-
-        .search-box input {
-            flex: 1;
-        }
-
-        input,
-        select,
-        textarea {
-            width: 100%;
-            padding: 11px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 14px;
-            outline: none;
-        }
-
-        input:focus,
-        select:focus,
-        textarea:focus {
-            border-color: #2563eb;
-        }
-
-        button {
-            border: none;
-            border-radius: 6px;
-            padding: 11px 18px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .btn-primary {
-            background: #2563eb;
-            color: #ffffff;
-        }
-
-        .btn-primary:hover {
-            background: #1d4ed8;
-        }
-
-        .btn-secondary {
-            background: #e5e7eb;
-            color: #111827;
-        }
-
-        .btn-danger {
-            background: #dc2626;
-            color: #ffffff;
-        }
-
-        .btn-edit {
-            background: #f59e0b;
-            color: #ffffff;
-        }
-
-        .table-card {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .table-header {
-            padding: 18px 20px;
+            padding: 18px;
             border-bottom: 1px solid #e5e7eb;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
 
-        .table-header h2 {
-            font-size: 18px;
+        .table th {
+            background: #f8fafc;
+            font-size: .78rem;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            color: #475569;
+            white-space: nowrap;
         }
 
-        .count {
-            color: #6b7280;
-            font-size: 14px;
-        }
-
-        .table-wrapper {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 800px;
-        }
-
-        th,
-        td {
-            padding: 14px 16px;
-            text-align: left;
-            border-bottom: 1px solid #e5e7eb;
-            font-size: 14px;
-        }
-
-        th {
-            background: #f9fafb;
-            color: #374151;
-            font-weight: 700;
-        }
-
-        tbody tr:hover {
-            background: #f9fafb;
+        .table td {
+            vertical-align: middle;
         }
 
         .permission-name {
@@ -182,136 +111,72 @@
         }
 
         .module-badge {
-            display: inline-block;
             background: #eff6ff;
             color: #1d4ed8;
-            padding: 5px 9px;
-            border-radius: 20px;
-            font-size: 12px;
+            border-radius: 50rem;
+            padding: 5px 10px;
+            font-size: .75rem;
             font-weight: 600;
-        }
-
-        .actions {
-            display: flex;
-            gap: 7px;
-            flex-wrap: wrap;
-        }
-
-        .actions button {
-            padding: 7px 11px;
-            font-size: 12px;
-        }
-
-        .empty {
-            text-align: center;
-            padding: 40px;
-            color: #6b7280;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #6b7280;
-        }
-
-        .message {
-            display: none;
-            padding: 12px 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-
-        .message.success {
-            display: block;
-            background: #ecfdf5;
-            color: #047857;
-            border: 1px solid #a7f3d0;
-        }
-
-        .message.error {
-            display: block;
-            background: #fef2f2;
-            color: #b91c1c;
-            border: 1px solid #fecaca;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            padding: 20px;
-            overflow-y: auto;
-        }
-
-        .modal.active {
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
 
         .modal-content {
-            width: 100%;
-            max-width: 550px;
-            background: #ffffff;
-            border-radius: 10px;
-            padding: 25px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+            border: 0;
+            border-radius: 16px;
         }
 
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
+        #message {
+            display: none;
         }
 
-        .modal-header h2 {
-            font-size: 20px;
-        }
-
-        .close {
-            background: transparent;
-            font-size: 25px;
-            padding: 0;
-            color: #6b7280;
-        }
-
-        .form-group {
-            margin-bottom: 18px;
-        }
-
-        .form-group label {
+        #message.show {
             display: block;
-            margin-bottom: 7px;
-            font-size: 14px;
-            font-weight: 600;
         }
 
-        .form-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 25px;
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, .5);
+            z-index: 1030;
         }
 
-        @media (max-width: 700px) {
-            .header {
-                padding: 18px;
+        .mobile-overlay.show {
+            display: block;
+        }
+
+        @media (max-width: 991.98px) {
+            .sidebar {
+                transform: translateX(-100%);
             }
 
-            .container {
-                padding: 18px;
+            .sidebar.show {
+                transform: translateX(0);
             }
 
-            .toolbar {
-                padding: 15px;
+            .main-content {
+                margin-left: 0;
             }
 
-            .search-box {
-                min-width: 100%;
+            .page-content {
+                padding: 20px;
+            }
+
+            .topbar {
+                padding: 15px 20px;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .page-content {
+                padding: 14px;
+            }
+
+            .topbar h1 {
+                font-size: 1.1rem;
+            }
+
+            .topbar p {
+                display: none;
             }
         }
     </style>
@@ -319,62 +184,228 @@
 
 <body>
 
-    <div class="page">
+    <div class="mobile-overlay" id="sidebarOverlay"></div>
 
-        <header class="header">
-            <div>
-                <h1>Permissions</h1>
-                <p>Manage permissions available throughout the school management system.</p>
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+
+        <div class="sidebar-brand">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-mortarboard-fill text-primary"></i>
+                <div>
+                    <div class="fw-bold">School Management</div>
+                    <small class="text-secondary">Administration Portal</small>
+                </div>
             </div>
+        </div>
 
-            <button type="button" class="btn-primary" onclick="openCreateModal()">
-                + Add Permission
+        <div class="sidebar-section">Main</div>
+        <nav class="nav flex-column">
+            <a class="nav-link" href="dashboard.html">
+                <i class="bi bi-grid-1x2"></i>Dashboard
+            </a>
+            <a class="nav-link" href="students.html">
+                <i class="bi bi-people"></i>Students
+            </a>
+            <a class="nav-link" href="staff.html">
+                <i class="bi bi-person-badge"></i>Staff
+            </a>
+            <a class="nav-link" href="guardians.html">
+                <i class="bi bi-person-heart"></i>Guardians
+            </a>
+        </nav>
+
+        <div class="sidebar-section">Academic</div>
+        <nav class="nav flex-column">
+            <a class="nav-link" href="classes.html">
+                <i class="bi bi-building"></i>Classes
+            </a>
+            <a class="nav-link" href="class-arms.html">
+                <i class="bi bi-diagram-3"></i>Class Arms
+            </a>
+            <a class="nav-link" href="departments.html">
+                <i class="bi bi-diagram-2"></i>Departments
+            </a>
+            <a class="nav-link" href="subjects.html">
+                <i class="bi bi-book"></i>Subjects
+            </a>
+            <a class="nav-link" href="academic-sessions.html">
+                <i class="bi bi-calendar3"></i>Sessions
+            </a>
+            <a class="nav-link" href="terms.html">
+                <i class="bi bi-calendar2-week"></i>Terms
+            </a>
+            <a class="nav-link" href="attendance.html">
+                <i class="bi bi-calendar-check"></i>Attendance
+            </a>
+            <a class="nav-link" href="results.html">
+                <i class="bi bi-bar-chart"></i>Results
+            </a>
+        </nav>
+
+        <div class="sidebar-section">Finance & Records</div>
+        <nav class="nav flex-column">
+            <a class="nav-link" href="fees.html">
+                <i class="bi bi-wallet2"></i>Fees
+            </a>
+            <a class="nav-link" href="documents.html">
+                <i class="bi bi-folder2-open"></i>Documents
+            </a>
+            <a class="nav-link" href="reports.html">
+                <i class="bi bi-file-earmark-bar-graph"></i>Reports
+            </a>
+            <a class="nav-link" href="notifications.html">
+                <i class="bi bi-bell"></i>Notifications
+            </a>
+        </nav>
+
+        <div class="sidebar-section">Administration</div>
+        <nav class="nav flex-column pb-4">
+            <a class="nav-link" href="users.html">
+                <i class="bi bi-person-gear"></i>Users
+            </a>
+            <a class="nav-link" href="roles.html">
+                <i class="bi bi-shield-check"></i>Roles
+            </a>
+            <a class="nav-link active" href="permissions.html">
+                <i class="bi bi-key"></i>Permissions
+            </a>
+            <a class="nav-link" href="profile.html">
+                <i class="bi bi-person-circle"></i>Profile
+            </a>
+            <a class="nav-link" href="settings.html">
+                <i class="bi bi-gear"></i>Settings
+            </a>
+            <button class="nav-link text-start border-0 bg-transparent" type="button" id="logoutButton">
+                <i class="bi bi-box-arrow-right"></i>Logout
             </button>
-        </header>
+        </nav>
 
+    </aside>
 
-        <main class="container">
+    <!-- MAIN -->
+    <div class="main-content">
 
-            <div id="message" class="message"></div>
+        <header class="topbar">
+            <div class="d-flex align-items-center justify-content-between gap-3">
 
+                <div class="d-flex align-items-center gap-3">
 
-            <section class="toolbar">
+                    <button class="btn btn-light d-lg-none" type="button" id="sidebarToggle"
+                        aria-label="Open navigation">
+                        <i class="bi bi-list fs-5"></i>
+                    </button>
 
-                <div class="search-box">
-
-                    <input type="text" id="searchInput" placeholder="Search permissions..." oninput="handleSearch()">
-
-                    <select id="moduleFilter" onchange="loadPermissions()">
-
-                        <option value="">All Modules</option>
-
-                    </select>
+                    <div>
+                        <h1 class="h4 mb-1">Permissions</h1>
+                        <p class="text-secondary small mb-0">
+                            Manage permissions available throughout the school management system.
+                        </p>
+                    </div>
 
                 </div>
 
-                <button type="button" class="btn-secondary" onclick="loadPermissions()">
-                    Refresh
-                </button>
+                <div class="d-flex align-items-center gap-3">
+
+                    <div class="text-end d-none d-md-block">
+                        <div class="fw-semibold small" id="userName">Administrator</div>
+                        <div class="text-secondary small">Administrator</div>
+                    </div>
+
+                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                        style="width:40px;height:40px;">
+                        <i class="bi bi-person"></i>
+                    </div>
+
+                    <button type="button" class="btn btn-primary" onclick="openCreateModal()">
+                        <i class="bi bi-plus-lg me-1"></i>
+                        <span class="d-none d-sm-inline">Add Permission</span>
+                        <span class="d-sm-none">Add</span>
+                    </button>
+
+                </div>
+
+            </div>
+        </header>
+
+        <main class="page-content">
+
+            <div id="message" class="alert mb-4" role="alert"></div>
+
+            <!-- FILTERS -->
+            <section class="content-card mb-4">
+
+                <div class="toolbar">
+
+                    <div class="row g-3 align-items-center">
+
+                        <div class="col-lg-7">
+
+                            <div class="input-group">
+
+                                <span class="input-group-text bg-white">
+                                    <i class="bi bi-search"></i>
+                                </span>
+
+                                <input type="search" class="form-control" id="searchInput"
+                                    placeholder="Search permissions..." oninput="handleSearch()">
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6 col-lg-3">
+
+                            <select class="form-select" id="moduleFilter" onchange="loadPermissions()">
+
+                                <option value="">All Modules</option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="col-md-6 col-lg-2">
+
+                            <button type="button" class="btn btn-outline-secondary w-100" onclick="loadPermissions()">
+
+                                <i class="bi bi-arrow-clockwise me-1"></i>
+                                Refresh
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
 
             </section>
 
+            <!-- PERMISSIONS TABLE -->
+            <section class="content-card">
 
-            <section class="table-card">
+                <div class="p-3 px-md-4 border-bottom">
 
-                <div class="table-header">
+                    <div class="d-flex align-items-center justify-content-between">
 
-                    <h2>Permission List</h2>
+                        <div>
+                            <h2 class="h6 mb-1 fw-bold">Permission List</h2>
+                            <small class="text-secondary">
+                                System access permissions
+                            </small>
+                        </div>
 
-                    <span class="count" id="permissionCount">
-                        0 permissions
-                    </span>
+                        <span class="text-secondary small" id="permissionCount">
+                            0 permissions
+                        </span>
+
+                    </div>
 
                 </div>
 
+                <div class="table-responsive">
 
-                <div class="table-wrapper">
-
-                    <table>
+                    <table class="table table-hover align-middle mb-0">
 
                         <thead>
                             <tr>
@@ -390,8 +421,11 @@
                         <tbody id="permissionsTable">
 
                             <tr>
-                                <td colspan="6" class="loading">
+                                <td colspan="6" class="text-center py-5 text-secondary">
+
+                                    <div class="spinner-border spinner-border-sm me-2"></div>
                                     Loading permissions...
+
                                 </td>
                             </tr>
 
@@ -407,107 +441,115 @@
 
     </div>
 
+    <!-- PERMISSION MODAL -->
+    <div class="modal fade" id="permissionModal" tabindex="-1" aria-hidden="true">
 
-    <!-- ============================================================
-     CREATE / EDIT MODAL
-     ============================================================ -->
+        <div class="modal-dialog modal-dialog-centered">
 
-    <div class="modal" id="permissionModal">
+            <div class="modal-content shadow-lg">
 
-        <div class="modal-content">
+                <div class="modal-header">
 
-            <div class="modal-header">
+                    <div>
+                        <h2 class="modal-title fs-5" id="modalTitle">
+                            Add Permission
+                        </h2>
 
-                <h2 id="modalTitle">
-                    Add Permission
-                </h2>
+                        <small class="text-secondary">
+                            Configure a system access permission.
+                        </small>
+                    </div>
 
-                <button type="button" class="close" onclick="closeModal()">
-                    &times;
-                </button>
+                    <button type="button" class="btn-close" onclick="closeModal()" aria-label="Close">
+                    </button>
+
+                </div>
+
+                <form id="permissionForm" onsubmit="savePermission(event)">
+
+                    <div class="modal-body">
+
+                        <input type="hidden" id="permissionId">
+
+                        <div class="mb-3">
+
+                            <label for="permissionName" class="form-label fw-semibold">
+                                Permission Name
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            <input type="text" class="form-control" id="permissionName"
+                                placeholder="Example: students.view" required>
+
+                            <div class="form-text">
+                                Use a clear permission name such as students.view or fees.create.
+                            </div>
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label for="permissionModule" class="form-label fw-semibold">
+                                Module
+                            </label>
+
+                            <input type="text" class="form-control" id="permissionModule"
+                                placeholder="Example: students">
+
+                        </div>
+
+                        <div>
+
+                            <label for="permissionDescription" class="form-label fw-semibold">
+                                Description
+                            </label>
+
+                            <textarea class="form-control" id="permissionDescription" rows="4"
+                                placeholder="Describe what this permission allows."></textarea>
+
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+
+                        <button type="button" class="btn btn-light" onclick="closeModal()">
+                            Cancel
+                        </button>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>
+                            Save Permission
+                        </button>
+
+                    </div>
+
+                </form>
 
             </div>
-
-
-            <form id="permissionForm" onsubmit="savePermission(event)">
-
-                <input type="hidden" id="permissionId">
-
-
-                <div class="form-group">
-
-                    <label for="permissionName">
-                        Permission Name *
-                    </label>
-
-                    <input type="text" id="permissionName" placeholder="Example: students.view" required>
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="permissionModule">
-                        Module
-                    </label>
-
-                    <input type="text" id="permissionModule" placeholder="Example: students">
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="permissionDescription">
-                        Description
-                    </label>
-
-                    <textarea id="permissionDescription" rows="4"
-                        placeholder="Describe what this permission allows."></textarea>
-
-                </div>
-
-
-                <div class="form-actions">
-
-                    <button type="button" class="btn-secondary" onclick="closeModal()">
-                        Cancel
-                    </button>
-
-                    <button type="submit" class="btn-primary">
-                        Save Permission
-                    </button>
-
-                </div>
-
-            </form>
 
         </div>
 
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-
         const API_URL = "/api/permissions";
 
         let permissions = [];
-
         let searchTimer = null;
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Authentication Headers
-        |--------------------------------------------------------------------------
-        */
+        let permissionModalInstance = null;
 
         function getAuthHeaders() {
-
             const token =
+                localStorage.getItem("school_management_token") ||
+                sessionStorage.getItem("school_management_token") ||
                 localStorage.getItem("token") ||
-                localStorage.getItem("accessToken") ||
                 sessionStorage.getItem("token") ||
+                localStorage.getItem("authToken") ||
+                sessionStorage.getItem("authToken") ||
+                localStorage.getItem("accessToken") ||
                 sessionStorage.getItem("accessToken");
 
             const headers = {
@@ -515,169 +557,118 @@
             };
 
             if (token) {
-                headers.Authorization = `Bearer ${token}`;
+                headers.Authorization = "Bearer " + token;
             }
 
             return headers;
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Show Message
-        |--------------------------------------------------------------------------
-        */
-
         function showMessage(message, type = "success") {
-
-            const element =
-                document.getElementById("message");
+            const element = document.getElementById("message");
 
             element.textContent = message;
 
             element.className =
-                `message ${type}`;
+                `alert alert-${type === "error" ? "danger" : "success"} mb-4 show`;
 
             setTimeout(() => {
-
-                element.className = "message";
-
+                element.className = "alert mb-4";
                 element.textContent = "";
-
             }, 4000);
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Load Permissions
-        |--------------------------------------------------------------------------
-        */
-
         async function loadPermissions() {
-
-            const table =
-                document.getElementById("permissionsTable");
+            const table = document.getElementById("permissionsTable");
 
             table.innerHTML = `
             <tr>
-                <td colspan="6" class="loading">
+                <td colspan="6" class="text-center py-5 text-secondary">
+                    <div class="spinner-border spinner-border-sm me-2"></div>
                     Loading permissions...
                 </td>
             </tr>
         `;
 
             try {
-
                 const module =
                     document.getElementById("moduleFilter").value;
 
                 let url = API_URL;
 
                 if (module) {
-
-                    url +=
-                        `?module=${encodeURIComponent(module)}`;
-
+                    url += `?module=${encodeURIComponent(module)}`;
                 }
 
+                const response = await fetch(url, {
+                    method: "GET",
+                    headers: getAuthHeaders()
+                });
 
-                const response =
-                    await fetch(
-                        url,
-                        {
-                            method: "GET",
-                            headers: getAuthHeaders()
-                        }
-                    );
-
-
-                const result =
-                    await response.json();
-
+                const result = await response.json().catch(() => ({}));
 
                 if (!response.ok) {
+                    if (response.status === 401 || response.status === 403) {
+                        clearAuthentication();
+                    }
 
                     throw new Error(
-                        result.message ||
-                        "Unable to load permissions."
+                        result.message || "Unable to load permissions."
                     );
-
                 }
-
 
                 permissions =
                     Array.isArray(result.data)
                         ? result.data
-                        : [];
-
+                        : Array.isArray(result.permissions)
+                            ? result.permissions
+                            : Array.isArray(result)
+                                ? result
+                                : [];
 
                 populateModules();
-
                 renderPermissions();
 
             } catch (error) {
-
-                console.error(
-                    "Load permissions error:",
-                    error
-                );
+                console.error("Load permissions error:", error);
 
                 table.innerHTML = `
                 <tr>
-                    <td colspan="6" class="empty">
+                    <td colspan="6" class="text-center py-5 text-danger">
+                        <i class="bi bi-exclamation-circle fs-4 d-block mb-2"></i>
                         Unable to load permissions.
                     </td>
                 </tr>
             `;
 
                 showMessage(
-                    error.message ||
-                    "Unable to load permissions.",
+                    error.message || "Unable to load permissions.",
                     "error"
                 );
-
             }
-
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Populate Module Filter
-        |--------------------------------------------------------------------------
-        */
-
         function populateModules() {
-
             const select =
                 document.getElementById("moduleFilter");
 
-            const currentValue =
-                select.value;
+            const currentValue = select.value;
 
-            const modules =
-                [
-                    ...new Set(
-                        permissions
-                            .map(permission => permission.module)
-                            .filter(Boolean)
-                    )
-                ]
-                    .sort();
-
+            const modules = [
+                ...new Set(
+                    permissions
+                        .map(permission => permission.module)
+                        .filter(Boolean)
+                )
+            ].sort();
 
             select.innerHTML =
                 `<option value="">All Modules</option>`;
 
-
             modules.forEach(module => {
-
                 const option =
                     document.createElement("option");
 
                 option.value = module;
-
                 option.textContent = module;
 
                 if (module === currentValue) {
@@ -685,38 +676,24 @@
                 }
 
                 select.appendChild(option);
-
             });
-
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Render Permissions
-        |--------------------------------------------------------------------------
-        */
-
-        function renderPermissions(
-            list = permissions
-        ) {
-
+        function renderPermissions(list = permissions) {
             const table =
                 document.getElementById("permissionsTable");
 
             const count =
                 document.getElementById("permissionCount");
 
-
             count.textContent =
                 `${list.length} permission${list.length === 1 ? "" : "s"}`;
 
-
             if (!list.length) {
-
                 table.innerHTML = `
                 <tr>
-                    <td colspan="6" class="empty">
+                    <td colspan="6" class="text-center py-5 text-secondary">
+                        <i class="bi bi-key fs-2 d-block mb-2"></i>
                         No permissions found.
                     </td>
                 </tr>
@@ -725,271 +702,203 @@
                 return;
             }
 
+            table.innerHTML = list.map(permission => {
 
-            table.innerHTML =
-                list.map(permission => {
+                const id = permission.id ?? "";
 
-                    const id =
-                        permission.id ?? "";
+                const name =
+                    escapeHtml(permission.name || "");
 
+                const module =
+                    permission.module
+                        ? `
+                        <span class="module-badge">
+                            ${escapeHtml(permission.module)}
+                        </span>
+                    `
+                        : "-";
 
-                    const name =
-                        escapeHtml(
-                            permission.name || ""
-                        );
+                const description =
+                    escapeHtml(permission.description || "-");
 
+                const created =
+                    permission.created_at
+                        ? formatDate(permission.created_at)
+                        : "-";
 
-                    const module =
-                        permission.module
-                            ? `
-                            <span class="module-badge">
-                                ${escapeHtml(permission.module)}
-                            </span>
-                          `
-                            : "-";
+                return `
+                <tr>
 
-
-                    const description =
-                        escapeHtml(
-                            permission.description || "-"
-                        );
-
-
-                    const created =
-                        permission.created_at
-                            ? formatDate(permission.created_at)
-                            : "-";
-
-
-                    return `
-                    <tr>
-
-                        <td>
+                    <td>
+                        <span class="text-secondary">
                             ${escapeHtml(String(id))}
-                        </td>
+                        </span>
+                    </td>
 
-                        <td>
-                            <span class="permission-name">
-                                ${name}
-                            </span>
-                        </td>
+                    <td>
+                        <span class="permission-name">
+                            ${name}
+                        </span>
+                    </td>
 
-                        <td>
-                            ${module}
-                        </td>
+                    <td>
+                        ${module}
+                    </td>
 
-                        <td>
-                            ${description}
-                        </td>
+                    <td class="text-secondary">
+                        ${description}
+                    </td>
 
-                        <td>
-                            ${created}
-                        </td>
+                    <td class="text-secondary">
+                        ${created}
+                    </td>
 
-                        <td>
+                    <td>
+                        <div class="d-flex gap-2 flex-wrap">
 
-                            <div class="actions">
+                            <button
+                                type="button"
+                                class="btn btn-sm btn-outline-primary"
+                                onclick="editPermission('${escapeJs(String(id))}')">
+                                <i class="bi bi-pencil"></i>
+                                <span class="d-none d-sm-inline ms-1">Edit</span>
+                            </button>
 
-                                <button
-                                    type="button"
-                                    class="btn-edit"
-                                    onclick="editPermission('${escapeJs(String(id))}')">
-                                    Edit
-                                </button>
+                            <button
+                                type="button"
+                                class="btn btn-sm btn-outline-danger"
+                                onclick="deletePermission('${escapeJs(String(id))}')">
+                                <i class="bi bi-trash"></i>
+                                <span class="d-none d-sm-inline ms-1">Delete</span>
+                            </button>
 
-                                <button
-                                    type="button"
-                                    class="btn-danger"
-                                    onclick="deletePermission('${escapeJs(String(id))}')">
-                                    Delete
-                                </button>
+                        </div>
+                    </td>
 
-                            </div>
+                </tr>
+            `;
 
-                        </td>
-
-                    </tr>
-                `;
-
-                })
-                    .join("");
-
+            }).join("");
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Search
-        |--------------------------------------------------------------------------
-        */
 
         function handleSearch() {
-
             clearTimeout(searchTimer);
 
-            searchTimer =
-                setTimeout(
-                    searchPermissions,
-                    300
-                );
-
+            searchTimer = setTimeout(
+                searchPermissions,
+                300
+            );
         }
 
-
         async function searchPermissions() {
-
             const searchInput =
                 document.getElementById("searchInput");
 
             const searchTerm =
                 searchInput.value.trim();
 
-
             if (!searchTerm) {
-
                 renderPermissions();
-
                 return;
-
             }
 
-
             try {
-
-                const response =
-                    await fetch(
-                        `${API_URL}/search?q=${encodeURIComponent(searchTerm)}`,
-                        {
-                            method: "GET",
-                            headers: getAuthHeaders()
-                        }
-                    );
-
+                const response = await fetch(
+                    `${API_URL}/search?q=${encodeURIComponent(searchTerm)}`,
+                    {
+                        method: "GET",
+                        headers: getAuthHeaders()
+                    }
+                );
 
                 const result =
-                    await response.json();
-
+                    await response.json().catch(() => ({}));
 
                 if (!response.ok) {
-
                     throw new Error(
-                        result.message ||
-                        "Search failed."
+                        result.message || "Search failed."
                     );
-
                 }
-
 
                 const data =
                     Array.isArray(result.data)
                         ? result.data
-                        : [];
-
+                        : Array.isArray(result.permissions)
+                            ? result.permissions
+                            : Array.isArray(result)
+                                ? result
+                                : [];
 
                 renderPermissions(data);
 
             } catch (error) {
-
                 console.error(
                     "Search permissions error:",
                     error
                 );
 
-                /*
-                 * Fallback to client-side search if
-                 * the search endpoint is unavailable.
-                 */
-
                 const term =
                     searchTerm.toLowerCase();
 
                 const filtered =
-                    permissions.filter(permission => {
+                    permissions.filter(permission =>
+                        String(permission.name || "")
+                            .toLowerCase()
+                            .includes(term) ||
 
-                        return (
+                        String(permission.module || "")
+                            .toLowerCase()
+                            .includes(term) ||
 
-                            String(permission.name || "")
-                                .toLowerCase()
-                                .includes(term)
-
-                            ||
-
-                            String(permission.module || "")
-                                .toLowerCase()
-                                .includes(term)
-
-                            ||
-
-                            String(permission.description || "")
-                                .toLowerCase()
-                                .includes(term)
-
-                        );
-
-                    });
-
+                        String(permission.description || "")
+                            .toLowerCase()
+                            .includes(term)
+                    );
 
                 renderPermissions(filtered);
-
             }
-
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Open Create Modal
-        |--------------------------------------------------------------------------
-        */
 
         function openCreateModal() {
+            document
+                .getElementById("permissionForm")
+                .reset();
 
-            document.getElementById(
-                "permissionForm"
-            ).reset();
+            document
+                .getElementById("permissionId")
+                .value = "";
 
-            document.getElementById(
-                "permissionId"
-            ).value = "";
+            document
+                .getElementById("modalTitle")
+                .textContent = "Add Permission";
 
-            document.getElementById(
-                "modalTitle"
-            ).textContent =
-                "Add Permission";
-
-
-            document.getElementById(
-                "permissionModal"
-            ).classList.add("active");
-
+            openModal();
         }
 
+        function openModal() {
+            const modal =
+                document.getElementById("permissionModal");
 
-        /*
-        |--------------------------------------------------------------------------
-        | Close Modal
-        |--------------------------------------------------------------------------
-        */
+            permissionModalInstance =
+                bootstrap.Modal.getOrCreateInstance(modal);
+
+            permissionModalInstance.show();
+        }
 
         function closeModal() {
+            const modal =
+                document.getElementById("permissionModal");
 
-            document.getElementById(
-                "permissionModal"
-            ).classList.remove("active");
+            const instance =
+                bootstrap.Modal.getInstance(modal);
 
+            if (instance) {
+                instance.hide();
+            }
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Edit Permission
-        |--------------------------------------------------------------------------
-        */
-
         async function editPermission(id) {
-
             try {
-
                 const response =
                     await fetch(
                         `${API_URL}/${encodeURIComponent(id)}`,
@@ -999,61 +908,37 @@
                         }
                     );
 
-
                 const result =
-                    await response.json();
-
+                    await response.json().catch(() => ({}));
 
                 if (!response.ok) {
-
                     throw new Error(
                         result.message ||
                         "Unable to load permission."
                     );
-
                 }
 
-
                 const permission =
-                    result.data;
+                    result.data || result.permission || result;
 
+                document.getElementById("permissionId").value =
+                    permission.id || "";
 
-                document.getElementById(
-                    "permissionId"
-                ).value =
-                    permission.id;
-
-
-                document.getElementById(
-                    "permissionName"
-                ).value =
+                document.getElementById("permissionName").value =
                     permission.name || "";
 
-
-                document.getElementById(
-                    "permissionModule"
-                ).value =
+                document.getElementById("permissionModule").value =
                     permission.module || "";
 
-
-                document.getElementById(
-                    "permissionDescription"
-                ).value =
+                document.getElementById("permissionDescription").value =
                     permission.description || "";
 
-
-                document.getElementById(
-                    "modalTitle"
-                ).textContent =
+                document.getElementById("modalTitle").textContent =
                     "Edit Permission";
 
-
-                document.getElementById(
-                    "permissionModal"
-                ).classList.add("active");
+                openModal();
 
             } catch (error) {
-
                 console.error(
                     "Edit permission error:",
                     error
@@ -1064,110 +949,75 @@
                     "Unable to load permission.",
                     "error"
                 );
-
             }
-
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Save Permission
-        |--------------------------------------------------------------------------
-        */
-
         async function savePermission(event) {
-
             event.preventDefault();
 
-
             const id =
-                document.getElementById(
-                    "permissionId"
-                ).value;
-
+                document.getElementById("permissionId").value;
 
             const name =
-                document.getElementById(
-                    "permissionName"
-                ).value.trim();
-
+                document
+                    .getElementById("permissionName")
+                    .value
+                    .trim();
 
             const module =
-                document.getElementById(
-                    "permissionModule"
-                ).value.trim();
-
+                document
+                    .getElementById("permissionModule")
+                    .value
+                    .trim();
 
             const description =
-                document.getElementById(
-                    "permissionDescription"
-                ).value.trim();
-
+                document
+                    .getElementById("permissionDescription")
+                    .value
+                    .trim();
 
             if (!name) {
-
                 showMessage(
                     "Permission name is required.",
                     "error"
                 );
 
                 return;
-
             }
 
-
             const payload = {
-
                 name,
-
-                module:
-                    module || null,
-
-                description:
-                    description || null
-
+                module: module || null,
+                description: description || null
             };
 
-
             try {
-
                 const method =
-                    id
-                        ? "PUT"
-                        : "POST";
-
+                    id ? "PUT" : "POST";
 
                 const url =
                     id
                         ? `${API_URL}/${encodeURIComponent(id)}`
                         : API_URL;
 
-
                 const response =
-                    await fetch(
-                        url,
-                        {
-                            method,
-                            headers: getAuthHeaders(),
-                            body: JSON.stringify(payload)
-                        }
-                    );
-
+                    await fetch(url, {
+                        method,
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify(payload)
+                    });
 
                 const result =
-                    await response.json();
-
+                    await response.json().catch(() => ({}));
 
                 if (!response.ok) {
-
                     throw new Error(
                         result.message ||
                         "Unable to save permission."
                     );
-
                 }
 
+                closeModal();
 
                 showMessage(
                     id
@@ -1176,13 +1026,9 @@
                     "success"
                 );
 
-
-                closeModal();
-
                 await loadPermissions();
 
             } catch (error) {
-
                 console.error(
                     "Save permission error:",
                     error
@@ -1193,46 +1039,31 @@
                     "Unable to save permission.",
                     "error"
                 );
-
             }
-
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Delete Permission
-        |--------------------------------------------------------------------------
-        */
-
         async function deletePermission(id) {
-
             const permission =
                 permissions.find(
                     item =>
                         String(item.id) === String(id)
                 );
 
-
             const name =
                 permission
                     ? permission.name
                     : "this permission";
-
 
             const confirmed =
                 window.confirm(
                     `Are you sure you want to delete "${name}"?`
                 );
 
-
             if (!confirmed) {
                 return;
             }
 
-
             try {
-
                 const response =
                     await fetch(
                         `${API_URL}/${encodeURIComponent(id)}`,
@@ -1242,31 +1073,24 @@
                         }
                     );
 
-
                 const result =
-                    await response.json();
-
+                    await response.json().catch(() => ({}));
 
                 if (!response.ok) {
-
                     throw new Error(
                         result.message ||
                         "Unable to delete permission."
                     );
-
                 }
-
 
                 showMessage(
                     "Permission deleted successfully.",
                     "success"
                 );
 
-
                 await loadPermissions();
 
             } catch (error) {
-
                 console.error(
                     "Delete permission error:",
                     error
@@ -1277,22 +1101,11 @@
                     "Unable to delete permission.",
                     "error"
                 );
-
             }
-
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Format Date
-        |--------------------------------------------------------------------------
-        */
-
         function formatDate(value) {
-
-            const date =
-                new Date(value);
+            const date = new Date(value);
 
             if (Number.isNaN(date.getTime())) {
                 return "-";
@@ -1306,78 +1119,113 @@
                     day: "numeric"
                 }
             );
-
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Escape HTML
-        |--------------------------------------------------------------------------
-        */
-
         function escapeHtml(value) {
-
             return String(value)
                 .replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
-
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Escape JavaScript String
-        |--------------------------------------------------------------------------
-        */
-
         function escapeJs(value) {
-
             return String(value)
                 .replace(/\\/g, "\\\\")
                 .replace(/'/g, "\\'");
-
         }
 
+        function clearAuthentication() {
+            [
+                "school_management_token",
+                "school_management_user",
+                "token",
+                "authToken",
+                "accessToken",
+                "jwt"
+            ].forEach(key => {
+                localStorage.removeItem(key);
+                sessionStorage.removeItem(key);
+            });
+        }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Close Modal When Clicking Outside
-        |--------------------------------------------------------------------------
-        */
+        function logout() {
+            clearAuthentication();
+            window.location.href = "login.html";
+        }
 
-        document.getElementById(
-            "permissionModal"
-        ).addEventListener(
-            "click",
-            function (event) {
+        function initializeSidebar() {
+            const sidebar =
+                document.getElementById("sidebar");
 
-                if (event.target === this) {
-                    closeModal();
-                }
+            const toggle =
+                document.getElementById("sidebarToggle");
 
+            const overlay =
+                document.getElementById("sidebarOverlay");
+
+            toggle.addEventListener("click", () => {
+                sidebar.classList.toggle("show");
+                overlay.classList.toggle("show");
+            });
+
+            overlay.addEventListener("click", () => {
+                sidebar.classList.remove("show");
+                overlay.classList.remove("show");
+            });
+
+            document
+                .querySelectorAll(".sidebar .nav-link")
+                .forEach(link => {
+                    link.addEventListener("click", () => {
+                        sidebar.classList.remove("show");
+                        overlay.classList.remove("show");
+                    });
+                });
+        }
+
+        function initializeUserDisplay() {
+            try {
+                const storedUser =
+                    JSON.parse(
+                        localStorage.getItem(
+                            "school_management_user"
+                        ) || "{}"
+                    );
+
+                const name =
+                    storedUser.name ||
+                    storedUser.full_name ||
+                    storedUser.username ||
+                    "Administrator";
+
+                document.getElementById("userName").textContent =
+                    name;
+
+            } catch (error) {
+                console.warn(
+                    "Unable to load user display:",
+                    error
+                );
             }
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Initial Load
-        |--------------------------------------------------------------------------
-        */
+        }
 
         document.addEventListener(
             "DOMContentLoaded",
             function () {
-
+                initializeSidebar();
+                initializeUserDisplay();
                 loadPermissions();
 
+                document
+                    .getElementById("logoutButton")
+                    .addEventListener(
+                        "click",
+                        logout
+                    );
             }
         );
-
     </script>
 
 </body>

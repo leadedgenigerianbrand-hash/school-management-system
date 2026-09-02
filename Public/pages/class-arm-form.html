@@ -2,819 +2,484 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Class Arm Form | School Management System</title>
 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="../css/style.css">
+
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
         body {
-            font-family:
-                Arial,
-                Helvetica,
-                sans-serif;
-
-            background: #f4f6f9;
-
-            color: #1f2937;
+            background: #f5f7fb;
         }
 
-        .page {
-            min-height: 100vh;
+        .page-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 28px;
         }
 
-        .header {
-            background: #ffffff;
-
-            border-bottom: 1px solid #e5e7eb;
-
-            padding: 18px 30px;
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: space-between;
-
-            gap: 20px;
-        }
-
-        .header-left h1 {
-            font-size: 24px;
-
+        .page-header h1 {
+            font-size: 27px;
+            font-weight: 700;
+            color: #172033;
             margin-bottom: 5px;
-
-            color: #111827;
         }
 
-        .header-left p {
-            font-size: 14px;
-
+        .page-header p {
             color: #6b7280;
+            margin: 0;
         }
 
-        .header-actions {
-            display: flex;
-
-            gap: 10px;
-
-            align-items: center;
-        }
-
-        .container {
-            max-width: 900px;
-
-            margin: 35px auto;
-
-            padding: 0 20px;
-        }
-
-        .card {
-            background: #ffffff;
-
-            border-radius: 12px;
-
-            box-shadow:
-                0 2px 10px rgba(0,
-                    0,
-                    0,
-                    0.06);
-
-            border: 1px solid #e5e7eb;
-
+        .form-card {
+            border: 0;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 4px 20px rgba(15, 23, 42, .07);
             overflow: hidden;
         }
 
-        .card-header {
-            padding: 22px 25px;
-
-            border-bottom: 1px solid #e5e7eb;
+        .card-header-custom {
+            padding: 22px 26px;
+            border-bottom: 1px solid #edf0f5;
         }
 
-        .card-header h2 {
+        .card-header-custom h2 {
             font-size: 19px;
-
-            margin-bottom: 6px;
+            font-weight: 700;
+            color: #172033;
+            margin-bottom: 5px;
         }
 
-        .card-header p {
-            font-size: 14px;
-
+        .card-header-custom p {
             color: #6b7280;
-        }
-
-        .card-body {
-            padding: 25px;
-        }
-
-        .form-grid {
-            display: grid;
-
-            grid-template-columns:
-                repeat(2, minmax(0, 1fr));
-
-            gap: 20px;
-        }
-
-        .form-group {
-            display: flex;
-
-            flex-direction: column;
-
-            gap: 7px;
-        }
-
-        .form-group.full {
-            grid-column: 1 / -1;
-        }
-
-        label {
             font-size: 14px;
+            margin: 0;
+        }
 
-            font-weight: 600;
+        .card-body-custom {
+            padding: 26px;
+        }
 
+        .form-label {
+            font-size: 13px;
+            font-weight: 700;
             color: #374151;
         }
 
-        label .required {
+        .required {
             color: #dc2626;
         }
 
-        input,
-        select,
-        textarea {
-            width: 100%;
-
-            border: 1px solid #d1d5db;
-
-            border-radius: 7px;
-
-            padding: 11px 12px;
-
-            font-size: 14px;
-
-            background: #ffffff;
-
-            color: #111827;
-
-            outline: none;
-
-            transition:
-                border-color 0.2s,
-                box-shadow 0.2s;
+        .form-control,
+        .form-select {
+            min-height: 44px;
+            border-color: #d8dee8;
         }
 
-        input:focus,
-        select:focus,
-        textarea:focus {
+        .form-control:focus,
+        .form-select:focus {
             border-color: #2563eb;
-
-            box-shadow:
-                0 0 0 3px rgba(37,
-                    99,
-                    235,
-                    0.1);
-        }
-
-        textarea {
-            resize: vertical;
-
-            min-height: 100px;
+            box-shadow: 0 0 0 .2rem rgba(37, 99, 235, .1);
         }
 
         .help-text {
             font-size: 12px;
+            color: #64748b;
+        }
 
-            color: #6b7280;
+        .status-options {
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            gap: 22px;
+            flex-wrap: wrap;
         }
 
         .form-footer {
-            margin-top: 25px;
-
+            margin-top: 28px;
             padding-top: 20px;
-
-            border-top: 1px solid #e5e7eb;
-
+            border-top: 1px solid #edf0f5;
             display: flex;
-
             justify-content: flex-end;
-
             gap: 10px;
-        }
-
-        button,
-        .button {
-            border: none;
-
-            border-radius: 7px;
-
-            padding: 11px 18px;
-
-            font-size: 14px;
-
-            font-weight: 600;
-
-            cursor: pointer;
-
-            text-decoration: none;
-
-            display: inline-flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            gap: 7px;
-
-            transition:
-                opacity 0.2s,
-                transform 0.1s;
-        }
-
-        button:hover,
-        .button:hover {
-            opacity: 0.9;
-        }
-
-        button:active,
-        .button:active {
-            transform: translateY(1px);
-        }
-
-        .btn-primary {
-            background: #2563eb;
-
-            color: #ffffff;
-        }
-
-        .btn-secondary {
-            background: #e5e7eb;
-
-            color: #374151;
-        }
-
-        .btn-danger {
-            background: #dc2626;
-
-            color: #ffffff;
-        }
-
-        .btn-success {
-            background: #16a34a;
-
-            color: #ffffff;
         }
 
         .message {
             display: none;
-
+            border-radius: 10px;
             padding: 12px 15px;
-
-            border-radius: 7px;
-
             margin-bottom: 20px;
-
             font-size: 14px;
         }
 
         .message.success {
             display: block;
-
             background: #dcfce7;
-
             color: #166534;
-
             border: 1px solid #bbf7d0;
         }
 
         .message.error {
             display: block;
-
             background: #fee2e2;
-
             color: #991b1b;
-
             border: 1px solid #fecaca;
         }
 
         .loading {
             display: none;
-
             text-align: center;
-
-            padding: 15px;
-
-            color: #6b7280;
-
-            font-size: 14px;
-        }
-
-        .status-row {
-            display: flex;
-
-            gap: 20px;
-
-            flex-wrap: wrap;
-        }
-
-        .radio-option {
-            display: flex;
-
-            align-items: center;
-
-            gap: 7px;
-
-            cursor: pointer;
-        }
-
-        .radio-option input {
-            width: auto;
+            padding: 10px;
+            color: #64748b;
         }
 
         .back-link {
-            color: #2563eb;
-
             text-decoration: none;
-
-            font-size: 14px;
-
             font-weight: 600;
         }
 
-        .back-link:hover {
-            text-decoration: underline;
-        }
-
-        @media (max-width: 700px) {
-
-            .header {
-                padding: 16px 18px;
-
-                flex-direction: column;
-
-                align-items: flex-start;
+        @media (max-width: 768px) {
+            .page-container {
+                padding: 18px 14px;
             }
 
-            .header-actions {
-                width: 100%;
+            .page-header h1 {
+                font-size: 23px;
             }
 
-            .container {
-                margin: 20px auto;
-
-                padding: 0 12px;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .form-group.full {
-                grid-column: auto;
-            }
-
-            .card-body {
-                padding: 18px;
+            .card-body-custom,
+            .card-header-custom {
+                padding: 20px;
             }
 
             .form-footer {
-                flex-direction: column;
+                flex-direction: column-reverse;
             }
 
-            .form-footer button,
-            .form-footer .button {
+            .form-footer .btn {
                 width: 100%;
             }
-
         }
     </style>
-
 </head>
-
 
 <body>
 
-    <div class="page">
+    <main class="page-container">
 
-        <header class="header">
+        <!-- HEADER -->
+        <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
 
-            <div class="header-left">
-
+            <div>
                 <h1 id="pageTitle">
+                    <i class="bi bi-diagram-3 me-2 text-primary"></i>
                     Add Class Arm
                 </h1>
 
                 <p>
                     Create and manage class arms for your school.
                 </p>
+            </div>
+
+            <a href="class-arms.html" class="btn btn-outline-primary back-link">
+                <i class="bi bi-arrow-left me-1"></i>
+                Back to Class Arms
+            </a>
+
+        </div>
+
+
+        <!-- FORM CARD -->
+        <div class="form-card">
+
+            <div class="card-header-custom">
+
+                <h2 id="formTitle">
+                    Class Arm Information
+                </h2>
+
+                <p>
+                    Enter the information below to create or update a class arm.
+                </p>
 
             </div>
 
 
-            <div class="header-actions">
+            <div class="card-body-custom">
 
-                <a href="class-arms.html" class="back-link">
-                    ← Back to Class Arms
-                </a>
-
-            </div>
-
-        </header>
+                <div id="message" class="message"></div>
 
 
-        <main class="container">
-
-            <div class="card">
-
-                <div class="card-header">
-
-                    <h2 id="formTitle">
-                        Class Arm Information
-                    </h2>
-
-                    <p>
-                        Enter the information below to create
-                        or update a class arm.
-                    </p>
-
+                <div id="loading" class="loading">
+                    <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                    Processing...
                 </div>
 
 
-                <div class="card-body">
+                <form id="classArmForm" novalidate>
 
-                    <div id="message" class="message"></div>
+                    <div class="row g-4">
 
+                        <!-- CLASS -->
+                        <div class="col-md-6">
 
-                    <div id="loading" class="loading">
-                        Processing...
-                    </div>
+                            <label for="classId" class="form-label">
+                                Class <span class="required">*</span>
+                            </label>
 
+                            <select id="classId" name="classId" class="form-select" required>
 
-                    <form id="classArmForm" novalidate>
+                                <option value="">
+                                    Select class
+                                </option>
 
-                        <div class="form-grid">
+                            </select>
 
-
-                            <div class="form-group">
-
-                                <label for="classId">
-                                    Class
-                                    <span class="required">*</span>
-                                </label>
-
-                                <select id="classId" name="classId" required>
-
-                                    <option value="">
-                                        Select class
-                                    </option>
-
-                                </select>
-
-                                <span class="help-text">
-                                    Select the main class this arm belongs to.
-                                </span>
-
+                            <div class="help-text mt-1">
+                                Select the main class this arm belongs to.
                             </div>
 
+                        </div>
 
-                            <div class="form-group">
 
-                                <label for="armName">
-                                    Arm Name
-                                    <span class="required">*</span>
-                                </label>
+                        <!-- ARM NAME -->
+                        <div class="col-md-6">
 
-                                <input type="text" id="armName" name="armName" placeholder="Example: A" maxlength="100"
-                                    required>
+                            <label for="armName" class="form-label">
+                                Arm Name <span class="required">*</span>
+                            </label>
 
-                                <span class="help-text">
-                                    Example: A, B, C or Blue.
-                                </span>
+                            <input type="text" id="armName" name="armName" class="form-control" placeholder="Example: A"
+                                maxlength="100" required>
 
+                            <div class="help-text mt-1">
+                                Example: A, B, C or Blue.
                             </div>
 
+                        </div>
 
-                            <div class="form-group">
 
-                                <label for="armCode">
-                                    Arm Code
-                                </label>
+                        <!-- ARM CODE -->
+                        <div class="col-md-6">
 
-                                <input type="text" id="armCode" name="armCode" placeholder="Example: JSS1-A"
-                                    maxlength="50">
+                            <label for="armCode" class="form-label">
+                                Arm Code
+                            </label>
 
-                                <span class="help-text">
-                                    Optional unique code for this class arm.
-                                </span>
+                            <input type="text" id="armCode" name="armCode" class="form-control"
+                                placeholder="Example: JSS1-A" maxlength="50">
 
+                            <div class="help-text mt-1">
+                                Optional unique code for this class arm.
                             </div>
 
+                        </div>
 
-                            <div class="form-group">
 
-                                <label for="capacity">
-                                    Capacity
-                                </label>
+                        <!-- CAPACITY -->
+                        <div class="col-md-6">
 
-                                <input type="number" id="capacity" name="capacity" placeholder="Example: 40" min="1"
-                                    max="1000">
+                            <label for="capacity" class="form-label">
+                                Capacity
+                            </label>
 
-                                <span class="help-text">
-                                    Maximum number of students allowed.
-                                </span>
+                            <input type="number" id="capacity" name="capacity" class="form-control"
+                                placeholder="Example: 40" min="1" max="1000">
 
+                            <div class="help-text mt-1">
+                                Maximum number of students allowed.
                             </div>
 
+                        </div>
 
-                            <div class="form-group">
 
-                                <label for="classTeacherId">
-                                    Class Teacher
-                                </label>
+                        <!-- CLASS TEACHER -->
+                        <div class="col-md-6">
 
-                                <select id="classTeacherId" name="classTeacherId">
+                            <label for="classTeacherId" class="form-label">
+                                Class Teacher
+                            </label>
 
-                                    <option value="">
-                                        Select class teacher
-                                    </option>
+                            <select id="classTeacherId" name="classTeacherId" class="form-select">
 
-                                </select>
+                                <option value="">
+                                    Select class teacher
+                                </option>
 
-                                <span class="help-text">
-                                    Optional teacher responsible for this arm.
-                                </span>
+                            </select>
 
+                            <div class="help-text mt-1">
+                                Optional teacher responsible for this arm.
                             </div>
 
+                        </div>
 
-                            <div class="form-group">
 
-                                <label>
-                                    Status
-                                </label>
+                        <!-- STATUS -->
+                        <div class="col-md-6">
 
-                                <div class="status-row">
+                            <label class="form-label">
+                                Status
+                            </label>
 
-                                    <label class="radio-option">
+                            <div class="status-options">
 
-                                        <input type="radio" name="status" value="active" checked>
+                                <div class="form-check">
 
+                                    <input class="form-check-input" type="radio" name="status" id="statusActive"
+                                        value="active" checked>
+
+                                    <label class="form-check-label" for="statusActive">
                                         Active
-
                                     </label>
 
+                                </div>
 
-                                    <label class="radio-option">
+                                <div class="form-check">
 
-                                        <input type="radio" name="status" value="inactive">
+                                    <input class="form-check-input" type="radio" name="status" id="statusInactive"
+                                        value="inactive">
 
+                                    <label class="form-check-label" for="statusInactive">
                                         Inactive
-
                                     </label>
 
                                 </div>
 
                             </div>
 
-
-                            <div class="form-group full">
-
-                                <label for="description">
-                                    Description
-                                </label>
-
-                                <textarea id="description" name="description"
-                                    placeholder="Enter any additional information about this class arm..."
-                                    maxlength="500"></textarea>
-
-                            </div>
-
                         </div>
 
 
-                        <div class="form-footer">
+                        <!-- DESCRIPTION -->
+                        <div class="col-12">
 
-                            <a href="class-arms.html" class="button btn-secondary">
-                                Cancel
-                            </a>
+                            <label for="description" class="form-label">
+                                Description
+                            </label>
 
-
-                            <button type="submit" class="btn-primary" id="submitButton">
-                                Save Class Arm
-                            </button>
+                            <textarea id="description" name="description" class="form-control" rows="4" maxlength="500"
+                                placeholder="Enter any additional information about this class arm..."></textarea>
 
                         </div>
 
-                    </form>
+                    </div>
 
-                </div>
+
+                    <!-- FOOTER -->
+                    <div class="form-footer">
+
+                        <a href="class-arms.html" class="btn btn-light border">
+                            Cancel
+                        </a>
+
+                        <button type="submit" class="btn btn-primary" id="submitButton">
+                            <i class="bi bi-check-lg me-1"></i>
+                            Save Class Arm
+                        </button>
+
+                    </div>
+
+                </form>
 
             </div>
 
-        </main>
+        </div>
 
-    </div>
+    </main>
 
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="../js/api.js"></script>
+
+    <script src="../js/auth.js"></script>
 
     <script>
-
-        const API_BASE = "/api";
-
-        const form =
-            document.getElementById(
-                "classArmForm"
-            );
-
-        const message =
-            document.getElementById(
-                "message"
-            );
-
-        const loading =
-            document.getElementById(
-                "loading"
-            );
-
-        const submitButton =
-            document.getElementById(
-                "submitButton"
-            );
-
-        const pageTitle =
-            document.getElementById(
-                "pageTitle"
-            );
-
-        const formTitle =
-            document.getElementById(
-                "formTitle"
-            );
-
-        const classSelect =
-            document.getElementById(
-                "classId"
-            );
-
-        const teacherSelect =
-            document.getElementById(
-                "classTeacherId"
-            );
-
+        const form = document.getElementById("classArmForm");
+        const message = document.getElementById("message");
+        const loading = document.getElementById("loading");
+        const submitButton = document.getElementById("submitButton");
+        const pageTitle = document.getElementById("pageTitle");
+        const formTitle = document.getElementById("formTitle");
+        const classSelect = document.getElementById("classId");
+        const teacherSelect = document.getElementById("classTeacherId");
 
         let editingId = null;
 
-
-        function showMessage(
-            text,
-            type = "error"
-        ) {
-
+        function showMessage(text, type = "error") {
             message.textContent = text;
-
-            message.className =
-                "message " + type;
-
+            message.className = `message ${type}`;
         }
-
 
         function hideMessage() {
-
             message.textContent = "";
-
-            message.className =
-                "message";
-
+            message.className = "message";
         }
 
-
-        function setLoading(
-            state
-        ) {
+        function setLoading(state) {
+            loading.style.display = state ? "block" : "none";
+            submitButton.disabled = state;
 
             if (state) {
-
-                loading.style.display =
-                    "block";
-
-                submitButton.disabled =
-                    true;
-
-                submitButton.textContent =
-                    "Saving...";
-
+                submitButton.innerHTML =
+                    '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
             } else {
-
-                loading.style.display =
-                    "none";
-
-                submitButton.disabled =
-                    false;
-
-                submitButton.textContent =
-                    editingId
-                        ? "Update Class Arm"
-                        : "Save Class Arm";
-
+                submitButton.innerHTML = editingId
+                    ? '<i class="bi bi-check-lg me-1"></i> Update Class Arm'
+                    : '<i class="bi bi-check-lg me-1"></i> Save Class Arm';
             }
-
         }
 
-
-        function getToken() {
-
-            return (
-                localStorage.getItem(
-                    "token"
-                ) ||
-
-                sessionStorage.getItem(
-                    "token"
-                )
-            );
-
-        }
-
-
-        async function apiRequest(
-            url,
-            options = {}
-        ) {
-
+        async function apiRequest(url, options = {}) {
             const token =
-                getToken();
+                localStorage.getItem("school_management_token") ||
+                sessionStorage.getItem("school_management_token") ||
+                localStorage.getItem("token") ||
+                sessionStorage.getItem("token");
 
             const headers = {
-                "Content-Type":
-                    "application/json",
-
+                "Content-Type": "application/json",
                 ...(options.headers || {})
             };
 
-
             if (token) {
-
-                headers.Authorization =
-                    `Bearer ${token}`;
-
+                headers.Authorization = `Bearer ${token}`;
             }
 
-
-            const response =
-                await fetch(
-                    API_BASE + url,
-                    {
-                        ...options,
-                        headers
-                    }
-                );
-
+            const response = await fetch(`/api${url}`, {
+                ...options,
+                headers
+            });
 
             let data = null;
 
             try {
-
-                data =
-                    await response.json();
-
-            } catch (error) {
-
+                data = await response.json();
+            } catch {
                 data = null;
-
             }
-
 
             if (!response.ok) {
-
                 throw new Error(
                     data?.message ||
+                    data?.error ||
                     "Request failed."
                 );
-
             }
 
-
             return data;
-
         }
 
-
         async function loadClasses() {
-
             try {
-
-                const result =
-                    await apiRequest(
-                        "/classes"
-                    );
-
+                const result = await apiRequest("/classes");
 
                 const classes =
                     Array.isArray(result?.data)
@@ -823,68 +488,36 @@
                             ? result
                             : [];
 
-
                 classSelect.innerHTML =
-                    `<option value="">
-                Select class
-            </option>`;
+                    '<option value="">Select class</option>';
 
+                classes.forEach(schoolClass => {
+                    const option = document.createElement("option");
 
-                classes.forEach(
-                    schoolClass => {
+                    option.value = schoolClass.id;
 
-                        const option =
-                            document.createElement(
-                                "option"
-                            );
+                    option.textContent =
+                        schoolClass.class_name ||
+                        schoolClass.name ||
+                        schoolClass.className ||
+                        `Class ${schoolClass.id}`;
 
-
-                        option.value =
-                            schoolClass.id;
-
-
-                        option.textContent =
-                            schoolClass.class_name ||
-                            schoolClass.name ||
-                            schoolClass.className ||
-                            `Class ${schoolClass.id}`;
-
-
-                        classSelect.appendChild(
-                            option
-                        );
-
-                    }
-                );
-
+                    classSelect.appendChild(option);
+                });
 
             } catch (error) {
-
-                console.error(
-                    "Load classes error:",
-                    error
-                );
+                console.error("Load classes error:", error);
 
                 showMessage(
-                    "Unable to load classes. " +
-                    error.message,
+                    `Unable to load classes. ${error.message}`,
                     "error"
                 );
-
             }
-
         }
 
-
         async function loadTeachers() {
-
             try {
-
-                const result =
-                    await apiRequest(
-                        "/staff"
-                    );
-
+                const result = await apiRequest("/staff");
 
                 const staff =
                     Array.isArray(result?.data)
@@ -893,124 +526,70 @@
                             ? result
                             : [];
 
-
                 teacherSelect.innerHTML =
-                    `<option value="">
-                Select class teacher
-            </option>`;
+                    '<option value="">Select class teacher</option>';
 
+                staff.forEach(teacher => {
+                    const option = document.createElement("option");
 
-                staff.forEach(
-                    teacher => {
+                    option.value = teacher.id;
 
-                        const option =
-                            document.createElement(
-                                "option"
-                            );
+                    const fullName = [
+                        teacher.first_name || teacher.firstName || "",
+                        teacher.last_name || teacher.lastName || ""
+                    ]
+                        .filter(Boolean)
+                        .join(" ");
 
+                    option.textContent =
+                        fullName ||
+                        teacher.staff_name ||
+                        teacher.name ||
+                        `Staff ${teacher.id}`;
 
-                        option.value =
-                            teacher.id;
-
-
-                        const fullName =
-                            [
-                                teacher.first_name ||
-                                teacher.firstName ||
-                                "",
-
-                                teacher.last_name ||
-                                teacher.lastName ||
-                                ""
-                            ]
-                                .filter(Boolean)
-                                .join(" ");
-
-
-                        option.textContent =
-                            fullName ||
-                            teacher.staff_name ||
-                            teacher.name ||
-                            `Staff ${teacher.id}`;
-
-
-                        teacherSelect.appendChild(
-                            option
-                        );
-
-                    }
-                );
-
+                    teacherSelect.appendChild(option);
+                });
 
             } catch (error) {
-
-                console.error(
-                    "Load teachers error:",
-                    error
-                );
-
+                console.error("Load teachers error:", error);
             }
-
         }
 
-
-        async function loadClassArm(
-            id
-        ) {
-
+        async function loadClassArm(id) {
             try {
-
                 setLoading(true);
 
                 const result =
-                    await apiRequest(
-                        `/class-arms/${id}`
-                    );
-
+                    await apiRequest(`/class-arms/${id}`);
 
                 const arm =
                     result?.data ||
                     result?.classArm ||
                     result;
 
-
                 if (!arm) {
-
                     throw new Error(
                         "Class arm could not be found."
                     );
-
                 }
-
 
                 classSelect.value =
                     arm.class_id ||
                     arm.classId ||
                     "";
 
-
-                document.getElementById(
-                    "armName"
-                ).value =
+                document.getElementById("armName").value =
                     arm.arm_name ||
                     arm.armName ||
                     "";
 
-
-                document.getElementById(
-                    "armCode"
-                ).value =
+                document.getElementById("armCode").value =
                     arm.arm_code ||
                     arm.armCode ||
                     "";
 
-
-                document.getElementById(
-                    "capacity"
-                ).value =
-                    arm.capacity ||
-                    "";
-
+                document.getElementById("capacity").value =
+                    arm.capacity || "";
 
                 teacherSelect.value =
                     arm.class_teacher_id ||
@@ -1018,45 +597,31 @@
                     arm.teacher_id ||
                     "";
 
-
-                document.getElementById(
-                    "description"
-                ).value =
-                    arm.description ||
-                    "";
-
+                document.getElementById("description").value =
+                    arm.description || "";
 
                 const status =
-                    arm.status ||
-                    "active";
-
+                    arm.status || "active";
 
                 const statusInput =
                     document.querySelector(
                         `input[name="status"][value="${status}"]`
                     );
 
-
                 if (statusInput) {
-
-                    statusInput.checked =
-                        true;
-
+                    statusInput.checked = true;
                 }
 
-
-                pageTitle.textContent =
-                    "Edit Class Arm";
+                pageTitle.innerHTML =
+                    '<i class="bi bi-pencil-square me-2 text-primary"></i> Edit Class Arm';
 
                 formTitle.textContent =
                     "Update Class Arm";
 
-                submitButton.textContent =
-                    "Update Class Arm";
-
+                submitButton.innerHTML =
+                    '<i class="bi bi-check-lg me-1"></i> Update Class Arm';
 
             } catch (error) {
-
                 console.error(
                     "Load class arm error:",
                     error
@@ -1068,26 +633,18 @@
                 );
 
             } finally {
-
                 setLoading(false);
-
             }
-
         }
 
-
         function getFormData() {
-
             const statusInput =
                 document.querySelector(
                     'input[name="status"]:checked'
                 );
 
-
             return {
-
-                classId:
-                    classSelect.value,
+                classId: classSelect.value,
 
                 armName:
                     document.getElementById(
@@ -1122,32 +679,21 @@
                     statusInput
                         ? statusInput.value
                         : "active"
-
             };
-
         }
 
-
-        function validateForm(
-            data
-        ) {
-
+        function validateForm(data) {
             if (!data.classId) {
-
                 showMessage(
                     "Please select a class.",
                     "error"
                 );
 
                 classSelect.focus();
-
                 return false;
-
             }
 
-
             if (!data.armName) {
-
                 showMessage(
                     "Please enter the arm name.",
                     "error"
@@ -1158,9 +704,7 @@
                 ).focus();
 
                 return false;
-
             }
-
 
             if (
                 data.capacity !== null &&
@@ -1169,7 +713,6 @@
                     data.capacity > 1000
                 )
             ) {
-
                 showMessage(
                     "Capacity must be between 1 and 1000.",
                     "error"
@@ -1180,79 +723,46 @@
                 ).focus();
 
                 return false;
-
             }
 
-
             return true;
-
         }
-
 
         form.addEventListener(
             "submit",
-            async function (event) {
-
+            async event => {
                 event.preventDefault();
 
                 hideMessage();
 
+                const data = getFormData();
 
-                const data =
-                    getFormData();
-
-
-                if (
-                    !validateForm(
-                        data
-                    )
-                ) {
-
+                if (!validateForm(data)) {
                     return;
-
                 }
 
-
                 try {
-
                     setLoading(true);
-
 
                     let result;
 
-
                     if (editingId) {
-
-                        result =
-                            await apiRequest(
-                                `/class-arms/${editingId}`,
-                                {
-                                    method: "PUT",
-
-                                    body:
-                                        JSON.stringify(
-                                            data
-                                        )
-                                }
-                            );
-
+                        result = await apiRequest(
+                            `/class-arms/${editingId}`,
+                            {
+                                method: "PUT",
+                                body: JSON.stringify(data)
+                            }
+                        );
                     } else {
-
-                        result =
-                            await apiRequest(
-                                "/class-arms",
-                                {
-                                    method: "POST",
-
-                                    body:
-                                        JSON.stringify(
-                                            data
-                                        )
-                                }
-                            );
-
+                        result = await apiRequest(
+                            "/class-arms",
+                            {
+                                method: "POST",
+                                body: JSON.stringify(data)
+                            }
+                        );
                     }
-
 
                     showMessage(
                         result?.message ||
@@ -1264,33 +774,12 @@
                         "success"
                     );
 
-
-                    if (!editingId) {
-
-                        form.reset();
-
-
-                        document.querySelector(
-                            'input[name="status"][value="active"]'
-                        ).checked =
-                            true;
-
-                    }
-
-
-                    setTimeout(
-                        function () {
-
-                            window.location.href =
-                                "class-arms.html";
-
-                        },
-                        1000
-                    );
-
+                    setTimeout(() => {
+                        window.location.href =
+                            "class-arms.html";
+                    }, 1000);
 
                 } catch (error) {
-
                     console.error(
                         "Save class arm error:",
                         error
@@ -1303,46 +792,30 @@
                     );
 
                 } finally {
-
                     setLoading(false);
-
                 }
-
             }
         );
 
-
         async function initialisePage() {
-
             const params =
                 new URLSearchParams(
                     window.location.search
                 );
 
-
-            editingId =
-                params.get("id");
-
+            editingId = params.get("id");
 
             await Promise.all([
                 loadClasses(),
                 loadTeachers()
             ]);
 
-
             if (editingId) {
-
-                await loadClassArm(
-                    editingId
-                );
-
+                await loadClassArm(editingId);
             }
-
         }
 
-
         initialisePage();
-
     </script>
 
 </body>

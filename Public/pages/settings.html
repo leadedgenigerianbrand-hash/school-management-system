@@ -7,69 +7,130 @@
 
     <title>Settings | School Management System</title>
 
-    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
-        * {
-            box-sizing: border-box;
-        }
-
         body {
-            margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
             background: #f5f7fb;
             color: #1f2937;
+            min-height: 100vh;
         }
 
-        .page-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 25px;
+        .sidebar {
+            width: 260px;
+            min-height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1040;
+            background: #111827;
+            color: #fff;
+            overflow-y: auto;
         }
 
-        .page-header {
-            margin-bottom: 25px;
+        .sidebar-brand {
+            padding: 22px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
         }
 
-        .page-header h1 {
-            margin: 0 0 8px;
-            font-size: 28px;
-        }
-
-        .page-header p {
-            margin: 0;
-            color: #6b7280;
-        }
-
-        .settings-grid {
-            display: grid;
-            grid-template-columns: 220px 1fr;
-            gap: 20px;
-        }
-
-        .settings-menu,
-        .settings-content {
-            background: #ffffff;
+        .sidebar-brand-icon {
+            width: 42px;
+            height: 42px;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            background: #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .sidebar-section {
+            padding: 18px 14px 6px;
+            color: #9ca3af;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+        }
+
+        .sidebar .nav-link {
+            color: #cbd5e1;
+            border-radius: 8px;
+            margin: 2px 10px;
+            padding: 10px 12px;
+            font-size: 14px;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: #1f2937;
+            color: #fff;
+        }
+
+        .sidebar .nav-link.active {
+            background: #2563eb;
+        }
+
+        .sidebar .nav-link i {
+            width: 22px;
+            margin-right: 8px;
+        }
+
+        .main-wrapper {
+            margin-left: 260px;
+            min-height: 100vh;
+        }
+
+        .topbar {
+            min-height: 70px;
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .page-content {
+            padding: 28px;
+        }
+
+        .page-title {
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .page-subtitle {
+            color: #6b7280;
+            margin-bottom: 0;
+        }
+
+        .settings-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, .03);
+            overflow: hidden;
         }
 
         .settings-menu {
             padding: 10px;
-            height: fit-content;
         }
 
         .settings-tab {
             width: 100%;
-            border: none;
+            border: 0;
             background: transparent;
+            color: #374151;
             text-align: left;
             padding: 12px 14px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            color: #374151;
+            border-radius: 8px;
             margin-bottom: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: .2s ease;
         }
 
         .settings-tab:hover {
@@ -78,11 +139,18 @@
 
         .settings-tab.active {
             background: #2563eb;
-            color: #ffffff;
+            color: #fff;
+        }
+
+        .settings-tab i {
+            width: 24px;
+            margin-right: 8px;
         }
 
         .settings-content {
-            padding: 25px;
+            padding: 28px;
+            border-left: 1px solid #e5e7eb;
+            min-height: 600px;
         }
 
         .settings-section {
@@ -95,81 +163,57 @@
 
         .section-header {
             border-bottom: 1px solid #e5e7eb;
-            padding-bottom: 15px;
-            margin-bottom: 22px;
+            padding-bottom: 18px;
+            margin-bottom: 24px;
         }
 
         .section-header h2 {
-            margin: 0 0 7px;
-            font-size: 21px;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 6px;
         }
 
         .section-header p {
-            margin: 0;
             color: #6b7280;
+            margin: 0;
             font-size: 14px;
         }
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 18px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 7px;
-        }
-
-        .form-group.full-width {
-            grid-column: 1 / -1;
-        }
-
-        .form-group label {
-            font-size: 14px;
+        .form-label {
+            font-size: 13px;
             font-weight: 600;
             color: #374151;
         }
 
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 11px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-family: inherit;
-            font-size: 14px;
-            outline: none;
+        .form-control,
+        .form-select {
+            border-color: #d1d5db;
+            padding: 10px 12px;
         }
 
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
+        .form-control:focus,
+        .form-select:focus {
             border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 100px;
+            box-shadow: 0 0 0 .2rem rgba(37, 99, 235, .12);
         }
 
         .checkbox-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 0;
+            padding: 14px 0;
+            border-bottom: 1px solid #f1f5f9;
         }
 
-        .checkbox-row input {
-            width: auto;
+        .checkbox-row:last-child {
+            border-bottom: 0;
         }
 
-        .checkbox-row label {
+        .checkbox-row .form-check-input {
+            cursor: pointer;
+        }
+
+        .checkbox-row .form-check-label {
             font-size: 14px;
             color: #374151;
+            cursor: pointer;
         }
 
         .form-actions {
@@ -181,105 +225,92 @@
             border-top: 1px solid #e5e7eb;
         }
 
-        .btn {
-            border: none;
-            border-radius: 6px;
-            padding: 11px 17px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .btn-primary {
-            background: #2563eb;
-            color: #ffffff;
-        }
-
-        .btn-primary:hover {
-            background: #1d4ed8;
-        }
-
-        .btn-secondary {
-            background: #6b7280;
-            color: #ffffff;
-        }
-
-        .btn-danger {
-            background: #dc2626;
-            color: #ffffff;
-        }
-
-        .message {
-            display: none;
-            padding: 12px 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-
-        .message.success {
-            display: block;
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .message.error {
-            display: block;
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
         .danger-zone {
             border: 1px solid #fecaca;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 25px;
             background: #fffafa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 28px;
         }
 
         .danger-zone h3 {
-            margin: 0 0 8px;
             color: #991b1b;
+            font-size: 17px;
+            font-weight: 700;
         }
 
         .danger-zone p {
             color: #6b7280;
-            font-size: 14px;
-            margin: 0 0 15px;
+            font-size: 13px;
         }
 
-        @media (max-width: 800px) {
-            .settings-grid {
-                grid-template-columns: 1fr;
+        .mobile-toggle {
+            display: none;
+        }
+
+        .sidebar-overlay {
+            display: none;
+        }
+
+        @media (max-width: 991.98px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform .25s ease;
             }
 
-            .settings-menu {
-                display: flex;
-                overflow-x: auto;
-                gap: 5px;
+            .sidebar.show {
+                transform: translateX(0);
             }
 
-            .settings-tab {
-                min-width: max-content;
-                width: auto;
+            .main-wrapper {
+                margin-left: 0;
+            }
+
+            .mobile-toggle {
+                display: inline-flex;
+            }
+
+            .sidebar-overlay.show {
+                display: block;
+                position: fixed;
+                inset: 0;
+                z-index: 1030;
+                background: rgba(0, 0, 0, .45);
+            }
+
+            .settings-content {
+                border-left: 0;
+                border-top: 1px solid #e5e7eb;
+            }
+
+            .topbar {
+                padding: 0 18px;
+            }
+
+            .page-content {
+                padding: 20px;
             }
         }
 
-        @media (max-width: 600px) {
-            .page-container {
+        @media (max-width: 575.98px) {
+            .page-content {
                 padding: 15px;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .form-group.full-width {
-                grid-column: auto;
             }
 
             .settings-content {
                 padding: 18px;
+            }
+
+            .user-label {
+                display: none;
+            }
+
+            .form-actions {
+                flex-direction: column-reverse;
+            }
+
+            .form-actions .btn {
+                width: 100%;
             }
         }
     </style>
@@ -287,591 +318,762 @@
 
 <body>
 
-    <div class="page-container">
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-        <div class="page-header">
-            <h1>Settings</h1>
-            <p>Manage your school system configuration and preferences.</p>
+    <aside class="sidebar" id="sidebar">
+
+        <div class="sidebar-brand">
+            <div class="d-flex align-items-center gap-3">
+                <div class="sidebar-brand-icon">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
+
+                <div>
+                    <div class="fw-bold">School Management</div>
+                    <small class="text-secondary">
+                        Administration Portal
+                    </small>
+                </div>
+            </div>
         </div>
 
+        <nav class="py-2">
 
-        <div id="settingsMessage" class="message"></div>
+            <div class="sidebar-section">Main</div>
 
+            <a class="nav-link" href="dashboard.html">
+                <i class="bi bi-speedometer2"></i>
+                Dashboard
+            </a>
 
-        <div class="settings-grid">
+            <a class="nav-link" href="students.html">
+                <i class="bi bi-people"></i>
+                Students
+            </a>
 
-            <!-- SETTINGS MENU -->
+            <a class="nav-link" href="staff.html">
+                <i class="bi bi-person-badge"></i>
+                Staff
+            </a>
 
-            <div class="settings-menu">
+            <a class="nav-link" href="guardians.html">
+                <i class="bi bi-person-heart"></i>
+                Guardians
+            </a>
 
-                <button type="button" class="settings-tab active" data-section="school">
-                    School Information
+            <div class="sidebar-section">Academic</div>
+
+            <a class="nav-link" href="classes.html">
+                <i class="bi bi-building"></i>
+                Classes
+            </a>
+
+            <a class="nav-link" href="class-arms.html">
+                <i class="bi bi-diagram-3"></i>
+                Class Arms
+            </a>
+
+            <a class="nav-link" href="departments.html">
+                <i class="bi bi-diagram-2"></i>
+                Departments
+            </a>
+
+            <a class="nav-link" href="subjects.html">
+                <i class="bi bi-book"></i>
+                Subjects
+            </a>
+
+            <a class="nav-link" href="academic-sessions.html">
+                <i class="bi bi-calendar3"></i>
+                Sessions
+            </a>
+
+            <a class="nav-link" href="terms.html">
+                <i class="bi bi-calendar-week"></i>
+                Terms
+            </a>
+
+            <a class="nav-link" href="attendance.html">
+                <i class="bi bi-check2-square"></i>
+                Attendance
+            </a>
+
+            <a class="nav-link" href="results.html">
+                <i class="bi bi-bar-chart"></i>
+                Results
+            </a>
+
+            <div class="sidebar-section">Finance & Records</div>
+
+            <a class="nav-link" href="fees.html">
+                <i class="bi bi-cash-stack"></i>
+                Fees
+            </a>
+
+            <a class="nav-link" href="documents.html">
+                <i class="bi bi-folder2-open"></i>
+                Documents
+            </a>
+
+            <a class="nav-link" href="reports.html">
+                <i class="bi bi-file-earmark-bar-graph"></i>
+                Reports
+            </a>
+
+            <div class="sidebar-section">Administration</div>
+
+            <a class="nav-link" href="users.html">
+                <i class="bi bi-person-gear"></i>
+                Users
+            </a>
+
+            <a class="nav-link" href="roles.html">
+                <i class="bi bi-shield-lock"></i>
+                Roles
+            </a>
+
+            <a class="nav-link" href="permissions.html">
+                <i class="bi bi-key"></i>
+                Permissions
+            </a>
+
+            <a class="nav-link" href="profile.html">
+                <i class="bi bi-person-circle"></i>
+                Profile
+            </a>
+
+            <a class="nav-link active" href="settings.html">
+                <i class="bi bi-gear"></i>
+                Settings
+            </a>
+
+            <div class="px-3 pt-3 pb-4">
+                <button type="button" class="btn btn-outline-light btn-sm w-100" id="logoutButton">
+                    <i class="bi bi-box-arrow-right me-2"></i>
+                    Sign Out
+                </button>
+            </div>
+
+        </nav>
+    </aside>
+
+    <div class="main-wrapper">
+
+        <header class="topbar">
+
+            <div class="d-flex align-items-center gap-3">
+
+                <button type="button" class="btn btn-light mobile-toggle" id="sidebarToggle">
+                    <i class="bi bi-list fs-5"></i>
                 </button>
 
-                <button type="button" class="settings-tab" data-section="academic">
-                    Academic Settings
-                </button>
+                <div>
+                    <h6 class="mb-0 fw-bold">
+                        System Settings
+                    </h6>
 
-                <button type="button" class="settings-tab" data-section="notifications">
-                    Notifications
-                </button>
-
-                <button type="button" class="settings-tab" data-section="security">
-                    Security
-                </button>
+                    <small class="text-secondary user-label">
+                        School configuration and preferences
+                    </small>
+                </div>
 
             </div>
 
-
-            <!-- SETTINGS CONTENT -->
-
-            <div class="settings-content">
-
-
-                <!-- SCHOOL INFORMATION -->
-
-                <section id="school" class="settings-section active">
-
-                    <div class="section-header">
-
-                        <h2>School Information</h2>
-
-                        <p>
-                            Update your school's basic information.
-                        </p>
-
-                    </div>
-
-
-                    <form id="schoolSettingsForm">
-
-                        <div class="form-grid">
-
-                            <div class="form-group full-width">
-
-                                <label for="schoolName">
-                                    School Name
-                                </label>
-
-                                <input type="text" id="schoolName" name="schoolName" placeholder="Enter school name">
-
-                            </div>
-
-
-                            <div class="form-group">
-
-                                <label for="schoolCode">
-                                    School Code
-                                </label>
-
-                                <input type="text" id="schoolCode" name="schoolCode" placeholder="e.g. SCH001">
-
-                            </div>
-
-
-                            <div class="form-group">
-
-                                <label for="schoolEmail">
-                                    School Email
-                                </label>
-
-                                <input type="email" id="schoolEmail" name="schoolEmail"
-                                    placeholder="school@example.com">
-
-                            </div>
-
-
-                            <div class="form-group">
-
-                                <label for="schoolPhone">
-                                    Phone Number
-                                </label>
-
-                                <input type="tel" id="schoolPhone" name="schoolPhone" placeholder="School phone number">
-
-                            </div>
-
-
-                            <div class="form-group">
-
-                                <label for="schoolWebsite">
-                                    Website
-                                </label>
-
-                                <input type="url" id="schoolWebsite" name="schoolWebsite"
-                                    placeholder="https://example.com">
-
-                            </div>
-
-
-                            <div class="form-group">
-
-                                <label for="schoolAddress">
-                                    Address
-                                </label>
-
-                                <textarea id="schoolAddress" name="schoolAddress"
-                                    placeholder="School address"></textarea>
-
-                            </div>
-
-
-                            <div class="form-group">
-
-                                <label for="schoolState">
-                                    State
-                                </label>
-
-                                <select id="schoolState" name="schoolState">
-
-                                    <option value="">
-                                        Select State
-                                    </option>
-
-                                    <option value="Abia">Abia</option>
-                                    <option value="Adamawa">Adamawa</option>
-                                    <option value="Akwa Ibom">Akwa Ibom</option>
-                                    <option value="Anambra">Anambra</option>
-                                    <option value="Bauchi">Bauchi</option>
-                                    <option value="Bayelsa">Bayelsa</option>
-                                    <option value="Benue">Benue</option>
-                                    <option value="Borno">Borno</option>
-                                    <option value="Cross River">Cross River</option>
-                                    <option value="Delta">Delta</option>
-                                    <option value="Ebonyi">Ebonyi</option>
-                                    <option value="Edo">Edo</option>
-                                    <option value="Ekiti">Ekiti</option>
-                                    <option value="Enugu">Enugu</option>
-                                    <option value="Gombe">Gombe</option>
-                                    <option value="Imo">Imo</option>
-                                    <option value="Jigawa">Jigawa</option>
-                                    <option value="Kaduna">Kaduna</option>
-                                    <option value="Kano">Kano</option>
-                                    <option value="Katsina">Katsina</option>
-                                    <option value="Kebbi">Kebbi</option>
-                                    <option value="Kogi">Kogi</option>
-                                    <option value="Kwara">Kwara</option>
-                                    <option value="Lagos">Lagos</option>
-                                    <option value="Nasarawa">Nasarawa</option>
-                                    <option value="Niger">Niger</option>
-                                    <option value="Ogun">Ogun</option>
-                                    <option value="Ondo">Ondo</option>
-                                    <option value="Osun">Osun</option>
-                                    <option value="Oyo">Oyo</option>
-                                    <option value="Plateau">Plateau</option>
-                                    <option value="Rivers">Rivers</option>
-                                    <option value="Sokoto">Sokoto</option>
-                                    <option value="Taraba">Taraba</option>
-                                    <option value="Yobe">Yobe</option>
-                                    <option value="Zamfara">Zamfara</option>
-
-                                </select>
-
-                            </div>
-
-                        </div>
-
-
-                        <div class="form-actions">
-
-                            <button type="button" class="btn btn-secondary" id="resetSchoolButton">
-                                Reset
-                            </button>
-
-                            <button type="submit" class="btn btn-primary">
-                                Save Changes
-                            </button>
-
-                        </div>
-
-                    </form>
-
-                </section>
-
-
-                <!-- ACADEMIC SETTINGS -->
-
-                <section id="academic" class="settings-section">
-
-                    <div class="section-header">
-
-                        <h2>Academic Settings</h2>
-
-                        <p>
-                            Configure the academic structure of your school.
-                        </p>
-
-                    </div>
-
-
-                    <form id="academicSettingsForm">
-
-                        <div class="form-grid">
-
-                            <div class="form-group">
-
-                                <label for="currentSession">
-                                    Current Academic Session
-                                </label>
-
-                                <input type="text" id="currentSession" placeholder="2026/2027">
-
-                            </div>
-
-
-                            <div class="form-group">
-
-                                <label for="currentTerm">
-                                    Current Term
-                                </label>
-
-                                <select id="currentTerm">
-
-                                    <option value="">
-                                        Select Term
-                                    </option>
-
-                                    <option value="First Term">
-                                        First Term
-                                    </option>
-
-                                    <option value="Second Term">
-                                        Second Term
-                                    </option>
-
-                                    <option value="Third Term">
-                                        Third Term
-                                    </option>
-
-                                </select>
-
-                            </div>
-
-
-                            <div class="form-group">
-
-                                <label for="gradingSystem">
-                                    Grading System
-                                </label>
-
-                                <select id="gradingSystem">
-
-                                    <option value="standard">
-                                        Standard Nigerian Grading
-                                    </option>
-
-                                    <option value="custom">
-                                        Custom
-                                    </option>
-
-                                </select>
-
-                            </div>
-
-
-                            <div class="form-group">
-
-                                <label for="passMark">
-                                    Pass Mark (%)
-                                </label>
-
-                                <input type="number" id="passMark" min="0" max="100" value="40">
-
-                            </div>
-
-                        </div>
-
-
-                        <div class="form-actions">
-
-                            <button type="submit" class="btn btn-primary">
-                                Save Academic Settings
-                            </button>
-
-                        </div>
-
-                    </form>
-
-                </section>
-
-
-                <!-- NOTIFICATIONS -->
-
-                <section id="notifications" class="settings-section">
-
-                    <div class="section-header">
-
-                        <h2>Notification Settings</h2>
-
-                        <p>
-                            Choose which notifications the school system sends.
-                        </p>
-
-                    </div>
-
-
-                    <form id="notificationSettingsForm">
-
-                        <div class="checkbox-row">
-
-                            <input type="checkbox" id="notifyFees" checked>
-
-                            <label for="notifyFees">
-                                Send notifications for fee payments and outstanding fees.
-                            </label>
-
-                        </div>
-
-
-                        <div class="checkbox-row">
-
-                            <input type="checkbox" id="notifyResults" checked>
-
-                            <label for="notifyResults">
-                                Notify parents when student results are published.
-                            </label>
-
-                        </div>
-
-
-                        <div class="checkbox-row">
-
-                            <input type="checkbox" id="notifyAttendance" checked>
-
-                            <label for="notifyAttendance">
-                                Send student attendance notifications.
-                            </label>
-
-                        </div>
-
-
-                        <div class="checkbox-row">
-
-                            <input type="checkbox" id="notifyAnnouncements" checked>
-
-                            <label for="notifyAnnouncements">
-                                Send important school announcements.
-                            </label>
-
-                        </div>
-
-
-                        <div class="form-actions">
-
-                            <button type="submit" class="btn btn-primary">
-                                Save Notification Settings
-                            </button>
-
-                        </div>
-
-                    </form>
-
-                </section>
-
-
-                <!-- SECURITY -->
-
-                <section id="security" class="settings-section">
-
-                    <div class="section-header">
-
-                        <h2>Security</h2>
-
-                        <p>
-                            Manage account and system security preferences.
-                        </p>
-
-                    </div>
-
-
-                    <form id="securitySettingsForm">
-
-                        <div class="checkbox-row">
-
-                            <input type="checkbox" id="requireStrongPassword" checked>
-
-                            <label for="requireStrongPassword">
-                                Require strong passwords for user accounts.
-                            </label>
-
-                        </div>
-
-
-                        <div class="checkbox-row">
-
-                            <input type="checkbox" id="sessionTimeout" checked>
-
-                            <label for="sessionTimeout">
-                                Automatically sign users out after inactivity.
-                            </label>
-
-                        </div>
-
-
-                        <div class="form-group">
-
-                            <label for="timeoutMinutes">
-                                Session Timeout (Minutes)
-                            </label>
-
-                            <input type="number" id="timeoutMinutes" min="5" value="30">
-
-                        </div>
-
-
-                        <div class="form-actions">
-
-                            <button type="submit" class="btn btn-primary">
-                                Save Security Settings
-                            </button>
-
-                        </div>
-
-                    </form>
-
-
-                    <div class="danger-zone">
-
-                        <h3>Danger Zone</h3>
-
-                        <p>
-                            These actions can affect your school system.
-                            Proceed carefully.
-                        </p>
-
-                        <button type="button" class="btn btn-danger" id="logoutButton">
-                            Sign Out
-                        </button>
-
-                    </div>
-
-                </section>
+            <div class="d-flex align-items-center">
+
+                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                    style="width:38px;height:38px;">
+                    <i class="bi bi-gear"></i>
+                </div>
 
             </div>
 
-        </div>
+        </header>
+
+        <main class="page-content">
+
+            <div class="mb-4">
+                <h1 class="page-title h3">
+                    Settings
+                </h1>
+
+                <p class="page-subtitle">
+                    Manage your school system configuration and preferences.
+                </p>
+            </div>
+
+            <div id="settingsMessage" class="alert d-none" role="alert"></div>
+
+            <div class="settings-card">
+
+                <div class="row g-0">
+
+                    <!-- SETTINGS MENU -->
+
+                    <div class="col-lg-3">
+
+                        <div class="settings-menu">
+
+                            <button type="button" class="settings-tab active" data-section="school">
+                                <i class="bi bi-building"></i>
+                                School Information
+                            </button>
+
+                            <button type="button" class="settings-tab" data-section="academic">
+                                <i class="bi bi-mortarboard"></i>
+                                Academic Settings
+                            </button>
+
+                            <button type="button" class="settings-tab" data-section="notifications">
+                                <i class="bi bi-bell"></i>
+                                Notifications
+                            </button>
+
+                            <button type="button" class="settings-tab" data-section="security">
+                                <i class="bi bi-shield-lock"></i>
+                                Security
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    <!-- SETTINGS CONTENT -->
+
+                    <div class="col-lg-9">
+
+                        <div class="settings-content">
+
+                            <!-- SCHOOL -->
+
+                            <section id="school" class="settings-section active">
+
+                                <div class="section-header">
+
+                                    <h2>
+                                        School Information
+                                    </h2>
+
+                                    <p>
+                                        Update your school's basic information.
+                                    </p>
+
+                                </div>
+
+                                <form id="schoolSettingsForm">
+
+                                    <div class="row g-3">
+
+                                        <div class="col-12">
+
+                                            <label for="schoolName" class="form-label">
+                                                School Name
+                                            </label>
+
+                                            <input type="text" id="schoolName" name="schoolName" class="form-control"
+                                                placeholder="Enter school name">
+
+                                        </div>
+
+                                        <div class="col-md-6">
+
+                                            <label for="schoolCode" class="form-label">
+                                                School Code
+                                            </label>
+
+                                            <input type="text" id="schoolCode" name="schoolCode" class="form-control"
+                                                placeholder="e.g. SCH001">
+
+                                        </div>
+
+                                        <div class="col-md-6">
+
+                                            <label for="schoolEmail" class="form-label">
+                                                School Email
+                                            </label>
+
+                                            <input type="email" id="schoolEmail" name="schoolEmail" class="form-control"
+                                                placeholder="school@example.com">
+
+                                        </div>
+
+                                        <div class="col-md-6">
+
+                                            <label for="schoolPhone" class="form-label">
+                                                Phone Number
+                                            </label>
+
+                                            <input type="tel" id="schoolPhone" name="schoolPhone" class="form-control"
+                                                placeholder="School phone number">
+
+                                        </div>
+
+                                        <div class="col-md-6">
+
+                                            <label for="schoolWebsite" class="form-label">
+                                                Website
+                                            </label>
+
+                                            <input type="url" id="schoolWebsite" name="schoolWebsite"
+                                                class="form-control" placeholder="https://example.com">
+
+                                        </div>
+
+                                        <div class="col-md-6">
+
+                                            <label for="schoolAddress" class="form-label">
+                                                Address
+                                            </label>
+
+                                            <textarea id="schoolAddress" name="schoolAddress" class="form-control"
+                                                rows="4" placeholder="School address"></textarea>
+
+                                        </div>
+
+                                        <div class="col-md-6">
+
+                                            <label for="schoolState" class="form-label">
+                                                State
+                                            </label>
+
+                                            <select id="schoolState" name="schoolState" class="form-select">
+
+                                                <option value="">
+                                                    Select State
+                                                </option>
+
+                                                <option value="Abia">Abia</option>
+                                                <option value="Adamawa">Adamawa</option>
+                                                <option value="Akwa Ibom">Akwa Ibom</option>
+                                                <option value="Anambra">Anambra</option>
+                                                <option value="Bauchi">Bauchi</option>
+                                                <option value="Bayelsa">Bayelsa</option>
+                                                <option value="Benue">Benue</option>
+                                                <option value="Borno">Borno</option>
+                                                <option value="Cross River">Cross River</option>
+                                                <option value="Delta">Delta</option>
+                                                <option value="Ebonyi">Ebonyi</option>
+                                                <option value="Edo">Edo</option>
+                                                <option value="Ekiti">Ekiti</option>
+                                                <option value="Enugu">Enugu</option>
+                                                <option value="Gombe">Gombe</option>
+                                                <option value="Imo">Imo</option>
+                                                <option value="Jigawa">Jigawa</option>
+                                                <option value="Kaduna">Kaduna</option>
+                                                <option value="Kano">Kano</option>
+                                                <option value="Katsina">Katsina</option>
+                                                <option value="Kebbi">Kebbi</option>
+                                                <option value="Kogi">Kogi</option>
+                                                <option value="Kwara">Kwara</option>
+                                                <option value="Lagos">Lagos</option>
+                                                <option value="Nasarawa">Nasarawa</option>
+                                                <option value="Niger">Niger</option>
+                                                <option value="Ogun">Ogun</option>
+                                                <option value="Ondo">Ondo</option>
+                                                <option value="Osun">Osun</option>
+                                                <option value="Oyo">Oyo</option>
+                                                <option value="Plateau">Plateau</option>
+                                                <option value="Rivers">Rivers</option>
+                                                <option value="Sokoto">Sokoto</option>
+                                                <option value="Taraba">Taraba</option>
+                                                <option value="Yobe">Yobe</option>
+                                                <option value="Zamfara">Zamfara</option>
+
+                                            </select>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="form-actions">
+
+                                        <button type="button" class="btn btn-outline-secondary" id="resetSchoolButton">
+                                            <i class="bi bi-arrow-counterclockwise me-2"></i>
+                                            Reset
+                                        </button>
+
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-check-lg me-2"></i>
+                                            Save Changes
+                                        </button>
+
+                                    </div>
+
+                                </form>
+
+                            </section>
+
+                            <!-- ACADEMIC -->
+
+                            <section id="academic" class="settings-section">
+
+                                <div class="section-header">
+
+                                    <h2>
+                                        Academic Settings
+                                    </h2>
+
+                                    <p>
+                                        Configure the academic structure of your school.
+                                    </p>
+
+                                </div>
+
+                                <form id="academicSettingsForm">
+
+                                    <div class="row g-3">
+
+                                        <div class="col-md-6">
+
+                                            <label for="currentSession" class="form-label">
+                                                Current Academic Session
+                                            </label>
+
+                                            <input type="text" id="currentSession" class="form-control"
+                                                placeholder="2026/2027">
+
+                                        </div>
+
+                                        <div class="col-md-6">
+
+                                            <label for="currentTerm" class="form-label">
+                                                Current Term
+                                            </label>
+
+                                            <select id="currentTerm" class="form-select">
+
+                                                <option value="">
+                                                    Select Term
+                                                </option>
+
+                                                <option value="First Term">
+                                                    First Term
+                                                </option>
+
+                                                <option value="Second Term">
+                                                    Second Term
+                                                </option>
+
+                                                <option value="Third Term">
+                                                    Third Term
+                                                </option>
+
+                                            </select>
+
+                                        </div>
+
+                                        <div class="col-md-6">
+
+                                            <label for="gradingSystem" class="form-label">
+                                                Grading System
+                                            </label>
+
+                                            <select id="gradingSystem" class="form-select">
+
+                                                <option value="standard">
+                                                    Standard Nigerian Grading
+                                                </option>
+
+                                                <option value="custom">
+                                                    Custom
+                                                </option>
+
+                                            </select>
+
+                                        </div>
+
+                                        <div class="col-md-6">
+
+                                            <label for="passMark" class="form-label">
+                                                Pass Mark (%)
+                                            </label>
+
+                                            <input type="number" id="passMark" class="form-control" min="0" max="100"
+                                                value="40">
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="form-actions">
+
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-check-lg me-2"></i>
+                                            Save Academic Settings
+                                        </button>
+
+                                    </div>
+
+                                </form>
+
+                            </section>
+
+                            <!-- NOTIFICATIONS -->
+
+                            <section id="notifications" class="settings-section">
+
+                                <div class="section-header">
+
+                                    <h2>
+                                        Notification Settings
+                                    </h2>
+
+                                    <p>
+                                        Choose which notifications the school system sends.
+                                    </p>
+
+                                </div>
+
+                                <form id="notificationSettingsForm">
+
+                                    <div class="checkbox-row form-check">
+                                        <input type="checkbox" class="form-check-input" id="notifyFees" checked>
+
+                                        <label for="notifyFees" class="form-check-label">
+                                            Send notifications for fee payments and outstanding fees.
+                                        </label>
+                                    </div>
+
+                                    <div class="checkbox-row form-check">
+                                        <input type="checkbox" class="form-check-input" id="notifyResults" checked>
+
+                                        <label for="notifyResults" class="form-check-label">
+                                            Notify parents when student results are published.
+                                        </label>
+                                    </div>
+
+                                    <div class="checkbox-row form-check">
+                                        <input type="checkbox" class="form-check-input" id="notifyAttendance" checked>
+
+                                        <label for="notifyAttendance" class="form-check-label">
+                                            Send student attendance notifications.
+                                        </label>
+                                    </div>
+
+                                    <div class="checkbox-row form-check">
+                                        <input type="checkbox" class="form-check-input" id="notifyAnnouncements"
+                                            checked>
+
+                                        <label for="notifyAnnouncements" class="form-check-label">
+                                            Send important school announcements.
+                                        </label>
+                                    </div>
+
+                                    <div class="form-actions">
+
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-check-lg me-2"></i>
+                                            Save Notification Settings
+                                        </button>
+
+                                    </div>
+
+                                </form>
+
+                            </section>
+
+                            <!-- SECURITY -->
+
+                            <section id="security" class="settings-section">
+
+                                <div class="section-header">
+
+                                    <h2>
+                                        Security
+                                    </h2>
+
+                                    <p>
+                                        Manage account and system security preferences.
+                                    </p>
+
+                                </div>
+
+                                <form id="securitySettingsForm">
+
+                                    <div class="checkbox-row form-check">
+                                        <input type="checkbox" class="form-check-input" id="requireStrongPassword"
+                                            checked>
+
+                                        <label for="requireStrongPassword" class="form-check-label">
+                                            Require strong passwords for user accounts.
+                                        </label>
+                                    </div>
+
+                                    <div class="checkbox-row form-check">
+                                        <input type="checkbox" class="form-check-input" id="sessionTimeout" checked>
+
+                                        <label for="sessionTimeout" class="form-check-label">
+                                            Automatically sign users out after inactivity.
+                                        </label>
+                                    </div>
+
+                                    <div class="mt-4">
+
+                                        <label for="timeoutMinutes" class="form-label">
+                                            Session Timeout (Minutes)
+                                        </label>
+
+                                        <input type="number" id="timeoutMinutes" class="form-control" min="5"
+                                            value="30">
+
+                                    </div>
+
+                                    <div class="form-actions">
+
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-shield-check me-2"></i>
+                                            Save Security Settings
+                                        </button>
+
+                                    </div>
+
+                                </form>
+
+                                <div class="danger-zone">
+
+                                    <h3>
+                                        <i class="bi bi-exclamation-triangle me-2"></i>
+                                        Danger Zone
+                                    </h3>
+
+                                    <p>
+                                        These actions can affect your school system.
+                                        Proceed carefully.
+                                    </p>
+
+                                    <button type="button" class="btn btn-danger" id="dangerLogoutButton">
+                                        <i class="bi bi-box-arrow-right me-2"></i>
+                                        Sign Out
+                                    </button>
+
+                                </div>
+
+                            </section>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </main>
 
     </div>
-
 
     <script src="../js/settings.js"></script>
 
     <script>
-
         const settingsTabs =
-            document.querySelectorAll(
-                ".settings-tab"
-            );
+            document.querySelectorAll(".settings-tab");
 
         const settingsSections =
-            document.querySelectorAll(
-                ".settings-section"
-            );
+            document.querySelectorAll(".settings-section");
 
+        settingsTabs.forEach(function (tab) {
+            tab.addEventListener("click", function () {
 
-        settingsTabs.forEach(
-            function (tab) {
+                const sectionId =
+                    tab.dataset.section;
 
-                tab.addEventListener(
-                    "click",
-                    function () {
+                settingsTabs.forEach(function (item) {
+                    item.classList.remove("active");
+                });
 
-                        const sectionId =
-                            tab.dataset.section;
+                settingsSections.forEach(function (section) {
+                    section.classList.remove("active");
+                });
 
+                tab.classList.add("active");
 
-                        settingsTabs.forEach(
-                            function (item) {
+                const section =
+                    document.getElementById(sectionId);
 
-                                item.classList.remove(
-                                    "active"
-                                );
+                if (section) {
+                    section.classList.add("active");
+                }
+            });
+        });
 
-                            }
-                        );
+        const logoutButton =
+            document.getElementById("logoutButton");
 
+        const dangerLogoutButton =
+            document.getElementById("dangerLogoutButton");
 
-                        settingsSections.forEach(
-                            function (section) {
+        function logoutUser() {
 
-                                section.classList.remove(
-                                    "active"
-                                );
-
-                            }
-                        );
-
-
-                        tab.classList.add(
-                            "active"
-                        );
-
-
-                        const section =
-                            document.getElementById(
-                                sectionId
-                            );
-
-
-                        if (section) {
-
-                            section.classList.add(
-                                "active"
-                            );
-
-                        }
-
-                    }
+            const confirmed =
+                window.confirm(
+                    "Are you sure you want to sign out?"
                 );
 
+            if (!confirmed) {
+                return;
+            }
+
+            localStorage.removeItem("school_management_token");
+            localStorage.removeItem("school_management_user");
+            localStorage.removeItem("token");
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("user");
+
+            sessionStorage.removeItem("school_management_token");
+            sessionStorage.removeItem("school_management_user");
+            sessionStorage.removeItem("token");
+            sessionStorage.removeItem("accessToken");
+            sessionStorage.removeItem("user");
+
+            window.location.href =
+                "login.html";
+        }
+
+        logoutButton?.addEventListener(
+            "click",
+            logoutUser
+        );
+
+        dangerLogoutButton?.addEventListener(
+            "click",
+            logoutUser
+        );
+
+        const sidebar =
+            document.getElementById("sidebar");
+
+        const sidebarToggle =
+            document.getElementById("sidebarToggle");
+
+        const sidebarOverlay =
+            document.getElementById("sidebarOverlay");
+
+        function closeSidebar() {
+            sidebar.classList.remove("show");
+            sidebarOverlay.classList.remove("show");
+        }
+
+        sidebarToggle?.addEventListener(
+            "click",
+            function () {
+                sidebar.classList.toggle("show");
+                sidebarOverlay.classList.toggle("show");
             }
         );
 
+        sidebarOverlay?.addEventListener(
+            "click",
+            closeSidebar
+        );
 
-        const logoutButton =
-            document.getElementById(
-                "logoutButton"
-            );
-
-
-        if (logoutButton) {
-
-            logoutButton.addEventListener(
-                "click",
-                function () {
-
-                    const confirmed =
-                        window.confirm(
-                            "Are you sure you want to sign out?"
-                        );
-
-
-                    if (!confirmed) {
-                        return;
-                    }
-
-
-                    localStorage.removeItem(
-                        "token"
-                    );
-
-                    localStorage.removeItem(
-                        "accessToken"
-                    );
-
-                    localStorage.removeItem(
-                        "user"
-                    );
-
-
-                    window.location.href =
-                        "/pages/login.html";
-
-                }
-            );
-
-        }
-
+        document
+            .querySelectorAll(".sidebar .nav-link")
+            .forEach(function (link) {
+                link.addEventListener(
+                    "click",
+                    closeSidebar
+                );
+            });
     </script>
 
 </body>

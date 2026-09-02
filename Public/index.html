@@ -1,56 +1,78 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
 
+    ```
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta name="description" content="School Management System">
+    <meta name="description"
+        content="Professional school management system for managing students, staff, academics, attendance, fees and results.">
+
+    <meta name="theme-color" content="#0d6efd">
 
     <title>School Management System</title>
 
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <!-- Application Styles -->
     <link rel="stylesheet" href="/css/style.css">
-
+    <link rel="stylesheet" href="/css/dashboard.css">
     <link rel="stylesheet" href="/css/responsive.css">
-</head>
+    ```
 
+</head>
 
 <body>
 
+    ```
     <!-- =========================================================
-         APPLICATION LOADING SCREEN
-    ========================================================== -->
+     APPLICATION LOADING SCREEN
+========================================================== -->
 
     <div id="appLoading" class="app-loading">
 
-        <div class="loading-spinner"></div>
+        <div class="text-center">
 
-        <p>
-            Loading School Management System...
-        </p>
+            <div class="spinner-border text-primary mb-3" role="status" aria-hidden="true">
+            </div>
+
+            <p class="mb-0 fw-semibold">
+                Loading School Management System...
+            </p>
+
+        </div>
 
     </div>
 
 
     <!-- =========================================================
-         APPLICATION
-    ========================================================== -->
+     APPLICATION
+========================================================== -->
 
     <div id="app" class="app" hidden>
 
 
         <!-- =====================================================
-             SIDEBAR
-        ====================================================== -->
+         SIDEBAR
+    ====================================================== -->
 
         <aside id="sidebar" class="sidebar">
+
+            <!-- School Branding -->
 
             <div class="sidebar-header">
 
                 <div class="school-logo-wrapper">
 
-                    <img id="schoolLogo" src="/assets/school-logo.png" alt="School Logo" class="school-logo">
+                    <img id="schoolLogo" src="/assets/school-logo.png" alt="School Logo" class="school-logo"
+                        onerror="this.style.display='none';">
 
                 </div>
 
@@ -69,13 +91,20 @@
             </div>
 
 
-            <!-- Navigation -->
+            <!-- =================================================
+             MAIN NAVIGATION
+        ================================================== -->
 
-            <nav class="sidebar-navigation">
+            <nav class="sidebar-navigation" aria-label="Main navigation">
+
+
+                <!-- Dashboard -->
 
                 <a href="/pages/dashboard.html" class="nav-item active" data-page="dashboard">
 
-                    <span class="nav-icon">▣</span>
+                    <span class="nav-icon">
+                        <i class="bi bi-grid-1x2-fill"></i>
+                    </span>
 
                     <span class="nav-text">
                         Dashboard
@@ -84,9 +113,13 @@
                 </a>
 
 
+                <!-- Students -->
+
                 <a href="/pages/students.html" class="nav-item" data-page="students">
 
-                    <span class="nav-icon">♙</span>
+                    <span class="nav-icon">
+                        <i class="bi bi-people-fill"></i>
+                    </span>
 
                     <span class="nav-text">
                         Students
@@ -95,53 +128,13 @@
                 </a>
 
 
-                <a href="/pages/attendance.html" class="nav-item" data-page="attendance">
-
-                    <span class="nav-icon">✓</span>
-
-                    <span class="nav-text">
-                        Attendance
-                    </span>
-
-                </a>
-
-
-                <a href="/pages/results.html" class="nav-item" data-page="results">
-
-                    <span class="nav-icon">▤</span>
-
-                    <span class="nav-text">
-                        Results
-                    </span>
-
-                </a>
-
-
-                <a href="/pages/fees.html" class="nav-item" data-page="fees">
-
-                    <span class="nav-icon">₦</span>
-
-                    <span class="nav-text">
-                        Fees & Payments
-                    </span>
-
-                </a>
-
-
-                <a href="/pages/guardians.html" class="nav-item" data-page="guardians">
-
-                    <span class="nav-icon">♧</span>
-
-                    <span class="nav-text">
-                        Parents & Guardians
-                    </span>
-
-                </a>
-
+                <!-- Staff -->
 
                 <a href="/pages/staff.html" class="nav-item" data-page="staff">
 
-                    <span class="nav-icon">♟</span>
+                    <span class="nav-icon">
+                        <i class="bi bi-person-badge-fill"></i>
+                    </span>
 
                     <span class="nav-text">
                         Staff
@@ -150,51 +143,284 @@
                 </a>
 
 
-                <a href="/pages/classes.html" class="nav-item" data-page="classes">
+                <!-- Guardians -->
 
-                    <span class="nav-icon">▦</span>
+                <a href="/pages/guardians.html" class="nav-item" data-page="guardians">
+
+                    <span class="nav-icon">
+                        <i class="bi bi-person-hearts"></i>
+                    </span>
 
                     <span class="nav-text">
-                        Classes
+                        Parents & Guardians
                     </span>
 
                 </a>
 
 
-                <a href="/pages/subjects.html" class="nav-item" data-page="subjects">
+                <!-- =================================================
+                 ACADEMICS
+            ================================================== -->
 
-                    <span class="nav-icon">▥</span>
+                <div class="navigation-section">
 
-                    <span class="nav-text">
-                        Subjects
-                    </span>
+                    <div class="navigation-section-title">
+                        Academics
+                    </div>
 
-                </a>
 
+                    <a href="/pages/classes.html" class="nav-item" data-page="classes">
+
+                        <span class="nav-icon">
+                            <i class="bi bi-building-fill"></i>
+                        </span>
+
+                        <span class="nav-text">
+                            Classes
+                        </span>
+
+                    </a>
+
+
+                    <a href="/pages/class-arms.html" class="nav-item" data-page="class-arms">
+
+                        <span class="nav-icon">
+                            <i class="bi bi-diagram-3-fill"></i>
+                        </span>
+
+                        <span class="nav-text">
+                            Class Arms
+                        </span>
+
+                    </a>
+
+
+                    <a href="/pages/departments.html" class="nav-item" data-page="departments">
+
+                        <span class="nav-icon">
+                            <i class="bi bi-diagram-2-fill"></i>
+                        </span>
+
+                        <span class="nav-text">
+                            Departments
+                        </span>
+
+                    </a>
+
+
+                    <a href="/pages/subjects.html" class="nav-item" data-page="subjects">
+
+                        <span class="nav-icon">
+                            <i class="bi bi-book-half"></i>
+                        </span>
+
+                        <span class="nav-text">
+                            Subjects
+                        </span>
+
+                    </a>
+
+
+                    <a href="/pages/academic-sessions.html" class="nav-item" data-page="academic-sessions">
+
+                        <span class="nav-icon">
+                            <i class="bi bi-calendar3"></i>
+                        </span>
+
+                        <span class="nav-text">
+                            Academic Sessions
+                        </span>
+
+                    </a>
+
+
+                    <a href="/pages/terms.html" class="nav-item" data-page="terms">
+
+                        <span class="nav-icon">
+                            <i class="bi bi-calendar-range-fill"></i>
+                        </span>
+
+                        <span class="nav-text">
+                            Terms
+                        </span>
+
+                    </a>
+
+                </div>
+
+
+                <!-- =================================================
+                 STUDENT MANAGEMENT
+            ================================================== -->
+
+                <div class="navigation-section">
+
+                    <div class="navigation-section-title">
+                        Student Management
+                    </div>
+
+
+                    <a href="/pages/attendance.html" class="nav-item" data-page="attendance">
+
+                        <span class="nav-icon">
+                            <i class="bi bi-check2-square"></i>
+                        </span>
+
+                        <span class="nav-text">
+                            Attendance
+                        </span>
+
+                    </a>
+
+
+                    <a href="/pages/results.html" class="nav-item" data-page="results">
+
+                        <span class="nav-icon">
+                            <i class="bi bi-journal-check"></i>
+                        </span>
+
+                        <span class="nav-text">
+                            Results
+                        </span>
+
+                    </a>
+
+
+                    <a href="/pages/fees.html" class="nav-item" data-page="fees">
+
+                        <span class="nav-icon">
+                            <i class="bi bi-cash-stack"></i>
+                        </span>
+
+                        <span class="nav-text">
+                            Fees & Payments
+                        </span>
+
+                    </a>
+
+
+                    <a href="/pages/documents.html" class="nav-item" data-page="documents">
+
+                        <span class="nav-icon">
+                            <i class="bi bi-folder2-open"></i>
+                        </span>
+
+                        <span class="nav-text">
+                            Documents
+                        </span>
+
+                    </a>
+
+                </div>
+
+
+                <!-- =================================================
+                 REPORTS
+            ================================================== -->
+
+                <div class="navigation-section">
+
+                    <div class="navigation-section-title">
+                        Reports
+                    </div>
+
+
+                    <a href="/pages/reports.html" class="nav-item" data-page="reports">
+
+                        <span class="nav-icon">
+                            <i class="bi bi-bar-chart-fill"></i>
+                        </span>
+
+                        <span class="nav-text">
+                            Reports
+                        </span>
+
+                    </a>
+
+                </div>
+
+
+                <!-- Divider -->
 
                 <div class="navigation-divider"></div>
 
 
-                <a href="/pages/settings.html" class="nav-item" data-page="settings">
+                <!-- =================================================
+                 ADMINISTRATION
+            ================================================== -->
 
-                    <span class="nav-icon">⚙</span>
+                <div class="navigation-section">
 
-                    <span class="nav-text">
-                        Settings
-                    </span>
+                    <div class="navigation-section-title">
+                        Administration
+                    </div>
 
-                </a>
+
+                    <a href="/pages/users.html" class="nav-item" data-page="users">
+
+                        <span class="nav-icon">
+                            <i class="bi bi-person-gear"></i>
+                        </span>
+
+                        <span class="nav-text">
+                            Users
+                        </span>
+
+                    </a>
+
+
+                    <a href="/pages/roles.html" class="nav-item" data-page="roles">
+
+                        <span class="nav-icon">
+                            <i class="bi bi-shield-lock-fill"></i>
+                        </span>
+
+                        <span class="nav-text">
+                            Roles
+                        </span>
+
+                    </a>
+
+
+                    <a href="/pages/permissions.html" class="nav-item" data-page="permissions">
+
+                        <span class="nav-icon">
+                            <i class="bi bi-key-fill"></i>
+                        </span>
+
+                        <span class="nav-text">
+                            Permissions
+                        </span>
+
+                    </a>
+
+
+                    <a href="/pages/settings.html" class="nav-item" data-page="settings">
+
+                        <span class="nav-icon">
+                            <i class="bi bi-gear-fill"></i>
+                        </span>
+
+                        <span class="nav-text">
+                            Settings
+                        </span>
+
+                    </a>
+
+                </div>
 
             </nav>
 
 
-            <!-- Sidebar Footer -->
+            <!-- =================================================
+             SIDEBAR FOOTER
+        ================================================== -->
 
             <div class="sidebar-footer">
 
                 <div class="user-mini-profile">
 
-                    <div id="userInitials" class="user-avatar">
+                    <div id="userInitials" class="user-avatar" aria-hidden="true">
                         U
                     </div>
 
@@ -216,7 +442,7 @@
                 <button id="sidebarLogout" type="button" class="logout-button">
 
                     <span>
-                        ⇥
+                        <i class="bi bi-box-arrow-right"></i>
                     </span>
 
                     Logout
@@ -229,23 +455,27 @@
 
 
         <!-- =====================================================
-             MAIN CONTENT
-        ====================================================== -->
+         MAIN CONTENT
+    ====================================================== -->
 
         <main class="main-content">
 
 
             <!-- =================================================
-                 TOP HEADER
-            ================================================== -->
+             TOP HEADER
+        ================================================== -->
 
             <header class="top-header">
 
                 <div class="header-left">
 
-                    <button id="sidebarToggle" type="button" class="sidebar-toggle" aria-label="Toggle sidebar">
-                        ☰
+                    <button id="sidebarToggle" type="button" class="sidebar-toggle" aria-label="Toggle navigation menu"
+                        aria-controls="sidebar">
+
+                        <i class="bi bi-list"></i>
+
                     </button>
+
 
                     <div>
 
@@ -262,12 +492,17 @@
                 </div>
 
 
+                <!-- Header Right -->
+
                 <div class="header-right">
+
+
+                    <!-- Notifications -->
 
                     <button id="notificationButton" type="button" class="header-button" aria-label="Notifications">
 
                         <span>
-                            ♢
+                            <i class="bi bi-bell-fill"></i>
                         </span>
 
                         <span id="notificationCount" class="notification-badge" hidden>
@@ -277,9 +512,11 @@
                     </button>
 
 
+                    <!-- User -->
+
                     <div class="header-user">
 
-                        <div id="headerUserInitials" class="user-avatar">
+                        <div id="headerUserInitials" class="user-avatar" aria-hidden="true">
                             U
                         </div>
 
@@ -303,18 +540,17 @@
 
 
             <!-- =================================================
-                 PAGE CONTENT
-            ================================================== -->
+             PAGE CONTENT
+        ================================================== -->
 
             <section id="pageContent" class="page-content">
 
-                <!-- Dynamic page content will load here -->
-
                 <div class="content-loading">
 
-                    <div class="loading-spinner"></div>
+                    <div class="spinner-border text-primary" role="status" aria-hidden="true">
+                    </div>
 
-                    <p>
+                    <p class="mt-3 mb-0">
                         Loading...
                     </p>
 
@@ -324,8 +560,8 @@
 
 
             <!-- =================================================
-                 FOOTER
-            ================================================== -->
+             FOOTER
+        ================================================== -->
 
             <footer class="main-footer">
 
@@ -354,22 +590,22 @@
 
 
     <!-- =========================================================
-         GLOBAL NOTIFICATION CONTAINER
-    ========================================================== -->
+     GLOBAL TOAST NOTIFICATION CONTAINER
+========================================================== -->
 
     <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true">
     </div>
 
 
     <!-- =========================================================
-         CONFIRMATION MODAL
-    ========================================================== -->
+     CONFIRMATION MODAL
+========================================================== -->
 
     <div id="confirmModal" class="modal" hidden>
 
         <div class="modal-overlay"></div>
 
-        <div class="modal-dialog" role="dialog" aria-modal="true">
+        <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
 
             <div class="modal-header">
 
@@ -411,15 +647,21 @@
 
 
     <!-- =========================================================
-         GLOBAL SCRIPTS
-    ========================================================== -->
+     BOOTSTRAP JAVASCRIPT
+========================================================== -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+    </script>
+
+
+    <!-- =========================================================
+     APPLICATION JAVASCRIPT
+========================================================== -->
 
     <script src="/js/api.js"></script>
-
     <script src="/js/auth.js"></script>
-
     <script src="/js/app.js"></script>
-
+    ```
 
 </body>
 

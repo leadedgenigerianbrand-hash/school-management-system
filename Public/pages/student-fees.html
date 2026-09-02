@@ -2,212 +2,590 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>
-        Student Fees | School Management System
-    </title>
+    <title>Student Fees | School Management System</title>
 
-    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <link rel="stylesheet" href="../css/students.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
+    <style>
+        body {
+            background: #f5f7fb;
+            color: #1f2937;
+        }
+
+        .app-sidebar {
+            width: 260px;
+            min-height: 100vh;
+            background: #172033;
+            position: fixed;
+            inset: 0 auto 0 0;
+            z-index: 1040;
+            overflow-y: auto;
+        }
+
+        .sidebar-brand {
+            padding: 22px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+        }
+
+        .sidebar-brand-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: #2563eb;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 21px;
+        }
+
+        .sidebar-section {
+            padding: 18px 15px 5px;
+            color: #7f8ba3;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 2px 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: #c7cfdd;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .sidebar-link:hover,
+        .sidebar-link.active {
+            background: #2563eb;
+            color: #fff;
+        }
+
+        .sidebar-link i {
+            width: 20px;
+            font-size: 16px;
+        }
+
+        .main-wrapper {
+            margin-left: 260px;
+            min-height: 100vh;
+        }
+
+        .topbar {
+            min-height: 70px;
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 28px;
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+        }
+
+        .page-content {
+            padding: 28px;
+            max-width: 1500px;
+            margin: auto;
+        }
+
+        .stat-card,
+        .content-card {
+            border: 0;
+            box-shadow: 0 3px 15px rgba(15, 23, 42, .05);
+        }
+
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #eff6ff;
+            color: #2563eb;
+            font-size: 20px;
+        }
+
+        .fees-table th {
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            white-space: nowrap;
+        }
+
+        .fees-table td {
+            vertical-align: middle;
+            font-size: 14px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 11px;
+            border-radius: 50px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: capitalize;
+            white-space: nowrap;
+        }
+
+        .status-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        #pageMessage:empty {
+            display: none;
+        }
+
+        #sidebarOverlay {
+            display: none;
+        }
+
+        @media (max-width: 991.98px) {
+            .app-sidebar {
+                transform: translateX(-100%);
+                transition: transform .25s ease;
+            }
+
+            .app-sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-wrapper {
+                margin-left: 0;
+            }
+
+            #sidebarOverlay.show {
+                display: block;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, .45);
+                z-index: 1035;
+            }
+
+            .page-content {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .topbar {
+                padding: 12px 16px;
+            }
+
+            .page-content {
+                padding: 15px;
+            }
+        }
+    </style>
 </head>
-
 
 <body>
 
-    <div class="page-container">
+    <div id="sidebarOverlay"></div>
 
+    <aside id="sidebar" class="app-sidebar">
 
-        <div class="page-header">
+        <div class="sidebar-brand">
+            <div class="d-flex align-items-center gap-3">
+                <div class="sidebar-brand-icon">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
 
-            <div>
-
-                <h1>
-                    Student Fees
-                </h1>
-
-                <p id="studentSubtitle">
-                    Loading student information...
-                </p>
-
+                <div>
+                    <div class="text-white fw-bold">School Management</div>
+                    <small class="text-secondary">Administration System</small>
+                </div>
             </div>
-
-
-            <button type="button" class="btn btn-secondary" onclick="goBackToProfile()">
-                ← Student Profile
-            </button>
-
         </div>
 
+        <div class="sidebar-section">Main</div>
 
-        <div id="pageMessage" class="message"></div>
+        <a href="dashboard.html" class="sidebar-link">
+            <i class="bi bi-grid-1x2-fill"></i>
+            <span>Dashboard</span>
+        </a>
+
+        <a href="students.html" class="sidebar-link active">
+            <i class="bi bi-people-fill"></i>
+            <span>Students</span>
+        </a>
+
+        <a href="staff.html" class="sidebar-link">
+            <i class="bi bi-person-badge-fill"></i>
+            <span>Staff</span>
+        </a>
+
+        <a href="guardians.html" class="sidebar-link">
+            <i class="bi bi-person-hearts"></i>
+            <span>Guardians</span>
+        </a>
+
+        <div class="sidebar-section">Academic</div>
+
+        <a href="classes.html" class="sidebar-link">
+            <i class="bi bi-building"></i>
+            <span>Classes</span>
+        </a>
+
+        <a href="class-arms.html" class="sidebar-link">
+            <i class="bi bi-diagram-3-fill"></i>
+            <span>Class Arms</span>
+        </a>
+
+        <a href="departments.html" class="sidebar-link">
+            <i class="bi bi-diagram-2-fill"></i>
+            <span>Departments</span>
+        </a>
+
+        <a href="subjects.html" class="sidebar-link">
+            <i class="bi bi-book-fill"></i>
+            <span>Subjects</span>
+        </a>
+
+        <a href="academic-sessions.html" class="sidebar-link">
+            <i class="bi bi-calendar3"></i>
+            <span>Sessions</span>
+        </a>
+
+        <a href="terms.html" class="sidebar-link">
+            <i class="bi bi-calendar-event"></i>
+            <span>Terms</span>
+        </a>
+
+        <a href="attendance.html" class="sidebar-link">
+            <i class="bi bi-calendar-check-fill"></i>
+            <span>Attendance</span>
+        </a>
+
+        <a href="results.html" class="sidebar-link">
+            <i class="bi bi-bar-chart-fill"></i>
+            <span>Results</span>
+        </a>
+
+        <div class="sidebar-section">Finance & Records</div>
+
+        <a href="fees.html" class="sidebar-link active">
+            <i class="bi bi-cash-stack"></i>
+            <span>Fees</span>
+        </a>
+
+        <a href="documents.html" class="sidebar-link">
+            <i class="bi bi-folder-fill"></i>
+            <span>Documents</span>
+        </a>
+
+        <a href="reports.html" class="sidebar-link">
+            <i class="bi bi-file-earmark-bar-graph-fill"></i>
+            <span>Reports</span>
+        </a>
+
+        <div class="sidebar-section">Administration</div>
+
+        <a href="users.html" class="sidebar-link">
+            <i class="bi bi-person-gear"></i>
+            <span>Users</span>
+        </a>
+
+        <a href="roles.html" class="sidebar-link">
+            <i class="bi bi-shield-lock-fill"></i>
+            <span>Roles</span>
+        </a>
+
+        <a href="permissions.html" class="sidebar-link">
+            <i class="bi bi-key-fill"></i>
+            <span>Permissions</span>
+        </a>
+
+        <a href="profile.html" class="sidebar-link">
+            <i class="bi bi-person-circle"></i>
+            <span>My Profile</span>
+        </a>
+
+        <a href="settings.html" class="sidebar-link">
+            <i class="bi bi-gear-fill"></i>
+            <span>Settings</span>
+        </a>
+
+    </aside>
 
 
-        <!-- FINANCIAL SUMMARY -->
+    <div class="main-wrapper">
 
-        <div class="stats-grid">
+        <header class="topbar">
 
-            <div class="stat-card">
+            <div class="d-flex align-items-center gap-3">
 
-                <span>
-                    Total Fees
-                </span>
-
-                <strong id="totalFees">
-                    ₦0
-                </strong>
-
-            </div>
-
-
-            <div class="stat-card">
-
-                <span>
-                    Amount Paid
-                </span>
-
-                <strong id="amountPaid">
-                    ₦0
-                </strong>
-
-            </div>
-
-
-            <div class="stat-card">
-
-                <span>
-                    Balance
-                </span>
-
-                <strong id="balance">
-                    ₦0
-                </strong>
-
-            </div>
-
-
-            <div class="stat-card">
-
-                <span>
-                    Payment Status
-                </span>
-
-                <strong id="paymentStatus">
-                    —
-                </strong>
-
-            </div>
-
-        </div>
-
-
-        <!-- FEES -->
-
-        <div class="content-card">
-
-
-            <div class="toolbar">
-
-                <h2 style="margin:0;">
-                    Fee Records
-                </h2>
-
-
-                <button type="button" class="btn btn-secondary" id="refreshButton">
-                    Refresh
+                <button id="sidebarToggle" class="btn btn-light d-lg-none" type="button">
+                    <i class="bi bi-list fs-5"></i>
                 </button>
 
-            </div>
+                <div>
+                    <h1 class="h5 mb-0 fw-bold">Student Fees</h1>
 
-
-            <div class="table-container">
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-
-                            <th>#</th>
-
-                            <th>Session</th>
-
-                            <th>Term</th>
-
-                            <th>Fee Type</th>
-
-                            <th>Amount</th>
-
-                            <th>Paid</th>
-
-                            <th>Balance</th>
-
-                            <th>Status</th>
-
-                            <th>Date</th>
-
-                        </tr>
-
-                    </thead>
-
-
-                    <tbody id="feesTableBody">
-
-                        <tr>
-
-                            <td colspan="9" class="loading-cell">
-                                Loading fee records...
-                            </td>
-
-                        </tr>
-
-                    </tbody>
-
-                </table>
+                    <small id="studentSubtitle" class="text-muted">
+                        Loading student information...
+                    </small>
+                </div>
 
             </div>
 
-        </div>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="goBackToProfile()">
+                <i class="bi bi-arrow-left me-1"></i>
+                Student Profile
+            </button>
+
+        </header>
+
+
+        <main class="page-content">
+
+            <div id="pageMessage" class="alert alert-danger mb-4" role="alert"></div>
+
+
+            <div class="row g-4 mb-4">
+
+                <div class="col-sm-6 col-xl-3">
+
+                    <div class="card stat-card h-100">
+
+                        <div class="card-body">
+
+                            <div class="d-flex justify-content-between align-items-start">
+
+                                <div>
+                                    <div class="text-muted small mb-2">
+                                        Total Fees
+                                    </div>
+
+                                    <div id="totalFees" class="fs-4 fw-bold">
+                                        ₦0.00
+                                    </div>
+                                </div>
+
+                                <div class="stat-icon">
+                                    <i class="bi bi-wallet2"></i>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="col-sm-6 col-xl-3">
+
+                    <div class="card stat-card h-100">
+
+                        <div class="card-body">
+
+                            <div class="d-flex justify-content-between align-items-start">
+
+                                <div>
+                                    <div class="text-muted small mb-2">
+                                        Amount Paid
+                                    </div>
+
+                                    <div id="amountPaid" class="fs-4 fw-bold text-success">
+                                        ₦0.00
+                                    </div>
+                                </div>
+
+                                <div class="stat-icon">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="col-sm-6 col-xl-3">
+
+                    <div class="card stat-card h-100">
+
+                        <div class="card-body">
+
+                            <div class="d-flex justify-content-between align-items-start">
+
+                                <div>
+                                    <div class="text-muted small mb-2">
+                                        Balance
+                                    </div>
+
+                                    <div id="balance" class="fs-4 fw-bold text-danger">
+                                        ₦0.00
+                                    </div>
+                                </div>
+
+                                <div class="stat-icon">
+                                    <i class="bi bi-exclamation-circle-fill"></i>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="col-sm-6 col-xl-3">
+
+                    <div class="card stat-card h-100">
+
+                        <div class="card-body">
+
+                            <div class="d-flex justify-content-between align-items-start">
+
+                                <div>
+                                    <div class="text-muted small mb-2">
+                                        Payment Status
+                                    </div>
+
+                                    <div id="paymentStatus" class="fs-4 fw-bold">
+                                        —
+                                    </div>
+                                </div>
+
+                                <div class="stat-icon">
+                                    <i class="bi bi-receipt"></i>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <section class="card content-card">
+
+                <div class="card-body p-0">
+
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 p-4 border-bottom">
+
+                        <div>
+                            <h2 class="h5 fw-bold mb-1">
+                                Fee Records
+                            </h2>
+
+                            <p class="text-muted small mb-0">
+                                Complete fee and payment history for this student.
+                            </p>
+                        </div>
+
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="refreshButton">
+                            <i class="bi bi-arrow-clockwise me-1"></i>
+                            Refresh
+                        </button>
+
+                    </div>
+
+
+                    <div class="table-responsive">
+
+                        <table class="table table-hover mb-0 fees-table">
+
+                            <thead>
+
+                                <tr>
+                                    <th>#</th>
+                                    <th>Session</th>
+                                    <th>Term</th>
+                                    <th>Fee Type</th>
+                                    <th>Amount</th>
+                                    <th>Paid</th>
+                                    <th>Balance</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody id="feesTableBody">
+
+                                <tr>
+
+                                    <td colspan="9" class="text-center py-5 text-muted">
+                                        <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                                        Loading fee records...
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
 
     </div>
 
 
     <script src="../js/api.js"></script>
     <script src="../js/auth.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-
         "use strict";
 
-
         const studentId =
-            new URLSearchParams(
-                window.location.search
-            ).get("id");
-
+            new URLSearchParams(window.location.search).get("id");
 
         const feesTableBody =
-            document.getElementById(
-                "feesTableBody"
-            );
-
+            document.getElementById("feesTableBody");
 
         const studentSubtitle =
-            document.getElementById(
-                "studentSubtitle"
-            );
-
+            document.getElementById("studentSubtitle");
 
         const pageMessage =
-            document.getElementById(
-                "pageMessage"
-            );
+            document.getElementById("pageMessage");
 
 
         function escapeHtml(value) {
@@ -222,16 +600,14 @@
         }
 
 
-        function showMessage(
-            message,
-            type = "error"
-        ) {
+        function showMessage(message, type = "error") {
 
-            pageMessage.textContent =
-                message;
+            pageMessage.textContent = message;
 
             pageMessage.className =
-                "message " + type;
+                type === "success"
+                    ? "alert alert-success mb-4"
+                    : "alert alert-danger mb-4";
 
         }
 
@@ -262,14 +638,8 @@
             const date =
                 new Date(value);
 
-            if (
-                Number.isNaN(
-                    date.getTime()
-                )
-            ) {
-
+            if (Number.isNaN(date.getTime())) {
                 return value;
-
             }
 
             return new Intl.DateTimeFormat(
@@ -287,32 +657,24 @@
         function statusClass(status) {
 
             const value =
-                String(
-                    status || ""
-                ).toLowerCase();
-
+                String(status || "").toLowerCase();
 
             if (
                 value === "paid" ||
                 value === "completed"
             ) {
-
-                return "status status-active";
-
+                return "status-badge status-active";
             }
-
 
             if (
                 value === "unpaid" ||
-                value === "overdue"
+                value === "overdue" ||
+                value === "outstanding"
             ) {
-
-                return "status status-inactive";
-
+                return "status-badge status-inactive";
             }
 
-
-            return "status status-pending";
+            return "status-badge status-pending";
 
         }
 
@@ -328,7 +690,6 @@
 
             }
 
-
             try {
 
                 const response =
@@ -336,7 +697,6 @@
                         "/api/students/" +
                         encodeURIComponent(studentId)
                     );
-
 
                 if (!response.ok) {
 
@@ -346,16 +706,13 @@
 
                 }
 
-
                 const data =
                     await response.json();
-
 
                 const student =
                     data.student ||
                     data.data ||
                     data;
-
 
                 const name =
                     student.name ||
@@ -367,12 +724,10 @@
                         .filter(Boolean)
                         .join(" ");
 
-
                 studentSubtitle.textContent =
                     name
                         ? "Fee records for " + name
                         : "Student fee records";
-
 
             } catch (error) {
 
@@ -392,7 +747,7 @@
 
                 feesTableBody.innerHTML = `
             <tr>
-                <td colspan="9" class="empty-cell">
+                <td colspan="9" class="text-center py-5 text-muted">
                     Student ID was not provided.
                 </td>
             </tr>
@@ -405,7 +760,8 @@
 
             feesTableBody.innerHTML = `
         <tr>
-            <td colspan="9" class="loading-cell">
+            <td colspan="9" class="text-center py-5 text-muted">
+                <div class="spinner-border spinner-border-sm text-primary me-2"></div>
                 Loading fee records...
             </td>
         </tr>
@@ -458,7 +814,8 @@
 
                 feesTableBody.innerHTML = `
             <tr>
-                <td colspan="9" class="empty-cell">
+                <td colspan="9" class="text-center py-5 text-danger">
+                    <i class="bi bi-exclamation-circle me-2"></i>
                     Unable to load fee records.
                 </td>
             </tr>
@@ -482,26 +839,24 @@
             let paid = 0;
 
 
-            records.forEach(
-                record => {
+            records.forEach(record => {
 
-                    totalFees += Number(
-                        record.amount ||
-                        record.total_amount ||
-                        record.totalAmount ||
-                        0
-                    );
+                totalFees += Number(
+                    record.amount ||
+                    record.total_amount ||
+                    record.totalAmount ||
+                    0
+                );
 
 
-                    paid += Number(
-                        record.amount_paid ||
-                        record.amountPaid ||
-                        record.paid ||
-                        0
-                    );
+                paid += Number(
+                    record.amount_paid ||
+                    record.amountPaid ||
+                    record.paid ||
+                    0
+                );
 
-                }
-            );
+            });
 
 
             const balance =
@@ -529,19 +884,26 @@
                 formatMoney(balance);
 
 
-            document.getElementById(
-                "paymentStatus"
-            ).textContent =
+            const paymentStatus =
+                document.getElementById("paymentStatus");
+
+            paymentStatus.textContent =
                 balance <= 0
                     ? "Paid"
                     : "Outstanding";
+
+            paymentStatus.className =
+                balance <= 0
+                    ? "fs-4 fw-bold text-success"
+                    : "fs-4 fw-bold text-danger";
 
 
             if (!records.length) {
 
                 feesTableBody.innerHTML = `
             <tr>
-                <td colspan="9" class="empty-cell">
+                <td colspan="9" class="text-center py-5 text-muted">
+                    <i class="bi bi-receipt fs-4 d-block mb-2"></i>
                     No fee records found.
                 </td>
             </tr>
@@ -593,7 +955,7 @@
                         return `
                     <tr>
 
-                        <td>
+                        <td class="fw-semibold">
                             ${index + 1}
                         </td>
 
@@ -624,36 +986,40 @@
                         )}
                         </td>
 
-                        <td>
+                        <td class="fw-semibold">
                             ${formatMoney(amount)}
                         </td>
 
-                        <td>
+                        <td class="text-success fw-semibold">
                             ${formatMoney(amountPaid)}
                         </td>
 
-                        <td>
+                        <td class="${recordBalance > 0
+                                ? "text-danger fw-semibold"
+                                : "text-success fw-semibold"
+                            }">
                             ${formatMoney(recordBalance)}
                         </td>
 
                         <td>
-
                             <span class="${statusClass(status)}">
-
+                                <i class="bi ${String(status).toLowerCase() === "paid" ||
+                                String(status).toLowerCase() === "completed"
+                                ? "bi-check-circle-fill"
+                                : "bi-exclamation-circle-fill"
+                            }"></i>
                                 ${escapeHtml(status)}
-
                             </span>
-
                         </td>
 
                         <td>
                             ${escapeHtml(
-                            formatDate(
-                                record.payment_date ||
-                                record.paymentDate ||
-                                record.date
-                            )
-                        )}
+                                formatDate(
+                                    record.payment_date ||
+                                    record.paymentDate ||
+                                    record.date
+                                )
+                            )}
                         </td>
 
                     </tr>
@@ -676,7 +1042,6 @@
                 return;
 
             }
-
 
             window.location.href =
                 "/pages/student-profile.html?id=" +
@@ -713,6 +1078,45 @@
             }
         );
 
+
+        const sidebarToggle =
+            document.getElementById("sidebarToggle");
+
+        const sidebar =
+            document.getElementById("sidebar");
+
+        const sidebarOverlay =
+            document.getElementById("sidebarOverlay");
+
+
+        if (sidebarToggle) {
+
+            sidebarToggle.addEventListener(
+                "click",
+                function () {
+
+                    sidebar.classList.toggle("show");
+                    sidebarOverlay.classList.toggle("show");
+
+                }
+            );
+
+        }
+
+
+        if (sidebarOverlay) {
+
+            sidebarOverlay.addEventListener(
+                "click",
+                function () {
+
+                    sidebar.classList.remove("show");
+                    sidebarOverlay.classList.remove("show");
+
+                }
+            );
+
+        }
     </script>
 
 </body>

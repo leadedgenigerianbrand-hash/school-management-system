@@ -2,36 +2,150 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>
-        Attendance | School Management System
-    </title>
+    <title>Attendance | School Management System</title>
 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Main styles -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="../css/style.css">
-
     <link rel="stylesheet" href="../css/dashboard.css">
-
     <link rel="stylesheet" href="../css/responsive.css">
-
     <link rel="stylesheet" href="../css/students.css">
 
-</head>
+    <style>
+        body {
+            background: #f5f7fb;
+        }
 
+        .page-container {
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 28px;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #172033;
+            margin-bottom: 5px;
+        }
+
+        .page-header p {
+            color: #6b7280;
+            margin: 0;
+        }
+
+        .attendance-card {
+            background: #fff;
+            border: 0;
+            border-radius: 14px;
+            box-shadow: 0 4px 18px rgba(15, 23, 42, .06);
+            overflow: hidden;
+        }
+
+        .controls {
+            padding: 20px;
+            border-bottom: 1px solid #edf0f5;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #374151;
+        }
+
+        .form-control,
+        .form-select {
+            min-height: 44px;
+            border-color: #d8dee8;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 .2rem rgba(37, 99, 235, .1);
+        }
+
+        .action-bar {
+            padding: 16px 20px;
+            background: #f8fafc;
+            border-bottom: 1px solid #edf0f5;
+        }
+
+        .table-responsive {
+            min-height: 280px;
+        }
+
+        .attendance-table {
+            margin: 0;
+        }
+
+        .attendance-table thead th {
+            background: #f8fafc;
+            color: #475569;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .03em;
+            padding: 15px 18px;
+            white-space: nowrap;
+        }
+
+        .attendance-table tbody td {
+            padding: 14px 18px;
+            vertical-align: middle;
+            border-color: #edf0f5;
+            color: #475569;
+        }
+
+        .attendance-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .student-name {
+            font-weight: 700;
+            color: #172033;
+        }
+
+        .empty-state,
+        .loading-state {
+            padding: 55px 20px;
+            text-align: center;
+            color: #64748b;
+        }
+
+        .empty-state i {
+            font-size: 42px;
+            color: #94a3b8;
+        }
+
+        #notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            max-width: 380px;
+        }
+
+        @media (max-width: 768px) {
+            .page-container {
+                padding: 18px 14px;
+            }
+
+            .page-header h1 {
+                font-size: 23px;
+            }
+        }
+    </style>
+</head>
 
 <body>
 
-
-    <!-- =========================================================
-         SIDEBAR
-    ========================================================== -->
-
+    <!-- SIDEBAR -->
     <aside class="sidebar">
 
         <div class="sidebar-header">
@@ -41,68 +155,70 @@
             </div>
 
             <div class="sidebar-title">
-
-                <strong>
-                    School Management
-                </strong>
-
-                <small>
-                    System
-                </small>
-
+                <strong>School Management</strong>
+                <small>System</small>
             </div>
 
         </div>
 
-
         <nav class="sidebar-nav">
 
             <a href="dashboard.html">
+                <i class="bi bi-grid me-2"></i>
                 Dashboard
             </a>
 
             <a href="students.html">
+                <i class="bi bi-people me-2"></i>
                 Students
             </a>
 
             <a href="attendance.html" class="active">
+                <i class="bi bi-calendar-check me-2"></i>
                 Attendance
             </a>
 
             <a href="classes.html">
+                <i class="bi bi-building me-2"></i>
                 Classes
             </a>
 
             <a href="subjects.html">
+                <i class="bi bi-book me-2"></i>
                 Subjects
             </a>
 
             <a href="results.html">
+                <i class="bi bi-bar-chart me-2"></i>
                 Results
             </a>
 
             <a href="fees.html">
+                <i class="bi bi-cash-stack me-2"></i>
                 Fees
             </a>
 
             <a href="guardians.html">
+                <i class="bi bi-person-hearts me-2"></i>
                 Guardians
             </a>
 
             <a href="staff.html">
+                <i class="bi bi-person-badge me-2"></i>
                 Staff
             </a>
 
             <a href="settings.html">
+                <i class="bi bi-gear me-2"></i>
                 Settings
             </a>
 
         </nav>
 
-
         <div class="sidebar-footer">
 
             <button type="button" id="logoutButton">
+                <i class="bi bi-box-arrow-right me-2"></i>
                 Logout
             </button>
 
@@ -111,193 +227,134 @@
     </aside>
 
 
-
-    <!-- =========================================================
-         MAIN CONTENT
-    ========================================================== -->
-
+    <!-- MAIN CONTENT -->
     <main class="main-content">
-
-
-        <!-- TOP BAR -->
 
         <header class="topbar">
 
             <div>
-
-                <h1>
-                    Attendance
-                </h1>
+                <h1>Attendance</h1>
 
                 <p>
                     Record and manage student attendance.
                 </p>
-
             </div>
 
-
             <div class="topbar-user">
-
-                <span id="userName">
-                    User
-                </span>
-
+                <span id="userName">User</span>
             </div>
 
         </header>
 
 
-
-        <!-- =====================================================
-             ATTENDANCE PAGE
-        ====================================================== -->
-
-        <section class="students-page">
-
+        <div class="page-container">
 
             <!-- PAGE HEADER -->
-
-            <div class="students-header">
+            <div class="page-header mb-4">
 
                 <div>
-
                     <h1>
+                        <i class="bi bi-calendar-check me-2 text-primary"></i>
                         Student Attendance
                     </h1>
 
                     <p>
-                        Select a date and class, then record
-                        attendance for your students.
+                        Select a date and class, then record attendance for your students.
                     </p>
-
                 </div>
 
             </div>
 
 
+            <!-- ATTENDANCE CARD -->
+            <div class="attendance-card">
 
-            <!-- =================================================
-                 ATTENDANCE CONTROLS
-            ================================================== -->
+                <!-- CONTROLS -->
+                <div class="controls">
 
-            <div class="students-table-card">
+                    <div class="row g-3 align-items-end">
 
+                        <div class="col-12 col-md-4 col-lg-3">
 
-                <div class="students-toolbar" style="padding:20px 20px 0;">
+                            <label for="attendanceDate" class="form-label">
+                                Attendance Date
+                            </label>
 
+                            <input type="date" id="attendanceDate" name="attendance_date" class="form-control">
 
-                    <!-- DATE -->
-
-                    <div>
-
-                        <label for="attendanceDate" style="
-                                display:block;
-                                margin-bottom:6px;
-                                font-size:13px;
-                                font-weight:600;
-                            ">
-                            Attendance Date
-                        </label>
-
-                        <input type="date" id="attendanceDate" name="attendance_date" style="
-                                height:44px;
-                                padding:0 12px;
-                                border:1px solid #d1d5db;
-                                border-radius:8px;
-                                background:#fff;
-                            ">
-
-                    </div>
+                        </div>
 
 
+                        <div class="col-12 col-md-4 col-lg-3">
 
-                    <!-- CLASS -->
+                            <label for="classId" class="form-label">
+                                Class
+                            </label>
 
-                    <div>
+                            <select id="classId" name="class_id" class="form-select">
 
-                        <label for="classId" style="
-                                display:block;
-                                margin-bottom:6px;
-                                font-size:13px;
-                                font-weight:600;
-                            ">
-                            Class
-                        </label>
+                                <option value="">
+                                    All Classes
+                                </option>
 
-                        <select id="classId" name="class_id" style="
-                                height:44px;
-                                min-width:180px;
-                                padding:0 12px;
-                                border:1px solid #d1d5db;
-                                border-radius:8px;
-                                background:#fff;
-                            ">
+                            </select>
 
-                            <option value="">
-                                All Classes
-                            </option>
+                        </div>
 
-                        </select>
+
+                        <div class="col-12 col-md-4 col-lg-6">
+
+                            <label for="attendanceSearch" class="form-label">
+                                Search Student
+                            </label>
+
+                            <div class="input-group">
+
+                                <span class="input-group-text bg-white">
+                                    <i class="bi bi-search"></i>
+                                </span>
+
+                                <input type="search" id="attendanceSearch" name="search" class="form-control"
+                                    placeholder="Search by student name or admission number..." autocomplete="off">
+
+                            </div>
+
+                        </div>
 
                     </div>
-
-
-
-                    <!-- SEARCH -->
-
-                    <div class="students-search">
-
-                        <input type="search" id="attendanceSearch" name="search" placeholder="Search student..."
-                            autocomplete="off">
-
-                    </div>
-
 
                 </div>
 
 
+                <!-- ACTION BAR -->
+                <div class="action-bar d-flex justify-content-end gap-2 flex-wrap">
 
-                <!-- =================================================
-                     ATTENDANCE ACTIONS
-                ================================================== -->
-
-                <div style="
-                        display:flex;
-                        justify-content:flex-end;
-                        gap:10px;
-                        flex-wrap:wrap;
-                        padding:20px;
-                    ">
-
-                    <button type="button" data-mark-all-present>
+                    <button type="button" class="btn btn-outline-success" data-mark-all-present>
+                        <i class="bi bi-check2-all me-1"></i>
                         Mark All Present
                     </button>
 
 
-                    <button type="button" data-reset-attendance>
+                    <button type="button" class="btn btn-outline-secondary" data-reset-attendance>
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>
                         Reset
                     </button>
 
 
-                    <button type="submit" form="attendanceForm" data-save-attendance>
+                    <button type="submit" form="attendanceForm" class="btn btn-primary" data-save-attendance>
+                        <i class="bi bi-cloud-arrow-up me-1"></i>
                         Save Attendance
                     </button>
 
                 </div>
 
 
-
-                <!-- =================================================
-                     ATTENDANCE FORM
-                ================================================== -->
-
+                <!-- ATTENDANCE FORM -->
                 <form id="attendanceForm" data-attendance-form>
 
+                    <div class="table-responsive">
 
-                    <div class="students-table-wrapper">
-
-
-                        <table class="students-table attendance-table">
+                        <table class="table attendance-table">
 
                             <thead>
 
@@ -327,18 +384,17 @@
 
                             </thead>
 
-
                             <tbody id="attendanceTableBody" data-attendance-body>
 
                                 <tr>
 
-                                    <td colspan="8">
+                                    <td colspan="5">
 
-                                        <div class="students-loading">
+                                        <div class="loading-state">
 
-                                            <div class="students-loading-spinner"></div>
+                                            <div class="spinner-border text-primary mb-3" role="status"></div>
 
-                                            <p>
+                                            <p class="mb-0">
                                                 Loading attendance...
                                             </p>
 
@@ -354,37 +410,26 @@
 
                     </div>
 
-
                 </form>
 
             </div>
 
-        </section>
+        </div>
 
     </main>
 
 
-
-    <!-- =========================================================
-         NOTIFICATIONS
-    ========================================================== -->
-
+    <!-- NOTIFICATIONS -->
     <div id="notification-container" aria-live="polite"></div>
 
 
-
-    <!-- =========================================================
-         JAVASCRIPT
-    ========================================================== -->
+    <!-- JAVASCRIPT -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script src="../js/api.js"></script>
-
     <script src="../js/app.js"></script>
-
     <script src="../js/auth.js"></script>
-
     <script src="../js/attendance.js"></script>
-
 
 </body>
 

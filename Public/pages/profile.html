@@ -1,732 +1,564 @@
-<title>My Profile | School Management System</title>
+<!DOCTYPE html>
+<html lang="en">
 
-<style>
-    * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-    }
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    body {
-        font-family: Arial, Helvetica, sans-serif;
-        background: #f4f6f9;
-        color: #1f2937;
-        min-height: 100vh;
-    }
+    <title>My Profile | School Management System</title>
 
-    .topbar {
-        height: 64px;
-        background: #ffffff;
-        border-bottom: 1px solid #e5e7eb;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 25px;
-        position: sticky;
-        top: 0;
-        z-index: 100;
-    }
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
-    .brand {
-        font-size: 20px;
-        font-weight: 700;
-        color: #1d4ed8;
-    }
-
-    .topbar-right {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-    }
-
-    .user-name {
-        font-size: 14px;
-        color: #4b5563;
-    }
-
-    .logout-btn {
-        border: none;
-        background: #dc2626;
-        color: #fff;
-        padding: 9px 15px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 14px;
-    }
-
-    .logout-btn:hover {
-        background: #b91c1c;
-    }
-
-    .layout {
-        display: flex;
-        min-height: calc(100vh - 64px);
-    }
-
-    .sidebar {
-        width: 235px;
-        background: #111827;
-        color: #fff;
-        padding: 20px 0;
-        flex-shrink: 0;
-    }
-
-    .sidebar-title {
-        padding: 0 20px 18px;
-        font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: #9ca3af;
-    }
-
-    .nav-link {
-        display: block;
-        padding: 12px 20px;
-        color: #d1d5db;
-        text-decoration: none;
-        font-size: 14px;
-        border-left: 3px solid transparent;
-    }
-
-    .nav-link:hover {
-        background: #1f2937;
-        color: #fff;
-    }
-
-    .nav-link.active {
-        background: #1e3a8a;
-        color: #fff;
-        border-left-color: #60a5fa;
-    }
-
-    .content {
-        flex: 1;
-        padding: 30px;
-        max-width: 1300px;
-    }
-
-    .page-header {
-        margin-bottom: 25px;
-    }
-
-    .page-header h1 {
-        font-size: 28px;
-        margin-bottom: 7px;
-    }
-
-    .page-header p {
-        color: #6b7280;
-        font-size: 14px;
-    }
-
-    .profile-grid {
-        display: grid;
-        grid-template-columns: 280px 1fr;
-        gap: 25px;
-    }
-
-    .card {
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    }
-
-    .profile-card {
-        padding: 30px 20px;
-        text-align: center;
-    }
-
-    .avatar {
-        width: 110px;
-        height: 110px;
-        margin: 0 auto 18px;
-        border-radius: 50%;
-        background: #1d4ed8;
-        color: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 38px;
-        font-weight: 700;
-    }
-
-    .profile-card h2 {
-        font-size: 20px;
-        margin-bottom: 7px;
-    }
-
-    .profile-role {
-        color: #6b7280;
-        font-size: 14px;
-        margin-bottom: 18px;
-    }
-
-    .status {
-        display: inline-block;
-        padding: 5px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
-    }
-
-    .status.active {
-        background: #dcfce7;
-        color: #166534;
-    }
-
-    .status.inactive {
-        background: #fee2e2;
-        color: #991b1b;
-    }
-
-    .details-card {
-        padding: 25px;
-    }
-
-    .card-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 15px;
-        border-bottom: 1px solid #e5e7eb;
-        padding-bottom: 18px;
-        margin-bottom: 22px;
-    }
-
-    .card-header h2 {
-        font-size: 19px;
-    }
-
-    .btn {
-        border: none;
-        padding: 10px 16px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 600;
-    }
-
-    .btn-primary {
-        background: #2563eb;
-        color: #fff;
-    }
-
-    .btn-primary:hover {
-        background: #1d4ed8;
-    }
-
-    .btn-secondary {
-        background: #e5e7eb;
-        color: #374151;
-    }
-
-    .btn-secondary:hover {
-        background: #d1d5db;
-    }
-
-    .form-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-    }
-
-    .form-group {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .form-group.full {
-        grid-column: 1 / -1;
-    }
-
-    label {
-        margin-bottom: 7px;
-        font-size: 13px;
-        font-weight: 600;
-        color: #374151;
-    }
-
-    input {
-        width: 100%;
-        padding: 11px 12px;
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
-        font-size: 14px;
-        outline: none;
-    }
-
-    input:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
-    }
-
-    input[readonly] {
-        background: #f9fafb;
-        color: #6b7280;
-    }
-
-    .actions {
-        margin-top: 25px;
-        display: flex;
-        gap: 10px;
-        justify-content: flex-end;
-    }
-
-    .password-card {
-        margin-top: 25px;
-        padding: 25px;
-    }
-
-    .message {
-        display: none;
-        margin-bottom: 20px;
-        padding: 12px 15px;
-        border-radius: 6px;
-        font-size: 14px;
-    }
-
-    .message.success {
-        display: block;
-        background: #dcfce7;
-        color: #166534;
-    }
-
-    .message.error {
-        display: block;
-        background: #fee2e2;
-        color: #991b1b;
-    }
-
-    .loading {
-        text-align: center;
-        padding: 30px;
-        color: #6b7280;
-    }
-
-    .school-info {
-        margin-top: 25px;
-        padding: 20px;
-        background: #f9fafb;
-        border-radius: 8px;
-        text-align: left;
-    }
-
-    .school-info h3 {
-        font-size: 14px;
-        margin-bottom: 12px;
-        color: #374151;
-    }
-
-    .school-info p {
-        font-size: 13px;
-        color: #6b7280;
-        margin-bottom: 6px;
-    }
-
-    @media (max-width: 900px) {
-        .profile-grid {
-            grid-template-columns: 1fr;
+    <style>
+        body {
+            background: #f5f7fb;
+            min-height: 100vh;
         }
 
-        .sidebar {
-            width: 190px;
+        .app-sidebar {
+            width: 270px;
+            min-height: 100vh;
+            background: #111827;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 1030;
+            overflow-y: auto;
         }
-    }
 
-    @media (max-width: 700px) {
-        .sidebar {
-            display: none;
+        .app-main {
+            margin-left: 270px;
+            min-height: 100vh;
         }
 
-        .content {
-            padding: 20px 15px;
+        .brand {
+            padding: 22px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+        }
+
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #2563eb;
+            color: #fff;
+            font-size: 21px;
+        }
+
+        .nav-section {
+            padding: 20px 15px 7px;
+            color: #6b7280;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+        }
+
+        .app-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 2px 12px;
+            padding: 10px 13px;
+            color: #cbd5e1;
+            text-decoration: none;
+            border-radius: 9px;
+            font-size: 14px;
+            transition: .2s;
+        }
+
+        .app-nav-link i {
+            font-size: 17px;
+            width: 21px;
+        }
+
+        .app-nav-link:hover {
+            background: #1f2937;
+            color: #fff;
+        }
+
+        .app-nav-link.active {
+            background: #2563eb;
+            color: #fff;
         }
 
         .topbar {
-            padding: 0 15px;
+            height: 72px;
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            z-index: 1020;
         }
 
-        .user-name {
+        .avatar {
+            width: 108px;
+            height: 108px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: 700;
+            margin: 0 auto;
+        }
+
+        .profile-card,
+        .content-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            box-shadow: 0 4px 18px rgba(15, 23, 42, .05);
+        }
+
+        .profile-card {
+            text-align: center;
+        }
+
+        .school-box {
+            background: #f8fafc;
+            border-radius: 12px;
+            text-align: left;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .form-label {
+            font-weight: 600;
+            font-size: 13px;
+            color: #374151;
+        }
+
+        .form-control {
+            min-height: 44px;
+            border-radius: 9px;
+        }
+
+        .form-control:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 .2rem rgba(37, 99, 235, .1);
+        }
+
+        .form-control[readonly] {
+            background: #f8fafc;
+            color: #64748b;
+        }
+
+        .message {
             display: none;
         }
 
-        .form-grid {
-            grid-template-columns: 1fr;
+        .mobile-overlay {
+            display: none;
         }
 
-        .form-group.full {
-            grid-column: auto;
-        }
+        @media (max-width: 991.98px) {
+            .app-sidebar {
+                transform: translateX(-100%);
+                transition: transform .25s ease;
+            }
 
-        .card-header {
-            align-items: flex-start;
-            flex-direction: column;
-        }
+            .app-sidebar.show {
+                transform: translateX(0);
+            }
 
-        .actions {
-            justify-content: stretch;
-        }
+            .app-main {
+                margin-left: 0;
+            }
 
-        .actions button {
-            flex: 1;
+            .mobile-overlay.show {
+                display: block;
+                position: fixed;
+                inset: 0;
+                background: rgba(15, 23, 42, .45);
+                z-index: 1025;
+            }
         }
-    }
-</style>
+    </style>
 </head>
 
 <body>
-    <header class="topbar">
+
+    <div class="mobile-overlay" id="sidebarOverlay"></div>
+
+    <aside class="app-sidebar" id="appSidebar">
+
         <div class="brand">
-            School Management System
+            <div class="d-flex align-items-center gap-3">
+                <div class="brand-icon">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
+
+                <div>
+                    <div class="text-white fw-bold">School Management</div>
+                    <small class="text-secondary">Administration Portal</small>
+                </div>
+            </div>
         </div>
 
-        <div class="topbar-right">
+        <div class="nav-section">Main</div>
 
-            <span class="user-name" id="topUserName">
-                Loading...
-            </span>
+        <a href="/pages/dashboard.html" class="app-nav-link">
+            <i class="bi bi-grid-1x2-fill"></i>
+            Dashboard
+        </a>
 
-            <button class="logout-btn" id="logoutBtn">
-                Logout
-            </button>
+        <a href="/pages/students.html" class="app-nav-link">
+            <i class="bi bi-people-fill"></i>
+            Students
+        </a>
 
-        </div>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
+        <a href="/pages/staff.html" class="app-nav-link">
+            <i class="bi bi-person-badge-fill"></i>
+            Staff
+        </a>
 
-            <div class="sidebar-title">
-                Administration
+        <a href="/pages/guardians.html" class="app-nav-link">
+            <i class="bi bi-person-hearts"></i>
+            Guardians
+        </a>
+
+        <div class="nav-section">Academic</div>
+
+        <a href="/pages/classes.html" class="app-nav-link">
+            <i class="bi bi-building"></i>
+            Classes
+        </a>
+
+        <a href="/pages/class-arms.html" class="app-nav-link">
+            <i class="bi bi-diagram-3-fill"></i>
+            Class Arms
+        </a>
+
+        <a href="/pages/departments.html" class="app-nav-link">
+            <i class="bi bi-diagram-2-fill"></i>
+            Departments
+        </a>
+
+        <a href="/pages/subjects.html" class="app-nav-link">
+            <i class="bi bi-book-fill"></i>
+            Subjects
+        </a>
+
+        <a href="/pages/academic-sessions.html" class="app-nav-link">
+            <i class="bi bi-calendar3"></i>
+            Academic Sessions
+        </a>
+
+        <a href="/pages/terms.html" class="app-nav-link">
+            <i class="bi bi-calendar-check-fill"></i>
+            Terms
+        </a>
+
+        <a href="/pages/attendance.html" class="app-nav-link">
+            <i class="bi bi-check2-square"></i>
+            Attendance
+        </a>
+
+        <a href="/pages/results.html" class="app-nav-link">
+            <i class="bi bi-bar-chart-fill"></i>
+            Results
+        </a>
+
+        <div class="nav-section">Finance & Records</div>
+
+        <a href="/pages/fees.html" class="app-nav-link">
+            <i class="bi bi-cash-stack"></i>
+            Fees
+        </a>
+
+        <a href="/pages/documents.html" class="app-nav-link">
+            <i class="bi bi-folder-fill"></i>
+            Documents
+        </a>
+
+        <a href="/pages/reports.html" class="app-nav-link">
+            <i class="bi bi-file-earmark-bar-graph-fill"></i>
+            Reports
+        </a>
+
+        <div class="nav-section">Administration</div>
+
+        <a href="/pages/users.html" class="app-nav-link">
+            <i class="bi bi-person-gear"></i>
+            Users
+        </a>
+
+        <a href="/pages/roles.html" class="app-nav-link">
+            <i class="bi bi-shield-check"></i>
+            Roles
+        </a>
+
+        <a href="/pages/permissions.html" class="app-nav-link">
+            <i class="bi bi-key-fill"></i>
+            Permissions
+        </a>
+
+        <a href="/pages/profile.html" class="app-nav-link active">
+            <i class="bi bi-person-circle"></i>
+            My Profile
+        </a>
+
+        <a href="/pages/settings.html" class="app-nav-link">
+            <i class="bi bi-gear-fill"></i>
+            Settings
+        </a>
+
+    </aside>
+
+    <div class="app-main">
+
+        <header class="topbar d-flex align-items-center justify-content-between px-3 px-lg-4">
+
+            <div class="d-flex align-items-center gap-3">
+
+                <button class="btn btn-light d-lg-none" id="sidebarToggle" type="button">
+                    <i class="bi bi-list fs-4"></i>
+                </button>
+
+                <div>
+                    <div class="fw-bold text-dark">My Profile</div>
+                    <small class="text-secondary">Account management</small>
+                </div>
+
             </div>
 
-            <a href="/pages/dashboard.html" class="nav-link">
-                Dashboard
-            </a>
+            <div class="d-flex align-items-center gap-3">
 
-            <a href="/pages/students.html" class="nav-link">
-                Students
-            </a>
+                <span class="text-secondary small d-none d-md-inline" id="topUserName">
+                    Loading...
+                </span>
 
-            <a href="/pages/staff.html" class="nav-link">
-                Staff
-            </a>
+                <button class="btn btn-outline-danger btn-sm" id="logoutBtn" type="button">
+                    <i class="bi bi-box-arrow-right me-1"></i>
+                    Logout
+                </button>
 
-            <a href="/pages/guardians.html" class="nav-link">
-                Guardians
-            </a>
+            </div>
 
-            <a href="/pages/departments.html" class="nav-link">
-                Departments
-            </a>
+        </header>
 
-            <a href="/pages/academic-sessions.html" class="nav-link">
-                Academic Sessions
-            </a>
+        <main class="container-fluid p-3 p-md-4 p-xl-5">
 
-            <a href="/pages/terms.html" class="nav-link">
-                Terms
-            </a>
-
-            <a href="/pages/class-arms.html" class="nav-link">
-                Class Arms
-            </a>
-
-            <a href="/pages/subjects.html" class="nav-link">
-                Subjects
-            </a>
-
-            <a href="/pages/results.html" class="nav-link">
-                Results
-            </a>
-
-            <a href="/pages/fees.html" class="nav-link">
-                Fees
-            </a>
-
-            <a href="/pages/attendance.html" class="nav-link">
-                Attendance
-            </a>
-
-            <a href="/pages/reports.html" class="nav-link">
-                Reports
-            </a>
-
-            <a href="/pages/notifications.html" class="nav-link">
-                Notifications
-            </a>
-
-            <a href="/pages/documents.html" class="nav-link">
-                Documents
-            </a>
-
-            <a href="/pages/users.html" class="nav-link">
-                Users
-            </a>
-
-            <a href="/pages/roles.html" class="nav-link">
-                Roles
-            </a>
-
-            <a href="/pages/permissions.html" class="nav-link">
-                Permissions
-            </a>
-
-            <a href="/pages/profile.html" class="nav-link active">
-                My Profile
-            </a>
-
-        </aside>
-
-
-        <main class="content">
-
-            <div class="page-header">
-
-                <h1>
-                    My Profile
-                </h1>
-
-                <p>
-                    View and manage your account information.
+            <div class="mb-4">
+                <h1 class="h3 fw-bold mb-1">My Profile</h1>
+                <p class="text-secondary mb-0">
+                    View and manage your account information and security settings.
                 </p>
-
             </div>
 
+            <div id="message" class="alert message" role="alert"></div>
 
-            <div id="message" class="message">
+            <div id="loading" class="text-center py-5">
+                <div class="spinner-border text-primary mb-3" role="status"></div>
+                <div class="text-secondary">Loading profile...</div>
             </div>
-
-
-            <div id="loading" class="loading">
-
-                Loading profile...
-
-            </div>
-
 
             <div id="profileContent" style="display:none;">
 
-                <div class="profile-grid">
+                <div class="row g-4">
 
+                    <div class="col-xl-3 col-lg-4">
 
-                    <div class="card profile-card">
+                        <div class="card profile-card h-100">
 
-                        <div class="avatar" id="avatar">
-                            U
-                        </div>
+                            <div class="card-body p-4">
 
-                        <h2 id="displayName">
-                            User
-                        </h2>
+                                <div class="avatar mb-3" id="avatar">
+                                    U
+                                </div>
 
-                        <div class="profile-role" id="displayRole">
-                            User
-                        </div>
+                                <h2 class="h5 fw-bold mb-1" id="displayName">
+                                    User
+                                </h2>
 
-                        <span id="displayStatus" class="status active">
-                            Active
-                        </span>
+                                <div class="text-secondary small mb-3" id="displayRole">
+                                    User
+                                </div>
 
-
-                        <div class="school-info">
-
-                            <h3>
-                                School
-                            </h3>
-
-                            <p>
-                                <strong>Name:</strong>
-                                <span id="schoolName">
-                                    -
+                                <span id="displayStatus" class="badge rounded-pill text-bg-success px-3 py-2">
+                                    Active
                                 </span>
-                            </p>
 
-                            <p>
-                                <strong>Code:</strong>
-                                <span id="schoolCode">
-                                    -
-                                </span>
-                            </p>
+                                <hr class="my-4">
+
+                                <div class="school-box p-3">
+
+                                    <div class="fw-bold small mb-3">
+                                        <i class="bi bi-building me-2 text-primary"></i>
+                                        School Information
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <div class="text-secondary small">School Name</div>
+                                        <div class="fw-semibold small" id="schoolName">-</div>
+                                    </div>
+
+                                    <div>
+                                        <div class="text-secondary small">School Code</div>
+                                        <div class="fw-semibold small" id="schoolCode">-</div>
+                                    </div>
+
+                                </div>
+
+                            </div>
 
                         </div>
 
                     </div>
 
+                    <div class="col-xl-9 col-lg-8">
 
-                    <div>
+                        <div class="card content-card mb-4">
 
+                            <div class="card-body p-4 p-lg-4">
 
-                        <div class="card details-card">
+                                <div
+                                    class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 border-bottom pb-3 mb-4">
 
-                            <div class="card-header">
+                                    <div>
+                                        <div class="section-title">Personal Information</div>
+                                        <div class="text-secondary small">
+                                            Keep your account details up to date.
+                                        </div>
+                                    </div>
 
-                                <h2>
-                                    Personal Information
-                                </h2>
+                                    <button type="button" class="btn btn-primary" id="editBtn">
+                                        <i class="bi bi-pencil-square me-1"></i>
+                                        Edit Profile
+                                    </button>
 
-                                <button type="button" class="btn btn-primary" id="editBtn">
-                                    Edit Profile
-                                </button>
+                                </div>
+
+                                <form id="profileForm">
+
+                                    <div class="row g-3">
+
+                                        <div class="col-md-6">
+                                            <label for="firstName" class="form-label">First Name</label>
+                                            <input type="text" class="form-control" id="firstName" name="firstName"
+                                                readonly required>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="lastName" class="form-label">Last Name</label>
+                                            <input type="text" class="form-control" id="lastName" name="lastName"
+                                                readonly required>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="username" class="form-label">Username</label>
+                                            <input type="text" class="form-control" id="username" name="username"
+                                                readonly>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="email" class="form-label">Email Address</label>
+                                            <input type="email" class="form-control" id="email" name="email" readonly
+                                                required>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="phone" class="form-label">Phone Number</label>
+                                            <input type="tel" class="form-control" id="phone" name="phone" readonly>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="role" class="form-label">Role</label>
+                                            <input type="text" class="form-control" id="role" readonly>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="d-flex justify-content-end gap-2 mt-4" id="profileActions"
+                                        style="display:none !important;">
+
+                                        <button type="button" class="btn btn-light border" id="cancelBtn">
+                                            Cancel
+                                        </button>
+
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-check2 me-1"></i>
+                                            Save Changes
+                                        </button>
+
+                                    </div>
+
+                                </form>
 
                             </div>
-
-
-                            <form id="profileForm">
-
-                                <div class="form-grid">
-
-
-                                    <div class="form-group">
-
-                                        <label for="firstName">
-                                            First Name
-                                        </label>
-
-                                        <input type="text" id="firstName" name="firstName" readonly required>
-
-                                    </div>
-
-
-                                    <div class="form-group">
-
-                                        <label for="lastName">
-                                            Last Name
-                                        </label>
-
-                                        <input type="text" id="lastName" name="lastName" readonly required>
-
-                                    </div>
-
-
-                                    <div class="form-group">
-
-                                        <label for="username">
-                                            Username
-                                        </label>
-
-                                        <input type="text" id="username" name="username" readonly>
-
-                                    </div>
-
-
-                                    <div class="form-group">
-
-                                        <label for="email">
-                                            Email Address
-                                        </label>
-
-                                        <input type="email" id="email" name="email" readonly required>
-
-                                    </div>
-
-
-                                    <div class="form-group">
-
-                                        <label for="phone">
-                                            Phone Number
-                                        </label>
-
-                                        <input type="tel" id="phone" name="phone" readonly>
-
-                                    </div>
-
-
-                                    <div class="form-group">
-
-                                        <label for="role">
-                                            Role
-                                        </label>
-
-                                        <input type="text" id="role" readonly>
-
-                                    </div>
-
-
-                                </div>
-
-
-                                <div class="actions" id="profileActions" style="display:none;">
-
-                                    <button type="button" class="btn btn-secondary" id="cancelBtn">
-                                        Cancel
-                                    </button>
-
-                                    <button type="submit" class="btn btn-primary">
-                                        Save Changes
-                                    </button>
-
-                                </div>
-
-                            </form>
 
                         </div>
 
+                        <div class="card content-card">
 
-                        <div class="card password-card">
+                            <div class="card-body p-4">
 
-                            <div class="card-header">
+                                <div class="border-bottom pb-3 mb-4">
+                                    <div class="section-title">
+                                        <i class="bi bi-shield-lock me-2 text-primary"></i>
+                                        Change Password
+                                    </div>
 
-                                <h2>
-                                    Change Password
-                                </h2>
+                                    <div class="text-secondary small mt-1">
+                                        Use a strong password to protect your account.
+                                    </div>
+                                </div>
+
+                                <form id="passwordForm">
+
+                                    <div class="row g-3">
+
+                                        <div class="col-12">
+                                            <label for="currentPassword" class="form-label">
+                                                Current Password
+                                            </label>
+
+                                            <input type="password" class="form-control" id="currentPassword"
+                                                autocomplete="current-password" required>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="newPassword" class="form-label">
+                                                New Password
+                                            </label>
+
+                                            <input type="password" class="form-control" id="newPassword"
+                                                autocomplete="new-password" minlength="6" required>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="confirmPassword" class="form-label">
+                                                Confirm New Password
+                                            </label>
+
+                                            <input type="password" class="form-control" id="confirmPassword"
+                                                autocomplete="new-password" minlength="6" required>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="d-flex justify-content-end mt-4">
+
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-key me-1"></i>
+                                            Change Password
+                                        </button>
+
+                                    </div>
+
+                                </form>
 
                             </div>
-
-
-                            <form id="passwordForm">
-
-                                <div class="form-grid">
-
-
-                                    <div class="form-group full">
-
-                                        <label for="currentPassword">
-                                            Current Password
-                                        </label>
-
-                                        <input type="password" id="currentPassword" autocomplete="current-password"
-                                            required>
-
-                                    </div>
-
-
-                                    <div class="form-group">
-
-                                        <label for="newPassword">
-                                            New Password
-                                        </label>
-
-                                        <input type="password" id="newPassword" autocomplete="new-password"
-                                            minlength="6" required>
-
-                                    </div>
-
-
-                                    <div class="form-group">
-
-                                        <label for="confirmPassword">
-                                            Confirm New Password
-                                        </label>
-
-                                        <input type="password" id="confirmPassword" autocomplete="new-password"
-                                            minlength="6" required>
-
-                                    </div>
-
-
-                                </div>
-
-
-                                <div class="actions">
-
-                                    <button type="submit" class="btn btn-primary">
-                                        Change Password
-                                    </button>
-
-                                </div>
-
-                            </form>
 
                         </div>
 
@@ -737,8 +569,476 @@
             </div>
 
         </main>
+
     </div>
-    <script> const API_BASE = "/api"; let currentUser = null; let originalProfile = null; function getToken() {return (localStorage.getItem("token") || localStorage.getItem("accessToken") || sessionStorage.getItem("token") || sessionStorage.getItem("accessToken"));} function authHeaders() {const token = getToken(); const headers = {"Content-Type": "application/json"}; if (token) {headers.Authorization = `Bearer ${token}`;} return headers;} async function apiRequest(url, options = {}) {const response = await fetch(url, {...options, headers: {...authHeaders(), ...(options.headers || {})}}); if (response.status === 401) {handleLogout(); throw new Error("Your session has expired.");} const contentType = response.headers.get("content-type") || ""; let data = null; if (contentType.includes("application/json")) {data = await response.json();} else {const text = await response.text(); data = {success: response.ok, message: text};} if (!response.ok) {throw new Error(data.message || "Request failed.");} return data;} function showMessage(message, type = "success") {const element = document.getElementById("message"); element.textContent = message; element.className = `message ${type}`; window.scrollTo({top: 0, behavior: "smooth"}); setTimeout(() => {element.className = "message"; element.textContent = "";}, 5000);} function getUserData(data) {if (data && data.data) {return data.data;} if (data && data.user) {return data.user;} return data;} function fullName(user) {const first = user.first_name || user.firstName || ""; const last = user.last_name || user.lastName || ""; return `${first} ${last}`.trim() || user.username || "User";} function getRoleName(user) {return (user.role_name || user.roleName || user.role || "User");} function getSchoolName(user) {return (user.school_name || user.schoolName || "-");} function getSchoolCode(user) {return (user.school_code || user.schoolCode || "-");} function setProfileFields(user) {document.getElementById("firstName").value = user.first_name || user.firstName || ""; document.getElementById("lastName").value = user.last_name || user.lastName || ""; document.getElementById("username").value = user.username || ""; document.getElementById("email").value = user.email || ""; document.getElementById("phone").value = user.phone || ""; document.getElementById("role").value = getRoleName(user); document.getElementById("displayName").textContent = fullName(user); document.getElementById("displayRole").textContent = getRoleName(user); document.getElementById("schoolName").textContent = getSchoolName(user); document.getElementById("schoolCode").textContent = getSchoolCode(user); const name = fullName(user); const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map(word => word.charAt(0).toUpperCase()).join(""); document.getElementById("avatar").textContent = initials || "U"; const active = user.is_active !== false && user.isActive !== false; const status = document.getElementById("displayStatus"); status.textContent = active ? "Active" : "Inactive"; status.className = active ? "status active" : "status inactive"; document.getElementById("topUserName").textContent = fullName(user);} async function loadProfile() {const loading = document.getElementById("loading"); const content = document.getElementById("profileContent"); try {const data = await apiRequest(`${API_BASE}/users/me`); currentUser = getUserData(data); originalProfile = JSON.parse(JSON.stringify(currentUser)); setProfileFields(currentUser); loading.style.display = "none"; content.style.display = "block";} catch (error) {loading.textContent = error.message || "Unable to load your profile."; showMessage(error.message || "Unable to load your profile.", "error");} } function enableEditing() {const fields = ["firstName", "lastName", "email", "phone"]; fields.forEach(id => {document.getElementById(id).readOnly = false;}); document.getElementById("editBtn").style.display = "none"; document.getElementById("profileActions").style.display = "flex";} function disableEditing() {const fields = ["firstName", "lastName", "email", "phone"]; fields.forEach(id => {document.getElementById(id).readOnly = true;}); document.getElementById("editBtn").style.display = "inline-block"; document.getElementById("profileActions").style.display = "none";} function restoreProfile() {if (originalProfile) {setProfileFields(originalProfile);} disableEditing();} async function updateProfile(event) {event.preventDefault(); const firstName = document.getElementById("firstName").value.trim(); const lastName = document.getElementById("lastName").value.trim(); const email = document.getElementById("email").value.trim(); const phone = document.getElementById("phone").value.trim(); if (!firstName || !lastName || !email) {showMessage("First name, last name and email are required.", "error"); return;} try {const data = await apiRequest(`${API_BASE}/users/me`, {method: "PUT", body: JSON.stringify({firstName, lastName, email, phone: phone || null})}); currentUser = getUserData(data); originalProfile = JSON.parse(JSON.stringify(currentUser)); setProfileFields(currentUser); disableEditing(); showMessage("Profile updated successfully.", "success");} catch (error) {showMessage(error.message || "Unable to update profile.", "error");} } async function changePassword(event) {event.preventDefault(); const currentPassword = document.getElementById("currentPassword").value; const newPassword = document.getElementById("newPassword").value; const confirmPassword = document.getElementById("confirmPassword").value; if (newPassword.length < 6) {showMessage("New password must contain at least 6 characters.", "error"); return;} if (newPassword !== confirmPassword) {showMessage("New password and confirmation do not match.", "error"); return;} try {await apiRequest(`${API_BASE}/users/me/password`, {method: "PUT", body: JSON.stringify({currentPassword, newPassword})}); document.getElementById("passwordForm").reset(); showMessage("Password changed successfully.", "success");} catch (error) {showMessage(error.message || "Unable to change password.", "error");} } function handleLogout() {localStorage.removeItem("token"); localStorage.removeItem("accessToken"); sessionStorage.removeItem("token"); sessionStorage.removeItem("accessToken"); window.location.href = "/pages/login.html";} document.getElementById("editBtn").addEventListener("click", enableEditing); document.getElementById("cancelBtn").addEventListener("click", restoreProfile); document.getElementById("profileForm").addEventListener("submit", updateProfile); document.getElementById("passwordForm").addEventListener("submit", changePassword); document.getElementById("logoutBtn").addEventListener("click", handleLogout); loadProfile(); </script>
+
+    <script>
+        const API_BASE = "/api";
+
+        let currentUser = null;
+        let originalProfile = null;
+
+        function getToken() {
+            return (
+                localStorage.getItem("school_management_token") ||
+                sessionStorage.getItem("school_management_token") ||
+                localStorage.getItem("token") ||
+                localStorage.getItem("accessToken") ||
+                sessionStorage.getItem("token") ||
+                sessionStorage.getItem("accessToken")
+            );
+        }
+
+        function authHeaders() {
+            const token = getToken();
+
+            const headers = {
+                "Content-Type": "application/json"
+            };
+
+            if (token) {
+                headers.Authorization = `Bearer ${token}`;
+            }
+
+            return headers;
+        }
+
+        async function apiRequest(url, options = {}) {
+            const response = await fetch(url, {
+                ...options,
+                headers: {
+                    ...authHeaders(),
+                    ...(options.headers || {})
+                }
+            });
+
+            if (response.status === 401 || response.status === 403) {
+                handleLogout();
+                throw new Error("Your session has expired.");
+            }
+
+            const contentType = response.headers.get("content-type") || "";
+
+            let data;
+
+            if (contentType.includes("application/json")) {
+                data = await response.json();
+            } else {
+                const text = await response.text();
+                data = {
+                    success: response.ok,
+                    message: text
+                };
+            }
+
+            if (!response.ok) {
+                throw new Error(data.message || "Request failed.");
+            }
+
+            return data;
+        }
+
+        function showMessage(message, type = "success") {
+            const element = document.getElementById("message");
+
+            element.textContent = message;
+            element.className = `alert message alert-${type === "error" ? "danger" : "success"}`;
+            element.style.display = "block";
+
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+
+            setTimeout(() => {
+                element.style.display = "none";
+                element.textContent = "";
+            }, 5000);
+        }
+
+        function getUserData(data) {
+            if (data && data.data) {
+                return data.data;
+            }
+
+            if (data && data.user) {
+                return data.user;
+            }
+
+            return data;
+        }
+
+        function fullName(user) {
+            const first = user.first_name || user.firstName || "";
+            const last = user.last_name || user.lastName || "";
+
+            return `${first} ${last}`.trim() ||
+                user.username ||
+                "User";
+        }
+
+        function getRoleName(user) {
+            return (
+                user.role_name ||
+                user.roleName ||
+                user.role ||
+                "User"
+            );
+        }
+
+        function getSchoolName(user) {
+            return (
+                user.school_name ||
+                user.schoolName ||
+                "-"
+            );
+        }
+
+        function getSchoolCode(user) {
+            return (
+                user.school_code ||
+                user.schoolCode ||
+                "-"
+            );
+        }
+
+        function setProfileFields(user) {
+
+            document.getElementById("firstName").value =
+                user.first_name || user.firstName || "";
+
+            document.getElementById("lastName").value =
+                user.last_name || user.lastName || "";
+
+            document.getElementById("username").value =
+                user.username || "";
+
+            document.getElementById("email").value =
+                user.email || "";
+
+            document.getElementById("phone").value =
+                user.phone || "";
+
+            document.getElementById("role").value =
+                getRoleName(user);
+
+            document.getElementById("displayName").textContent =
+                fullName(user);
+
+            document.getElementById("displayRole").textContent =
+                getRoleName(user);
+
+            document.getElementById("schoolName").textContent =
+                getSchoolName(user);
+
+            document.getElementById("schoolCode").textContent =
+                getSchoolCode(user);
+
+            const name = fullName(user);
+
+            const initials = name
+                .split(/\s+/)
+                .filter(Boolean)
+                .slice(0, 2)
+                .map(word => word.charAt(0).toUpperCase())
+                .join("");
+
+            document.getElementById("avatar").textContent =
+                initials || "U";
+
+            const active =
+                user.is_active !== false &&
+                user.isActive !== false;
+
+            const status =
+                document.getElementById("displayStatus");
+
+            status.textContent = active ? "Active" : "Inactive";
+
+            status.className = active
+                ? "badge rounded-pill text-bg-success px-3 py-2"
+                : "badge rounded-pill text-bg-danger px-3 py-2";
+
+            document.getElementById("topUserName").textContent =
+                fullName(user);
+        }
+
+        async function loadProfile() {
+
+            const loading =
+                document.getElementById("loading");
+
+            const content =
+                document.getElementById("profileContent");
+
+            try {
+
+                const data =
+                    await apiRequest(`${API_BASE}/users/me`);
+
+                currentUser =
+                    getUserData(data);
+
+                originalProfile =
+                    JSON.parse(JSON.stringify(currentUser));
+
+                setProfileFields(currentUser);
+
+                loading.style.display = "none";
+                content.style.display = "block";
+
+            } catch (error) {
+
+                loading.innerHTML = `
+                    <div class="text-danger mb-2">
+                        <i class="bi bi-exclamation-circle fs-3"></i>
+                    </div>
+                    <div class="fw-semibold">
+                        ${error.message || "Unable to load your profile."}
+                    </div>
+                `;
+
+                showMessage(
+                    error.message || "Unable to load your profile.",
+                    "error"
+                );
+            }
+        }
+
+        function enableEditing() {
+
+            const fields = [
+                "firstName",
+                "lastName",
+                "email",
+                "phone"
+            ];
+
+            fields.forEach(id => {
+                document.getElementById(id).readOnly = false;
+            });
+
+            document.getElementById("editBtn").style.display =
+                "none";
+
+            const actions =
+                document.getElementById("profileActions");
+
+            actions.style.setProperty(
+                "display",
+                "flex",
+                "important"
+            );
+        }
+
+        function disableEditing() {
+
+            const fields = [
+                "firstName",
+                "lastName",
+                "email",
+                "phone"
+            ];
+
+            fields.forEach(id => {
+                document.getElementById(id).readOnly = true;
+            });
+
+            document.getElementById("editBtn").style.display =
+                "inline-block";
+
+            document.getElementById("profileActions")
+                .style.setProperty(
+                    "display",
+                    "none",
+                    "important"
+                );
+        }
+
+        function restoreProfile() {
+
+            if (originalProfile) {
+                setProfileFields(originalProfile);
+            }
+
+            disableEditing();
+        }
+
+        async function updateProfile(event) {
+
+            event.preventDefault();
+
+            const firstName =
+                document.getElementById("firstName").value.trim();
+
+            const lastName =
+                document.getElementById("lastName").value.trim();
+
+            const email =
+                document.getElementById("email").value.trim();
+
+            const phone =
+                document.getElementById("phone").value.trim();
+
+            if (!firstName || !lastName || !email) {
+                showMessage(
+                    "First name, last name and email are required.",
+                    "error"
+                );
+                return;
+            }
+
+            try {
+
+                const data =
+                    await apiRequest(`${API_BASE}/users/me`, {
+                        method: "PUT",
+                        body: JSON.stringify({
+                            firstName,
+                            lastName,
+                            email,
+                            phone: phone || null
+                        })
+                    });
+
+                currentUser =
+                    getUserData(data);
+
+                originalProfile =
+                    JSON.parse(JSON.stringify(currentUser));
+
+                setProfileFields(currentUser);
+
+                disableEditing();
+
+                showMessage(
+                    "Profile updated successfully.",
+                    "success"
+                );
+
+            } catch (error) {
+
+                showMessage(
+                    error.message || "Unable to update profile.",
+                    "error"
+                );
+            }
+        }
+
+        async function changePassword(event) {
+
+            event.preventDefault();
+
+            const currentPassword =
+                document.getElementById("currentPassword").value;
+
+            const newPassword =
+                document.getElementById("newPassword").value;
+
+            const confirmPassword =
+                document.getElementById("confirmPassword").value;
+
+            if (newPassword.length < 6) {
+                showMessage(
+                    "New password must contain at least 6 characters.",
+                    "error"
+                );
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                showMessage(
+                    "New password and confirmation do not match.",
+                    "error"
+                );
+                return;
+            }
+
+            try {
+
+                await apiRequest(
+                    `${API_BASE}/users/me/password`,
+                    {
+                        method: "PUT",
+                        body: JSON.stringify({
+                            currentPassword,
+                            newPassword
+                        })
+                    }
+                );
+
+                document.getElementById("passwordForm").reset();
+
+                showMessage(
+                    "Password changed successfully.",
+                    "success"
+                );
+
+            } catch (error) {
+
+                showMessage(
+                    error.message || "Unable to change password.",
+                    "error"
+                );
+            }
+        }
+
+        function handleLogout() {
+
+            localStorage.removeItem("school_management_token");
+            localStorage.removeItem("school_management_user");
+
+            sessionStorage.removeItem("school_management_token");
+            sessionStorage.removeItem("school_management_user");
+
+            localStorage.removeItem("token");
+            localStorage.removeItem("accessToken");
+
+            sessionStorage.removeItem("token");
+            sessionStorage.removeItem("accessToken");
+
+            window.location.href =
+                "/pages/login.html";
+        }
+
+        document.getElementById("editBtn")
+            .addEventListener("click", enableEditing);
+
+        document.getElementById("cancelBtn")
+            .addEventListener("click", restoreProfile);
+
+        document.getElementById("profileForm")
+            .addEventListener("submit", updateProfile);
+
+        document.getElementById("passwordForm")
+            .addEventListener("submit", changePassword);
+
+        document.getElementById("logoutBtn")
+            .addEventListener("click", handleLogout);
+
+        document.getElementById("sidebarToggle")
+            .addEventListener("click", () => {
+                document.getElementById("appSidebar")
+                    .classList.toggle("show");
+
+                document.getElementById("sidebarOverlay")
+                    .classList.toggle("show");
+            });
+
+        document.getElementById("sidebarOverlay")
+            .addEventListener("click", () => {
+                document.getElementById("appSidebar")
+                    .classList.remove("show");
+
+                document.getElementById("sidebarOverlay")
+                    .classList.remove("show");
+            });
+
+        loadProfile();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 
 </html>

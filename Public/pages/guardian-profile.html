@@ -7,174 +7,117 @@
 
     <title>Guardian Profile | School Management System</title>
 
-    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
-        * {
-            box-sizing: border-box;
-        }
-
         body {
-            margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            background: #f4f6f9;
+            background: #f5f7fb;
             color: #1f2937;
         }
 
-        .page-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 30px 20px 50px;
+        .sidebar {
+            min-height: 100vh;
+            background: #111827;
         }
 
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 20px;
-            margin-bottom: 25px;
+        .sidebar .nav-link {
+            color: #cbd5e1;
+            border-radius: .6rem;
+            margin-bottom: .2rem;
         }
 
-        .page-header h1 {
-            margin: 0 0 6px;
-            font-size: 28px;
-        }
-
-        .page-header p {
-            margin: 0;
-            color: #6b7280;
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border: none;
-            border-radius: 6px;
-            padding: 10px 16px;
-            font-size: 14px;
-            font-weight: 600;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        .btn-primary {
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
             background: #2563eb;
-            color: #ffffff;
+            color: #fff;
         }
 
-        .btn-primary:hover {
-            background: #1d4ed8;
+        .brand {
+            color: #fff;
+            font-weight: 700;
         }
 
-        .btn-secondary {
-            background: #6b7280;
-            color: #ffffff;
+        .sidebar-section {
+            color: #64748b;
+            font-size: .7rem;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            margin-top: 1.25rem;
+            margin-bottom: .4rem;
         }
 
-        .btn-secondary:hover {
-            background: #4b5563;
+        .main-content {
+            min-height: 100vh;
         }
 
-        .btn-danger {
-            background: #dc2626;
-            color: #ffffff;
+        .page-title {
+            font-weight: 700;
         }
 
-        .btn-danger:hover {
-            background: #b91c1c;
+        .profile-card,
+        .section-card {
+            border: 0;
+            border-radius: 1rem;
+            box-shadow: 0 .25rem 1rem rgba(15, 23, 42, .06);
         }
 
-        .message {
-            display: none;
-            padding: 13px 16px;
-            margin-bottom: 20px;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        .message.success {
-            display: block;
-            background: #dcfce7;
-            color: #166534;
-            border: 1px solid #bbf7d0;
-        }
-
-        .message.error {
-            display: block;
-            background: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #fecaca;
-        }
-
-        .loading {
-            display: block;
-            padding: 40px;
-            text-align: center;
-            background: #ffffff;
-            border-radius: 10px;
-            color: #6b7280;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        .profile-content {
-            display: none;
-        }
-
-        .profile-top {
+        .avatar {
+            width: 108px;
+            height: 108px;
+            border-radius: 50%;
             display: grid;
-            grid-template-columns: 280px 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .profile-card {
-            background: #ffffff;
-            border-radius: 10px;
-            padding: 25px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            place-items: center;
+            margin: 0 auto 1rem;
+            background: #2563eb;
+            color: #fff;
+            font-size: 2.2rem;
+            font-weight: 700;
         }
 
         .profile-summary {
             text-align: center;
         }
 
-        .avatar {
-            width: 110px;
-            height: 110px;
-            margin: 0 auto 18px;
-            border-radius: 50%;
-            background: #2563eb;
-            color: #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 38px;
+        .section-title {
+            font-size: 1rem;
             font-weight: 700;
+            padding-bottom: .85rem;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 1.25rem;
         }
 
-        .profile-summary h2 {
-            margin: 0 0 8px;
-            font-size: 23px;
+        .section-title i {
+            color: #2563eb;
+            margin-right: .45rem;
         }
 
-        .relationship {
-            margin-bottom: 15px;
-            color: #6b7280;
-            font-size: 14px;
+        .info-label {
+            display: block;
+            color: #64748b;
+            font-size: .7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            margin-bottom: .35rem;
+        }
+
+        .info-value {
+            color: #111827;
+            min-height: 22px;
+            word-break: break-word;
+        }
+
+        .empty-value {
+            color: #9ca3af !important;
+            font-style: italic;
         }
 
         .status-badge {
             display: inline-block;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
+            padding: .4rem .8rem;
+            border-radius: 50rem;
+            font-size: .75rem;
             font-weight: 700;
             text-transform: capitalize;
         }
@@ -189,133 +132,39 @@
             color: #991b1b;
         }
 
-        .quick-contact {
-            margin-top: 22px;
-            text-align: left;
+        .contact-item {
+            padding: .8rem 0;
+            border-bottom: 1px solid #f1f5f9;
         }
 
-        .quick-contact-item {
-            padding: 10px 0;
-            border-bottom: 1px solid #f0f0f0;
-            font-size: 14px;
-            word-break: break-word;
+        .contact-item:last-child {
+            border-bottom: 0;
         }
 
-        .quick-contact-item:last-child {
-            border-bottom: none;
-        }
-
-        .quick-contact-label {
-            display: block;
-            margin-bottom: 4px;
-            color: #6b7280;
-            font-size: 12px;
-        }
-
-        .quick-contact a {
+        .contact-item a {
             color: #2563eb;
             text-decoration: none;
         }
 
-        .section-card {
-            background: #ffffff;
-            border-radius: 10px;
-            padding: 25px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        .section-title {
-            margin: 0 0 20px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #e5e7eb;
-            font-size: 19px;
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 20px;
-        }
-
-        .info-item {
-            min-width: 0;
-        }
-
-        .info-item.full-width {
-            grid-column: 1 / -1;
-        }
-
-        .info-label {
-            display: block;
-            margin-bottom: 6px;
-            color: #6b7280;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
-
-        .info-value {
-            min-height: 20px;
-            color: #111827;
-            font-size: 15px;
-            word-break: break-word;
-        }
-
-        .empty-value {
-            color: #9ca3af;
-            font-style: italic;
-        }
-
-        .students-table-wrapper {
-            overflow-x: auto;
-        }
-
-        .students-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .students-table th,
-        .students-table td {
-            padding: 12px;
-            border-bottom: 1px solid #e5e7eb;
-            text-align: left;
-            font-size: 14px;
-        }
-
         .students-table th {
-            background: #f9fafb;
-            color: #374151;
-            font-weight: 700;
+            white-space: nowrap;
+            font-size: .75rem;
+            text-transform: uppercase;
+            color: #64748b;
         }
 
-        .students-table tr:hover td {
-            background: #f9fafb;
+        .students-table td {
+            vertical-align: middle;
         }
 
         .student-link {
             color: #2563eb;
-            text-decoration: none;
             font-weight: 600;
+            text-decoration: none;
         }
 
         .student-link:hover {
             text-decoration: underline;
-        }
-
-        .no-students {
-            padding: 20px;
-            text-align: center;
-            color: #6b7280;
-            background: #f9fafb;
-            border-radius: 6px;
-        }
-
-        .notes {
-            white-space: pre-wrap;
-            line-height: 1.6;
         }
 
         .danger-zone {
@@ -326,76 +175,18 @@
             color: #991b1b;
         }
 
-        .delete-description {
-            margin: 0 0 15px;
-            color: #6b7280;
-            font-size: 14px;
-            line-height: 1.5;
+        #loading {
+            display: block;
         }
 
-        .not-found {
+        #profileContent,
+        #notFound {
             display: none;
-            padding: 50px 20px;
-            text-align: center;
-            background: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
         }
 
-        .not-found h2 {
-            margin: 0 0 10px;
-        }
-
-        .not-found p {
-            color: #6b7280;
-            margin-bottom: 20px;
-        }
-
-        @media (max-width: 800px) {
-
-            .profile-top {
-                grid-template-columns: 1fr;
-            }
-
-            .info-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .info-item.full-width {
-                grid-column: auto;
-            }
-
-            .page-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .header-actions {
-                width: 100%;
-            }
-
-            .header-actions .btn {
-                flex: 1;
-            }
-        }
-
-        @media (max-width: 500px) {
-
-            .page-container {
-                padding: 20px 12px 40px;
-            }
-
-            .profile-card,
-            .section-card {
-                padding: 18px;
-            }
-
-            .header-actions {
-                flex-direction: column;
-            }
-
-            .header-actions .btn {
-                width: 100%;
+        @media (max-width: 991.98px) {
+            .sidebar {
+                min-height: auto;
             }
         }
     </style>
@@ -403,167 +194,594 @@
 
 <body>
 
-    <div class="page-container">
+    <div class="container-fluid">
+        <div class="row">
 
-        <div class="page-header">
+            <!-- SIDEBAR -->
+            <aside class="col-lg-2 col-xl-2 sidebar p-3">
 
-            <div>
-                <h1>Guardian Profile</h1>
-
-                <p id="pageSubtitle">
-                    View guardian information and linked students.
-                </p>
-            </div>
-
-            <div class="header-actions">
-
-                <a href="guardians.html" class="btn btn-secondary">
-                    Back to Guardians
-                </a>
-
-                <a href="#" id="editButton" class="btn btn-primary">
-                    Edit Guardian
-                </a>
-
-            </div>
-
-        </div>
-
-
-        <div id="message" class="message"></div>
-
-
-        <div id="loading" class="loading">
-            Loading guardian profile...
-        </div>
-
-
-        <div id="notFound" class="not-found">
-
-            <h2>Guardian Not Found</h2>
-
-            <p>
-                The guardian could not be found or you do not have permission to view this profile.
-            </p>
-
-            <a href="guardians.html" class="btn btn-secondary">
-                Back to Guardians
-            </a>
-
-        </div>
-
-
-        <div id="profileContent" class="profile-content">
-
-            <div class="profile-top">
-
-                <div class="profile-card profile-summary">
-
-                    <div id="avatar" class="avatar">
-                        G
+                <div class="d-flex align-items-center gap-2 mb-4">
+                    <div class="bg-primary rounded-3 p-2 text-white">
+                        <i class="bi bi-mortarboard-fill"></i>
                     </div>
+                    <span class="brand">School Management</span>
+                </div>
 
-                    <h2 id="guardianName">
-                        Guardian
-                    </h2>
+                <nav>
 
-                    <div id="relationship" class="relationship">
-                        Guardian
-                    </div>
+                    <div class="sidebar-section">Main</div>
 
-                    <span id="statusBadge" class="status-badge status-active">
-                        Active
-                    </span>
+                    <a class="nav-link px-3 py-2" href="dashboard.html">
+                        <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                    </a>
+
+                    <a class="nav-link px-3 py-2" href="students.html">
+                        <i class="bi bi-people me-2"></i> Students
+                    </a>
+
+                    <a class="nav-link px-3 py-2" href="staff.html">
+                        <i class="bi bi-person-badge me-2"></i> Staff
+                    </a>
+
+                    <a class="nav-link active px-3 py-2" href="guardians.html">
+                        <i class="bi bi-person-hearts me-2"></i> Guardians
+                    </a>
+
+                    <div class="sidebar-section">Academic</div>
+
+                    <a class="nav-link px-3 py-2" href="classes.html">
+                        <i class="bi bi-building me-2"></i> Classes
+                    </a>
+
+                    <a class="nav-link px-3 py-2" href="class-arms.html">
+                        <i class="bi bi-diagram-3 me-2"></i> Class Arms
+                    </a>
+
+                    <a class="nav-link px-3 py-2" href="departments.html">
+                        <i class="bi bi-diagram-2 me-2"></i> Departments
+                    </a>
+
+                    <a class="nav-link px-3 py-2" href="subjects.html">
+                        <i class="bi bi-book me-2"></i> Subjects
+                    </a>
+
+                    <a class="nav-link px-3 py-2" href="academic-sessions.html">
+                        <i class="bi bi-calendar3 me-2"></i> Sessions
+                    </a>
+
+                    <a class="nav-link px-3 py-2" href="terms.html">
+                        <i class="bi bi-calendar-week me-2"></i> Terms
+                    </a>
+
+                    <a class="nav-link px-3 py-2" href="attendance.html">
+                        <i class="bi bi-check2-square me-2"></i> Attendance
+                    </a>
+
+                    <a class="nav-link px-3 py-2" href="results.html">
+                        <i class="bi bi-bar-chart me-2"></i> Results
+                    </a>
+
+                    <div class="sidebar-section">Finance & Records</div>
+
+                    <a class="nav-link px-3 py-2" href="fees.html">
+                        <i class="bi bi-cash-stack me-2"></i> Fees
+                    </a>
+
+                    <a class="nav-link px-3 py-2" href="documents.html">
+                        <i class="bi bi-folder2-open me-2"></i> Documents
+                    </a>
+
+                    <a class="nav-link px-3 py-2" href="reports.html">
+                        <i class="bi bi-file-earmark-bar-graph me-2"></i> Reports
+                    </a>
+
+                    <div class="sidebar-section">Administration</div>
+
+                    <a class="nav-link px-3 py-2" href="users.html">
+                        <i class="bi bi-person-gear me-2"></i> Users
+                    </a>
+
+                    <a class="nav-link px-3 py-2" href="roles.html">
+                        <i class="bi bi-shield-check me-2"></i> Roles
+                    </a>
+
+                    <a class="nav-link px-3 py-2" href="permissions.html">
+                        <i class="bi bi-key me-2"></i> Permissions
+                    </a>
+
+                    <a class="nav-link px-3 py-2" href="profile.html">
+                        <i class="bi bi-person-circle me-2"></i> Profile
+                    </a>
+
+                    <a class="nav-link px-3 py-2" href="settings.html">
+                        <i class="bi bi-gear me-2"></i> Settings
+                    </a>
+
+                </nav>
+            </aside>
 
 
-                    <div class="quick-contact">
+            <!-- MAIN -->
+            <main class="col-lg-10 col-xl-10 main-content p-3 p-md-4">
 
-                        <div class="quick-contact-item">
+                <!-- HEADER -->
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
 
-                            <span class="quick-contact-label">
-                                Phone
-                            </span>
-
-                            <a id="phoneLink" href="#">
-                                <span id="phoneValue">—</span>
-                            </a>
-
+                    <div>
+                        <div class="text-primary small fw-semibold mb-1">
+                            GUARDIANS
                         </div>
 
+                        <h1 class="page-title h2 mb-1">
+                            Guardian Profile
+                        </h1>
 
-                        <div class="quick-contact-item">
+                        <p id="pageSubtitle" class="text-secondary mb-0">
+                            View guardian information and linked students.
+                        </p>
+                    </div>
 
-                            <span class="quick-contact-label">
-                                Email
-                            </span>
+                    <div class="d-flex flex-wrap gap-2">
 
-                            <a id="emailLink" href="#">
-                                <span id="emailValue">—</span>
-                            </a>
+                        <a href="guardians.html" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>
+                            Back to Guardians
+                        </a>
 
-                        </div>
+                        <a href="#" id="editButton" class="btn btn-primary">
+                            <i class="bi bi-pencil me-2"></i>
+                            Edit Guardian
+                        </a>
 
                     </div>
 
                 </div>
 
 
-                <div class="profile-card">
+                <!-- MESSAGE -->
+                <div id="message" class="alert d-none" role="alert"></div>
 
-                    <h2 class="section-title">
-                        Contact Overview
-                    </h2>
 
-                    <div class="info-grid">
+                <!-- LOADING -->
+                <div id="loading" class="card profile-card">
+                    <div class="card-body text-center py-5 text-secondary">
+                        <div class="spinner-border text-primary mb-3"></div>
+                        <div>Loading guardian profile...</div>
+                    </div>
+                </div>
 
-                        <div class="info-item">
 
-                            <span class="info-label">
-                                Phone Number
-                            </span>
+                <!-- NOT FOUND -->
+                <div id="notFound" class="card profile-card">
 
-                            <div class="info-value" id="overviewPhone">
-                                —
+                    <div class="card-body text-center py-5">
+
+                        <div class="display-5 text-secondary mb-3">
+                            <i class="bi bi-person-x"></i>
+                        </div>
+
+                        <h2 class="h4">
+                            Guardian Not Found
+                        </h2>
+
+                        <p class="text-secondary">
+                            The guardian could not be found or you do not have permission to view this profile.
+                        </p>
+
+                        <a href="guardians.html" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>
+                            Back to Guardians
+                        </a>
+
+                    </div>
+
+                </div>
+
+
+                <!-- PROFILE -->
+                <div id="profileContent">
+
+                    <!-- TOP -->
+                    <div class="row g-4 mb-4">
+
+                        <!-- SUMMARY -->
+                        <div class="col-xl-4">
+
+                            <div class="card profile-card h-100">
+
+                                <div class="card-body p-4 profile-summary">
+
+                                    <div id="avatar" class="avatar">
+                                        G
+                                    </div>
+
+                                    <h2 id="guardianName" class="h4 mb-2">
+                                        Guardian
+                                    </h2>
+
+                                    <div id="relationship" class="text-secondary mb-3">
+                                        Guardian
+                                    </div>
+
+                                    <span id="statusBadge" class="status-badge status-active">
+                                        Active
+                                    </span>
+
+
+                                    <div class="contact-item text-start mt-4">
+
+                                        <span class="info-label">
+                                            Phone
+                                        </span>
+
+                                        <a id="phoneLink" href="#">
+                                            <span id="phoneValue">—</span>
+                                        </a>
+
+                                    </div>
+
+
+                                    <div class="contact-item text-start">
+
+                                        <span class="info-label">
+                                            Email
+                                        </span>
+
+                                        <a id="emailLink" href="#">
+                                            <span id="emailValue">—</span>
+                                        </a>
+
+                                    </div>
+
+                                </div>
+
                             </div>
 
                         </div>
 
 
-                        <div class="info-item">
+                        <!-- CONTACT OVERVIEW -->
+                        <div class="col-xl-8">
+
+                            <div class="card profile-card h-100">
+
+                                <div class="card-body p-4">
+
+                                    <h2 class="section-title">
+                                        <i class="bi bi-telephone"></i>
+                                        Contact Overview
+                                    </h2>
+
+                                    <div class="row g-4">
+
+                                        <div class="col-md-6">
+
+                                            <span class="info-label">
+                                                Phone Number
+                                            </span>
+
+                                            <div class="info-value" id="overviewPhone">
+                                                —
+                                            </div>
+
+                                        </div>
+
+
+                                        <div class="col-md-6">
+
+                                            <span class="info-label">
+                                                Alternative Phone
+                                            </span>
+
+                                            <div class="info-value" id="overviewAlternativePhone">
+                                                —
+                                            </div>
+
+                                        </div>
+
+
+                                        <div class="col-md-6">
+
+                                            <span class="info-label">
+                                                Email Address
+                                            </span>
+
+                                            <div class="info-value" id="overviewEmail">
+                                                —
+                                            </div>
+
+                                        </div>
+
+
+                                        <div class="col-md-6">
+
+                                            <span class="info-label">
+                                                Preferred Contact
+                                            </span>
+
+                                            <div class="info-value" id="overviewPreferredContact">
+                                                —
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- PERSONAL INFORMATION -->
+                    <div class="card section-card mb-4">
+
+                        <div class="card-body p-4">
+
+                            <h2 class="section-title">
+                                <i class="bi bi-person-vcard"></i>
+                                Personal Information
+                            </h2>
+
+                            <div class="row g-4">
+
+                                <div class="col-md-6">
+
+                                    <span class="info-label">First Name</span>
+
+                                    <div class="info-value" id="firstName">—</div>
+
+                                </div>
+
+
+                                <div class="col-md-6">
+
+                                    <span class="info-label">Last Name</span>
+
+                                    <div class="info-value" id="lastName">—</div>
+
+                                </div>
+
+
+                                <div class="col-md-6">
+
+                                    <span class="info-label">Other Name</span>
+
+                                    <div class="info-value" id="otherName">—</div>
+
+                                </div>
+
+
+                                <div class="col-md-6">
+
+                                    <span class="info-label">Relationship</span>
+
+                                    <div class="info-value" id="relationshipValue">—</div>
+
+                                </div>
+
+
+                                <div class="col-md-6">
+
+                                    <span class="info-label">Occupation</span>
+
+                                    <div class="info-value" id="occupation">—</div>
+
+                                </div>
+
+
+                                <div class="col-md-6">
+
+                                    <span class="info-label">National ID</span>
+
+                                    <div class="info-value" id="nationalId">—</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ADDRESS -->
+                    <div class="card section-card mb-4">
+
+                        <div class="card-body p-4">
+
+                            <h2 class="section-title">
+                                <i class="bi bi-geo-alt"></i>
+                                Address
+                            </h2>
+
+                            <div class="row g-4">
+
+                                <div class="col-12">
+
+                                    <span class="info-label">
+                                        Residential Address
+                                    </span>
+
+                                    <div class="info-value" id="address">
+                                        —
+                                    </div>
+
+                                </div>
+
+
+                                <div class="col-md-4">
+
+                                    <span class="info-label">City</span>
+
+                                    <div class="info-value" id="city">—</div>
+
+                                </div>
+
+
+                                <div class="col-md-4">
+
+                                    <span class="info-label">State</span>
+
+                                    <div class="info-value" id="state">—</div>
+
+                                </div>
+
+
+                                <div class="col-md-4">
+
+                                    <span class="info-label">Country</span>
+
+                                    <div class="info-value" id="country">—</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- LINKED STUDENTS -->
+                    <div class="card section-card mb-4">
+
+                        <div class="card-body p-4">
+
+                            <h2 class="section-title">
+                                <i class="bi bi-people"></i>
+                                Linked Students
+                            </h2>
+
+                            <div id="studentsContainer">
+
+                                <div class="text-center py-4 text-secondary">
+                                    <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                                    Loading linked students...
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ADDITIONAL INFORMATION -->
+                    <div class="card section-card mb-4">
+
+                        <div class="card-body p-4">
+
+                            <h2 class="section-title">
+                                <i class="bi bi-card-text"></i>
+                                Additional Information
+                            </h2>
 
                             <span class="info-label">
-                                Alternative Phone
+                                Notes
                             </span>
 
-                            <div class="info-value" id="overviewAlternativePhone">
+                            <div class="info-value" id="notes">
                                 —
                             </div>
 
                         </div>
 
+                    </div>
 
-                        <div class="info-item">
 
-                            <span class="info-label">
-                                Email Address
-                            </span>
+                    <!-- RECORD INFORMATION -->
+                    <div class="card section-card mb-4">
 
-                            <div class="info-value" id="overviewEmail">
-                                —
+                        <div class="card-body p-4">
+
+                            <h2 class="section-title">
+                                <i class="bi bi-database"></i>
+                                Record Information
+                            </h2>
+
+                            <div class="row g-4">
+
+                                <div class="col-md-6">
+
+                                    <span class="info-label">
+                                        Guardian ID
+                                    </span>
+
+                                    <div class="info-value" id="guardianId">
+                                        —
+                                    </div>
+
+                                </div>
+
+
+                                <div class="col-md-6">
+
+                                    <span class="info-label">
+                                        Status
+                                    </span>
+
+                                    <div class="info-value" id="recordStatus">
+                                        —
+                                    </div>
+
+                                </div>
+
+
+                                <div class="col-md-6">
+
+                                    <span class="info-label">
+                                        Created
+                                    </span>
+
+                                    <div class="info-value" id="createdAt">
+                                        —
+                                    </div>
+
+                                </div>
+
+
+                                <div class="col-md-6">
+
+                                    <span class="info-label">
+                                        Last Updated
+                                    </span>
+
+                                    <div class="info-value" id="updatedAt">
+                                        —
+                                    </div>
+
+                                </div>
+
                             </div>
 
                         </div>
 
+                    </div>
 
-                        <div class="info-item">
 
-                            <span class="info-label">
-                                Preferred Contact
-                            </span>
+                    <!-- DELETE -->
+                    <div class="card section-card danger-zone mb-4">
 
-                            <div class="info-value" id="overviewPreferredContact">
-                                —
-                            </div>
+                        <div class="card-body p-4">
+
+                            <h2 class="section-title">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                Guardian Record
+                            </h2>
+
+                            <p class="text-secondary">
+                                Deleting this guardian will permanently remove the guardian record.
+                                Only continue if you are sure this record should be removed.
+                            </p>
+
+                            <button type="button" id="deleteButton" class="btn btn-danger">
+                                <i class="bi bi-trash me-2"></i>
+                                Delete Guardian
+                            </button>
 
                         </div>
 
@@ -571,288 +789,9 @@
 
                 </div>
 
-            </div>
-
-
-            <div class="section-card">
-
-                <h2 class="section-title">
-                    Personal Information
-                </h2>
-
-                <div class="info-grid">
-
-                    <div class="info-item">
-
-                        <span class="info-label">
-                            First Name
-                        </span>
-
-                        <div class="info-value" id="firstName">
-                            —
-                        </div>
-
-                    </div>
-
-
-                    <div class="info-item">
-
-                        <span class="info-label">
-                            Last Name
-                        </span>
-
-                        <div class="info-value" id="lastName">
-                            —
-                        </div>
-
-                    </div>
-
-
-                    <div class="info-item">
-
-                        <span class="info-label">
-                            Other Name
-                        </span>
-
-                        <div class="info-value" id="otherName">
-                            —
-                        </div>
-
-                    </div>
-
-
-                    <div class="info-item">
-
-                        <span class="info-label">
-                            Relationship
-                        </span>
-
-                        <div class="info-value" id="relationshipValue">
-                            —
-                        </div>
-
-                    </div>
-
-
-                    <div class="info-item">
-
-                        <span class="info-label">
-                            Occupation
-                        </span>
-
-                        <div class="info-value" id="occupation">
-                            —
-                        </div>
-
-                    </div>
-
-
-                    <div class="info-item">
-
-                        <span class="info-label">
-                            National ID
-                        </span>
-
-                        <div class="info-value" id="nationalId">
-                            —
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <div class="section-card">
-
-                <h2 class="section-title">
-                    Address
-                </h2>
-
-                <div class="info-grid">
-
-                    <div class="info-item full-width">
-
-                        <span class="info-label">
-                            Residential Address
-                        </span>
-
-                        <div class="info-value" id="address">
-                            —
-                        </div>
-
-                    </div>
-
-
-                    <div class="info-item">
-
-                        <span class="info-label">
-                            City
-                        </span>
-
-                        <div class="info-value" id="city">
-                            —
-                        </div>
-
-                    </div>
-
-
-                    <div class="info-item">
-
-                        <span class="info-label">
-                            State
-                        </span>
-
-                        <div class="info-value" id="state">
-                            —
-                        </div>
-
-                    </div>
-
-
-                    <div class="info-item">
-
-                        <span class="info-label">
-                            Country
-                        </span>
-
-                        <div class="info-value" id="country">
-                            —
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <div class="section-card">
-
-                <h2 class="section-title">
-                    Linked Students
-                </h2>
-
-                <div id="studentsContainer" class="students-table-wrapper">
-
-                    <div class="no-students">
-                        Loading linked students...
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <div class="section-card">
-
-                <h2 class="section-title">
-                    Additional Information
-                </h2>
-
-                <div class="info-grid">
-
-                    <div class="info-item full-width">
-
-                        <span class="info-label">
-                            Notes
-                        </span>
-
-                        <div class="info-value notes" id="notes">
-                            —
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <div class="section-card">
-
-                <h2 class="section-title">
-                    Record Information
-                </h2>
-
-                <div class="info-grid">
-
-                    <div class="info-item">
-
-                        <span class="info-label">
-                            Guardian ID
-                        </span>
-
-                        <div class="info-value" id="guardianId">
-                            —
-                        </div>
-
-                    </div>
-
-
-                    <div class="info-item">
-
-                        <span class="info-label">
-                            Status
-                        </span>
-
-                        <div class="info-value" id="recordStatus">
-                            —
-                        </div>
-
-                    </div>
-
-
-                    <div class="info-item">
-
-                        <span class="info-label">
-                            Created
-                        </span>
-
-                        <div class="info-value" id="createdAt">
-                            —
-                        </div>
-
-                    </div>
-
-
-                    <div class="info-item">
-
-                        <span class="info-label">
-                            Last Updated
-                        </span>
-
-                        <div class="info-value" id="updatedAt">
-                            —
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <div class="section-card danger-zone">
-
-                <h2 class="section-title">
-                    Guardian Record
-                </h2>
-
-                <p class="delete-description">
-                    Deleting this guardian will permanently remove the guardian record. Only continue if you are sure
-                    this record should be removed.
-                </p>
-
-                <button type="button" id="deleteButton" class="btn btn-danger">
-                    Delete Guardian
-                </button>
-
-            </div>
+            </main>
 
         </div>
-
     </div>
 
 
@@ -861,41 +800,35 @@
         const API_BASE = "/api/guardians";
 
         const params =
-            new URLSearchParams(
-                window.location.search
-            );
+            new URLSearchParams(window.location.search);
 
         const guardianId =
             params.get("id");
 
 
         const loading =
-            document.getElementById(
-                "loading"
-            );
+            document.getElementById("loading");
 
         const profileContent =
-            document.getElementById(
-                "profileContent"
-            );
+            document.getElementById("profileContent");
 
         const notFound =
-            document.getElementById(
-                "notFound"
-            );
+            document.getElementById("notFound");
 
         const message =
-            document.getElementById(
-                "message"
-            );
+            document.getElementById("message");
 
 
         function getToken() {
 
             return (
+                localStorage.getItem("school_management_token") ||
+
                 localStorage.getItem("token") ||
 
                 localStorage.getItem("accessToken") ||
+
+                sessionStorage.getItem("school_management_token") ||
 
                 sessionStorage.getItem("token") ||
 
@@ -913,9 +846,7 @@
                 "Content-Type": "application/json"
             };
 
-            const token =
-                getToken();
-
+            const token = getToken();
 
             if (token) {
 
@@ -924,22 +855,17 @@
 
             }
 
-
             return headers;
 
         }
 
 
-        function showMessage(
-            text,
-            type = "success"
-        ) {
+        function showMessage(text, type = "success") {
 
-            message.textContent =
-                text;
+            message.textContent = text;
 
             message.className =
-                `message ${type}`;
+                `alert alert-${type === "error" ? "danger" : type}`;
 
             window.scrollTo({
                 top: 0,
@@ -954,26 +880,19 @@
             message.textContent = "";
 
             message.className =
-                "message";
+                "alert d-none";
 
         }
 
 
-        function displayValue(
-            elementId,
-            value
-        ) {
+        function displayValue(elementId, value) {
 
             const element =
-                document.getElementById(
-                    elementId
-                );
-
+                document.getElementById(elementId);
 
             if (!element) {
                 return;
             }
-
 
             if (
                 value === null ||
@@ -984,33 +903,23 @@
                 element.textContent =
                     "Not provided";
 
-                element.classList.add(
-                    "empty-value"
-                );
+                element.classList.add("empty-value");
 
                 return;
 
             }
 
-
             element.textContent =
                 value;
 
-            element.classList.remove(
-                "empty-value"
-            );
+            element.classList.remove("empty-value");
 
         }
 
 
-        function getValue(
-            object,
-            ...keys
-        ) {
+        function getValue(object, ...keys) {
 
-            for (
-                const key of keys
-            ) {
+            for (const key of keys) {
 
                 if (
                     object &&
@@ -1024,35 +933,23 @@
 
             }
 
-
             return null;
 
         }
 
 
-        function formatDate(
-            value
-        ) {
+        function formatDate(value) {
 
             if (!value) {
                 return null;
             }
 
-
             const date =
                 new Date(value);
 
-
-            if (
-                Number.isNaN(
-                    date.getTime()
-                )
-            ) {
-
+            if (Number.isNaN(date.getTime())) {
                 return value;
-
             }
-
 
             return date.toLocaleString(
                 "en-NG",
@@ -1065,114 +962,64 @@
         }
 
 
-        function createInitials(
-            firstName,
-            lastName
-        ) {
+        function createInitials(firstName, lastName) {
 
             const first =
-                String(
-                    firstName || ""
-                ).trim();
+                String(firstName || "").trim();
 
             const last =
-                String(
-                    lastName || ""
-                ).trim();
-
-
-            const firstInitial =
-                first
-                    ? first.charAt(0)
-                    : "";
-
-
-            const lastInitial =
-                last
-                    ? last.charAt(0)
-                    : "";
-
+                String(lastName || "").trim();
 
             const initials =
-                `${firstInitial}${lastInitial}`
+                `${first.charAt(0)}${last.charAt(0)}`
                     .toUpperCase();
-
 
             return initials || "G";
 
         }
 
 
-        function normalizeGuardian(
-            result
-        ) {
+        function normalizeGuardian(result) {
 
-            if (
-                result &&
-                result.data
-            ) {
-
+            if (result && result.data) {
                 return result.data;
-
             }
 
-
-            if (
-                result &&
-                result.guardian
-            ) {
-
+            if (result && result.guardian) {
                 return result.guardian;
-
             }
-
 
             return result;
 
         }
 
 
-        function normalizeStudents(
-            result
-        ) {
+        function normalizeStudents(result) {
 
             if (
                 result &&
                 Array.isArray(result.data)
             ) {
-
                 return result.data;
-
             }
-
 
             if (
                 result &&
                 Array.isArray(result.students)
             ) {
-
                 return result.students;
-
             }
 
-
-            if (
-                Array.isArray(result)
-            ) {
-
+            if (Array.isArray(result)) {
                 return result;
-
             }
-
 
             return [];
 
         }
 
 
-        function renderGuardian(
-            guardian
-        ) {
+        function renderGuardian(guardian) {
 
             const firstName =
                 getValue(
@@ -1181,14 +1028,12 @@
                     "firstName"
                 ) || "";
 
-
             const lastName =
                 getValue(
                     guardian,
                     "last_name",
                     "lastName"
                 ) || "";
-
 
             const otherName =
                 getValue(
@@ -1197,13 +1042,11 @@
                     "otherName"
                 );
 
-
             const relationship =
                 getValue(
                     guardian,
                     "relationship"
                 );
-
 
             const fullName =
                 [
@@ -1216,58 +1059,30 @@
                     .trim();
 
 
-            document.getElementById(
-                "guardianName"
-            ).textContent =
+            document.getElementById("guardianName").textContent =
                 fullName || "Guardian";
 
 
-            document.getElementById(
-                "avatar"
-            ).textContent =
+            document.getElementById("avatar").textContent =
                 createInitials(
                     firstName,
                     lastName
                 );
 
 
-            document.getElementById(
-                "relationship"
-            ).textContent =
-                relationship ||
-                "Guardian";
+            document.getElementById("relationship").textContent =
+                relationship || "Guardian";
 
 
-            displayValue(
-                "firstName",
-                firstName
-            );
-
-
-            displayValue(
-                "lastName",
-                lastName
-            );
-
-
-            displayValue(
-                "otherName",
-                otherName
-            );
-
-
-            displayValue(
-                "relationshipValue",
-                relationship
-            );
+            displayValue("firstName", firstName);
+            displayValue("lastName", lastName);
+            displayValue("otherName", otherName);
+            displayValue("relationshipValue", relationship);
 
 
             displayValue(
                 "occupation",
-                getValue(
-                    guardian,
-                    "occupation"
-                )
+                getValue(guardian, "occupation")
             );
 
 
@@ -1316,40 +1131,15 @@
                 );
 
 
-            displayValue(
-                "phoneValue",
-                phone
-            );
-
-
-            displayValue(
-                "overviewPhone",
-                phone
-            );
-
-
-            displayValue(
-                "overviewAlternativePhone",
-                alternativePhone
-            );
-
-
-            displayValue(
-                "overviewEmail",
-                email
-            );
-
-
-            displayValue(
-                "overviewPreferredContact",
-                preferredContact
-            );
+            displayValue("phoneValue", phone);
+            displayValue("overviewPhone", phone);
+            displayValue("overviewAlternativePhone", alternativePhone);
+            displayValue("overviewEmail", email);
+            displayValue("overviewPreferredContact", preferredContact);
 
 
             const phoneLink =
-                document.getElementById(
-                    "phoneLink"
-                );
+                document.getElementById("phoneLink");
 
 
             if (phone) {
@@ -1359,17 +1149,13 @@
 
             } else {
 
-                phoneLink.removeAttribute(
-                    "href"
-                );
+                phoneLink.removeAttribute("href");
 
             }
 
 
             const emailValue =
-                document.getElementById(
-                    "emailValue"
-                );
+                document.getElementById("emailValue");
 
 
             emailValue.textContent =
@@ -1378,23 +1164,17 @@
 
             if (!email) {
 
-                emailValue.classList.add(
-                    "empty-value"
-                );
+                emailValue.classList.add("empty-value");
 
             } else {
 
-                emailValue.classList.remove(
-                    "empty-value"
-                );
+                emailValue.classList.remove("empty-value");
 
             }
 
 
             const emailLink =
-                document.getElementById(
-                    "emailLink"
-                );
+                document.getElementById("emailLink");
 
 
             if (email) {
@@ -1404,55 +1184,34 @@
 
             } else {
 
-                emailLink.removeAttribute(
-                    "href"
-                );
+                emailLink.removeAttribute("href");
 
             }
 
 
             displayValue(
                 "address",
-                getValue(
-                    guardian,
-                    "address"
-                )
+                getValue(guardian, "address")
             );
-
 
             displayValue(
                 "city",
-                getValue(
-                    guardian,
-                    "city"
-                )
+                getValue(guardian, "city")
             );
-
 
             displayValue(
                 "state",
-                getValue(
-                    guardian,
-                    "state"
-                )
+                getValue(guardian, "state")
             );
-
 
             displayValue(
                 "country",
-                getValue(
-                    guardian,
-                    "country"
-                )
+                getValue(guardian, "country")
             );
-
 
             displayValue(
                 "notes",
-                getValue(
-                    guardian,
-                    "notes"
-                )
+                getValue(guardian, "notes")
             );
 
 
@@ -1464,9 +1223,7 @@
 
 
             const statusBadge =
-                document.getElementById(
-                    "statusBadge"
-                );
+                document.getElementById("statusBadge");
 
 
             statusBadge.textContent =
@@ -1523,22 +1280,29 @@
             );
 
 
-            document.getElementById(
-                "editButton"
-            ).href =
+            document.getElementById("editButton").href =
                 `guardian-form.html?id=${encodeURIComponent(guardianId)}`;
 
         }
 
 
-        function renderStudents(
-            students
-        ) {
+        function escapeHtml(value) {
+
+            const div =
+                document.createElement("div");
+
+            div.textContent =
+                value ?? "";
+
+            return div.innerHTML;
+
+        }
+
+
+        function renderStudents(students) {
 
             const container =
-                document.getElementById(
-                    "studentsContainer"
-                );
+                document.getElementById("studentsContainer");
 
 
             if (
@@ -1547,7 +1311,8 @@
             ) {
 
                 container.innerHTML = `
-                <div class="no-students">
+                <div class="alert alert-light border text-center mb-0">
+                    <i class="bi bi-people me-2"></i>
                     No students are currently linked to this guardian.
                 </div>
             `;
@@ -1558,158 +1323,125 @@
 
 
             const rows =
-                students.map(
-                    function (student) {
+                students.map(function (student) {
 
-                        const studentId =
-                            getValue(
-                                student,
-                                "id",
-                                "student_id",
-                                "studentId"
-                            );
-
-
-                        const firstName =
-                            getValue(
-                                student,
-                                "first_name",
-                                "firstName"
-                            ) || "";
+                    const studentId =
+                        getValue(
+                            student,
+                            "id",
+                            "student_id",
+                            "studentId"
+                        );
 
 
-                        const lastName =
-                            getValue(
-                                student,
-                                "last_name",
-                                "lastName"
-                            ) || "";
+                    const firstName =
+                        getValue(
+                            student,
+                            "first_name",
+                            "firstName"
+                        ) || "";
 
 
-                        const studentName =
-                            `${firstName} ${lastName}`
-                                .trim() ||
-                            getValue(
-                                student,
-                                "student_name",
-                                "studentName"
-                            ) ||
-                            "Student";
+                    const lastName =
+                        getValue(
+                            student,
+                            "last_name",
+                            "lastName"
+                        ) || "";
 
 
-                        const admissionNumber =
-                            getValue(
-                                student,
-                                "admission_number",
-                                "admissionNumber",
-                                "student_number",
-                                "studentNumber"
-                            ) || "—";
+                    const studentName =
+                        `${firstName} ${lastName}`
+                            .trim() ||
+                        getValue(
+                            student,
+                            "student_name",
+                            "studentName"
+                        ) ||
+                        "Student";
 
 
-                        const className =
-                            getValue(
-                                student,
-                                "class_name",
-                                "className"
-                            ) || "—";
+                    const admissionNumber =
+                        getValue(
+                            student,
+                            "admission_number",
+                            "admissionNumber",
+                            "student_number",
+                            "studentNumber"
+                        ) || "—";
 
 
-                        const armName =
-                            getValue(
-                                student,
-                                "arm_name",
-                                "armName",
-                                "class_arm"
-                            ) || "—";
+                    const className =
+                        getValue(
+                            student,
+                            "class_name",
+                            "className"
+                        ) || "—";
 
 
-                        const status =
-                            getValue(
-                                student,
-                                "status"
-                            ) || "—";
+                    const armName =
+                        getValue(
+                            student,
+                            "arm_name",
+                            "armName",
+                            "class_arm"
+                        ) || "—";
 
 
-                        const studentLink =
-                            studentId
-                                ? `
-                                <a
-                                    class="student-link"
-                                    href="student-profile.html?id=${encodeURIComponent(studentId)}"
-                                >
-                                    ${escapeHtml(studentName)}
-                                </a>
-                            `
-                                : escapeHtml(
-                                    studentName
-                                );
+                    const status =
+                        getValue(
+                            student,
+                            "status"
+                        ) || "—";
 
 
-                        return `
-                        <tr>
-                            <td>
-                                ${studentLink}
-                            </td>
+                    const studentLink =
+                        studentId
+                            ? `
+                            <a
+                                class="student-link"
+                                href="student-profile.html?id=${encodeURIComponent(studentId)}"
+                            >
+                                ${escapeHtml(studentName)}
+                            </a>
+                        `
+                            : escapeHtml(studentName);
 
-                            <td>
-                                ${escapeHtml(admissionNumber)}
-                            </td>
 
-                            <td>
-                                ${escapeHtml(className)}
-                            </td>
+                    return `
+                    <tr>
+                        <td>${studentLink}</td>
+                        <td>${escapeHtml(admissionNumber)}</td>
+                        <td>${escapeHtml(className)}</td>
+                        <td>${escapeHtml(armName)}</td>
+                        <td>${escapeHtml(status)}</td>
+                    </tr>
+                `;
 
-                            <td>
-                                ${escapeHtml(armName)}
-                            </td>
-
-                            <td>
-                                ${escapeHtml(status)}
-                            </td>
-                        </tr>
-                    `;
-
-                    }
-                ).join("");
+                }).join("");
 
 
             container.innerHTML = `
-            <table class="students-table">
+            <div class="table-responsive">
+                <table class="table table-hover students-table mb-0">
 
-                <thead>
-                    <tr>
-                        <th>Student</th>
-                        <th>Admission Number</th>
-                        <th>Class</th>
-                        <th>Arm</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student</th>
+                            <th>Admission Number</th>
+                            <th>Class</th>
+                            <th>Arm</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
 
-                <tbody>
-                    ${rows}
-                </tbody>
+                    <tbody>
+                        ${rows}
+                    </tbody>
 
-            </table>
+                </table>
+            </div>
         `;
-
-        }
-
-
-        function escapeHtml(
-            value
-        ) {
-
-            const div =
-                document.createElement(
-                    "div"
-                );
-
-            div.textContent =
-                value ?? "";
-
-            return div.innerHTML;
 
         }
 
@@ -1717,17 +1449,12 @@
         async function loadStudents() {
 
             const possibleUrls = [
-
                 `${API_BASE}/${guardianId}/students`,
-
                 `${API_BASE}/students/${guardianId}`
-
             ];
 
 
-            for (
-                const url of possibleUrls
-            ) {
+            for (const url of possibleUrls) {
 
                 try {
 
@@ -1742,9 +1469,7 @@
 
 
                     if (!response.ok) {
-
                         continue;
-
                     }
 
 
@@ -1752,14 +1477,8 @@
                         await response.json();
 
 
-                    const students =
-                        normalizeStudents(
-                            result
-                        );
-
-
                     renderStudents(
-                        students
+                        normalizeStudents(result)
                     );
 
 
@@ -1812,7 +1531,7 @@
                     );
 
 
-                let result = null;
+                let result;
 
 
                 try {
@@ -1840,9 +1559,7 @@
 
 
                 const guardian =
-                    normalizeGuardian(
-                        result
-                    );
+                    normalizeGuardian(result);
 
 
                 if (!guardian) {
@@ -1854,9 +1571,7 @@
                 }
 
 
-                renderGuardian(
-                    guardian
-                );
+                renderGuardian(guardian);
 
 
                 loading.style.display =
@@ -1904,9 +1619,7 @@
                 async function () {
 
                     if (!guardianId) {
-
                         return;
-
                     }
 
 
@@ -1917,24 +1630,20 @@
 
 
                     if (!confirmed) {
-
                         return;
-
                     }
 
 
                     const button =
-                        document.getElementById(
-                            "deleteButton"
-                        );
+                        document.getElementById("deleteButton");
 
 
                     button.disabled =
                         true;
 
 
-                    button.textContent =
-                        "Deleting...";
+                    button.innerHTML =
+                        '<span class="spinner-border spinner-border-sm me-2"></span> Deleting...';
 
 
                     try {
@@ -2011,8 +1720,8 @@
                             false;
 
 
-                        button.textContent =
-                            "Delete Guardian";
+                        button.innerHTML =
+                            '<i class="bi bi-trash me-2"></i> Delete Guardian';
 
                     }
 
@@ -2023,6 +1732,8 @@
         loadGuardian();
 
     </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 

@@ -1,162 +1,170 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    ```
     <title>Student Form | School Management System</title>
 
-    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
-        .page-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 25px;
+        body {
+            background: #f5f7fb;
+            color: #1f2937;
         }
 
-        .page-header {
-            display: flex;
-            justify-content: space-between;
+        .app-sidebar {
+            width: 260px;
+            min-height: 100vh;
+            background: #172033;
+            position: fixed;
+            inset: 0 auto 0 0;
+            z-index: 1040;
+            overflow-y: auto;
+        }
+
+        .sidebar-brand {
+            padding: 22px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+        }
+
+        .sidebar-brand-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: #2563eb;
+            color: #fff;
+            display: inline-flex;
             align-items: center;
-            margin-bottom: 25px;
-            gap: 20px;
+            justify-content: center;
+            font-size: 21px;
         }
 
-        .page-header h1 {
-            margin: 0 0 6px;
+        .sidebar-section {
+            padding: 18px 15px 5px;
+            color: #7f8ba3;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
         }
 
-        .page-header p {
-            margin: 0;
-            color: #6b7280;
-        }
-
-        .back-link {
-            display: inline-block;
-            margin-bottom: 12px;
-            color: #2563eb;
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 2px 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: #c7cfdd;
             text-decoration: none;
-            font-weight: 600;
             font-size: 14px;
         }
 
-        .content-card {
-            background: #ffffff;
-            border-radius: 10px;
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        .sidebar-link:hover,
+        .sidebar-link.active {
+            background: #2563eb;
+            color: #fff;
         }
 
-        .content-card h2 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            font-size: 19px;
+        .sidebar-link i {
+            width: 20px;
+            font-size: 16px;
         }
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 18px;
+        .main-wrapper {
+            margin-left: 260px;
+            min-height: 100vh;
         }
 
-        .form-group {
+        .topbar {
+            min-height: 70px;
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 28px;
+            position: sticky;
+            top: 0;
+            z-index: 1030;
         }
 
-        .form-group.full-width {
-            grid-column: 1 / -1;
+        .page-content {
+            padding: 28px;
+            max-width: 1400px;
+            margin: auto;
         }
 
-        .form-group label {
-            margin-bottom: 7px;
+        .form-card {
+            border: 0;
+            box-shadow: 0 3px 15px rgba(15, 23, 42, .05);
+        }
+
+        .section-title {
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .section-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 9px;
+            background: #eff6ff;
+            color: #2563eb;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .form-label {
             font-size: 13px;
             font-weight: 600;
             color: #374151;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 11px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 14px;
-            outline: none;
-            background: #ffffff;
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 90px;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-
-        .form-help {
-            margin-top: 5px;
-            color: #6b7280;
-            font-size: 11px;
-        }
-
-        .form-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            padding-top: 20px;
-            margin-top: 20px;
-            border-top: 1px solid #e5e7eb;
-        }
-
-        .message {
-            display: none;
-            padding: 12px 15px;
-            margin-bottom: 20px;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        .message.success {
-            display: block;
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .message.error {
-            display: block;
-            background: #fee2e2;
-            color: #991b1b;
         }
 
         .required {
             color: #dc2626;
         }
 
+        .form-control,
+        .form-select {
+            min-height: 44px;
+            border-color: #d1d5db;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 .2rem rgba(37, 99, 235, .12);
+        }
+
+        textarea.form-control {
+            min-height: 110px;
+            resize: vertical;
+        }
+
+        .form-text {
+            font-size: 11px;
+        }
+
         .photo-preview {
-            width: 120px;
-            height: 120px;
-            border-radius: 8px;
+            width: 140px;
+            height: 140px;
+            border-radius: 12px;
             border: 1px dashed #cbd5e1;
+            background: #f8fafc;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            background: #f8fafc;
             color: #64748b;
             font-size: 12px;
             text-align: center;
-            margin-bottom: 10px;
         }
 
         .photo-preview img {
@@ -165,511 +173,739 @@
             object-fit: cover;
         }
 
-        @media (max-width: 900px) {
-            .form-grid {
-                grid-template-columns: repeat(2, 1fr);
+        #pageMessage:empty {
+            display: none;
+        }
+
+        #sidebarOverlay {
+            display: none;
+        }
+
+        @media (max-width: 991.98px) {
+            .app-sidebar {
+                transform: translateX(-100%);
+                transition: transform .25s ease;
+            }
+
+            .app-sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-wrapper {
+                margin-left: 0;
+            }
+
+            #sidebarOverlay.show {
+                display: block;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, .45);
+                z-index: 1035;
+            }
+
+            .page-content {
+                padding: 20px;
             }
         }
 
-        @media (max-width: 600px) {
-            .page-container {
+        @media (max-width: 575.98px) {
+            .topbar {
+                padding: 12px 16px;
+            }
+
+            .page-content {
                 padding: 15px;
-            }
-
-            .page-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .form-group.full-width {
-                grid-column: auto;
-            }
-
-            .form-actions {
-                flex-direction: column;
-            }
-
-            .form-actions button {
-                width: 100%;
             }
         }
     </style>
-    ```
-
 </head>
 
 <body>
 
-    <div class="page-container">
+    <div id="sidebarOverlay"></div>
 
-        ```
-        <div class="page-header">
+    <aside id="sidebar" class="app-sidebar">
 
-            <div>
+        <div class="sidebar-brand">
+            <div class="d-flex align-items-center gap-3">
+                <div class="sidebar-brand-icon">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
 
-                <a href="/pages/students.html" class="back-link">
-                    ← Back to Students
-                </a>
-
-                <h1 id="pageTitle">
-                    Add Student
-                </h1>
-
-                <p id="pageDescription">
-                    Register a new student in the school management system.
-                </p>
-
+                <div>
+                    <div class="text-white fw-bold">School Management</div>
+                    <small class="text-secondary">Administration System</small>
+                </div>
             </div>
-
         </div>
 
-        <div id="pageMessage" class="message" role="alert"></div>
+        <div class="sidebar-section">Main</div>
+
+        <a href="dashboard.html" class="sidebar-link">
+            <i class="bi bi-grid-1x2-fill"></i>
+            <span>Dashboard</span>
+        </a>
+
+        <a href="students.html" class="sidebar-link active">
+            <i class="bi bi-people-fill"></i>
+            <span>Students</span>
+        </a>
+
+        <a href="staff.html" class="sidebar-link">
+            <i class="bi bi-person-badge-fill"></i>
+            <span>Staff</span>
+        </a>
+
+        <a href="guardians.html" class="sidebar-link">
+            <i class="bi bi-person-hearts"></i>
+            <span>Guardians</span>
+        </a>
+
+        <div class="sidebar-section">Academic</div>
+
+        <a href="classes.html" class="sidebar-link">
+            <i class="bi bi-building"></i>
+            <span>Classes</span>
+        </a>
+
+        <a href="class-arms.html" class="sidebar-link">
+            <i class="bi bi-diagram-3-fill"></i>
+            <span>Class Arms</span>
+        </a>
+
+        <a href="departments.html" class="sidebar-link">
+            <i class="bi bi-diagram-2-fill"></i>
+            <span>Departments</span>
+        </a>
+
+        <a href="subjects.html" class="sidebar-link">
+            <i class="bi bi-book-fill"></i>
+            <span>Subjects</span>
+        </a>
+
+        <a href="academic-sessions.html" class="sidebar-link">
+            <i class="bi bi-calendar3"></i>
+            <span>Sessions</span>
+        </a>
+
+        <a href="terms.html" class="sidebar-link">
+            <i class="bi bi-calendar-event"></i>
+            <span>Terms</span>
+        </a>
+
+        <a href="attendance.html" class="sidebar-link">
+            <i class="bi bi-calendar-check-fill"></i>
+            <span>Attendance</span>
+        </a>
+
+        <a href="results.html" class="sidebar-link">
+            <i class="bi bi-bar-chart-fill"></i>
+            <span>Results</span>
+        </a>
+
+        <div class="sidebar-section">Finance & Records</div>
+
+        <a href="fees.html" class="sidebar-link">
+            <i class="bi bi-cash-stack"></i>
+            <span>Fees</span>
+        </a>
+
+        <a href="documents.html" class="sidebar-link">
+            <i class="bi bi-folder-fill"></i>
+            <span>Documents</span>
+        </a>
+
+        <a href="reports.html" class="sidebar-link">
+            <i class="bi bi-file-earmark-bar-graph-fill"></i>
+            <span>Reports</span>
+        </a>
+
+        <div class="sidebar-section">Administration</div>
+
+        <a href="users.html" class="sidebar-link">
+            <i class="bi bi-person-gear"></i>
+            <span>Users</span>
+        </a>
+
+        <a href="roles.html" class="sidebar-link">
+            <i class="bi bi-shield-lock-fill"></i>
+            <span>Roles</span>
+        </a>
+
+        <a href="permissions.html" class="sidebar-link">
+            <i class="bi bi-key-fill"></i>
+            <span>Permissions</span>
+        </a>
+
+        <a href="profile.html" class="sidebar-link">
+            <i class="bi bi-person-circle"></i>
+            <span>My Profile</span>
+        </a>
+
+        <a href="settings.html" class="sidebar-link">
+            <i class="bi bi-gear-fill"></i>
+            <span>Settings</span>
+        </a>
+
+    </aside>
 
 
-        <form id="studentForm" enctype="multipart/form-data">
+    <div class="main-wrapper">
 
+        <header class="topbar">
 
-            <!-- BASIC INFORMATION -->
+            <div class="d-flex align-items-center gap-3">
 
-            <div class="content-card">
+                <button id="sidebarToggle" class="btn btn-light d-lg-none" type="button">
+                    <i class="bi bi-list fs-5"></i>
+                </button>
 
-                <h2>Basic Information</h2>
+                <div>
+                    <h1 id="pageTitle" class="h5 mb-0 fw-bold">
+                        Add Student
+                    </h1>
 
-                <div class="form-grid">
-
-                    <div class="form-group">
-
-                        <label for="admission_number">
-                            Admission Number
-                            <span class="required">*</span>
-                        </label>
-
-                        <input type="text" id="admission_number" name="admission_number" placeholder="e.g. LMC001"
-                            required>
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label for="first_name">
-                            First Name
-                            <span class="required">*</span>
-                        </label>
-
-                        <input type="text" id="first_name" name="first_name" placeholder="First name" required>
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label for="middle_name">
-                            Middle Name
-                        </label>
-
-                        <input type="text" id="middle_name" name="middle_name" placeholder="Middle name">
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label for="last_name">
-                            Last Name
-                            <span class="required">*</span>
-                        </label>
-
-                        <input type="text" id="last_name" name="last_name" placeholder="Last name" required>
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label for="gender">
-                            Gender
-                            <span class="required">*</span>
-                        </label>
-
-                        <select id="gender" name="gender" required>
-
-                            <option value="">
-                                Select gender
-                            </option>
-
-                            <option value="Male">
-                                Male
-                            </option>
-
-                            <option value="Female">
-                                Female
-                            </option>
-
-                        </select>
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label for="date_of_birth">
-                            Date of Birth
-                        </label>
-
-                        <input type="date" id="date_of_birth" name="date_of_birth">
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label for="nationality">
-                            Nationality
-                        </label>
-
-                        <input type="text" id="nationality" name="nationality" value="Nigerian">
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label for="state_of_origin">
-                            State of Origin
-                        </label>
-
-                        <input type="text" id="state_of_origin" name="state_of_origin" placeholder="e.g. Lagos">
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label for="local_government">
-                            Local Government
-                        </label>
-
-                        <input type="text" id="local_government" name="local_government" placeholder="e.g. Alimosho">
-
-                    </div>
-
+                    <small id="pageDescription" class="text-muted">
+                        Register a new student in the school management system.
+                    </small>
                 </div>
 
             </div>
 
+            <a href="/pages/students.html" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>
+                Back to Students
+            </a>
 
-            <!-- ACADEMIC INFORMATION -->
+        </header>
 
-            <div class="content-card">
 
-                <h2>Academic Information</h2>
+        <main class="page-content">
 
-                <div class="form-grid">
+            <div id="pageMessage" class="alert mb-4" role="alert"></div>
 
-                    <div class="form-group">
 
-                        <label for="academic_level">
-                            Academic Level
-                            <span class="required">*</span>
-                        </label>
+            <form id="studentForm" enctype="multipart/form-data">
 
-                        <select id="academic_level" name="academic_level" required>
 
-                            <option value="">
-                                Select level
-                            </option>
+                <!-- BASIC INFORMATION -->
 
-                            <option value="JSS">
-                                JSS
-                            </option>
+                <section class="card form-card mb-4">
 
-                            <option value="SSS">
-                                SSS
-                            </option>
+                    <div class="card-body p-4">
 
-                        </select>
+                        <div class="d-flex align-items-center gap-3 mb-4">
 
-                    </div>
+                            <div class="section-icon">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
 
+                            <div>
+                                <h2 class="section-title mb-1">
+                                    Basic Information
+                                </h2>
 
-                    <div class="form-group">
+                                <p class="text-muted small mb-0">
+                                    Personal details and identification information.
+                                </p>
+                            </div>
 
-                        <label for="class_name">
-                            Class
-                            <span class="required">*</span>
-                        </label>
-
-                        <select id="class_name" name="class_name" required>
-
-                            <option value="">
-                                Select class
-                            </option>
-
-                            <option value="JSS1">
-                                JSS1
-                            </option>
-
-                            <option value="JSS2">
-                                JSS2
-                            </option>
-
-                            <option value="JSS3">
-                                JSS3
-                            </option>
-
-                            <option value="SS1">
-                                SS1
-                            </option>
-
-                            <option value="SS2">
-                                SS2
-                            </option>
-
-                            <option value="SS3">
-                                SS3
-                            </option>
-
-                        </select>
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label for="class_arm">
-                            Class Arm
-                        </label>
-
-                        <input type="text" id="class_arm" name="class_arm" placeholder="e.g. A">
-
-                        <span class="form-help">
-                            Example: A, B, C or Gold, Silver.
-                        </span>
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label for="academic_session">
-                            Academic Session
-                        </label>
-
-                        <input type="text" id="academic_session" name="academic_session" placeholder="e.g. 2026/2027">
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label for="status">
-                            Student Status
-                        </label>
-
-                        <select id="status" name="status">
-
-                            <option value="active">
-                                Active
-                            </option>
-
-                            <option value="inactive">
-                                Inactive
-                            </option>
-
-                            <option value="graduated">
-                                Graduated
-                            </option>
-
-                            <option value="withdrawn">
-                                Withdrawn
-                            </option>
-
-                            <option value="transferred">
-                                Transferred
-                            </option>
-
-                        </select>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- CONTACT INFORMATION -->
-
-            <div class="content-card">
-
-                <h2>Contact Information</h2>
-
-                <div class="form-grid">
-
-                    <div class="form-group">
-
-                        <label for="email">
-                            Email Address
-                        </label>
-
-                        <input type="email" id="email" name="email" placeholder="student@example.com">
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label for="phone">
-                            Phone Number
-                        </label>
-
-                        <input type="tel" id="phone" name="phone" placeholder="080XXXXXXXX">
-
-                    </div>
-
-
-                    <div class="form-group full-width">
-
-                        <label for="address">
-                            Residential Address
-                        </label>
-
-                        <textarea id="address" name="address"
-                            placeholder="Enter student's residential address"></textarea>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- PHOTO -->
-
-            <div class="content-card">
-
-                <h2>Student Photograph</h2>
-
-                <div class="form-grid">
-
-                    <div class="form-group">
-
-                        <div id="photoPreview" class="photo-preview">
-                            No photo selected
                         </div>
 
-                        <label for="photo">
-                            Student Photo
-                        </label>
 
-                        <input type="file" id="photo" name="photo" accept="image/*">
+                        <div class="row g-4">
+
+                            <div class="col-md-4">
+
+                                <label for="admission_number" class="form-label">
+                                    Admission Number
+                                    <span class="required">*</span>
+                                </label>
+
+                                <input type="text" id="admission_number" name="admission_number" class="form-control"
+                                    placeholder="e.g. LMC001" required>
+
+                            </div>
+
+
+                            <div class="col-md-4">
+
+                                <label for="first_name" class="form-label">
+                                    First Name
+                                    <span class="required">*</span>
+                                </label>
+
+                                <input type="text" id="first_name" name="first_name" class="form-control"
+                                    placeholder="First name" required>
+
+                            </div>
+
+
+                            <div class="col-md-4">
+
+                                <label for="middle_name" class="form-label">
+                                    Middle Name
+                                </label>
+
+                                <input type="text" id="middle_name" name="middle_name" class="form-control"
+                                    placeholder="Middle name">
+
+                            </div>
+
+
+                            <div class="col-md-4">
+
+                                <label for="last_name" class="form-label">
+                                    Last Name
+                                    <span class="required">*</span>
+                                </label>
+
+                                <input type="text" id="last_name" name="last_name" class="form-control"
+                                    placeholder="Last name" required>
+
+                            </div>
+
+
+                            <div class="col-md-4">
+
+                                <label for="gender" class="form-label">
+                                    Gender
+                                    <span class="required">*</span>
+                                </label>
+
+                                <select id="gender" name="gender" class="form-select" required>
+                                    <option value="">Select gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+
+                            </div>
+
+
+                            <div class="col-md-4">
+
+                                <label for="date_of_birth" class="form-label">
+                                    Date of Birth
+                                </label>
+
+                                <input type="date" id="date_of_birth" name="date_of_birth" class="form-control">
+
+                            </div>
+
+
+                            <div class="col-md-4">
+
+                                <label for="nationality" class="form-label">
+                                    Nationality
+                                </label>
+
+                                <input type="text" id="nationality" name="nationality" class="form-control"
+                                    value="Nigerian">
+
+                            </div>
+
+
+                            <div class="col-md-4">
+
+                                <label for="state_of_origin" class="form-label">
+                                    State of Origin
+                                </label>
+
+                                <input type="text" id="state_of_origin" name="state_of_origin" class="form-control"
+                                    placeholder="e.g. Lagos">
+
+                            </div>
+
+
+                            <div class="col-md-4">
+
+                                <label for="local_government" class="form-label">
+                                    Local Government
+                                </label>
+
+                                <input type="text" id="local_government" name="local_government" class="form-control"
+                                    placeholder="e.g. Alimosho">
+
+                            </div>
+
+                        </div>
 
                     </div>
 
-                </div>
-
-            </div>
+                </section>
 
 
-            <!-- NOTES -->
+                <!-- ACADEMIC INFORMATION -->
 
-            <div class="content-card">
+                <section class="card form-card mb-4">
 
-                <h2>Additional Information</h2>
+                    <div class="card-body p-4">
 
-                <div class="form-grid">
+                        <div class="d-flex align-items-center gap-3 mb-4">
 
-                    <div class="form-group full-width">
+                            <div class="section-icon">
+                                <i class="bi bi-mortarboard-fill"></i>
+                            </div>
 
-                        <label for="notes">
+                            <div>
+                                <h2 class="section-title mb-1">
+                                    Academic Information
+                                </h2>
+
+                                <p class="text-muted small mb-0">
+                                    Class placement, session and student status.
+                                </p>
+                            </div>
+
+                        </div>
+
+
+                        <div class="row g-4">
+
+                            <div class="col-md-4">
+
+                                <label for="academic_level" class="form-label">
+                                    Academic Level
+                                    <span class="required">*</span>
+                                </label>
+
+                                <select id="academic_level" name="academic_level" class="form-select" required>
+                                    <option value="">Select level</option>
+                                    <option value="JSS">JSS</option>
+                                    <option value="SSS">SSS</option>
+                                </select>
+
+                            </div>
+
+
+                            <div class="col-md-4">
+
+                                <label for="class_name" class="form-label">
+                                    Class
+                                    <span class="required">*</span>
+                                </label>
+
+                                <select id="class_name" name="class_name" class="form-select" required>
+                                    <option value="">Select class</option>
+                                    <option value="JSS1">JSS1</option>
+                                    <option value="JSS2">JSS2</option>
+                                    <option value="JSS3">JSS3</option>
+                                    <option value="SS1">SS1</option>
+                                    <option value="SS2">SS2</option>
+                                    <option value="SS3">SS3</option>
+                                </select>
+
+                            </div>
+
+
+                            <div class="col-md-4">
+
+                                <label for="class_arm" class="form-label">
+                                    Class Arm
+                                </label>
+
+                                <input type="text" id="class_arm" name="class_arm" class="form-control"
+                                    placeholder="e.g. A">
+
+                                <div class="form-text">
+                                    Example: A, B, C or Gold, Silver.
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-4">
+
+                                <label for="academic_session" class="form-label">
+                                    Academic Session
+                                </label>
+
+                                <input type="text" id="academic_session" name="academic_session" class="form-control"
+                                    placeholder="e.g. 2026/2027">
+
+                            </div>
+
+
+                            <div class="col-md-4">
+
+                                <label for="status" class="form-label">
+                                    Student Status
+                                </label>
+
+                                <select id="status" name="status" class="form-select">
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                    <option value="graduated">Graduated</option>
+                                    <option value="withdrawn">Withdrawn</option>
+                                    <option value="transferred">Transferred</option>
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- CONTACT INFORMATION -->
+
+                <section class="card form-card mb-4">
+
+                    <div class="card-body p-4">
+
+                        <div class="d-flex align-items-center gap-3 mb-4">
+
+                            <div class="section-icon">
+                                <i class="bi bi-telephone-fill"></i>
+                            </div>
+
+                            <div>
+                                <h2 class="section-title mb-1">
+                                    Contact Information
+                                </h2>
+
+                                <p class="text-muted small mb-0">
+                                    Student contact and residential information.
+                                </p>
+                            </div>
+
+                        </div>
+
+
+                        <div class="row g-4">
+
+                            <div class="col-md-6">
+
+                                <label for="email" class="form-label">
+                                    Email Address
+                                </label>
+
+                                <input type="email" id="email" name="email" class="form-control"
+                                    placeholder="student@example.com">
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <label for="phone" class="form-label">
+                                    Phone Number
+                                </label>
+
+                                <input type="tel" id="phone" name="phone" class="form-control"
+                                    placeholder="080XXXXXXXX">
+
+                            </div>
+
+
+                            <div class="col-12">
+
+                                <label for="address" class="form-label">
+                                    Residential Address
+                                </label>
+
+                                <textarea id="address" name="address" class="form-control"
+                                    placeholder="Enter student's residential address"></textarea>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- PHOTO -->
+
+                <section class="card form-card mb-4">
+
+                    <div class="card-body p-4">
+
+                        <div class="d-flex align-items-center gap-3 mb-4">
+
+                            <div class="section-icon">
+                                <i class="bi bi-camera-fill"></i>
+                            </div>
+
+                            <div>
+                                <h2 class="section-title mb-1">
+                                    Student Photograph
+                                </h2>
+
+                                <p class="text-muted small mb-0">
+                                    Upload a clear photograph of the student.
+                                </p>
+                            </div>
+
+                        </div>
+
+
+                        <div class="row g-4 align-items-center">
+
+                            <div class="col-auto">
+
+                                <div id="photoPreview" class="photo-preview">
+                                    No photo selected
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <label for="photo" class="form-label">
+                                    Student Photo
+                                </label>
+
+                                <input type="file" id="photo" name="photo" class="form-control" accept="image/*">
+
+                                <div class="form-text">
+                                    Recommended: clear JPG or PNG image.
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- NOTES -->
+
+                <section class="card form-card mb-4">
+
+                    <div class="card-body p-4">
+
+                        <div class="d-flex align-items-center gap-3 mb-4">
+
+                            <div class="section-icon">
+                                <i class="bi bi-journal-text"></i>
+                            </div>
+
+                            <div>
+                                <h2 class="section-title mb-1">
+                                    Additional Information
+                                </h2>
+
+                                <p class="text-muted small mb-0">
+                                    Optional notes about the student.
+                                </p>
+                            </div>
+
+                        </div>
+
+
+                        <label for="notes" class="form-label">
                             Notes
                         </label>
 
-                        <textarea id="notes" name="notes"
+                        <textarea id="notes" name="notes" class="form-control"
                             placeholder="Additional information about the student"></textarea>
 
                     </div>
 
-                </div>
-
-            </div>
+                </section>
 
 
-            <!-- ACTIONS -->
+                <!-- ACTIONS -->
 
-            <div class="content-card">
+                <section class="card form-card">
 
-                <div class="form-actions">
+                    <div class="card-body p-4">
 
-                    <button type="button" class="btn btn-secondary" id="cancelButton">
-                        Cancel
-                    </button>
+                        <div class="d-flex justify-content-end gap-2 flex-wrap">
 
-                    <button type="reset" class="btn btn-secondary" id="resetButton">
-                        Reset
-                    </button>
+                            <button type="button" class="btn btn-outline-secondary" id="cancelButton">
+                                <i class="bi bi-x-circle me-1"></i>
+                                Cancel
+                            </button>
 
-                    <button type="submit" class="btn btn-primary" id="saveStudentButton">
-                        Save Student
-                    </button>
+                            <button type="reset" class="btn btn-outline-secondary" id="resetButton">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>
+                                Reset
+                            </button>
 
-                </div>
+                            <button type="submit" class="btn btn-primary" id="saveStudentButton">
+                                <i class="bi bi-check-circle me-1"></i>
+                                Save Student
+                            </button>
 
-            </div>
+                        </div>
 
-        </form>
-        ```
+                    </div>
+
+                </section>
+
+            </form>
+
+        </main>
 
     </div>
+
+
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
 
         "use strict";
 
-        const STUDENT_API =
-            "/api/students";
+
+        const STUDENT_API = "/api/students";
+
 
         const urlParams =
             new URLSearchParams(
                 window.location.search
             );
 
+
         const studentId =
             urlParams.get("id");
+
 
         const form =
             document.getElementById(
                 "studentForm"
             );
 
+
         const pageTitle =
             document.getElementById(
                 "pageTitle"
             );
+
 
         const pageDescription =
             document.getElementById(
                 "pageDescription"
             );
 
+
         const messageElement =
             document.getElementById(
                 "pageMessage"
             );
+
 
         const saveButton =
             document.getElementById(
                 "saveStudentButton"
             );
 
+
         const photoInput =
             document.getElementById(
                 "photo"
             );
+
 
         const photoPreview =
             document.getElementById(
@@ -677,15 +913,19 @@
             );
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | INITIALIZE
-        |--------------------------------------------------------------------------
-        */
-
         document.addEventListener(
             "DOMContentLoaded",
             async function () {
+
+                if (
+                    typeof protectPage ===
+                    "function"
+                ) {
+
+                    await protectPage();
+
+                }
+
 
                 if (studentId) {
 
@@ -695,6 +935,9 @@
                     pageDescription.textContent =
                         "Update the student's information.";
 
+                    saveButton.innerHTML =
+                        '<i class="bi bi-check-circle me-1"></i> Update Student';
+
                     await loadStudent();
 
                 }
@@ -702,12 +945,6 @@
             }
         );
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | LOAD STUDENT
-        |--------------------------------------------------------------------------
-        */
 
         async function loadStudent() {
 
@@ -722,8 +959,10 @@
                         )
                     );
 
+
                 const data =
                     await response.json();
+
 
                 if (!response.ok) {
 
@@ -734,10 +973,12 @@
 
                 }
 
+
                 const student =
                     data.student ||
                     data.data ||
                     data;
+
 
                 setField(
                     "admission_number",
@@ -745,11 +986,13 @@
                     student.admissionNumber
                 );
 
+
                 setField(
                     "first_name",
                     student.first_name ||
                     student.firstName
                 );
+
 
                 setField(
                     "middle_name",
@@ -757,16 +1000,19 @@
                     student.middleName
                 );
 
+
                 setField(
                     "last_name",
                     student.last_name ||
                     student.lastName
                 );
 
+
                 setField(
                     "gender",
                     student.gender
                 );
+
 
                 setField(
                     "date_of_birth",
@@ -776,10 +1022,12 @@
                     )
                 );
 
+
                 setField(
                     "nationality",
                     student.nationality
                 );
+
 
                 setField(
                     "state_of_origin",
@@ -787,11 +1035,13 @@
                     student.stateOfOrigin
                 );
 
+
                 setField(
                     "local_government",
                     student.local_government ||
                     student.localGovernment
                 );
+
 
                 setField(
                     "academic_level",
@@ -799,12 +1049,14 @@
                     student.academicLevel
                 );
 
+
                 setField(
                     "class_name",
                     student.class_name ||
                     student.className ||
                     student.class
                 );
+
 
                 setField(
                     "class_arm",
@@ -814,6 +1066,7 @@
                     student.classArmName
                 );
 
+
                 setField(
                     "academic_session",
                     student.academic_session ||
@@ -821,31 +1074,37 @@
                     student.session
                 );
 
+
                 setField(
                     "status",
                     student.status ||
                     "active"
                 );
 
+
                 setField(
                     "email",
                     student.email
                 );
+
 
                 setField(
                     "phone",
                     student.phone
                 );
 
+
                 setField(
                     "address",
                     student.address
                 );
 
+
                 setField(
                     "notes",
                     student.notes
                 );
+
 
             } catch (error) {
 
@@ -853,6 +1112,7 @@
                     "Load student error:",
                     error
                 );
+
 
                 showMessage(
                     error.message ||
@@ -865,27 +1125,19 @@
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | FORM SUBMIT
-        |--------------------------------------------------------------------------
-        */
-
         form.addEventListener(
             "submit",
             async function (event) {
 
                 event.preventDefault();
 
+
                 const formData =
                     new FormData(form);
 
-                /*
-                 * Convert the form into an object.
-                 * Photo is deliberately handled separately.
-                 */
 
                 const data = {};
+
 
                 formData.forEach(
                     function (
@@ -907,20 +1159,18 @@
                     }
                 );
 
+
                 try {
 
                     saveButton.disabled =
                         true;
 
-                    saveButton.textContent =
+
+                    saveButton.innerHTML =
                         studentId
-                            ? "Updating..."
-                            : "Saving...";
+                            ? '<span class="spinner-border spinner-border-sm me-2"></span>Updating...'
+                            : '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
 
-
-                    /*
-                     * JSON request for normal student fields.
-                     */
 
                     const response =
                         await fetch(
@@ -952,6 +1202,7 @@
 
                     let result =
                         null;
+
 
                     try {
 
@@ -986,14 +1237,14 @@
                     );
 
 
-                    /*
-                     * If this was a new student,
-                     * return to the students list.
-                     */
-
                     if (!studentId) {
 
                         form.reset();
+
+
+                        photoPreview.innerHTML =
+                            "No photo selected";
+
 
                         setTimeout(
                             function () {
@@ -1022,12 +1273,14 @@
 
                     }
 
+
                 } catch (error) {
 
                     console.error(
                         "Save student error:",
                         error
                     );
+
 
                     showMessage(
                         error.message ||
@@ -1040,10 +1293,11 @@
                     saveButton.disabled =
                         false;
 
-                    saveButton.textContent =
+
+                    saveButton.innerHTML =
                         studentId
-                            ? "Update Student"
-                            : "Save Student";
+                            ? '<i class="bi bi-check-circle me-1"></i> Update Student'
+                            : '<i class="bi bi-check-circle me-1"></i> Save Student';
 
                 }
 
@@ -1051,18 +1305,13 @@
         );
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | PHOTO PREVIEW
-        |--------------------------------------------------------------------------
-        */
-
         photoInput.addEventListener(
             "change",
             function () {
 
                 const file =
                     photoInput.files[0];
+
 
                 if (!file) {
 
@@ -1073,8 +1322,10 @@
 
                 }
 
+
                 const reader =
                     new FileReader();
+
 
                 reader.onload =
                     function (event) {
@@ -1088,6 +1339,7 @@
 
                     };
 
+
                 reader.readAsDataURL(
                     file
                 );
@@ -1095,12 +1347,6 @@
             }
         );
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | CANCEL
-        |--------------------------------------------------------------------------
-        */
 
         document
             .getElementById(
@@ -1117,11 +1363,27 @@
             );
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | HELPERS
-        |--------------------------------------------------------------------------
-        */
+        document
+            .getElementById(
+                "resetButton"
+            )
+            .addEventListener(
+                "click",
+                function () {
+
+                    setTimeout(
+                        function () {
+
+                            photoPreview.innerHTML =
+                                "No photo selected";
+
+                        },
+                        0
+                    );
+
+                }
+            );
+
 
         function setField(
             id,
@@ -1131,9 +1393,11 @@
             const element =
                 document.getElementById(id);
 
+
             if (!element) {
                 return;
             }
+
 
             if (
                 value !== null &&
@@ -1156,8 +1420,10 @@
                 return "";
             }
 
+
             const date =
                 new Date(value);
+
 
             if (
                 Number.isNaN(
@@ -1172,6 +1438,7 @@
                     );
 
             }
+
 
             return date
                 .toISOString()
@@ -1191,12 +1458,71 @@
             messageElement.textContent =
                 message;
 
+
             messageElement.className =
-                "message " +
-                type;
+                type === "success"
+                    ? "alert alert-success mb-4"
+                    : "alert alert-danger mb-4";
 
         }
 
+
+        const sidebarToggle =
+            document.getElementById(
+                "sidebarToggle"
+            );
+
+
+        const sidebar =
+            document.getElementById(
+                "sidebar"
+            );
+
+
+        const sidebarOverlay =
+            document.getElementById(
+                "sidebarOverlay"
+            );
+
+
+        if (sidebarToggle) {
+
+            sidebarToggle.addEventListener(
+                "click",
+                function () {
+
+                    sidebar.classList.toggle(
+                        "show"
+                    );
+
+                    sidebarOverlay.classList.toggle(
+                        "show"
+                    );
+
+                }
+            );
+
+        }
+
+
+        if (sidebarOverlay) {
+
+            sidebarOverlay.addEventListener(
+                "click",
+                function () {
+
+                    sidebar.classList.remove(
+                        "show"
+                    );
+
+                    sidebarOverlay.classList.remove(
+                        "show"
+                    );
+
+                }
+            );
+
+        }
 
     </script>
 
