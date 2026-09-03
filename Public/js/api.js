@@ -1,450 +1,341 @@
-```javascript
-"use strict";
-
 /*
 |--------------------------------------------------------------------------
 | SCHOOL MANAGEMENT SYSTEM
-| API JAVASCRIPT
+| API.JS
 |--------------------------------------------------------------------------
-|
-| Central API communication for the frontend.
-|
-| This file is synchronized with auth.js.
-|
-| JWT TOKEN:
-| school_management_token
-|
-| USER:
-| school_management_user
-|
+| Central frontend API communication layer.
 |--------------------------------------------------------------------------
 */
 
-const API_BASE_URL = "/api";
+(function () {
+    "use strict";
 
-/*
-|--------------------------------------------------------------------------
-| TOKEN HELPERS
-|--------------------------------------------------------------------------
-*/
+    const API_BASE_URL = "/api";
+    const TOKEN_KEY = "school_management_token";
+    const USER_KEY = "school_management_user";
 
-function getApiToken() {
-    return (
-        localStorage.getItem("school_management_token") ||
-        sessionStorage.getItem("school_management_token") ||
-        localStorage.getItem("token") ||
-        sessionStorage.getItem("token") ||
-        localStorage.getItem("accessToken") ||
-        sessionStorage.getItem("accessToken") ||
-        null
-    );
-}
+    /*
+    |--------------------------------------------------------------------------
+    | Token
+    |--------------------------------------------------------------------------
+    */
 
-/*
-|--------------------------------------------------------------------------
-| CLEAR AUTHENTICATION
-|--------------------------------------------------------------------------
-*/
-
-function clearApiAuthentication() {
-    // Current authentication storage
-    localStorage.removeItem("school_management_token");
-    localStorage.removeItem("school_management_user");
-
-    sessionStorage.removeItem("school_management_token");
-    sessionStorage.removeItem("school_management_user");
-
-    // Legacy storage
-    localStorage.removeItem("token");
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("currentUser");
-
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("accessToken");
-    sessionStorage.removeItem("currentUser");
-}
-
-/*
-|--------------------------------------------------------------------------
-| LOGIN PAGE CHECK
-|--------------------------------------------------------------------------
-*/
-
-function isLoginPage() {
-    return window.location.pathname
-        .toLowerCase()
-        .includes("login.html");
-}
-
-/*
-|--------------------------------------------------------------------------
-| REDIRECT TO LOGIN
-|--------------------------------------------------------------------------
-*/
-
-function redirectToLogin() {
-    if (!isLoginPage()) {
-        window.location.replace("/pages/login.html");
-    }
-}
-
-/*
-|--------------------------------------------------------------------------
-| PARSE RESPONSE
-|--------------------------------------------------------------------------
-*/
-
-async function parseApiResponse(response) {
-    const contentType =
-        response.headers.get("content-type") || "";
-
-    if (contentType.includes("application/json")) {
-        try {
-            return await response.json();
-        } catch (error) {
-            console.error(
-                "Failed to parse JSON response:",
-                error
-            );
-
-            throw new Error(
-                "The server returned invalid JSON."
-            );
-        }
+    function getApiToken() {
+        return (
+            localStorage.getItem(TOKEN_KEY) ||
+            sessionStorage.getItem(TOKEN_KEY) ||
+            localStorage.getItem("token") ||
+            sessionStorage.getItem("token") ||
+            localStorage.getItem("accessToken") ||
+            sessionStorage.getItem("accessToken") ||
+            ""
+        );
     }
 
-    const text = await response.text();
+    /*
+    |--------------------------------------------------------------------------
+    | Clear Authentication
+    |--------------------------------------------------------------------------
+    */
 
-    console.error(
-        "API returned a non-JSON response:",
-        text
-    );
+    function clearApiAuthentication() {
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
 
-    throw new Error(
-        `Server returned an unexpected response (${response.status}).`
-    );
-}
+        sessionStorage.removeItem(TOKEN_KEY);
+        sessionStorage.removeItem(USER_KEY);
 
-/*
-|--------------------------------------------------------------------------
-| MAIN API REQUEST
-|--------------------------------------------------------------------------
-*/
+        localStorage.removeItem("token");
+        localStorage.removeItem("accessToken");
 
-async function apiRequest(endpoint, options = {}) {
-    try {
+        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("accessToken");
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | API Request
+    |--------------------------------------------------------------------------
+    */
+
+    async function apiRequest(endpoint, options = {}) {
         const token = getApiToken();
 
-        const headers = {
-            Accept: "application/json"
+        let url = endpoint;
+
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            if (!url.startsWith("/")) {
+                url = "/" + url;
+            }
+
+            if (!url.startsWith(API_BASE_URL + "/")) {
+                url = API_BASE_URL + url;
+            }
+        }
+
+        const requestOptions = {
+            ...options,
+            headers: {
+                ...(options.headers || {})
+            }
         };
 
         /*
         |--------------------------------------------------------------------------
-        | CONTENT TYPE
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            options.body &&
-            typeof options.body === "string"
-        ) {
-            headers["Content-Type"] =
-                "application/json";
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | JWT AUTHORIZATION
+        | Authorization
         |--------------------------------------------------------------------------
         */
 
         if (token) {
-            headers["Authorization"] =
-                `Bearer ${token}`;
+            requestOptions.headers.Authorization = `Bearer ${token}`;
         }
 
         /*
         |--------------------------------------------------------------------------
-        | CUSTOM HEADERS
+        | Content-Type
         |--------------------------------------------------------------------------
         */
 
-        if (options.headers) {
-            Object.assign(
-                headers,
-                options.headers
+        if (
+            requestOptions.body &&
+            !(requestOptions.body instanceof FormData) &&
+            !requestOptions.headers["Content-Type"] &&
+            !requestOptions.headers["content-type"]
+        ) {
+            requestOptions.headers["Content-Type"] = "application/json";
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Request
+        |--------------------------------------------------------------------------
+        */
+
+        let response;
+
+        try {
+            response = await fetch(url, requestOptions);
+        } catch (error) {
+            console.error("API request failed:", error);
+            throw new Error(
+                "Unable to connect to the server. Please check your connection."
             );
         }
 
         /*
         |--------------------------------------------------------------------------
-        | URL
-        |--------------------------------------------------------------------------
-        */
-
-        const url =
-            endpoint.startsWith("http")
-                ? endpoint
-                : `${API_BASE_URL}${endpoint}`;
-
-        console.log(
-            "API Request:",
-            options.method || "GET",
-            url,
-            token
-                ? "Authenticated"
-                : "No authentication token"
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | FETCH
-        |--------------------------------------------------------------------------
-        */
-
-        const response = await fetch(url, {
-            ...options,
-            headers,
-            credentials: "include"
-        });
-
-        /*
-        |--------------------------------------------------------------------------
-        | RESPONSE
-        |--------------------------------------------------------------------------
-        */
-
-        const data =
-            await parseApiResponse(response);
-
-        /*
-        |--------------------------------------------------------------------------
-        | UNAUTHORIZED
-        |--------------------------------------------------------------------------
-        |
-        | Only clear authentication when the server actually
-        | confirms that the token is invalid/expired.
-        |
+        | Authentication Error
         |--------------------------------------------------------------------------
         */
 
         if (response.status === 401) {
-            console.error(
-                "API authentication failed (401):",
-                endpoint,
-                data
-            );
-
             clearApiAuthentication();
 
-            redirectToLogin();
+            const currentPath = window.location.pathname;
 
-            return null;
+            if (!currentPath.endsWith("/login.html")) {
+                window.location.href = "/pages/login.html";
+            }
+
+            throw new Error("Authentication required.");
         }
 
         /*
         |--------------------------------------------------------------------------
-        | FORBIDDEN
+        | Permission Error
         |--------------------------------------------------------------------------
         */
 
         if (response.status === 403) {
-            console.error(
-                "API access forbidden (403):",
-                endpoint,
-                data
-            );
-
             throw new Error(
-                data?.message ||
                 "You do not have permission to perform this action."
             );
         }
 
         /*
         |--------------------------------------------------------------------------
-        | OTHER ERRORS
+        | Response Parsing
         |--------------------------------------------------------------------------
         */
-
-        if (!response.ok) {
-            throw new Error(
-                data?.message ||
-                `Request failed with status ${response.status}.`
-            );
-        }
-
-        return data;
-
-    } catch (error) {
-        console.error(
-            "API request error:",
-            endpoint,
-            error
-        );
-
-        throw error;
-    }
-}
-
-/*
-|--------------------------------------------------------------------------
-| GET
-|--------------------------------------------------------------------------
-*/
-
-async function apiGet(endpoint) {
-    return apiRequest(endpoint, {
-        method: "GET"
-    });
-}
-
-/*
-|--------------------------------------------------------------------------
-| POST
-|--------------------------------------------------------------------------
-*/
-
-async function apiPost(endpoint, data = {}) {
-    return apiRequest(endpoint, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-    });
-}
-
-/*
-|--------------------------------------------------------------------------
-| PUT
-|--------------------------------------------------------------------------
-*/
-
-async function apiPut(endpoint, data = {}) {
-    return apiRequest(endpoint, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-    });
-}
-
-/*
-|--------------------------------------------------------------------------
-| PATCH
-|--------------------------------------------------------------------------
-*/
-
-async function apiPatch(endpoint, data = {}) {
-    return apiRequest(endpoint, {
-        method: "PATCH",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-    });
-}
-
-/*
-|--------------------------------------------------------------------------
-| DELETE
-|--------------------------------------------------------------------------
-*/
-
-async function apiDelete(endpoint) {
-    return apiRequest(endpoint, {
-        method: "DELETE"
-    });
-}
-
-/*
-|--------------------------------------------------------------------------
-| GET CURRENT USER
-|--------------------------------------------------------------------------
-|
-| IMPORTANT:
-| The working authentication endpoint is:
-|
-| /api/auth/me
-|
-|--------------------------------------------------------------------------
-*/
-
-async function getCurrentUserFromAPI() {
-    return apiRequest("/auth/me", {
-        method: "GET"
-    });
-}
-
-/*
-|--------------------------------------------------------------------------
-| API HEALTH CHECK
-|--------------------------------------------------------------------------
-*/
-
-async function checkApiHealth() {
-    try {
-        const response = await fetch(
-            `${API_BASE_URL}/health`,
-            {
-                method: "GET",
-                headers: {
-                    Accept: "application/json"
-                }
-            }
-        );
-
-        if (!response.ok) {
-            return false;
-        }
 
         const contentType =
             response.headers.get("content-type") || "";
 
-        if (
-            !contentType.includes(
-                "application/json"
-            )
-        ) {
-            return false;
+        let data;
+
+        if (contentType.includes("application/json")) {
+            data = await response.json();
+        } else {
+            data = await response.text();
         }
 
-        const data =
-            await response.json();
+        /*
+        |--------------------------------------------------------------------------
+        | HTTP Errors
+        |--------------------------------------------------------------------------
+        */
 
-        return data.success !== false;
+        if (!response.ok) {
+            let message = "Request failed.";
 
-    } catch (error) {
-        console.error(
-            "API health check failed:",
-            error
-        );
+            if (data && typeof data === "object") {
+                message =
+                    data.message ||
+                    data.error ||
+                    message;
+            } else if (typeof data === "string" && data.trim()) {
+                message = data;
+            }
 
-        return false;
+            throw new Error(message);
+        }
+
+        return data;
     }
-}
 
-/*
-|--------------------------------------------------------------------------
-| EXPOSE FUNCTIONS GLOBALLY
-|--------------------------------------------------------------------------
-*/
+    /*
+    |--------------------------------------------------------------------------
+    | GET
+    |--------------------------------------------------------------------------
+    */
 
-window.apiRequest = apiRequest;
-window.apiGet = apiGet;
-window.apiPost = apiPost;
-window.apiPut = apiPut;
-window.apiPatch = apiPatch;
-window.apiDelete = apiDelete;
-window.getCurrentUserFromAPI =
-    getCurrentUserFromAPI;
-window.checkApiHealth =
-    checkApiHealth;
-window.getApiToken =
-    getApiToken;
-window.clearApiAuthentication =
-    clearApiAuthentication;
-```
+    async function apiGet(endpoint, options = {}) {
+        return apiRequest(endpoint, {
+            ...options,
+            method: "GET"
+        });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | POST
+    |--------------------------------------------------------------------------
+    */
+
+    async function apiPost(endpoint, body, options = {}) {
+        const requestBody =
+            body instanceof FormData
+                ? body
+                : body !== undefined
+                    ? JSON.stringify(body)
+                    : undefined;
+
+        return apiRequest(endpoint, {
+            ...options,
+            method: "POST",
+            body: requestBody
+        });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | PUT
+    |--------------------------------------------------------------------------
+    */
+
+    async function apiPut(endpoint, body, options = {}) {
+        const requestBody =
+            body instanceof FormData
+                ? body
+                : body !== undefined
+                    ? JSON.stringify(body)
+                    : undefined;
+
+        return apiRequest(endpoint, {
+            ...options,
+            method: "PUT",
+            body: requestBody
+        });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | PATCH
+    |--------------------------------------------------------------------------
+    */
+
+    async function apiPatch(endpoint, body, options = {}) {
+        const requestBody =
+            body instanceof FormData
+                ? body
+                : body !== undefined
+                    ? JSON.stringify(body)
+                    : undefined;
+
+        return apiRequest(endpoint, {
+            ...options,
+            method: "PATCH",
+            body: requestBody
+        });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | DELETE
+    |--------------------------------------------------------------------------
+    */
+
+    async function apiDelete(endpoint, options = {}) {
+        return apiRequest(endpoint, {
+            ...options,
+            method: "DELETE"
+        });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Current User
+    |--------------------------------------------------------------------------
+    */
+
+    async function getCurrentUserFromAPI() {
+        return apiGet("/auth/me");
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | API Health
+    |--------------------------------------------------------------------------
+    */
+
+    async function checkApiHealth() {
+        try {
+            const response = await fetch("/api/health");
+
+            if (!response.ok) {
+                return false;
+            }
+
+            const data = await response.json();
+
+            return data && (
+                data.success === true ||
+                data.status === "ok" ||
+                data.status === "healthy"
+            );
+        } catch (error) {
+            console.error("API health check failed:", error);
+            return false;
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Global Exports
+    |--------------------------------------------------------------------------
+    */
+
+    window.apiRequest = apiRequest;
+    window.apiGet = apiGet;
+    window.apiPost = apiPost;
+    window.apiPut = apiPut;
+    window.apiPatch = apiPatch;
+    window.apiDelete = apiDelete;
+
+    window.getCurrentUserFromAPI = getCurrentUserFromAPI;
+    window.checkApiHealth = checkApiHealth;
+
+    window.getApiToken = getApiToken;
+    window.clearApiAuthentication = clearApiAuthentication;
+
+})();

@@ -1,24 +1,69 @@
+```javascript
+"use strict";
+
 const { query } = require("../config/database");
 
 /*
 |--------------------------------------------------------------------------
-| Fee Service
+| FEE SERVICE
 |--------------------------------------------------------------------------
-|
-| Handles fee-related business logic for the school management system.
-|
-| Responsibilities:
-|
-| - Get student fee records
-| - Calculate student fee balances
-| - Get school fee statistics
-| - Record payments
-| - Get payment history
-| - Get outstanding fees
-| - Get fee summaries
-|
+| Business logic for:
+| - Student fees
+| - Fee structures
+| - Payments
+| - Balances
+| - Fee statistics
 |--------------------------------------------------------------------------
 */
+
+
+/*
+|--------------------------------------------------------------------------
+| Helpers
+|--------------------------------------------------------------------------
+*/
+
+function normalizePaymentStatus(status) {
+    const value = String(status || "")
+        .trim()
+        .toLowerCase();
+
+    if (value === "paid") {
+        return "Paid";
+    }
+
+    if (
+        value === "partial" ||
+        value === "partially paid" ||
+        value === "partially_paid"
+    ) {
+        return "Partially Paid";
+    }
+
+    if (value === "overpaid") {
+        return "Overpaid";
+    }
+
+    return "Unpaid";
+}
+
+
+function validateAmount(amount, allowZero = true) {
+    const value = Number(amount);
+
+    if (
+        !Number.isFinite(value) ||
+        (allowZero ? value < 0 : value <= 0)
+    ) {
+        throw new Error(
+            allowZero
+                ? "A valid fee amount is required."
+                : "Payment amount must be greater than zero."
+        );
+    }
+
+    return value;
+}
 
 
 /*
@@ -27,11 +72,7 @@ const { query } = require("../config/database");
 |--------------------------------------------------------------------------
 */
 
-async function getStudentFees(
-    studentId,
-    schoolId
-) {
-
+async function getStudentFees(studentId, schoolId) {
     if (!studentId) {
         throw new Error("Student ID is required.");
     }
@@ -40,33 +81,29 @@ async function getStudentFees(
         throw new Error("School ID is required.");
     }
 
-    const sql = `
+    const result = await query(
+        `
         SELECT
-            f.*,
-
+            sf.*,
+            fs.fee_name,
+            fs.description AS fee_description,
+            fs.amount AS structure_amount,
+            fs.academic_session_id,
+            fs.term_id,
+            fs.class_id,
             s.first_name,
             s.last_name,
             s.admission_number
-
-        FROM fees f
-
+        FROM student_fees sf
+        INNER JOIN fee_structures fs
+            ON fs.id = sf.fee_structure_id
         INNER JOIN students s
-            ON s.id = f.student_id
-
-        WHERE f.student_id = $1
-
-          AND f.school_id = $2
-
-        ORDER BY
-            f.created_at DESC
-    `;
-
-    const result = await query(
-        sql,
-        [
-            studentId,
-            schoolId
-        ]
+            ON s.id = sf.student_id
+        WHERE sf.student_id = $1
+          AND sf.school_id = $2
+        ORDER BY sf.created_at DESC
+        `,
+        [studentId, schoolId]
     );
 
     return result.rows;
@@ -79,11 +116,7 @@ async function getStudentFees(
 |--------------------------------------------------------------------------
 */
 
-async function getFeeById(
-    feeId,
-    schoolId
-) {
-
+async function getFeeById(feeId, schoolId) {
     if (!feeId) {
         throw new Error("Fee ID is required.");
     }
@@ -92,32 +125,29 @@ async function getFeeById(
         throw new Error("School ID is required.");
     }
 
-    const sql = `
+    const result = await query(
+        `
         SELECT
-            f.*,
-
+            sf.*,
+            fs.fee_name,
+            fs.description AS fee_description,
+            fs.amount AS structure_amount,
+            fs.academic_session_id,
+            fs.term_id,
+            fs.class_id,
             s.first_name,
             s.last_name,
             s.admission_number
-
-        FROM fees f
-
+        FROM student_fees sf
+        INNER JOIN fee_structures fs
+            ON fs.id = sf.fee_structure_id
         INNER JOIN students s
-            ON s.id = f.student_id
-
-        WHERE f.id = $1
-
-          AND f.school_id = $2
-
+            ON s.id = sf.student_id
+        WHERE sf.id = $1
+          AND sf.school_id = $2
         LIMIT 1
-    `;
-
-    const result = await query(
-        sql,
-        [
-            feeId,
-            schoolId
-        ]
+        `,
+        [feeId, schoolId]
     );
 
     return result.rows[0] || null;
@@ -126,22 +156,22 @@ async function getFeeById(
 
 /*
 |--------------------------------------------------------------------------
-| Create Fee Record
+| Create Fee
 |--------------------------------------------------------------------------
 */
 
 async function createFee({
     schoolId,
     studentId,
-    sessionId,
+    sessionId = null,
     termId = null,
-    feeType,
+    feeStructureId = null,
+    feeType = null,
     amount,
     dueDate = null,
     description = null,
-    status = "unpaid"
+    status = "Unpaid"
 }) {
-
     if (!schoolId) {
         throw new Error("School ID is required.");
     }
@@ -150,60 +180,144 @@ async function createFee({
         throw new Error("Student ID is required.");
     }
 
-    if (!feeType || !feeType.trim()) {
-        throw new Error("Fee type is required.");
+    const feeAmount = validateAmount(amount);
+
+    let structureId = feeStructureId;
+
+    /*
+    |----------------------------------------------------------------------
+    | Verify supplied fee structure
+    |----------------------------------------------------------------------
+    */
+
+    if (structureId) {
+        const structureResult = await query(
+            `
+            SELECT id
+            FROM fee_structures
+            WHERE id = $1
+              AND school_id = $2
+            LIMIT 1
+            `,
+            [structureId, schoolId]
+        );
+
+        if (!structureResult.rows[0]) {
+            throw new Error("Fee structure not found.");
+        }
     }
 
-    if (
-        amount === undefined ||
-        amount === null ||
-        Number(amount) < 0
-    ) {
-        throw new Error("A valid fee amount is required.");
+
+    /*
+    |----------------------------------------------------------------------
+    | Find structure by fee name
+    |----------------------------------------------------------------------
+    */
+
+    if (!structureId && feeType) {
+        const structureResult = await query(
+            `
+            SELECT id
+            FROM fee_structures
+            WHERE school_id = $1
+              AND fee_name ILIKE $2
+              AND (
+                    $3::UUID IS NULL
+                    OR academic_session_id = $3
+                  )
+              AND (
+                    $4::UUID IS NULL
+                    OR term_id = $4
+                  )
+            ORDER BY created_at DESC
+            LIMIT 1
+            `,
+            [
+                schoolId,
+                String(feeType).trim(),
+                sessionId,
+                termId
+            ]
+        );
+
+        structureId =
+            structureResult.rows[0]?.id || null;
     }
 
-    const sql = `
-        INSERT INTO fees (
-            school_id,
-            student_id,
-            session_id,
-            term_id,
-            fee_type,
-            amount,
-            amount_paid,
-            balance,
-            due_date,
-            description,
-            status
-        )
-        VALUES (
-            $1,
-            $2,
-            $3,
-            $4,
-            $5,
-            $6,
-            0,
-            $6,
-            $7,
-            $8,
-            $9
-        )
-        RETURNING *
-    `;
+
+    /*
+    |----------------------------------------------------------------------
+    | Create structure when necessary
+    |----------------------------------------------------------------------
+    */
+
+    if (!structureId) {
+        if (!sessionId) {
+            throw new Error(
+                "Academic session is required to create a fee structure."
+            );
+        }
+
+        if (!feeType || !String(feeType).trim()) {
+            throw new Error("Fee name is required.");
+        }
+
+        const structureResult = await query(
+            `
+            INSERT INTO fee_structures (
+                school_id,
+                academic_session_id,
+                term_id,
+                fee_name,
+                description,
+                amount
+            )
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING id
+            `,
+            [
+                schoolId,
+                sessionId,
+                termId,
+                String(feeType).trim(),
+                description,
+                feeAmount
+            ]
+        );
+
+        structureId = structureResult.rows[0].id;
+    }
+
+
+    /*
+    |----------------------------------------------------------------------
+    | Create student fee
+    |----------------------------------------------------------------------
+    */
+
+    const normalizedStatus =
+        normalizePaymentStatus(status);
 
     const result = await query(
-        sql,
+        `
+        INSERT INTO student_fees (
+            student_id,
+            school_id,
+            fee_structure_id,
+            amount_due,
+            amount_paid,
+            balance,
+            payment_status
+        )
+        VALUES ($1, $2, $3, $4, 0, $4, $5)
+        RETURNING *
+        `,
         [
-            schoolId,
             studentId,
-            sessionId || null,
-            termId || null,
-            feeType.trim(),
-            Number(amount),
-            dueDate,
-            description,
-            status
+            schoolId,
+            structureId,
+            feeAmount,
+            normalizedStatus
         ]
     );
 
@@ -213,7 +327,7 @@ async function createFee({
 
 /*
 |--------------------------------------------------------------------------
-| Record Fee Payment
+| Record Payment
 |--------------------------------------------------------------------------
 */
 
@@ -225,9 +339,9 @@ async function recordPayment({
     reference = null,
     paymentDate = null,
     notes = null,
-    receivedBy = null
+    receivedBy = null,
+    receiptNumber = null
 }) {
-
     if (!feeId) {
         throw new Error("Fee ID is required.");
     }
@@ -236,44 +350,33 @@ async function recordPayment({
         throw new Error("School ID is required.");
     }
 
-    if (
-        amount === undefined ||
-        amount === null ||
-        Number(amount) <= 0
-    ) {
-        throw new Error("Payment amount must be greater than zero.");
-    }
+    const paymentAmount =
+        validateAmount(amount, false);
 
-    const clientResult = await query(
+    const feeResult = await query(
         `
-            SELECT
-                id,
-                amount,
-                amount_paid,
-                balance
-
-            FROM fees
-
-            WHERE id = $1
-
-              AND school_id = $2
-
-            LIMIT 1
+        SELECT
+            id,
+            student_id,
+            amount_due,
+            amount_paid,
+            balance
+        FROM student_fees
+        WHERE id = $1
+          AND school_id = $2
+        LIMIT 1
         `,
-        [
-            feeId,
-            schoolId
-        ]
+        [feeId, schoolId]
     );
 
-    const fee = clientResult.rows[0];
+    const fee = feeResult.rows[0];
 
     if (!fee) {
         return null;
     }
 
-    const paymentAmount = Number(amount);
-    const currentBalance = Number(fee.balance);
+    const currentBalance =
+        Number(fee.balance || 0);
 
     if (paymentAmount > currentBalance) {
         throw new Error(
@@ -282,27 +385,42 @@ async function recordPayment({
     }
 
     const newAmountPaid =
-        Number(fee.amount_paid) + paymentAmount;
+        Number(fee.amount_paid || 0) +
+        paymentAmount;
 
     const newBalance =
-        Number(fee.amount) - newAmountPaid;
+        Math.max(
+            Number(fee.amount_due || 0) -
+            newAmountPaid,
+            0
+        );
 
-    let newStatus = "partial";
+    const paymentStatus =
+        newBalance <= 0
+            ? "Paid"
+            : newAmountPaid > 0
+                ? "Partially Paid"
+                : "Unpaid";
 
-    if (newBalance <= 0) {
-        newStatus = "paid";
-    }
+    const finalReceiptNumber =
+        receiptNumber ||
+        `RCT-${Date.now()}-${Math.floor(
+            Math.random() * 1000
+        )}`;
 
-    const paymentSql = `
-        INSERT INTO fee_payments (
-            fee_id,
+    const paymentResult = await query(
+        `
+        INSERT INTO payments (
+            student_id,
             school_id,
+            student_fee_id,
+            receipt_number,
             amount,
             payment_method,
-            reference,
+            transaction_reference,
             payment_date,
-            notes,
-            received_by
+            received_by,
+            notes
         )
         VALUES (
             $1,
@@ -310,45 +428,43 @@ async function recordPayment({
             $3,
             $4,
             $5,
-            COALESCE($6, CURRENT_DATE),
+            $6,
             $7,
-            $8
+            COALESCE($8, CURRENT_DATE),
+            $9,
+            $10
         )
         RETURNING *
-    `;
-
-    const paymentResult = await query(
-        paymentSql,
+        `,
         [
-            feeId,
+            fee.student_id,
             schoolId,
+            feeId,
+            finalReceiptNumber,
             paymentAmount,
             paymentMethod,
             reference,
             paymentDate,
-            notes,
-            receivedBy
+            receivedBy,
+            notes
         ]
     );
 
     await query(
         `
-            UPDATE fees
-
-            SET
-                amount_paid = $1,
-                balance = $2,
-                status = $3,
-                updated_at = NOW()
-
-            WHERE id = $4
-
-              AND school_id = $5
+        UPDATE student_fees
+        SET
+            amount_paid = $1,
+            balance = $2,
+            payment_status = $3,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = $4
+          AND school_id = $5
         `,
         [
             newAmountPaid,
             newBalance,
-            newStatus,
+            paymentStatus,
             feeId,
             schoolId
         ]
@@ -364,11 +480,7 @@ async function recordPayment({
 |--------------------------------------------------------------------------
 */
 
-async function getPaymentHistory(
-    feeId,
-    schoolId
-) {
-
+async function getPaymentHistory(feeId, schoolId) {
     if (!feeId) {
         throw new Error("Fee ID is required.");
     }
@@ -377,26 +489,21 @@ async function getPaymentHistory(
         throw new Error("School ID is required.");
     }
 
-    const sql = `
-        SELECT *
-
-        FROM fee_payments
-
-        WHERE fee_id = $1
-
-          AND school_id = $2
-
-        ORDER BY
-            payment_date DESC,
-            created_at DESC
-    `;
-
     const result = await query(
-        sql,
-        [
-            feeId,
-            schoolId
-        ]
+        `
+        SELECT
+            p.*,
+            u.username AS received_by_username
+        FROM payments p
+        LEFT JOIN users u
+            ON u.id = p.received_by
+        WHERE p.student_fee_id = $1
+          AND p.school_id = $2
+        ORDER BY
+            p.payment_date DESC,
+            p.created_at DESC
+        `,
+        [feeId, schoolId]
     );
 
     return result.rows;
@@ -413,7 +520,6 @@ async function getStudentFeeBalance(
     studentId,
     schoolId
 ) {
-
     if (!studentId) {
         throw new Error("Student ID is required.");
     }
@@ -422,45 +528,25 @@ async function getStudentFeeBalance(
         throw new Error("School ID is required.");
     }
 
-    const sql = `
-        SELECT
-
-            COALESCE(
-                SUM(amount),
-                0
-            ) AS total_amount,
-
-            COALESCE(
-                SUM(amount_paid),
-                0
-            ) AS total_paid,
-
-            COALESCE(
-                SUM(balance),
-                0
-            ) AS total_balance
-
-        FROM fees
-
-        WHERE student_id = $1
-
-          AND school_id = $2
-    `;
-
     const result = await query(
-        sql,
-        [
-            studentId,
-            schoolId
-        ]
+        `
+        SELECT
+            COALESCE(SUM(amount_due), 0) AS total_amount,
+            COALESCE(SUM(amount_paid), 0) AS total_paid,
+            COALESCE(SUM(balance), 0) AS total_balance
+        FROM student_fees
+        WHERE student_id = $1
+          AND school_id = $2
+        `,
+        [studentId, schoolId]
     );
 
     const row = result.rows[0];
 
     return {
-        totalAmount: Number(row.total_amount),
-        totalPaid: Number(row.total_paid),
-        totalBalance: Number(row.total_balance)
+        totalAmount: Number(row.total_amount || 0),
+        totalPaid: Number(row.total_paid || 0),
+        totalBalance: Number(row.total_balance || 0)
     };
 }
 
@@ -471,43 +557,36 @@ async function getStudentFeeBalance(
 |--------------------------------------------------------------------------
 */
 
-async function getOutstandingFees(
-    schoolId
-) {
-
+async function getOutstandingFees(schoolId) {
     if (!schoolId) {
         throw new Error("School ID is required.");
     }
 
-    const sql = `
+    const result = await query(
+        `
         SELECT
-
-            f.*,
-
+            sf.*,
+            fs.fee_name,
+            fs.description AS fee_description,
+            fs.academic_session_id,
+            fs.term_id,
+            fs.class_id,
             s.first_name,
             s.last_name,
             s.admission_number
-
-        FROM fees f
-
+        FROM student_fees sf
+        INNER JOIN fee_structures fs
+            ON fs.id = sf.fee_structure_id
         INNER JOIN students s
-            ON s.id = f.student_id
-
-        WHERE f.school_id = $1
-
-          AND f.balance > 0
-
+            ON s.id = sf.student_id
+        WHERE sf.school_id = $1
+          AND sf.balance > 0
         ORDER BY
-            f.due_date ASC NULLS LAST,
             s.last_name ASC,
-            s.first_name ASC
-    `;
-
-    const result = await query(
-        sql,
-        [
-            schoolId
-        ]
+            s.first_name ASC,
+            sf.created_at DESC
+        `,
+        [schoolId]
     );
 
     return result.rows;
@@ -525,108 +604,96 @@ async function getFeeStatistics(
     sessionId = null,
     termId = null
 ) {
-
     if (!schoolId) {
         throw new Error("School ID is required.");
     }
 
     let sql = `
         SELECT
+            COUNT(*)::INTEGER AS total_records,
 
-            COUNT(*)::INTEGER
-                AS total_records,
+            COALESCE(SUM(sf.amount_due), 0)
+                AS total_amount,
 
-            COALESCE(
-                SUM(amount),
-                0
-            ) AS total_amount,
+            COALESCE(SUM(sf.amount_paid), 0)
+                AS total_paid,
 
-            COALESCE(
-                SUM(amount_paid),
-                0
-            ) AS total_paid,
-
-            COALESCE(
-                SUM(balance),
-                0
-            ) AS total_balance,
+            COALESCE(SUM(sf.balance), 0)
+                AS total_balance,
 
             COUNT(
                 CASE
-                    WHEN status = 'paid'
+                    WHEN sf.payment_status = 'Paid'
                     THEN 1
                 END
             )::INTEGER AS paid_records,
 
             COUNT(
                 CASE
-                    WHEN status = 'partial'
+                    WHEN sf.payment_status = 'Partially Paid'
                     THEN 1
                 END
             )::INTEGER AS partial_records,
 
             COUNT(
                 CASE
-                    WHEN status = 'unpaid'
+                    WHEN sf.payment_status = 'Unpaid'
                     THEN 1
                 END
             )::INTEGER AS unpaid_records
 
-        FROM fees
+        FROM student_fees sf
 
-        WHERE school_id = $1
+        INNER JOIN fee_structures fs
+            ON fs.id = sf.fee_structure_id
+
+        WHERE sf.school_id = $1
     `;
 
-    const values = [
-        schoolId
-    ];
+    const values = [schoolId];
 
     if (sessionId) {
-
         values.push(sessionId);
 
         sql += `
-            AND session_id = $${values.length}
+            AND fs.academic_session_id = $${values.length}
         `;
     }
 
     if (termId) {
-
         values.push(termId);
 
         sql += `
-            AND term_id = $${values.length}
+            AND fs.term_id = $${values.length}
         `;
     }
 
-    const result = await query(
-        sql,
-        values
-    );
+    const result =
+        await query(sql, values);
 
-    const row = result.rows[0];
+    const row = result.rows[0] || {};
 
     return {
         totalRecords:
-            Number(row.total_records),
+            Number(row.total_records || 0),
 
         totalAmount:
-            Number(row.total_amount),
+            Number(row.total_amount || 0),
 
         totalPaid:
-            Number(row.total_paid),
+            Number(row.total_paid || 0),
 
         totalBalance:
-            Number(row.total_balance),
+            Number(row.total_balance || 0),
 
         paidRecords:
-            Number(row.paid_records),
+            Number(row.paid_records || 0),
 
         partialRecords:
-            Number(row.partial_records),
+            Number(row.partial_records || 0),
 
         unpaidRecords:
-            Number(row.unpaid_records)
+            Number(row.unpaid_records || 0)
     };
 }
 
@@ -642,78 +709,70 @@ async function getFeeSummaryByType(
     sessionId = null,
     termId = null
 ) {
-
     if (!schoolId) {
         throw new Error("School ID is required.");
     }
 
     let sql = `
         SELECT
+            fs.fee_name AS fee_type,
 
-            fee_type,
-
-            COUNT(*)::INTEGER
+            COUNT(sf.id)::INTEGER
                 AS record_count,
 
-            COALESCE(
-                SUM(amount),
-                0
-            ) AS total_amount,
+            COALESCE(SUM(sf.amount_due), 0)
+                AS total_amount,
 
-            COALESCE(
-                SUM(amount_paid),
-                0
-            ) AS total_paid,
+            COALESCE(SUM(sf.amount_paid), 0)
+                AS total_paid,
 
-            COALESCE(
-                SUM(balance),
-                0
-            ) AS total_balance
+            COALESCE(SUM(sf.balance), 0)
+                AS total_balance
 
-        FROM fees
+        FROM student_fees sf
 
-        WHERE school_id = $1
+        INNER JOIN fee_structures fs
+            ON fs.id = sf.fee_structure_id
+
+        WHERE sf.school_id = $1
     `;
 
-    const values = [
-        schoolId
-    ];
+    const values = [schoolId];
 
     if (sessionId) {
-
         values.push(sessionId);
 
         sql += `
-            AND session_id = $${values.length}
+            AND fs.academic_session_id = $${values.length}
         `;
     }
 
     if (termId) {
-
         values.push(termId);
 
         sql += `
-            AND term_id = $${values.length}
+            AND fs.term_id = $${values.length}
         `;
     }
 
     sql += `
-        GROUP BY fee_type
-
-        ORDER BY fee_type ASC
+        GROUP BY fs.fee_name
+        ORDER BY fs.fee_name ASC
     `;
 
-    const result = await query(
-        sql,
-        values
-    );
+    const result =
+        await query(sql, values);
 
     return result.rows.map(row => ({
         feeType: row.fee_type,
-        recordCount: Number(row.record_count),
-        totalAmount: Number(row.total_amount),
-        totalPaid: Number(row.total_paid),
-        totalBalance: Number(row.total_balance)
+        recordCount:
+            Number(row.record_count || 0),
+        totalAmount:
+            Number(row.total_amount || 0),
+        totalPaid:
+            Number(row.total_paid || 0),
+        totalBalance:
+            Number(row.total_balance || 0)
     }));
 }
 
@@ -728,7 +787,6 @@ async function searchFees(
     searchTerm,
     schoolId
 ) {
-
     if (!schoolId) {
         throw new Error("School ID is required.");
     }
@@ -740,38 +798,35 @@ async function searchFees(
         return [];
     }
 
-    const sql = `
+    const result = await query(
+        `
         SELECT
-
-            f.*,
-
+            sf.*,
+            fs.fee_name,
+            fs.description AS fee_description,
+            fs.academic_session_id,
+            fs.term_id,
+            fs.class_id,
             s.first_name,
             s.last_name,
             s.admission_number
-
-        FROM fees f
-
+        FROM student_fees sf
+        INNER JOIN fee_structures fs
+            ON fs.id = sf.fee_structure_id
         INNER JOIN students s
-            ON s.id = f.student_id
-
-        WHERE f.school_id = $1
-
+            ON s.id = sf.student_id
+        WHERE sf.school_id = $1
           AND (
                 s.first_name ILIKE $2
                 OR s.last_name ILIKE $2
                 OR s.admission_number ILIKE $2
-                OR f.fee_type ILIKE $2
+                OR fs.fee_name ILIKE $2
               )
-
         ORDER BY
             s.last_name ASC,
             s.first_name ASC
-
         LIMIT 100
-    `;
-
-    const result = await query(
-        sql,
+        `,
         [
             schoolId,
             `%${term}%`
@@ -793,7 +848,6 @@ async function updateFee(
     schoolId,
     data
 ) {
-
     if (!feeId) {
         throw new Error("Fee ID is required.");
     }
@@ -802,64 +856,97 @@ async function updateFee(
         throw new Error("School ID is required.");
     }
 
+    if (!data || typeof data !== "object") {
+        throw new Error("Fee update data is required.");
+    }
+
     const allowedFields = {
-        feeType: "fee_type",
-        amount: "amount",
-        dueDate: "due_date",
-        description: "description",
-        status: "status",
-        sessionId: "session_id",
-        termId: "term_id"
+        amountDue: "amount_due",
+        amount: "amount_due",
+        paymentStatus: "payment_status",
+        status: "payment_status",
+        feeStructureId: "fee_structure_id"
     };
 
     const updates = [];
     const values = [];
 
-    for (const key of Object.keys(data || {})) {
+    for (const key of Object.keys(data)) {
+        if (
+            !allowedFields[key] ||
+            data[key] === undefined
+        ) {
+            continue;
+        }
+
+        let value = data[key];
 
         if (
-            allowedFields[key] &&
-            data[key] !== undefined
+            allowedFields[key] ===
+            "payment_status"
         ) {
-
-            values.push(data[key]);
-
-            updates.push(
-                `${allowedFields[key]} = $${values.length}`
-            );
+            value =
+                normalizePaymentStatus(value);
         }
+
+        if (
+            allowedFields[key] ===
+            "amount_due"
+        ) {
+            value = validateAmount(value);
+        }
+
+        values.push(value);
+
+        updates.push(
+            `${allowedFields[key]} = $${values.length}`
+        );
     }
 
-    if (updates.length === 0) {
+    if (!updates.length) {
         throw new Error(
             "No valid fields supplied for update."
         );
     }
 
-    values.push(feeId);
+    /*
+    |----------------------------------------------------------------------
+    | If amount_due changes, recalculate balance.
+    |----------------------------------------------------------------------
+    */
 
+    const amountIndex =
+        updates.findIndex(
+            item => item.startsWith("amount_due =")
+        );
+
+    if (amountIndex !== -1) {
+        const amountValue =
+            values[amountIndex];
+
+        updates.push(
+            `balance = GREATEST($${values.length + 1} - amount_paid, 0)`
+        );
+
+        values.push(amountValue);
+    }
+
+    values.push(feeId);
     const feeIdPosition = values.length;
 
     values.push(schoolId);
-
     const schoolIdPosition = values.length;
 
-    const sql = `
-        UPDATE fees
-
+    const result = await query(
+        `
+        UPDATE student_fees
         SET
             ${updates.join(", ")},
-            updated_at = NOW()
-
+            updated_at = CURRENT_TIMESTAMP
         WHERE id = $${feeIdPosition}
-
           AND school_id = $${schoolIdPosition}
-
         RETURNING *
-    `;
-
-    const result = await query(
-        sql,
+        `,
         values
     );
 
@@ -877,7 +964,6 @@ async function deleteFee(
     feeId,
     schoolId
 ) {
-
     if (!feeId) {
         throw new Error("Fee ID is required.");
     }
@@ -886,22 +972,14 @@ async function deleteFee(
         throw new Error("School ID is required.");
     }
 
-    const sql = `
-        DELETE FROM fees
-
-        WHERE id = $1
-
-          AND school_id = $2
-
-        RETURNING *
-    `;
-
     const result = await query(
-        sql,
-        [
-            feeId,
-            schoolId
-        ]
+        `
+        DELETE FROM student_fees
+        WHERE id = $1
+          AND school_id = $2
+        RETURNING *
+        `,
+        [feeId, schoolId]
     );
 
     return result.rows[0] || null;
@@ -915,29 +993,16 @@ async function deleteFee(
 */
 
 module.exports = {
-
     getStudentFees,
-
     getFeeById,
-
     createFee,
-
     recordPayment,
-
     getPaymentHistory,
-
     getStudentFeeBalance,
-
     getOutstandingFees,
-
     getFeeStatistics,
-
     getFeeSummaryByType,
-
     searchFees,
-
     updateFee,
-
     deleteFee
-
 };

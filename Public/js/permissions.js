@@ -1,864 +1,647 @@
-const API_BASE = "/api";
+"use strict";
 
-let permissions = [];
+(function () {
+    const API_BASE = "/api";
+    const TOKEN_KEY = "school_management_token";
 
+    let permissions = [];
 
-/*
-|--------------------------------------------------------------------------
-| DOM ELEMENTS
-|--------------------------------------------------------------------------
-*/
-
-const tableBody =
-    document.getElementById("permissionsTableBody") ||
-    document.getElementById("permissionTableBody") ||
-    document.querySelector("#permissionsTable tbody");
-
-const searchInput =
-    document.getElementById("searchInput") ||
-    document.getElementById("permissionSearch");
-
-const moduleFilter =
-    document.getElementById("moduleFilter") ||
-    document.getElementById("permissionModuleFilter");
-
-const messageContainer =
-    document.getElementById("message") ||
-    document.getElementById("messageContainer");
-
-
-/*
-|--------------------------------------------------------------------------
-| AUTHENTICATION
-|--------------------------------------------------------------------------
-*/
-
-function getToken() {
-
-    return (
-        localStorage.getItem("token") ||
-        sessionStorage.getItem("token")
-    );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| API REQUEST
-|--------------------------------------------------------------------------
-*/
-
-async function apiRequest(
-    url,
-    options = {}
-) {
-
-    const token = getToken();
-
-    const headers = {
-        ...(options.headers || {})
-    };
-
-
-    if (
-        options.body &&
-        !(options.body instanceof FormData)
-    ) {
-
-        headers["Content-Type"] =
-            "application/json";
-
+    function getToken() {
+        return (
+            localStorage.getItem(TOKEN_KEY) ||
+            sessionStorage.getItem(TOKEN_KEY) ||
+            localStorage.getItem("token") ||
+            sessionStorage.getItem("token") ||
+            localStorage.getItem("accessToken") ||
+            sessionStorage.getItem("accessToken") ||
+            ""
+        );
     }
 
+    async function apiRequest(endpoint, options = {}) {
+        let url = endpoint;
 
-    if (token) {
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            if (!url.startsWith("/")) {
+                url = "/" + url;
+            }
 
-        headers.Authorization =
-            `Bearer ${token}`;
+            if (!url.startsWith(API_BASE + "/")) {
+                url = API_BASE + url;
+            }
+        }
 
-    }
+        const headers = {
+            ...(options.headers || {})
+        };
 
+        const token = getToken();
 
-    const response =
-        await fetch(
-            API_BASE + url,
-            {
+        if (token) {
+            headers.Authorization = `Bearer ${token}`;
+        }
+
+        if (
+            options.body &&
+            !(options.body instanceof FormData) &&
+            !headers["Content-Type"] &&
+            !headers["content-type"]
+        ) {
+            headers["Content-Type"] = "application/json";
+        }
+
+        let response;
+
+        try {
+            response = await fetch(url, {
                 ...options,
                 headers
+            });
+        } catch (error) {
+            console.error("Permission API error:", error);
+            throw new Error(
+                "Unable to connect to the server."
+            );
+        }
+
+        if (response.status === 401) {
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem("school_management_user");
+            sessionStorage.removeItem(TOKEN_KEY);
+            sessionStorage.removeItem("school_management_user");
+
+            if (!window.location.pathname.endsWith("/login.html")) {
+                window.location.href = "/pages/login.html";
             }
-        );
 
+            throw new Error("Authentication required.");
+        }
 
-    let data = null;
+        if (response.status === 403) {
+            throw new Error(
+                "You do not have permission to perform this action."
+            );
+        }
 
+        const contentType =
+            response.headers.get("content-type") || "";
 
-    try {
+        let data;
 
-        data =
-            await response.json();
+        if (contentType.includes("application/json")) {
+            data = await response.json();
+        } else {
+            data = await response.text();
+        }
 
-    } catch (error) {
+        if (!response.ok) {
+            throw new Error(
+                typeof data === "object"
+                    ? data.message || data.error || "Request failed."
+                    : data || "Request failed."
+            );
+        }
 
-        data = null;
-
+        return data;
     }
 
+    function getElements() {
+        return {
+            tableBody:
+                document.getElementById("permissionsTableBody") ||
+                document.getElementById("permissionTableBody") ||
+                document.querySelector("#permissionsTable tbody"),
 
-    if (!response.ok) {
+            searchInput:
+                document.getElementById("searchInput") ||
+                document.getElementById("permissionSearch"),
 
-        throw new Error(
-            data?.message ||
-            "Request failed."
-        );
+            moduleFilter:
+                document.getElementById("moduleFilter") ||
+                document.getElementById("permissionModuleFilter"),
 
+            message:
+                document.getElementById("message") ||
+                document.getElementById("messageContainer")
+        };
     }
 
+    function showMessage(text, type = "success") {
+        const { message } = getElements();
 
-    return data;
+        if (!message) {
+            return;
+        }
 
-}
+        message.textContent = text;
+        message.className = `message ${type}`;
 
-
-/*
-|--------------------------------------------------------------------------
-| SHOW MESSAGE
-|--------------------------------------------------------------------------
-*/
-
-function showMessage(
-    text,
-    type = "success"
-) {
-
-    if (!messageContainer) {
-        return;
+        setTimeout(() => {
+            message.textContent = "";
+            message.className = "message";
+        }, 4000);
     }
 
-
-    messageContainer.textContent =
-        text;
-
-
-    messageContainer.className =
-        `message ${type}`;
-
-
-    setTimeout(
-        function() {
-
-            messageContainer.textContent =
-                "";
-
-            messageContainer.className =
-                "message";
-
-        },
-        4000
-    );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| LOAD PERMISSIONS
-|--------------------------------------------------------------------------
-*/
-
-async function loadPermissions() {
-
-    try {
+    async function loadPermissions() {
+        const { tableBody } = getElements();
 
         showLoading();
 
+        try {
+            const result = await apiRequest("/permissions");
 
-        const result =
-            await apiRequest(
-                "/permissions"
-            );
+            permissions =
+                Array.isArray(result)
+                    ? result
+                    : Array.isArray(result?.data)
+                        ? result.data
+                        : Array.isArray(result?.permissions)
+                            ? result.permissions
+                            : Array.isArray(result?.records)
+                                ? result.records
+                                : [];
 
+            populateModuleFilter();
+            renderPermissions();
+        } catch (error) {
+            console.error("Load permissions error:", error);
 
-        permissions =
-            Array.isArray(result?.data)
-                ? result.data
-                : Array.isArray(result?.permissions)
-                    ? result.permissions
-                    : Array.isArray(result)
-                        ? result
-                        : [];
+            permissions = [];
 
-
-        renderPermissions();
-
-        populateModuleFilter();
-
-
-    } catch (error) {
-
-        console.error(
-            "Load permissions error:",
-            error
-        );
-
-
-        showEmpty(
-            "Unable to load permissions."
-        );
-
-
-        showMessage(
-            error.message ||
-            "Unable to load permissions.",
-            "error"
-        );
-
-    }
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| RENDER PERMISSIONS
-|--------------------------------------------------------------------------
-*/
-
-function renderPermissions() {
-
-    if (!tableBody) {
-        return;
-    }
-
-
-    const searchTerm =
-        searchInput
-            ? searchInput.value
-                .trim()
-                .toLowerCase()
-            : "";
-
-
-    const selectedModule =
-        moduleFilter
-            ? moduleFilter.value
-                .trim()
-                .toLowerCase()
-            : "";
-
-
-    const filteredPermissions =
-        permissions.filter(
-            permission => {
-
-                const name =
-                    String(
-                        permission.name ||
-                        permission.permission_name ||
-                        permission.permissionName ||
-                        ""
-                    ).toLowerCase();
-
-
-                const description =
-                    String(
-                        permission.description ||
-                        ""
-                    ).toLowerCase();
-
-
-                const module =
-                    String(
-                        permission.module ||
-                        permission.module_name ||
-                        permission.moduleName ||
-                        ""
-                    ).toLowerCase();
-
-
-                const matchesSearch =
-                    !searchTerm ||
-                    name.includes(searchTerm) ||
-                    description.includes(searchTerm) ||
-                    module.includes(searchTerm);
-
-
-                const matchesModule =
-                    !selectedModule ||
-                    module === selectedModule;
-
-
-                return (
-                    matchesSearch &&
-                    matchesModule
-                );
-
+            if (tableBody) {
+                showEmpty("Unable to load permissions.");
             }
-        );
 
-
-    if (
-        filteredPermissions.length === 0
-    ) {
-
-        showEmpty(
-            "No permissions found."
-        );
-
-        return;
-
+            showMessage(
+                error.message || "Unable to load permissions.",
+                "error"
+            );
+        }
     }
 
+    function renderPermissions() {
+        const {
+            tableBody,
+            searchInput,
+            moduleFilter
+        } = getElements();
 
-    tableBody.innerHTML =
-        filteredPermissions
-            .map(
-                permission =>
-                    createPermissionRow(
-                        permission
-                    )
-            )
+        if (!tableBody) {
+            return;
+        }
+
+        const searchTerm =
+            searchInput?.value.trim().toLowerCase() || "";
+
+        const selectedModule =
+            moduleFilter?.value.trim().toLowerCase() || "";
+
+        const filtered = permissions.filter((permission) => {
+            const name = String(
+                permission.name ||
+                permission.permission_name ||
+                permission.permissionName ||
+                ""
+            ).toLowerCase();
+
+            const description = String(
+                permission.description || ""
+            ).toLowerCase();
+
+            const module = String(
+                permission.module ||
+                permission.module_name ||
+                permission.moduleName ||
+                ""
+            ).toLowerCase();
+
+            const matchesSearch =
+                !searchTerm ||
+                name.includes(searchTerm) ||
+                description.includes(searchTerm) ||
+                module.includes(searchTerm);
+
+            const matchesModule =
+                !selectedModule ||
+                module === selectedModule;
+
+            return matchesSearch && matchesModule;
+        });
+
+        if (!filtered.length) {
+            showEmpty("No permissions found.");
+            return;
+        }
+
+        tableBody.innerHTML = filtered
+            .map(createPermissionRow)
             .join("");
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| CREATE PERMISSION ROW
-|--------------------------------------------------------------------------
-*/
-
-function createPermissionRow(
-    permission
-) {
-
-    const id =
-        permission.id;
-
-
-    const name =
-        permission.name ||
-        permission.permission_name ||
-        permission.permissionName ||
-        "-";
-
-
-    const description =
-        permission.description ||
-        "-";
-
-
-    const module =
-        permission.module ||
-        permission.module_name ||
-        permission.moduleName ||
-        "-";
-
-
-    const createdAt =
-        permission.created_at ||
-        permission.createdAt;
-
-
-    return `
-        <tr>
-
-            <td>
-                ${escapeHtml(name)}
-            </td>
-
-            <td>
-                ${escapeHtml(description)}
-            </td>
-
-            <td>
-                <span class="module-badge">
-                    ${escapeHtml(module)}
-                </span>
-            </td>
-
-            <td>
-                ${formatDate(createdAt)}
-            </td>
-
-            <td>
-
-                <div class="action-buttons">
-
-                    <button
-                        type="button"
-                        class="btn btn-sm btn-primary"
-                        onclick="editPermission('${escapeJs(id)}')"
-                    >
-                        Edit
-                    </button>
-
-                    <button
-                        type="button"
-                        class="btn btn-sm btn-danger"
-                        onclick="deletePermission('${escapeJs(id)}')"
-                    >
-                        Delete
-                    </button>
-
-                </div>
-
-            </td>
-
-        </tr>
-    `;
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| POPULATE MODULE FILTER
-|--------------------------------------------------------------------------
-*/
-
-function populateModuleFilter() {
-
-    if (!moduleFilter) {
-        return;
     }
 
+    function createPermissionRow(permission) {
+        const id =
+            permission.id ??
+            permission.permission_id ??
+            "";
 
-    const currentValue =
-        moduleFilter.value;
+        const name =
+            permission.name ||
+            permission.permission_name ||
+            permission.permissionName ||
+            "-";
 
+        const description =
+            permission.description ||
+            "-";
 
-    const modules =
-        [
+        const module =
+            permission.module ||
+            permission.module_name ||
+            permission.moduleName ||
+            "-";
+
+        const createdAt =
+            permission.created_at ||
+            permission.createdAt ||
+            "";
+
+        return `
+            <tr>
+                <td>${escapeHtml(name)}</td>
+
+                <td>${escapeHtml(description)}</td>
+
+                <td>
+                    <span class="module-badge">
+                        ${escapeHtml(module)}
+                    </span>
+                </td>
+
+                <td>
+                    ${formatDate(createdAt)}
+                </td>
+
+                <td>
+                    <div class="action-buttons">
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-primary"
+                            data-action="edit-permission"
+                            data-id="${escapeAttribute(id)}"
+                        >
+                            Edit
+                        </button>
+
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-danger"
+                            data-action="delete-permission"
+                            data-id="${escapeAttribute(id)}"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    function populateModuleFilter() {
+        const { moduleFilter } = getElements();
+
+        if (!moduleFilter) {
+            return;
+        }
+
+        const currentValue = moduleFilter.value;
+
+        const modules = [
             ...new Set(
                 permissions
                     .map(
-                        permission =>
+                        (permission) =>
                             permission.module ||
                             permission.module_name ||
                             permission.moduleName ||
                             ""
                     )
-                    .filter(
-                        module =>
-                            String(module).trim()
-                    )
-                    .map(
-                        module =>
-                            String(module).trim()
-                    )
+                    .map((module) => String(module).trim())
+                    .filter(Boolean)
             )
-        ]
-        .sort(
-            (a, b) =>
-                a.localeCompare(b)
-        );
+        ].sort((a, b) => a.localeCompare(b));
 
-
-    const existingOptions =
-        Array.from(
-            moduleFilter.options
-        )
-        .map(
-            option =>
-                option.value
-        );
-
-
-    if (
-        existingOptions.length <= 1
-    ) {
-
-        moduleFilter.innerHTML =
-            `
-                <option value="">
-                    All Modules
-                </option>
-            ` +
-            modules
+        moduleFilter.innerHTML = `
+            <option value="">All Modules</option>
+            ${modules
                 .map(
-                    module =>
-                        `
-                            <option value="${escapeHtml(module.toLowerCase())}">
-                                ${escapeHtml(module)}
-                            </option>
-                        `
+                    (module) => `
+                        <option value="${escapeAttribute(
+                            module.toLowerCase()
+                        )}">
+                            ${escapeHtml(module)}
+                        </option>
+                    `
                 )
-                .join("");
+                .join("")}
+        `;
 
+        moduleFilter.value = currentValue;
     }
 
-
-    moduleFilter.value =
-        currentValue;
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| ADD PERMISSION
-|--------------------------------------------------------------------------
-*/
-
-function addPermission() {
-
-    window.location.href =
-        "permission-form.html";
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| EDIT PERMISSION
-|--------------------------------------------------------------------------
-*/
-
-function editPermission(
-    id
-) {
-
-    window.location.href =
-        `permission-form.html?id=${encodeURIComponent(id)}`;
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| VIEW PERMISSION
-|--------------------------------------------------------------------------
-*/
-
-function viewPermission(
-    id
-) {
-
-    window.location.href =
-        `permission-profile.html?id=${encodeURIComponent(id)}`;
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| DELETE PERMISSION
-|--------------------------------------------------------------------------
-*/
-
-async function deletePermission(
-    id
-) {
-
-    const permission =
-        permissions.find(
-            item =>
-                String(item.id) ===
-                String(id)
+    function addPermission() {
+        const page = document.querySelector(
+            "[data-permission-form]"
         );
 
-
-    const permissionName =
-        permission
-            ? (
-                permission.name ||
-                permission.permission_name ||
-                permission.permissionName ||
-                "this permission"
-            )
-            : "this permission";
-
-
-    const confirmed =
-        window.confirm(
-            `Are you sure you want to delete "${permissionName}"?`
-        );
-
-
-    if (!confirmed) {
-        return;
-    }
-
-
-    try {
-
-        await apiRequest(
-            `/permissions/${id}`,
-            {
-                method: "DELETE"
-            }
-        );
-
+        if (page) {
+            page.scrollIntoView({
+                behavior: "smooth"
+            });
+            return;
+        }
 
         showMessage(
-            "Permission deleted successfully.",
-            "success"
-        );
-
-
-        await loadPermissions();
-
-
-    } catch (error) {
-
-        console.error(
-            "Delete permission error:",
-            error
-        );
-
-
-        showMessage(
-            error.message ||
-            "Unable to delete permission.",
+            "Permission creation form is not available on this page.",
             "error"
         );
-
     }
 
-}
+    function editPermission(id) {
+        const permission = permissions.find(
+            (item) =>
+                String(
+                    item.id ??
+                    item.permission_id
+                ) === String(id)
+        );
 
+        if (!permission) {
+            return;
+        }
 
-/*
-|--------------------------------------------------------------------------
-| SEARCH
-|--------------------------------------------------------------------------
-*/
+        const form = document.querySelector(
+            "#permissionForm"
+        );
 
-if (searchInput) {
+        if (!form) {
+            showMessage(
+                "Permission editing form is not available on this page.",
+                "error"
+            );
+            return;
+        }
 
-    searchInput.addEventListener(
-        "input",
-        renderPermissions
-    );
+        form.dataset.editingId = id;
 
-}
+        setFormValue(
+            form,
+            "#name",
+            permission.name ||
+            permission.permission_name ||
+            permission.permissionName
+        );
 
+        setFormValue(
+            form,
+            "#description",
+            permission.description
+        );
 
-/*
-|--------------------------------------------------------------------------
-| MODULE FILTER
-|--------------------------------------------------------------------------
-*/
+        setFormValue(
+            form,
+            "#module",
+            permission.module ||
+            permission.module_name ||
+            permission.moduleName
+        );
 
-if (moduleFilter) {
+        const submitButton =
+            form.querySelector(
+                "button[type='submit']"
+            );
 
-    moduleFilter.addEventListener(
-        "change",
-        renderPermissions
-    );
+        if (submitButton) {
+            submitButton.textContent =
+                "Update Permission";
+        }
 
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| LOADING STATE
-|--------------------------------------------------------------------------
-*/
-
-function showLoading() {
-
-    if (!tableBody) {
-        return;
+        form.scrollIntoView({
+            behavior: "smooth"
+        });
     }
 
+    async function deletePermission(id) {
+        const permission = permissions.find(
+            (item) =>
+                String(
+                    item.id ??
+                    item.permission_id
+                ) === String(id)
+        );
 
-    tableBody.innerHTML = `
-        <tr>
+        const name =
+            permission?.name ||
+            permission?.permission_name ||
+            permission?.permissionName ||
+            "this permission";
 
-            <td
-                colspan="5"
-                style="
-                    text-align:center;
-                    padding:30px;
-                "
-            >
-                Loading permissions...
-            </td>
+        if (
+            !window.confirm(
+                `Are you sure you want to delete "${name}"?`
+            )
+        ) {
+            return;
+        }
 
-        </tr>
-    `;
+        try {
+            await apiRequest(
+                `/permissions/${encodeURIComponent(id)}`,
+                {
+                    method: "DELETE"
+                }
+            );
 
-}
+            showMessage(
+                "Permission deleted successfully.",
+                "success"
+            );
 
+            await loadPermissions();
+        } catch (error) {
+            console.error(
+                "Delete permission error:",
+                error
+            );
 
-/*
-|--------------------------------------------------------------------------
-| EMPTY STATE
-|--------------------------------------------------------------------------
-*/
-
-function showEmpty(
-    text
-) {
-
-    if (!tableBody) {
-        return;
+            showMessage(
+                error.message ||
+                "Unable to delete permission.",
+                "error"
+            );
+        }
     }
 
+    function setFormValue(form, selector, value) {
+        const element = form.querySelector(selector);
 
-    tableBody.innerHTML = `
-        <tr>
-
-            <td
-                colspan="5"
-                style="
-                    text-align:center;
-                    padding:30px;
-                "
-            >
-                ${escapeHtml(text)}
-            </td>
-
-        </tr>
-    `;
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| FORMAT DATE
-|--------------------------------------------------------------------------
-*/
-
-function formatDate(
-    value
-) {
-
-    if (!value) {
-        return "-";
+        if (element) {
+            element.value = value ?? "";
+        }
     }
 
+    function showLoading() {
+        const { tableBody } = getElements();
 
-    const date =
-        new Date(value);
+        if (!tableBody) {
+            return;
+        }
 
-
-    if (
-        Number.isNaN(
-            date.getTime()
-        )
-    ) {
-
-        return "-";
-
+        tableBody.innerHTML = `
+            <tr>
+                <td
+                    colspan="5"
+                    style="text-align:center;padding:30px;"
+                >
+                    Loading permissions...
+                </td>
+            </tr>
+        `;
     }
 
+    function showEmpty(text) {
+        const { tableBody } = getElements();
 
-    return date.toLocaleDateString(
-        "en-NG",
-        {
+        if (!tableBody) {
+            return;
+        }
+
+        tableBody.innerHTML = `
+            <tr>
+                <td
+                    colspan="5"
+                    style="text-align:center;padding:30px;"
+                >
+                    ${escapeHtml(text)}
+                </td>
+            </tr>
+        `;
+    }
+
+    function formatDate(value) {
+        if (!value) {
+            return "-";
+        }
+
+        const date = new Date(value);
+
+        if (Number.isNaN(date.getTime())) {
+            return "-";
+        }
+
+        return date.toLocaleDateString("en-NG", {
             year: "numeric",
             month: "short",
             day: "numeric"
-        }
-    );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| ESCAPE HTML
-|--------------------------------------------------------------------------
-*/
-
-function escapeHtml(
-    value
-) {
-
-    return String(
-        value ?? ""
-    )
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
-        );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| ESCAPE JAVASCRIPT
-|--------------------------------------------------------------------------
-*/
-
-function escapeJs(
-    value
-) {
-
-    return String(
-        value ?? ""
-    )
-        .replace(
-            /\\/g,
-            "\\\\"
-        )
-        .replace(
-            /'/g,
-            "\\'"
-        )
-        .replace(
-            /"/g,
-            '\\"'
-        );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| GLOBAL FUNCTIONS
-|--------------------------------------------------------------------------
-*/
-
-window.loadPermissions =
-    loadPermissions;
-
-window.addPermission =
-    addPermission;
-
-window.editPermission =
-    editPermission;
-
-window.viewPermission =
-    viewPermission;
-
-window.deletePermission =
-    deletePermission;
-
-
-/*
-|--------------------------------------------------------------------------
-| INITIALISE
-|--------------------------------------------------------------------------
-*/
-
-document.addEventListener(
-    "DOMContentLoaded",
-    function() {
-
-        loadPermissions();
-
+        });
     }
-);
+
+    function escapeHtml(value) {
+        return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function escapeAttribute(value) {
+        return escapeHtml(value);
+    }
+
+    function setupEvents() {
+        const {
+            searchInput,
+            moduleFilter
+        } = getElements();
+
+        if (searchInput) {
+            searchInput.addEventListener(
+                "input",
+                renderPermissions
+            );
+        }
+
+        if (moduleFilter) {
+            moduleFilter.addEventListener(
+                "change",
+                renderPermissions
+            );
+        }
+
+        document.addEventListener(
+            "click",
+            async (event) => {
+                const button =
+                    event.target.closest(
+                        "[data-action]"
+                    );
+
+                if (!button) {
+                    return;
+                }
+
+                const action =
+                    button.dataset.action;
+
+                const id =
+                    button.dataset.id;
+
+                if (!id) {
+                    return;
+                }
+
+                if (
+                    action ===
+                    "edit-permission"
+                ) {
+                    editPermission(id);
+                }
+
+                if (
+                    action ===
+                    "delete-permission"
+                ) {
+                    await deletePermission(id);
+                }
+            }
+        );
+    }
+
+    window.loadPermissions = loadPermissions;
+    window.addPermission = addPermission;
+    window.editPermission = editPermission;
+    window.deletePermission = deletePermission;
+
+    window.PermissionsPage = {
+        initialize: loadPermissions,
+        loadPermissions,
+        addPermission,
+        editPermission,
+        deletePermission
+    };
+
+    function initialize() {
+        setupEvents();
+        loadPermissions();
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener(
+            "DOMContentLoaded",
+            initialize,
+            { once: true }
+        );
+    } else {
+        initialize();
+    }
+})();

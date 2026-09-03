@@ -1,101 +1,143 @@
-/*
-|--------------------------------------------------------------------------
-| GUARDIANS.JS
-|--------------------------------------------------------------------------
-| Handles student guardians / parents.
-|--------------------------------------------------------------------------
-*/
+"use strict";
 
 (function () {
-    "use strict";
+    const API_BASE = "/api";
 
     let guardians = [];
     let students = [];
     let editingGuardianId = null;
 
+    function getToken() {
+        return (
+            localStorage.getItem("school_management_token") ||
+            sessionStorage.getItem("school_management_token") ||
+            localStorage.getItem("token") ||
+            sessionStorage.getItem("token") ||
+            localStorage.getItem("accessToken") ||
+            sessionStorage.getItem("accessToken") ||
+            ""
+        );
+    }
 
-    /*
-    |--------------------------------------------------------------------------
-    | API HELPER
-    |--------------------------------------------------------------------------
-    */
+    async function request(endpoint, options = {}) {
+        let url = endpoint;
 
-    async function request(url, options = {}) {
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            if (!url.startsWith("/")) {
+                url = "/" + url;
+            }
 
-        if (
-            window.API &&
-            typeof window.API.request === "function"
-        ) {
-            return window.API.request(url, options);
+            if (!url.startsWith(API_BASE + "/")) {
+                url = API_BASE + url;
+            }
         }
 
-        const response = await fetch(url, {
-            credentials: "include",
-            ...options,
-            headers: {
-                "Content-Type": "application/json",
-                ...(options.headers || {})
+        const headers = {
+            ...(options.headers || {})
+        };
+
+        const token = getToken();
+
+        if (token) {
+            headers.Authorization = `Bearer ${token}`;
+        }
+
+        if (
+            options.body &&
+            !(options.body instanceof FormData) &&
+            !headers["Content-Type"] &&
+            !headers["content-type"]
+        ) {
+            headers["Content-Type"] = "application/json";
+        }
+
+        let response;
+
+        try {
+            response = await fetch(url, {
+                ...options,
+                headers
+            });
+        } catch (error) {
+            console.error("Guardian API request failed:", error);
+            throw new Error(
+                "Unable to connect to the server. Please check your connection."
+            );
+        }
+
+        if (response.status === 401) {
+            localStorage.removeItem("school_management_token");
+            localStorage.removeItem("school_management_user");
+            sessionStorage.removeItem("school_management_token");
+            sessionStorage.removeItem("school_management_user");
+
+            if (!window.location.pathname.endsWith("/login.html")) {
+                window.location.href = "/pages/login.html";
             }
-        });
+
+            throw new Error("Authentication required.");
+        }
+
+        if (response.status === 403) {
+            throw new Error(
+                "You do not have permission to perform this action."
+            );
+        }
 
         const contentType =
             response.headers.get("content-type") || "";
 
-        const data =
-            contentType.includes("application/json")
-                ? await response.json()
-                : await response.text();
+        let data;
+
+        if (contentType.includes("application/json")) {
+            data = await response.json();
+        } else {
+            data = await response.text();
+        }
 
         if (!response.ok) {
-            throw new Error(
-                data?.message ||
-                data?.error ||
-                "Request failed."
-            );
+            let message = "Request failed.";
+
+            if (data && typeof data === "object") {
+                message =
+                    data.message ||
+                    data.error ||
+                    message;
+            } else if (
+                typeof data === "string" &&
+                data.trim()
+            ) {
+                message = data;
+            }
+
+            throw new Error(message);
         }
 
         return data;
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | INITIALIZE
-    |--------------------------------------------------------------------------
-    */
-
     async function initialize() {
-
         setupEvents();
 
         await loadStudents();
-
         await loadGuardians();
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | EVENTS
-    |--------------------------------------------------------------------------
-    */
-
     function setupEvents() {
-
         const form =
             document.querySelector("#guardianForm") ||
             document.querySelector(
                 "form[data-guardian-form]"
             );
 
-        if (form) {
-
+        if (form && !form.dataset.guardianInitialized) {
             form.addEventListener(
                 "submit",
                 handleSubmit
             );
-        }
 
+            form.dataset.guardianInitialized = "true";
+        }
 
         const search =
             document.querySelector("#guardianSearch") ||
@@ -103,12 +145,11 @@
                 "[name='guardian_search']"
             );
 
-        if (search) {
-
+        if (search && !search.dataset.guardianSearchInitialized) {
             const handler =
                 window.App &&
-                typeof App.debounce === "function"
-                    ? App.debounce(
+                typeof window.App.debounce === "function"
+                    ? window.App.debounce(
                         renderGuardians,
                         300
                     )
@@ -118,44 +159,35 @@
                 "input",
                 handler
             );
+
+            search.dataset.guardianSearchInitialized = "true";
         }
 
+        if (!document.body.dataset.guardianActionsInitialized) {
+            document.addEventListener(
+                "click",
+                handleActionClick
+            );
 
-        document.addEventListener(
-            "click",
-            handleActionClick
-        );
+            document.body.dataset.guardianActionsInitialized = "true";
+        }
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | LOAD STUDENTS
-    |--------------------------------------------------------------------------
-    */
-
     async function loadStudents() {
-
         try {
-
-            const data =
-                await request(
-                    "/api/students"
-                );
+            const data = await request("/students");
 
             students =
                 Array.isArray(data)
                     ? data
-                    : (
-                        data?.data ||
-                        data?.students ||
-                        []
-                    );
+                    : Array.isArray(data?.data)
+                        ? data.data
+                        : Array.isArray(data?.students)
+                            ? data.students
+                            : [];
 
             populateStudentSelect();
-
         } catch (error) {
-
             console.error(
                 "Unable to load students:",
                 error
@@ -165,38 +197,25 @@
         }
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | LOAD GUARDIANS
-    |--------------------------------------------------------------------------
-    */
-
     async function loadGuardians() {
-
         showLoading();
 
         try {
-
-            const data =
-                await request(
-                    "/api/guardians"
-                );
+            const data = await request("/guardians");
 
             guardians =
                 Array.isArray(data)
                     ? data
-                    : (
-                        data?.data ||
-                        data?.guardians ||
-                        data?.records ||
-                        []
-                    );
+                    : Array.isArray(data?.data)
+                        ? data.data
+                        : Array.isArray(data?.guardians)
+                            ? data.guardians
+                            : Array.isArray(data?.records)
+                                ? data.records
+                                : [];
 
             renderGuardians();
-
         } catch (error) {
-
             console.error(
                 "Unable to load guardians:",
                 error
@@ -211,15 +230,7 @@
         }
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | POPULATE STUDENT SELECT
-    |--------------------------------------------------------------------------
-    */
-
     function populateStudentSelect() {
-
         const select =
             document.querySelector("#studentId") ||
             document.querySelector("#student-id") ||
@@ -231,136 +242,104 @@
             return;
         }
 
-
-        const currentValue =
-            select.value;
-
+        const currentValue = select.value;
 
         select.innerHTML =
-            `<option value="">
-                Select student
-            </option>`;
-
+            `<option value="">Select student</option>`;
 
         students.forEach(function (student) {
-
-            const option =
-                document.createElement(
-                    "option"
-                );
-
-
-            option.value =
+            const id =
                 student.id ||
                 student.student_id;
 
+            if (!id) {
+                return;
+            }
 
+            const option =
+                document.createElement("option");
+
+            option.value = id;
             option.textContent =
                 getStudentName(student);
 
-
-            select.appendChild(
-                option
-            );
+            select.appendChild(option);
         });
 
-
         if (currentValue) {
-            select.value =
-                currentValue;
+            select.value = currentValue;
         }
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | RENDER GUARDIANS
-    |--------------------------------------------------------------------------
-    */
-
     function renderGuardians() {
-
         const container =
-            document.querySelector(
-                "#guardiansTableBody"
-            ) ||
-            document.querySelector(
-                "#guardianTableBody"
-            ) ||
+            document.querySelector("#guardiansTableBody") ||
+            document.querySelector("#guardianTableBody") ||
             document.querySelector(
                 "tbody[data-guardians-body]"
             );
-
 
         if (!container) {
             return;
         }
 
-
         const search =
             getValue(
                 "#guardianSearch",
                 "[name='guardian_search']"
-            ).toLowerCase();
+            )
+                .trim()
+                .toLowerCase();
 
+        const records =
+            search
+                ? guardians.filter(function (guardian) {
+                    const guardianName =
+                        getGuardianName(
+                            guardian
+                        ).toLowerCase();
 
-        let records =
-            guardians;
+                    const phone =
+                        String(
+                            guardian.phone ||
+                            guardian.phone_number ||
+                            ""
+                        ).toLowerCase();
 
+                    const email =
+                        String(
+                            guardian.email ||
+                            ""
+                        ).toLowerCase();
 
-        if (search) {
+                    const studentName =
+                        getStudentName(
+                            guardian
+                        ).toLowerCase();
 
-            records =
-                guardians.filter(
-                    function (guardian) {
+                    const admissionNumber =
+                        String(
+                            guardian.admission_number ||
+                            guardian.admissionNumber ||
+                            ""
+                        ).toLowerCase();
 
-                        const guardianName =
-                            getGuardianName(
-                                guardian
-                            ).toLowerCase();
-
-
-                        const phone =
-                            String(
-                                guardian.phone ||
-                                guardian.phone_number ||
-                                ""
-                            ).toLowerCase();
-
-
-                        const email =
-                            String(
-                                guardian.email ||
-                                ""
-                            ).toLowerCase();
-
-
-                        const studentName =
-                            getStudentName(
-                                guardian
-                            ).toLowerCase();
-
-
-                        return (
-                            guardianName.includes(search) ||
-                            phone.includes(search) ||
-                            email.includes(search) ||
-                            studentName.includes(search)
-                        );
-                    }
-                );
-        }
-
+                    return (
+                        guardianName.includes(search) ||
+                        phone.includes(search) ||
+                        email.includes(search) ||
+                        studentName.includes(search) ||
+                        admissionNumber.includes(search)
+                    );
+                })
+                : guardians;
 
         if (!records.length) {
-
             container.innerHTML = `
                 <tr>
                     <td colspan="9">
                         <div class="students-empty">
-                            <div class="students-empty-icon">
-                                👤
-                            </div>
+                            <div class="students-empty-icon">👤</div>
                             <h3>No guardians found</h3>
                             <p>
                                 No parent or guardian records are available.
@@ -373,78 +352,71 @@
             return;
         }
 
-
         container.innerHTML =
             records
                 .map(renderGuardianRow)
                 .join("");
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | GUARDIAN ROW
-    |--------------------------------------------------------------------------
-    */
-
     function renderGuardianRow(guardian) {
-
         const id =
             guardian.id ||
             guardian.guardian_id;
 
-
         const guardianName =
             getGuardianName(guardian);
 
-
         const studentName =
             getStudentName(guardian);
-
 
         const relationship =
             guardian.relationship ||
             guardian.relation ||
             "-";
 
-
         const phone =
             guardian.phone ||
             guardian.phone_number ||
             "-";
 
-
         const email =
             guardian.email ||
             "-";
-
 
         const occupation =
             guardian.occupation ||
             "-";
 
-
         const address =
             guardian.address ||
+            guardian.residential_address ||
             "-";
 
+        const status =
+            String(
+                guardian.status ||
+                "active"
+            ).toLowerCase();
 
         return `
             <tr>
-
                 <td>
                     <div class="student-name">
-
                         <div class="student-avatar">
-                            ${getInitials(guardianName)}
+                            ${escapeHtml(
+                                getInitials(
+                                    guardianName
+                                )
+                            )}
                         </div>
 
                         <div class="student-name-text">
                             <strong>
-                                ${escapeHtml(guardianName)}
+                                ${escapeHtml(
+                                    guardianName
+                                )}
                             </strong>
                         </div>
-
                     </div>
                 </td>
 
@@ -473,14 +445,15 @@
                 </td>
 
                 <td>
-                    <span class="student-status active">
-                        Active
+                    <span class="student-status ${escapeAttribute(status)}">
+                        ${escapeHtml(
+                            formatStatus(status)
+                        )}
                     </span>
                 </td>
 
                 <td>
                     <div class="student-actions">
-
                         <button
                             type="button"
                             class="student-action-btn"
@@ -500,83 +473,62 @@
                         >
                             ×
                         </button>
-
                     </div>
                 </td>
-
             </tr>
         `;
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | SUBMIT
-    |--------------------------------------------------------------------------
-    */
-
     async function handleSubmit(event) {
-
         event.preventDefault();
 
-
-        const form =
-            event.currentTarget;
-
-
-        const data =
-            formToObject(form);
-
+        const form = event.currentTarget;
+        const data = formToObject(form);
 
         if (!data.student_id) {
-
             notify(
                 "Please select a student.",
                 "error"
             );
-
             return;
         }
-
 
         const firstName =
             data.first_name ||
             data.firstname ||
             "";
 
-
         const lastName =
             data.last_name ||
             data.lastname ||
             "";
 
+        const guardianName =
+            data.name ||
+            data.full_name ||
+            "";
 
         if (
             !firstName &&
             !lastName &&
-            !data.name &&
-            !data.full_name
+            !guardianName
         ) {
-
             notify(
                 "Please enter the guardian's name.",
                 "error"
             );
-
             return;
         }
 
-
         try {
-
             if (editingGuardianId) {
-
                 await request(
-                    `/api/guardians/${editingGuardianId}`,
+                    `/guardians/${encodeURIComponent(
+                        editingGuardianId
+                    )}`,
                     {
                         method: "PUT",
-                        body:
-                            JSON.stringify(data)
+                        body: JSON.stringify(data)
                     }
                 );
 
@@ -584,15 +536,12 @@
                     "Guardian updated successfully.",
                     "success"
                 );
-
             } else {
-
                 await request(
-                    "/api/guardians",
+                    "/guardians",
                     {
                         method: "POST",
-                        body:
-                            JSON.stringify(data)
+                        body: JSON.stringify(data)
                     }
                 );
 
@@ -602,13 +551,9 @@
                 );
             }
 
-
             resetForm();
-
             await loadGuardians();
-
         } catch (error) {
-
             console.error(
                 "Guardian save failed:",
                 error
@@ -622,35 +567,20 @@
         }
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | EDIT GUARDIAN
-    |--------------------------------------------------------------------------
-    */
-
     function editGuardian(id) {
-
         const guardian =
-            guardians.find(
-                function (item) {
-
-                    return String(
-                        item.id ||
-                        item.guardian_id
-                    ) === String(id);
-                }
-            );
-
+            guardians.find(function (item) {
+                return String(
+                    item.id ||
+                    item.guardian_id
+                ) === String(id);
+            });
 
         if (!guardian) {
             return;
         }
 
-
-        editingGuardianId =
-            id;
-
+        editingGuardianId = id;
 
         setFormValue(
             "#studentId",
@@ -658,20 +588,11 @@
             guardian.studentId
         );
 
-
         setFormValue(
             "#firstName",
             guardian.first_name ||
             guardian.firstName
         );
-
-
-        setFormValue(
-            "#lastName",
-            guardian.last_name ||
-            guardian.lastName
-        );
-
 
         setFormValue(
             "#middleName",
@@ -679,13 +600,18 @@
             guardian.middleName
         );
 
+        setFormValue(
+            "#lastName",
+            guardian.last_name ||
+            guardian.lastName
+        );
 
         setFormValue(
             "#name",
             guardian.name ||
-            guardian.full_name
+            guardian.full_name ||
+            guardian.guardian_name
         );
-
 
         setFormValue(
             "#relationship",
@@ -693,31 +619,27 @@
             guardian.relation
         );
 
-
         setFormValue(
             "#phone",
             guardian.phone ||
             guardian.phone_number
         );
 
-
         setFormValue(
             "#email",
             guardian.email
         );
-
 
         setFormValue(
             "#occupation",
             guardian.occupation
         );
 
-
         setFormValue(
             "#address",
-            guardian.address
+            guardian.address ||
+            guardian.residential_address
         );
-
 
         setFormValue(
             "#isPrimary",
@@ -726,50 +648,48 @@
             false
         );
 
-
         updateFormMode(
             "Update Guardian"
         );
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | DELETE GUARDIAN
-    |--------------------------------------------------------------------------
-    */
-
     async function deleteGuardian(id) {
+        const guardian =
+            guardians.find(function (item) {
+                return String(
+                    item.id ||
+                    item.guardian_id
+                ) === String(id);
+            });
+
+        const name =
+            guardian
+                ? getGuardianName(guardian)
+                : "this guardian";
 
         if (
             !window.confirm(
-                "Are you sure you want to delete this guardian?"
+                `Are you sure you want to delete "${name}"?`
             )
         ) {
             return;
         }
 
-
         try {
-
             await request(
-                `/api/guardians/${id}`,
+                `/guardians/${encodeURIComponent(id)}`,
                 {
                     method: "DELETE"
                 }
             );
-
 
             notify(
                 "Guardian deleted successfully.",
                 "success"
             );
 
-
             await loadGuardians();
-
         } catch (error) {
-
             console.error(
                 "Guardian deletion failed:",
                 error
@@ -783,143 +703,86 @@
         }
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | ACTION CLICK
-    |--------------------------------------------------------------------------
-    */
-
     async function handleActionClick(event) {
-
         const button =
             event.target.closest(
                 "[data-action]"
             );
 
-
         if (!button) {
             return;
         }
-
 
         const action =
             button.getAttribute(
                 "data-action"
             );
 
-
         const id =
             button.getAttribute(
                 "data-id"
             );
 
-
         if (!id) {
             return;
         }
 
-
-        if (
-            action ===
-            "edit-guardian"
-        ) {
-
+        if (action === "edit-guardian") {
             editGuardian(id);
-
             return;
         }
 
-
-        if (
-            action ===
-            "delete-guardian"
-        ) {
-
+        if (action === "delete-guardian") {
             await deleteGuardian(id);
         }
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | RESET FORM
-    |--------------------------------------------------------------------------
-    */
-
     function resetForm() {
-
-        editingGuardianId =
-            null;
-
+        editingGuardianId = null;
 
         const form =
             document.querySelector(
                 "#guardianForm"
             );
 
-
         if (form) {
             form.reset();
         }
-
 
         updateFormMode(
             "Add Guardian"
         );
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | UPDATE FORM BUTTON
-    |--------------------------------------------------------------------------
-    */
-
     function updateFormMode(text) {
-
         const form =
             document.querySelector(
                 "#guardianForm"
             );
 
-
         if (!form) {
             return;
         }
-
 
         const button =
             form.querySelector(
                 "button[type='submit']"
             );
 
-
         if (button) {
-            button.textContent =
-                text;
+            button.textContent = text;
         }
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | GET GUARDIAN NAME
-    |--------------------------------------------------------------------------
-    */
-
     function getGuardianName(guardian) {
-
         const fullName =
             guardian.name ||
             guardian.full_name ||
             guardian.guardian_name;
 
-
         if (fullName) {
-            return fullName;
+            return String(fullName);
         }
-
 
         return [
             guardian.first_name ||
@@ -939,46 +802,30 @@
             "Unknown Guardian";
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | GET STUDENT NAME
-    |--------------------------------------------------------------------------
-    */
-
     function getStudentName(record) {
-
-        if (
-            record.student_name
-        ) {
-            return record.student_name;
+        if (record.student_name) {
+            return String(
+                record.student_name
+            );
         }
 
-
-        if (
-            record.studentName
-        ) {
-            return record.studentName;
+        if (record.studentName) {
+            return String(
+                record.studentName
+            );
         }
-
 
         return [
             record.student_first_name ||
             record.studentFirstName ||
-            record.first_name ||
-            record.firstName ||
             "",
 
             record.student_middle_name ||
             record.studentMiddleName ||
-            record.middle_name ||
-            record.middleName ||
             "",
 
             record.student_last_name ||
             record.studentLastName ||
-            record.last_name ||
-            record.lastName ||
             ""
         ]
             .filter(Boolean)
@@ -986,140 +833,80 @@
             "Unknown Student";
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | INITIALS
-    |--------------------------------------------------------------------------
-    */
-
     function getInitials(name) {
-
         if (
             window.App &&
-            typeof App.getInitials ===
-            "function"
+            typeof window.App.getInitials === "function"
         ) {
-            return App.getInitials(name);
+            return window.App.getInitials(name);
         }
 
-
         return String(name)
-            .split(" ")
+            .trim()
+            .split(/\s+/)
             .filter(Boolean)
             .slice(0, 2)
-            .map(
-                word =>
-                    word
-                        .charAt(0)
-                        .toUpperCase()
-            )
+            .map(function (word) {
+                return word
+                    .charAt(0)
+                    .toUpperCase();
+            })
             .join("");
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | FORM TO OBJECT
-    |--------------------------------------------------------------------------
-    */
-
     function formToObject(form) {
-
         const formData =
             new FormData(form);
 
-
         const data = {};
 
+        formData.forEach(function (value, key) {
+            data[key] = value;
+        });
 
-        formData.forEach(
-            function (value, key) {
-
-                data[key] =
-                    value;
-            }
-        );
-
+        form.querySelectorAll(
+            "input[type='checkbox']"
+        ).forEach(function (checkbox) {
+            data[checkbox.name] =
+                checkbox.checked;
+        });
 
         return data;
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | SET FORM VALUE
-    |--------------------------------------------------------------------------
-    */
-
-    function setFormValue(
-        selector,
-        value
-    ) {
-
+    function setFormValue(selector, value) {
         const element =
-            document.querySelector(
-                selector
-            );
-
+            document.querySelector(selector);
 
         if (!element) {
             return;
         }
 
-
-        if (
-            element.type ===
-            "checkbox"
-        ) {
-
+        if (element.type === "checkbox") {
             element.checked =
                 Boolean(value);
-
         } else {
-
             element.value =
                 value ?? "";
         }
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | GET VALUE
-    |--------------------------------------------------------------------------
-    */
-
     function getValue(...selectors) {
-
-        for (
-            const selector of selectors
-        ) {
-
+        for (const selector of selectors) {
             const element =
                 document.querySelector(
                     selector
                 );
-
 
             if (element) {
                 return element.value || "";
             }
         }
 
-
         return "";
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | LOADING
-    |--------------------------------------------------------------------------
-    */
-
     function showLoading() {
-
         const container =
             document.querySelector(
                 "#guardiansTableBody"
@@ -1131,35 +918,23 @@
                 "tbody[data-guardians-body]"
             );
 
-
         if (!container) {
             return;
         }
-
 
         container.innerHTML = `
             <tr>
                 <td colspan="9">
                     <div class="students-loading">
                         <div class="students-loading-spinner"></div>
-                        <p>
-                            Loading guardians...
-                        </p>
+                        <p>Loading guardians...</p>
                     </div>
                 </td>
             </tr>
         `;
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | ERROR
-    |--------------------------------------------------------------------------
-    */
-
     function showError(message) {
-
         const container =
             document.querySelector(
                 "#guardiansTableBody"
@@ -1171,144 +946,89 @@
                 "tbody[data-guardians-body]"
             );
 
-
         if (!container) {
             return;
         }
-
 
         container.innerHTML = `
             <tr>
                 <td colspan="9">
                     <div class="students-empty">
                         <h3>Unable to load guardians</h3>
-                        <p>
-                            ${escapeHtml(message)}
-                        </p>
+                        <p>${escapeHtml(message)}</p>
                     </div>
                 </td>
             </tr>
         `;
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | NOTIFICATION
-    |--------------------------------------------------------------------------
-    */
-
     function notify(
         message,
         type = "success"
     ) {
-
         if (
             typeof window.showNotification ===
             "function"
         ) {
-
             window.showNotification(
                 message,
                 type
             );
-
             return;
         }
-
 
         let container =
             document.querySelector(
                 "#notification-container"
             );
 
-
         if (!container) {
-
             container =
-                document.createElement(
-                    "div"
-                );
+                document.createElement("div");
 
             container.id =
                 "notification-container";
 
-            container.style.position =
-                "fixed";
-
-            container.style.top =
-                "20px";
-
-            container.style.right =
-                "20px";
-
-            container.style.zIndex =
-                "9999";
+            container.style.position = "fixed";
+            container.style.top = "20px";
+            container.style.right = "20px";
+            container.style.zIndex = "9999";
 
             document.body.appendChild(
                 container
             );
         }
 
-
         const notification =
-            document.createElement(
-                "div"
-            );
-
+            document.createElement("div");
 
         notification.className =
             `alert alert-${type}`;
 
-
         notification.textContent =
             message;
 
-
         notification.style.marginBottom =
             "10px";
-
 
         container.appendChild(
             notification
         );
 
-
-        setTimeout(
-            function () {
-                notification.remove();
-            },
-            4000
-        );
+        setTimeout(function () {
+            notification.remove();
+        }, 4000);
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | ESCAPE HTML
-    |--------------------------------------------------------------------------
-    */
-
     function escapeHtml(value) {
-
-        if (
-            value === null ||
-            value === undefined
-        ) {
-            return "";
-        }
-
-
         if (
             window.App &&
-            typeof App.escapeHtml ===
-            "function"
+            typeof window.App.escapeHtml === "function"
         ) {
-            return App.escapeHtml(value);
+            return window.App.escapeHtml(value);
         }
 
-
-        return String(value)
+        return String(value ?? "")
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;")
@@ -1316,24 +1036,27 @@
             .replace(/'/g, "&#039;");
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | ESCAPE ATTRIBUTE
-    |--------------------------------------------------------------------------
-    */
-
     function escapeAttribute(value) {
-
         return escapeHtml(value);
     }
 
+    function formatStatus(status) {
+        const normalized =
+            String(status || "active")
+                .replace(/_/g, " ")
+                .trim();
 
-    /*
-    |--------------------------------------------------------------------------
-    | EXPORT
-    |--------------------------------------------------------------------------
-    */
+        if (!normalized) {
+            return "Active";
+        }
+
+        return normalized
+            .charAt(0)
+            .toUpperCase() +
+            normalized
+                .slice(1)
+                .toLowerCase();
+    }
 
     window.GuardiansPage = {
         initialize,
@@ -1344,26 +1067,13 @@
         resetForm
     };
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | START
-    |--------------------------------------------------------------------------
-    */
-
-    if (
-        document.readyState ===
-        "loading"
-    ) {
-
+    if (document.readyState === "loading") {
         document.addEventListener(
             "DOMContentLoaded",
-            initialize
+            initialize,
+            { once: true }
         );
-
     } else {
-
         initialize();
     }
-
 })();

@@ -1,22 +1,30 @@
-const { query } = require("../config/database");
+```javascript
+const { query, pool } = require("../config/database");
 
 /*
 |--------------------------------------------------------------------------
 | Attendance Model
 |--------------------------------------------------------------------------
+| Uses the actual attendance schema:
 |
-| Handles student attendance records.
-|
+| academic_session_id
+| term_id
+| class_id
+| class_arm_id
+| student_id
+| attendance_date
+| status
+| remarks
+| recorded_by
 |--------------------------------------------------------------------------
 */
 
 
 /*
 |--------------------------------------------------------------------------
-| Record Attendance
+| RECORD ATTENDANCE
 |--------------------------------------------------------------------------
 */
-
 async function recordAttendance({
     schoolId,
     studentId,
@@ -29,35 +37,28 @@ async function recordAttendance({
     remarks = null,
     recordedBy = null
 }) {
+    if (!schoolId) throw new Error("School ID is required.");
+    if (!studentId) throw new Error("Student ID is required.");
+    if (!classId) throw new Error("Class ID is required.");
+    if (!sessionId) throw new Error("Academic session is required.");
+    if (!termId) throw new Error("Term is required.");
+    if (!attendanceDate) throw new Error("Attendance date is required.");
+    if (!status) throw new Error("Attendance status is required.");
 
-    if (!schoolId) {
-        throw new Error("School ID is required.");
+    const allowedStatuses = [
+        "present",
+        "absent",
+        "late",
+        "excused"
+    ];
+
+    const normalizedStatus = String(status).toLowerCase();
+
+    if (!allowedStatuses.includes(normalizedStatus)) {
+        throw new Error(
+            `Invalid attendance status. Allowed values: ${allowedStatuses.join(", ")}.`
+        );
     }
-
-    if (!studentId) {
-        throw new Error("Student ID is required.");
-    }
-
-    if (!classId) {
-        throw new Error("Class ID is required.");
-    }
-
-    if (!sessionId) {
-        throw new Error("Academic session is required.");
-    }
-
-    if (!termId) {
-        throw new Error("Term is required.");
-    }
-
-    if (!attendanceDate) {
-        throw new Error("Attendance date is required.");
-    }
-
-    if (!status) {
-        throw new Error("Attendance status is required.");
-    }
-
 
     const sql = `
         INSERT INTO attendance (
@@ -65,7 +66,7 @@ async function recordAttendance({
             student_id,
             class_id,
             class_arm_id,
-            session_id,
+            academic_session_id,
             term_id,
             attendance_date,
             status,
@@ -90,41 +91,28 @@ async function recordAttendance({
             term_id
         )
         DO UPDATE SET
-
             class_id = EXCLUDED.class_id,
-
             class_arm_id = EXCLUDED.class_arm_id,
-
-            session_id = EXCLUDED.session_id,
-
+            academic_session_id = EXCLUDED.academic_session_id,
             status = EXCLUDED.status,
-
             remarks = EXCLUDED.remarks,
-
             recorded_by = EXCLUDED.recorded_by,
-
-            updated_at = NOW()
-
+            updated_at = CURRENT_TIMESTAMP
         RETURNING *
     `;
 
-
-    const result = await query(
-        sql,
-        [
-            schoolId,
-            studentId,
-            classId,
-            classArmId,
-            sessionId,
-            termId,
-            attendanceDate,
-            status,
-            remarks,
-            recordedBy
-        ]
-    );
-
+    const result = await query(sql, [
+        schoolId,
+        studentId,
+        classId,
+        classArmId,
+        sessionId,
+        termId,
+        attendanceDate,
+        normalizedStatus,
+        remarks,
+        recordedBy
+    ]);
 
     return result.rows[0];
 }
@@ -132,42 +120,21 @@ async function recordAttendance({
 
 /*
 |--------------------------------------------------------------------------
-| Record Bulk Attendance
+| RECORD BULK ATTENDANCE
 |--------------------------------------------------------------------------
 */
-
-async function recordBulkAttendance(
-    records
-) {
-
-    if (
-        !Array.isArray(records) ||
-        records.length === 0
-    ) {
-        throw new Error(
-            "Attendance records are required."
-        );
+async function recordBulkAttendance(records) {
+    if (!Array.isArray(records) || records.length === 0) {
+        throw new Error("Attendance records are required.");
     }
-
 
     const results = [];
 
-
-    for (
-        const record of records
-    ) {
-
-        const attendance =
-            await recordAttendance(
-                record
-            );
-
-
+    for (const record of records) {
         results.push(
-            attendance
+            await recordAttendance(record)
         );
     }
-
 
     return results;
 }
@@ -175,26 +142,20 @@ async function recordBulkAttendance(
 
 /*
 |--------------------------------------------------------------------------
-| Find Attendance By ID
+| FIND ATTENDANCE BY ID
 |--------------------------------------------------------------------------
 */
-
 async function findAttendanceById(
     attendanceId,
     schoolId
 ) {
-
     const sql = `
         SELECT
-
             a.*,
 
             s.admission_number,
-
             s.first_name,
-
             s.middle_name,
-
             s.last_name,
 
             c.class_name,
@@ -213,21 +174,15 @@ async function findAttendanceById(
             ON ca.id = a.class_arm_id
 
         WHERE a.id = $1
-
           AND a.school_id = $2
 
         LIMIT 1
     `;
 
-
-    const result = await query(
-        sql,
-        [
-            attendanceId,
-            schoolId
-        ]
-    );
-
+    const result = await query(sql, [
+        attendanceId,
+        schoolId
+    ]);
 
     return result.rows[0] || null;
 }
@@ -235,10 +190,9 @@ async function findAttendanceById(
 
 /*
 |--------------------------------------------------------------------------
-| Get Student Attendance
+| GET STUDENT ATTENDANCE
 |--------------------------------------------------------------------------
 */
-
 async function getStudentAttendance({
     schoolId,
     studentId,
@@ -249,10 +203,8 @@ async function getStudentAttendance({
     limit = 100,
     offset = 0
 }) {
-
     let sql = `
         SELECT
-
             a.*,
 
             c.class_name,
@@ -268,29 +220,23 @@ async function getStudentAttendance({
             ON ca.id = a.class_arm_id
 
         WHERE a.school_id = $1
-
           AND a.student_id = $2
     `;
-
 
     const values = [
         schoolId,
         studentId
     ];
 
-
     if (sessionId) {
-
         values.push(sessionId);
 
         sql += `
-            AND a.session_id = $${values.length}
+            AND a.academic_session_id = $${values.length}
         `;
     }
 
-
     if (termId) {
-
         values.push(termId);
 
         sql += `
@@ -298,39 +244,28 @@ async function getStudentAttendance({
         `;
     }
 
-
     if (startDate) {
-
         values.push(startDate);
 
         sql += `
-            AND a.attendance_date >=
-                $${values.length}
+            AND a.attendance_date >= $${values.length}
         `;
     }
 
-
     if (endDate) {
-
         values.push(endDate);
 
         sql += `
-            AND a.attendance_date <=
-                $${values.length}
+            AND a.attendance_date <= $${values.length}
         `;
     }
-
 
     values.push(limit);
 
     sql += `
-        ORDER BY
-
-            a.attendance_date DESC
-
+        ORDER BY a.attendance_date DESC
         LIMIT $${values.length}
     `;
-
 
     values.push(offset);
 
@@ -338,12 +273,7 @@ async function getStudentAttendance({
         OFFSET $${values.length}
     `;
 
-
-    const result = await query(
-        sql,
-        values
-    );
-
+    const result = await query(sql, values);
 
     return result.rows;
 }
@@ -351,10 +281,9 @@ async function getStudentAttendance({
 
 /*
 |--------------------------------------------------------------------------
-| Get Class Attendance For Date
+| GET CLASS ATTENDANCE FOR DATE
 |--------------------------------------------------------------------------
 */
-
 async function getClassAttendance({
     schoolId,
     classId,
@@ -363,26 +292,20 @@ async function getClassAttendance({
     sessionId,
     termId
 }) {
-
     let sql = `
         SELECT
-
             s.id AS student_id,
 
             s.admission_number,
 
             s.first_name,
-
             s.middle_name,
-
             s.last_name,
 
             a.id AS attendance_id,
 
             a.status,
-
             a.remarks,
-
             a.attendance_date
 
         FROM students s
@@ -392,22 +315,18 @@ async function getClassAttendance({
 
         LEFT JOIN attendance a
             ON a.student_id = s.id
-
+           AND a.school_id = s.school_id
+           AND a.class_id = $2
            AND a.attendance_date = $4
-
+           AND a.academic_session_id = $5
            AND a.term_id = $6
 
         WHERE s.school_id = $1
-
+          AND se.school_id = $1
           AND se.class_id = $2
-
-          AND se.session_id = $5
-
-          AND se.term_id = $6
-
-          AND s.status = 'active'
+          AND se.academic_session_id = $5
+          AND s.status = 'Active'
     `;
-
 
     const values = [
         schoolId,
@@ -418,31 +337,28 @@ async function getClassAttendance({
         termId
     ];
 
-
     if (classArmId) {
-
         values[2] = classArmId;
 
         sql += `
             AND se.class_arm_id = $3
         `;
-    }
 
+        sql += `
+            AND (
+                a.class_arm_id = $3
+                OR a.class_arm_id IS NULL
+            )
+        `;
+    }
 
     sql += `
         ORDER BY
-
             s.last_name ASC,
-
             s.first_name ASC
     `;
 
-
-    const result = await query(
-        sql,
-        values
-    );
-
+    const result = await query(sql, values);
 
     return result.rows;
 }
@@ -450,27 +366,22 @@ async function getClassAttendance({
 
 /*
 |--------------------------------------------------------------------------
-| Get Attendance By Date
+| GET ATTENDANCE BY DATE
 |--------------------------------------------------------------------------
 */
-
 async function getAttendanceByDate(
     schoolId,
     attendanceDate,
     classId = null
 ) {
-
     let sql = `
         SELECT
-
             a.*,
 
             s.admission_number,
 
             s.first_name,
-
             s.middle_name,
-
             s.last_name,
 
             c.class_name,
@@ -489,19 +400,15 @@ async function getAttendanceByDate(
             ON ca.id = a.class_arm_id
 
         WHERE a.school_id = $1
-
           AND a.attendance_date = $2
     `;
-
 
     const values = [
         schoolId,
         attendanceDate
     ];
 
-
     if (classId) {
-
         values.push(classId);
 
         sql += `
@@ -509,23 +416,14 @@ async function getAttendanceByDate(
         `;
     }
 
-
     sql += `
         ORDER BY
-
             c.class_name ASC,
-
             s.last_name ASC,
-
             s.first_name ASC
     `;
 
-
-    const result = await query(
-        sql,
-        values
-    );
-
+    const result = await query(sql, values);
 
     return result.rows;
 }
@@ -533,60 +431,52 @@ async function getAttendanceByDate(
 
 /*
 |--------------------------------------------------------------------------
-| Update Attendance
+| UPDATE ATTENDANCE
 |--------------------------------------------------------------------------
 */
-
 async function updateAttendance(
     attendanceId,
     schoolId,
     data
 ) {
-
     const allowedFields = {
-
-        status:
-            "status",
-
-        remarks:
-            "remarks",
-
-        attendanceDate:
-            "attendance_date",
-
-        classId:
-            "class_id",
-
-        classArmId:
-            "class_arm_id",
-
-        sessionId:
-            "session_id",
-
-        termId:
-            "term_id"
-
+        status: "status",
+        remarks: "remarks",
+        attendanceDate: "attendance_date",
+        classId: "class_id",
+        classArmId: "class_arm_id",
+        sessionId: "academic_session_id",
+        termId: "term_id"
     };
 
-
     const updates = [];
-
     const values = [];
 
-
-    for (
-        const key of Object.keys(data)
-    ) {
-
+    for (const key of Object.keys(data)) {
         if (
             allowedFields[key] &&
             data[key] !== undefined
         ) {
+            let value = data[key];
 
-            values.push(
-                data[key]
-            );
+            if (key === "status") {
+                value = String(value).toLowerCase();
 
+                if (
+                    ![
+                        "present",
+                        "absent",
+                        "late",
+                        "excused"
+                    ].includes(value)
+                ) {
+                    throw new Error(
+                        "Invalid attendance status."
+                    );
+                }
+            }
+
+            values.push(value);
 
             updates.push(
                 `${allowedFields[key]} = $${values.length}`
@@ -594,48 +484,34 @@ async function updateAttendance(
         }
     }
 
-
     if (updates.length === 0) {
         throw new Error(
             "No valid fields supplied for update."
         );
     }
 
-
     values.push(attendanceId);
 
-    const attendanceIdPosition =
-        values.length;
-
+    const attendanceIdPosition = values.length;
 
     values.push(schoolId);
 
-    const schoolIdPosition =
-        values.length;
-
+    const schoolIdPosition = values.length;
 
     const sql = `
         UPDATE attendance
 
         SET
-
             ${updates.join(", ")},
-
-            updated_at = NOW()
+            updated_at = CURRENT_TIMESTAMP
 
         WHERE id = $${attendanceIdPosition}
-
           AND school_id = $${schoolIdPosition}
 
         RETURNING *
     `;
 
-
-    const result = await query(
-        sql,
-        values
-    );
-
+    const result = await query(sql, values);
 
     return result.rows[0] || null;
 }
@@ -643,34 +519,24 @@ async function updateAttendance(
 
 /*
 |--------------------------------------------------------------------------
-| Delete Attendance
+| DELETE ATTENDANCE
 |--------------------------------------------------------------------------
 */
-
 async function deleteAttendance(
     attendanceId,
     schoolId
 ) {
-
     const sql = `
         DELETE FROM attendance
-
         WHERE id = $1
-
           AND school_id = $2
-
         RETURNING *
     `;
 
-
-    const result = await query(
-        sql,
-        [
-            attendanceId,
-            schoolId
-        ]
-    );
-
+    const result = await query(sql, [
+        attendanceId,
+        schoolId
+    ]);
 
     return result.rows[0] || null;
 }
@@ -678,10 +544,9 @@ async function deleteAttendance(
 
 /*
 |--------------------------------------------------------------------------
-| Attendance Summary
+| STUDENT ATTENDANCE SUMMARY
 |--------------------------------------------------------------------------
 */
-
 async function getStudentAttendanceSummary({
     schoolId,
     studentId,
@@ -690,71 +555,58 @@ async function getStudentAttendanceSummary({
     startDate = null,
     endDate = null
 }) {
-
     let sql = `
         SELECT
-
-            COUNT(*)::INTEGER
-                AS total_days,
+            COUNT(*)::INTEGER AS total_days,
 
             COUNT(
                 CASE
-                    WHEN status = 'present'
+                    WHEN LOWER(status) = 'present'
                     THEN 1
                 END
-            )::INTEGER
-                AS present_days,
+            )::INTEGER AS present_days,
 
             COUNT(
                 CASE
-                    WHEN status = 'absent'
+                    WHEN LOWER(status) = 'absent'
                     THEN 1
                 END
-            )::INTEGER
-                AS absent_days,
+            )::INTEGER AS absent_days,
 
             COUNT(
                 CASE
-                    WHEN status = 'late'
+                    WHEN LOWER(status) = 'late'
                     THEN 1
                 END
-            )::INTEGER
-                AS late_days,
+            )::INTEGER AS late_days,
 
             COUNT(
                 CASE
-                    WHEN status = 'excused'
+                    WHEN LOWER(status) = 'excused'
                     THEN 1
                 END
-            )::INTEGER
-                AS excused_days
+            )::INTEGER AS excused_days
 
         FROM attendance
 
         WHERE school_id = $1
-
           AND student_id = $2
     `;
-
 
     const values = [
         schoolId,
         studentId
     ];
 
-
     if (sessionId) {
-
         values.push(sessionId);
 
         sql += `
-            AND session_id = $${values.length}
+            AND academic_session_id = $${values.length}
         `;
     }
 
-
     if (termId) {
-
         values.push(termId);
 
         sql += `
@@ -762,59 +614,39 @@ async function getStudentAttendanceSummary({
         `;
     }
 
-
     if (startDate) {
-
         values.push(startDate);
 
         sql += `
-            AND attendance_date >=
-                $${values.length}
+            AND attendance_date >= $${values.length}
         `;
     }
 
-
     if (endDate) {
-
         values.push(endDate);
 
         sql += `
-            AND attendance_date <=
-                $${values.length}
+            AND attendance_date <= $${values.length}
         `;
     }
 
-
-    const result = await query(
-        sql,
-        values
-    );
-
+    const result = await query(sql, values);
 
     const row = result.rows[0];
 
-
-    const totalDays =
-        Number(row.total_days);
-
-    const presentDays =
-        Number(row.present_days);
-
+    const totalDays = Number(row.total_days);
+    const presentDays = Number(row.present_days);
 
     return {
-
         totalDays,
 
         presentDays,
 
-        absentDays:
-            Number(row.absent_days),
+        absentDays: Number(row.absent_days),
 
-        lateDays:
-            Number(row.late_days),
+        lateDays: Number(row.late_days),
 
-        excusedDays:
-            Number(row.excused_days),
+        excusedDays: Number(row.excused_days),
 
         attendancePercentage:
             totalDays > 0
@@ -826,17 +658,15 @@ async function getStudentAttendanceSummary({
                     ).toFixed(2)
                 )
                 : 0
-
     };
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| Class Attendance Summary
+| CLASS ATTENDANCE SUMMARY
 |--------------------------------------------------------------------------
 */
-
 async function getClassAttendanceSummary({
     schoolId,
     classId,
@@ -845,53 +675,42 @@ async function getClassAttendanceSummary({
     startDate = null,
     endDate = null
 }) {
-
     let sql = `
         SELECT
-
-            COUNT(*)::INTEGER
-                AS total_records,
+            COUNT(*)::INTEGER AS total_records,
 
             COUNT(
                 CASE
-                    WHEN a.status = 'present'
+                    WHEN LOWER(a.status) = 'present'
                     THEN 1
                 END
-            )::INTEGER
-                AS present_records,
+            )::INTEGER AS present_records,
 
             COUNT(
                 CASE
-                    WHEN a.status = 'absent'
+                    WHEN LOWER(a.status) = 'absent'
                     THEN 1
                 END
-            )::INTEGER
-                AS absent_records,
+            )::INTEGER AS absent_records,
 
             COUNT(
                 CASE
-                    WHEN a.status = 'late'
+                    WHEN LOWER(a.status) = 'late'
                     THEN 1
                 END
-            )::INTEGER
-                AS late_records,
+            )::INTEGER AS late_records,
 
             COUNT(
                 DISTINCT a.student_id
-            )::INTEGER
-                AS students_recorded
+            )::INTEGER AS students_recorded
 
         FROM attendance a
 
         WHERE a.school_id = $1
-
           AND a.class_id = $2
-
-          AND a.session_id = $3
-
+          AND a.academic_session_id = $3
           AND a.term_id = $4
     `;
-
 
     const values = [
         schoolId,
@@ -900,56 +719,37 @@ async function getClassAttendanceSummary({
         termId
     ];
 
-
     if (startDate) {
-
         values.push(startDate);
 
         sql += `
-            AND a.attendance_date >=
-                $${values.length}
+            AND a.attendance_date >= $${values.length}
         `;
     }
 
-
     if (endDate) {
-
         values.push(endDate);
 
         sql += `
-            AND a.attendance_date <=
-                $${values.length}
+            AND a.attendance_date <= $${values.length}
         `;
     }
 
-
-    const result = await query(
-        sql,
-        values
-    );
-
+    const result = await query(sql, values);
 
     const row = result.rows[0];
 
-
-    const totalRecords =
-        Number(row.total_records);
-
-    const presentRecords =
-        Number(row.present_records);
-
+    const totalRecords = Number(row.total_records);
+    const presentRecords = Number(row.present_records);
 
     return {
-
         totalRecords,
 
         presentRecords,
 
-        absentRecords:
-            Number(row.absent_records),
+        absentRecords: Number(row.absent_records),
 
-        lateRecords:
-            Number(row.late_records),
+        lateRecords: Number(row.late_records),
 
         studentsRecorded:
             Number(row.students_recorded),
@@ -964,94 +764,71 @@ async function getClassAttendanceSummary({
                     ).toFixed(2)
                 )
                 : 0
-
     };
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| Attendance Statistics
+| ATTENDANCE STATISTICS
 |--------------------------------------------------------------------------
 */
-
 async function getAttendanceStatistics(
     schoolId,
     attendanceDate = null
 ) {
-
     let sql = `
         SELECT
-
-            COUNT(*)::INTEGER
-                AS total_records,
+            COUNT(*)::INTEGER AS total_records,
 
             COUNT(
                 CASE
-                    WHEN status = 'present'
+                    WHEN LOWER(status) = 'present'
                     THEN 1
                 END
-            )::INTEGER
-                AS present,
+            )::INTEGER AS present,
 
             COUNT(
                 CASE
-                    WHEN status = 'absent'
+                    WHEN LOWER(status) = 'absent'
                     THEN 1
                 END
-            )::INTEGER
-                AS absent,
+            )::INTEGER AS absent,
 
             COUNT(
                 CASE
-                    WHEN status = 'late'
+                    WHEN LOWER(status) = 'late'
                     THEN 1
                 END
-            )::INTEGER
-                AS late,
+            )::INTEGER AS late,
 
             COUNT(
                 CASE
-                    WHEN status = 'excused'
+                    WHEN LOWER(status) = 'excused'
                     THEN 1
                 END
-            )::INTEGER
-                AS excused
+            )::INTEGER AS excused
 
         FROM attendance
 
         WHERE school_id = $1
     `;
 
-
-    const values = [
-        schoolId
-    ];
-
+    const values = [schoolId];
 
     if (attendanceDate) {
-
-        values.push(
-            attendanceDate
-        );
+        values.push(attendanceDate);
 
         sql += `
             AND attendance_date = $${values.length}
         `;
     }
 
-
-    const result = await query(
-        sql,
-        values
-    );
-
+    const result = await query(sql, values);
 
     const row = result.rows[0];
 
-
     return {
-
         totalRecords:
             Number(row.total_records),
 
@@ -1066,39 +843,25 @@ async function getAttendanceStatistics(
 
         excused:
             Number(row.excused)
-
     };
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| Export
+| EXPORTS
 |--------------------------------------------------------------------------
 */
-
 module.exports = {
-
     recordAttendance,
-
     recordBulkAttendance,
-
     findAttendanceById,
-
     getStudentAttendance,
-
     getClassAttendance,
-
     getAttendanceByDate,
-
     updateAttendance,
-
     deleteAttendance,
-
     getStudentAttendanceSummary,
-
     getClassAttendanceSummary,
-
     getAttendanceStatistics
-
 };

@@ -1,14 +1,7 @@
-```css
 /*
 |--------------------------------------------------------------------------
 | SCHOOL MANAGEMENT SYSTEM
 | BOOTSTRAP DESIGN SYSTEM
-|--------------------------------------------------------------------------
-|
-| Shared visual foundation for the entire application.
-| Bootstrap handles the UI framework.
-| This file handles our school's visual identity.
-|
 |--------------------------------------------------------------------------
 */
 
@@ -16,33 +9,23 @@
     --sms-primary: #1d4ed8;
     --sms-primary-dark: #1e3a8a;
     --sms-primary-light: #eff6ff;
-
     --sms-success: #16a34a;
     --sms-warning: #d97706;
     --sms-danger: #dc2626;
     --sms-info: #0891b2;
-
     --sms-dark: #0f172a;
     --sms-text: #1e293b;
     --sms-muted: #64748b;
-
     --sms-background: #f8fafc;
     --sms-surface: #ffffff;
     --sms-border: #e2e8f0;
-
     --sms-sidebar-width: 260px;
     --sms-header-height: 70px;
-
     --sms-radius: 12px;
     --sms-radius-sm: 8px;
-
-    --sms-shadow:
-        0 4px 16px rgba(15, 23, 42, 0.08);
-
-    --sms-shadow-lg:
-        0 15px 40px rgba(15, 23, 42, 0.12);
+    --sms-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+    --sms-shadow-lg: 0 15px 40px rgba(15, 23, 42, 0.12);
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -80,7 +63,6 @@ textarea {
     font: inherit;
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | APPLICATION BACKGROUND
@@ -92,7 +74,6 @@ textarea {
     background: var(--sms-background);
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | SIDEBAR
@@ -103,25 +84,18 @@ textarea {
     position: fixed;
     top: 0;
     left: 0;
-
     width: var(--sms-sidebar-width);
     height: 100vh;
-
     background:
         linear-gradient(180deg,
             #172554 0%,
             #1e3a8a 55%,
             #172554 100%);
-
     color: #ffffff;
-
     z-index: 1040;
-
     display: flex;
     flex-direction: column;
-
     overflow-y: auto;
-
     box-shadow:
         4px 0 20px rgba(15, 23, 42, 0.08);
 }
@@ -135,7 +109,6 @@ textarea {
     border-radius: 10px;
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | SIDEBAR BRAND
@@ -144,14 +117,10 @@ textarea {
 
 .sms-brand {
     min-height: var(--sms-header-height);
-
     display: flex;
     align-items: center;
-
     gap: 12px;
-
     padding: 12px 18px;
-
     border-bottom:
         1px solid rgba(255, 255, 255, 0.12);
 }
@@ -159,19 +128,13 @@ textarea {
 .sms-brand-logo {
     width: 42px;
     height: 42px;
-
     flex-shrink: 0;
-
     border-radius: 12px;
-
     background: #ffffff;
-
     color: var(--sms-primary-dark);
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     font-weight: 800;
     font-size: 17px;
 }
@@ -182,12 +145,9 @@ textarea {
 
 .sms-brand-title {
     display: block;
-
     color: #ffffff;
-
     font-size: 14px;
     font-weight: 700;
-
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -195,15 +155,10 @@ textarea {
 
 .sms-brand-code {
     display: block;
-
     margin-top: 2px;
-
-    color:
-        rgba(255, 255, 255, 0.62);
-
+    color: rgba(255, 255, 255, 0.62);
     font-size: 11px;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -216,40 +171,25 @@ textarea {
 }
 
 .sms-nav-section {
-    margin:
-        18px 10px 8px;
-
-    color:
-        rgba(255, 255, 255, 0.45);
-
+    margin: 18px 10px 8px;
+    color: rgba(255, 255, 255, 0.45);
     font-size: 10px;
     font-weight: 700;
-
     letter-spacing: 0.09em;
-
     text-transform: uppercase;
 }
 
 .sms-nav-link {
     display: flex;
     align-items: center;
-
     gap: 11px;
-
     width: 100%;
-
     padding: 10px 12px;
-
     margin-bottom: 4px;
-
     border-radius: 9px;
-
-    color:
-        rgba(255, 255, 255, 0.78);
-
+    color: rgba(255, 255, 255, 0.78);
     font-size: 13px;
     font-weight: 500;
-
     transition:
         background 0.2s ease,
         color 0.2s ease,
@@ -257,35 +197,25 @@ textarea {
 }
 
 .sms-nav-link:hover {
-    background:
-        rgba(255, 255, 255, 0.10);
-
+    background: rgba(255, 255, 255, 0.10);
     color: #ffffff;
-
     transform: translateX(2px);
 }
 
 .sms-nav-link.active {
     background: #ffffff;
-
     color: var(--sms-primary-dark);
-
     font-weight: 700;
-
     box-shadow:
         0 3px 10px rgba(0, 0, 0, 0.08);
 }
 
 .sms-nav-icon {
     width: 22px;
-
     text-align: center;
-
     font-size: 16px;
-
     flex-shrink: 0;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -295,9 +225,7 @@ textarea {
 
 .sms-sidebar-footer {
     margin-top: auto;
-
     padding: 12px;
-
     border-top:
         1px solid rgba(255, 255, 255, 0.10);
 }
@@ -305,36 +233,23 @@ textarea {
 .sms-logout {
     display: flex;
     align-items: center;
-
     gap: 10px;
-
     width: 100%;
-
     padding: 11px 12px;
-
     border: 0;
-
     border-radius: 9px;
-
-    background:
-        rgba(255, 255, 255, 0.08);
-
-    color:
-        rgba(255, 255, 255, 0.82);
-
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.82);
     cursor: pointer;
-
     transition:
-        background 0.2s ease;
+        background 0.2s ease,
+        color 0.2s ease;
 }
 
 .sms-logout:hover {
-    background:
-        rgba(220, 38, 38, 0.85);
-
+    background: rgba(220, 38, 38, 0.85);
     color: #ffffff;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -344,11 +259,8 @@ textarea {
 
 .sms-main {
     min-height: 100vh;
-
-    margin-left:
-        var(--sms-sidebar-width);
+    margin-left: var(--sms-sidebar-width);
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -358,68 +270,46 @@ textarea {
 
 .sms-topbar {
     position: sticky;
-
     top: 0;
-
-    height:
-        var(--sms-header-height);
-
-    background:
-        rgba(255, 255, 255, 0.96);
-
+    height: var(--sms-header-height);
+    background: rgba(255, 255, 255, 0.96);
     backdrop-filter: blur(10px);
-
     border-bottom:
         1px solid var(--sms-border);
-
     display: flex;
     align-items: center;
     justify-content: space-between;
-
-    padding:
-        0 28px;
-
+    padding: 0 28px;
     z-index: 1030;
 }
 
 .sms-topbar-left {
     display: flex;
     align-items: center;
-
     gap: 14px;
 }
 
 .sms-menu-button {
     display: none;
-
     border: 0;
-
     background: transparent;
-
     color: var(--sms-dark);
-
     font-size: 22px;
-
     cursor: pointer;
 }
 
 .sms-page-title {
     margin: 0;
-
     color: var(--sms-dark);
-
     font-size: 21px;
     font-weight: 700;
 }
 
 .sms-page-subtitle {
     margin: 2px 0 0;
-
     color: var(--sms-muted);
-
     font-size: 12px;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -430,47 +320,34 @@ textarea {
 .sms-user {
     display: flex;
     align-items: center;
-
     gap: 10px;
 }
 
 .sms-user-avatar {
     width: 38px;
     height: 38px;
-
     border-radius: 50%;
-
-    background:
-        var(--sms-primary-light);
-
-    color:
-        var(--sms-primary-dark);
-
+    background: var(--sms-primary-light);
+    color: var(--sms-primary-dark);
     display: flex;
     align-items: center;
     justify-content: center;
-
     font-size: 13px;
     font-weight: 800;
 }
 
 .sms-user-name {
     display: block;
-
     color: var(--sms-dark);
-
     font-size: 13px;
     font-weight: 700;
 }
 
 .sms-user-role {
     display: block;
-
     color: var(--sms-muted);
-
     font-size: 11px;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -482,7 +359,6 @@ textarea {
     padding: 28px;
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | CARDS
@@ -490,30 +366,20 @@ textarea {
 */
 
 .sms-card {
-    background:
-        var(--sms-surface);
-
-    border:
-        1px solid var(--sms-border);
-
-    border-radius:
-        var(--sms-radius);
-
-    box-shadow:
-        var(--sms-shadow);
+    background: var(--sms-surface);
+    border: 1px solid var(--sms-border);
+    border-radius: var(--sms-radius);
+    box-shadow: var(--sms-shadow);
 }
 
 .sms-card-header {
     padding: 18px 20px;
-
-    border-bottom:
-        1px solid var(--sms-border);
+    border-bottom: 1px solid var(--sms-border);
 }
 
 .sms-card-body {
     padding: 20px;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -523,21 +389,11 @@ textarea {
 
 .sms-stat-card {
     height: 100%;
-
     padding: 20px;
-
-    background:
-        var(--sms-surface);
-
-    border:
-        1px solid var(--sms-border);
-
-    border-radius:
-        var(--sms-radius);
-
-    box-shadow:
-        var(--sms-shadow);
-
+    background: var(--sms-surface);
+    border: 1px solid var(--sms-border);
+    border-radius: var(--sms-radius);
+    box-shadow: var(--sms-shadow);
     transition:
         transform 0.2s ease,
         box-shadow 0.2s ease;
@@ -545,47 +401,34 @@ textarea {
 
 .sms-stat-card:hover {
     transform: translateY(-2px);
-
-    box-shadow:
-        var(--sms-shadow-lg);
+    box-shadow: var(--sms-shadow-lg);
 }
 
 .sms-stat-icon {
     width: 44px;
     height: 44px;
-
     border-radius: 11px;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
-    background:
-        var(--sms-primary-light);
-
+    background: var(--sms-primary-light);
     font-size: 20px;
 }
 
 .sms-stat-label {
     margin-top: 14px;
-
     color: var(--sms-muted);
-
     font-size: 12px;
     font-weight: 600;
 }
 
 .sms-stat-value {
     display: block;
-
     margin-top: 3px;
-
     color: var(--sms-dark);
-
     font-size: 25px;
     font-weight: 800;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -595,9 +438,7 @@ textarea {
 
 .sms-btn {
     border-radius: 8px;
-
     font-weight: 600;
-
     transition:
         transform 0.15s ease,
         box-shadow 0.15s ease;
@@ -606,7 +447,6 @@ textarea {
 .sms-btn:hover {
     transform: translateY(-1px);
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -620,45 +460,31 @@ textarea {
 
 .sms-table {
     width: 100%;
-
     margin: 0;
-
     border-collapse: collapse;
 }
 
 .sms-table th {
     padding: 12px 15px;
-
     background: #f8fafc;
-
     color: var(--sms-muted);
-
-    border-bottom:
-        1px solid var(--sms-border);
-
+    border-bottom: 1px solid var(--sms-border);
     font-size: 11px;
     font-weight: 700;
-
     text-transform: uppercase;
-
     letter-spacing: 0.04em;
 }
 
 .sms-table td {
     padding: 13px 15px;
-
-    border-bottom:
-        1px solid var(--sms-border);
-
+    border-bottom: 1px solid var(--sms-border);
     color: var(--sms-text);
-
     font-size: 13px;
 }
 
 .sms-table tbody tr:hover {
     background: #f8fafc;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -668,30 +494,22 @@ textarea {
 
 .sms-form-label {
     margin-bottom: 6px;
-
     color: var(--sms-text);
-
     font-size: 13px;
     font-weight: 600;
 }
 
 .sms-form-control {
     min-height: 42px;
-
     border-radius: 8px;
-
-    border:
-        1px solid #cbd5e1;
+    border: 1px solid #cbd5e1;
 }
 
 .sms-form-control:focus {
-    border-color:
-        var(--sms-primary);
-
+    border-color: var(--sms-primary);
     box-shadow:
         0 0 0 3px rgba(37, 99, 235, 0.12);
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -702,11 +520,8 @@ textarea {
 .sms-badge {
     display: inline-flex;
     align-items: center;
-
     padding: 4px 8px;
-
     border-radius: 999px;
-
     font-size: 10px;
     font-weight: 700;
 }
@@ -731,7 +546,6 @@ textarea {
     color: #155e75;
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | MOBILE OVERLAY
@@ -740,17 +554,11 @@ textarea {
 
 .sms-overlay {
     display: none;
-
     position: fixed;
-
     inset: 0;
-
-    background:
-        rgba(15, 23, 42, 0.45);
-
+    background: rgba(15, 23, 42, 0.45);
     z-index: 1035;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -759,18 +567,13 @@ textarea {
 */
 
 @media (max-width: 991.98px) {
-
     .sms-sidebar {
-        transform:
-            translateX(-100%);
-
-        transition:
-            transform 0.25s ease;
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
     }
 
     .sms-sidebar.show {
-        transform:
-            translateX(0);
+        transform: translateX(0);
     }
 
     .sms-main {
@@ -786,19 +589,15 @@ textarea {
     }
 
     .sms-topbar {
-        padding:
-            0 18px;
+        padding: 0 18px;
     }
 
     .sms-content {
         padding: 20px;
     }
-
 }
 
-
 @media (max-width: 575.98px) {
-
     .sms-content {
         padding: 15px;
     }
@@ -810,7 +609,4 @@ textarea {
     .sms-user-info {
         display: none;
     }
-
 }
-
-```

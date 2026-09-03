@@ -1,68 +1,114 @@
-/*
-|--------------------------------------------------------------------------
-| STAFF.JS
-|--------------------------------------------------------------------------
-| Handles staff listing, searching, adding, editing and deleting staff.
-|--------------------------------------------------------------------------
-*/
+```javascript
+"use strict";
 
 (function () {
-    "use strict";
-
     let staff = [];
     let editingStaffId = null;
 
-    /*
-    |--------------------------------------------------------------------------
-    | API HELPER
-    |--------------------------------------------------------------------------
-    */
-
-    async function request(url, options = {}) {
-
-        if (
-            window.API &&
-            typeof window.API.request === "function"
-        ) {
-            return window.API.request(url, options);
+    async function request(endpoint, options = {}) {
+        if (typeof window.apiRequest === "function") {
+            return window.apiRequest(endpoint, options);
         }
 
-        const response = await fetch(url, {
-            credentials: "include",
-            ...options,
-            headers: {
-                "Content-Type": "application/json",
-                ...(options.headers || {})
+        let url = endpoint;
+
+        if (
+            !url.startsWith("http://") &&
+            !url.startsWith("https://")
+        ) {
+            if (!url.startsWith("/")) {
+                url = "/" + url;
             }
-        });
+
+            if (!url.startsWith("/api/")) {
+                url = "/api" + url;
+            }
+        }
+
+        const token =
+            localStorage.getItem("school_management_token") ||
+            sessionStorage.getItem("school_management_token") ||
+            localStorage.getItem("token") ||
+            sessionStorage.getItem("token") ||
+            localStorage.getItem("accessToken") ||
+            sessionStorage.getItem("accessToken") ||
+            "";
+
+        const headers = {
+            ...(options.headers || {})
+        };
+
+        if (token) {
+            headers.Authorization = `Bearer ${token}`;
+        }
+
+        if (
+            options.body &&
+            !(options.body instanceof FormData) &&
+            !headers["Content-Type"] &&
+            !headers["content-type"]
+        ) {
+            headers["Content-Type"] = "application/json";
+        }
+
+        let response;
+
+        try {
+            response = await fetch(url, {
+                ...options,
+                headers
+            });
+        } catch (error) {
+            console.error("Staff API error:", error);
+            throw new Error(
+                "Unable to connect to the server."
+            );
+        }
+
+        if (response.status === 401) {
+            if (typeof window.clearApiAuthentication === "function") {
+                window.clearApiAuthentication();
+            } else {
+                localStorage.removeItem("school_management_token");
+                localStorage.removeItem("school_management_user");
+                sessionStorage.removeItem("school_management_token");
+                sessionStorage.removeItem("school_management_user");
+            }
+
+            if (!window.location.pathname.endsWith("/login.html")) {
+                window.location.href = "/pages/login.html";
+            }
+
+            throw new Error("Authentication required.");
+        }
+
+        if (response.status === 403) {
+            throw new Error(
+                "You do not have permission to perform this action."
+            );
+        }
 
         const contentType =
             response.headers.get("content-type") || "";
 
-        const data =
-            contentType.includes("application/json")
-                ? await response.json()
-                : await response.text();
+        const data = contentType.includes("application/json")
+            ? await response.json()
+            : await response.text();
 
         if (!response.ok) {
             throw new Error(
-                data?.message ||
-                data?.error ||
-                "Request failed."
+                typeof data === "object"
+                    ? data?.message ||
+                      data?.error ||
+                      "Request failed."
+                    : data || "Request failed."
             );
         }
 
         return data;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | INITIALIZE
-    |--------------------------------------------------------------------------
-    */
-
     async function initialize() {
-
         setupEvents();
 
         await loadStaff();
@@ -70,19 +116,10 @@
         updateSummary();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | EVENTS
-    |--------------------------------------------------------------------------
-    */
-
     function setupEvents() {
-
         const form =
             document.querySelector("#staffForm") ||
-            document.querySelector(
-                "form[data-staff-form]"
-            );
+            document.querySelector("form[data-staff-form]");
 
         if (form) {
             form.addEventListener(
@@ -93,25 +130,18 @@
 
         const search =
             document.querySelector("#staffSearch") ||
-            document.querySelector(
-                "[name='staff_search']"
-            );
+            document.querySelector("[name='staff_search']");
 
         if (search) {
-
             search.addEventListener(
                 "input",
-                function () {
-                    renderStaff();
-                }
+                renderStaff
             );
         }
 
         const departmentSelect =
             document.querySelector("#departmentId") ||
-            document.querySelector(
-                "[name='department_id']"
-            );
+            document.querySelector("[name='department_id']");
 
         if (
             departmentSelect &&
@@ -126,39 +156,27 @@
         );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | LOAD STAFF
-    |--------------------------------------------------------------------------
-    */
-
     async function loadStaff() {
-
         showLoading();
 
         try {
-
             const data =
-                await request(
-                    "/api/staff"
-                );
+                await request("/staff");
 
             staff =
                 Array.isArray(data)
                     ? data
-                    : (
-                        data?.data ||
-                        data?.staff ||
-                        data?.records ||
-                        []
-                    );
+                    : Array.isArray(data?.data)
+                        ? data.data
+                        : Array.isArray(data?.staff)
+                            ? data.staff
+                            : Array.isArray(data?.records)
+                                ? data.records
+                                : [];
 
             renderStaff();
-
             updateSummary();
-
         } catch (error) {
-
             console.error(
                 "Unable to load staff:",
                 error
@@ -170,39 +188,27 @@
                 error.message ||
                 "Unable to load staff."
             );
+
+            updateSummary();
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | LOAD DEPARTMENTS
-    |--------------------------------------------------------------------------
-    */
-
     async function loadDepartments() {
-
         try {
-
             const data =
-                await request(
-                    "/api/departments"
-                );
+                await request("/departments");
 
             const departments =
                 Array.isArray(data)
                     ? data
-                    : (
-                        data?.data ||
-                        data?.departments ||
-                        []
-                    );
+                    : Array.isArray(data?.data)
+                        ? data.data
+                        : Array.isArray(data?.departments)
+                            ? data.departments
+                            : [];
 
-            populateDepartments(
-                departments
-            );
-
+            populateDepartments(departments);
         } catch (error) {
-
             console.error(
                 "Unable to load departments:",
                 error
@@ -210,23 +216,10 @@
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | POPULATE DEPARTMENTS
-    |--------------------------------------------------------------------------
-    */
-
-    function populateDepartments(
-        departments
-    ) {
-
+    function populateDepartments(departments) {
         const select =
-            document.querySelector(
-                "#departmentId"
-            ) ||
-            document.querySelector(
-                "[name='department_id']"
-            );
+            document.querySelector("#departmentId") ||
+            document.querySelector("[name='department_id']");
 
         if (!select) {
             return;
@@ -236,57 +229,35 @@
             select.value;
 
         select.innerHTML =
-            `<option value="">
-                Select department
-            </option>`;
+            `<option value="">Select department</option>`;
 
-        departments.forEach(
-            function (department) {
+        departments.forEach((department) => {
+            const option =
+                document.createElement("option");
 
-                const option =
-                    document.createElement(
-                        "option"
-                    );
+            option.value =
+                department.id ??
+                department.department_id ??
+                "";
 
-                option.value =
-                    department.id ||
-                    department.department_id;
+            option.textContent =
+                department.name ||
+                department.department_name ||
+                "Department";
 
-                option.textContent =
-                    department.name ||
-                    department.department_name ||
-                    "Department";
-
-                select.appendChild(
-                    option
-                );
-            }
-        );
+            select.appendChild(option);
+        });
 
         if (currentValue) {
-            select.value =
-                currentValue;
+            select.value = currentValue;
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | RENDER STAFF
-    |--------------------------------------------------------------------------
-    */
-
     function renderStaff() {
-
         const container =
-            document.querySelector(
-                "#staffTableBody"
-            ) ||
-            document.querySelector(
-                "#staff-table-body"
-            ) ||
-            document.querySelector(
-                "tbody[data-staff-body]"
-            );
+            document.querySelector("#staffTableBody") ||
+            document.querySelector("#staff-table-body") ||
+            document.querySelector("tbody[data-staff-body]");
 
         if (!container) {
             return;
@@ -296,79 +267,69 @@
             getValue(
                 "#staffSearch",
                 "[name='staff_search']"
-            ).toLowerCase();
+            )
+                .trim()
+                .toLowerCase();
 
-        let records =
-            staff;
+        let records = staff;
 
         if (search) {
-
             records =
-                staff.filter(
-                    function (member) {
+                staff.filter((member) => {
+                    const name =
+                        getStaffName(member)
+                            .toLowerCase();
 
-                        const name =
-                            getStaffName(
-                                member
-                            ).toLowerCase();
+                    const email =
+                        String(
+                            member.email || ""
+                        ).toLowerCase();
 
-                        const email =
-                            String(
-                                member.email ||
-                                ""
-                            ).toLowerCase();
+                    const phone =
+                        String(
+                            member.phone ||
+                            member.phone_number ||
+                            ""
+                        ).toLowerCase();
 
-                        const phone =
-                            String(
-                                member.phone ||
-                                member.phone_number ||
-                                ""
-                            ).toLowerCase();
+                    const staffId =
+                        String(
+                            member.staff_id ||
+                            member.employee_id ||
+                            ""
+                        ).toLowerCase();
 
-                        const staffId =
-                            String(
-                                member.staff_id ||
-                                member.employee_id ||
-                                ""
-                            ).toLowerCase();
+                    const department =
+                        String(
+                            member.department_name ||
+                            member.department ||
+                            ""
+                        ).toLowerCase();
 
-                        const department =
-                            String(
-                                member.department_name ||
-                                member.department ||
-                                ""
-                            ).toLowerCase();
-
-                        return (
-                            name.includes(search) ||
-                            email.includes(search) ||
-                            phone.includes(search) ||
-                            staffId.includes(search) ||
-                            department.includes(search)
-                        );
-                    }
-                );
+                    return (
+                        name.includes(search) ||
+                        email.includes(search) ||
+                        phone.includes(search) ||
+                        staffId.includes(search) ||
+                        department.includes(search)
+                    );
+                });
         }
 
         if (!records.length) {
-
             container.innerHTML = `
                 <tr>
                     <td colspan="10">
                         <div class="students-empty">
-
                             <div class="students-empty-icon">
                                 S
                             </div>
 
-                            <h3>
-                                No staff found
-                            </h3>
+                            <h3>No staff found</h3>
 
                             <p>
                                 There are no staff records to display.
                             </p>
-
                         </div>
                     </td>
                 </tr>
@@ -383,17 +344,11 @@
                 .join("");
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | STAFF ROW
-    |--------------------------------------------------------------------------
-    */
-
     function renderStaffRow(member) {
-
         const id =
-            member.id ||
-            member.staff_id;
+            member.id ??
+            member.staff_id ??
+            "";
 
         const name =
             getStaffName(member);
@@ -415,12 +370,12 @@
 
         return `
             <tr>
-
                 <td>
                     <div class="student-name">
-
                         <div class="student-avatar">
-                            ${getInitials(name)}
+                            ${escapeHtml(
+                                getInitials(name)
+                            )}
                         </div>
 
                         <div class="student-name-text">
@@ -428,7 +383,6 @@
                                 ${escapeHtml(name)}
                             </strong>
                         </div>
-
                     </div>
                 </td>
 
@@ -464,7 +418,9 @@
                 </td>
 
                 <td>
-                    <span class="status-badge ${getStatusClass(status)}">
+                    <span class="status-badge ${escapeAttribute(
+                        getStatusClass(status)
+                    )}">
                         ${escapeHtml(status)}
                     </span>
                 </td>
@@ -477,9 +433,7 @@
                 </td>
 
                 <td>
-
                     <div class="student-actions">
-
                         <button
                             type="button"
                             class="student-action-btn"
@@ -499,23 +453,13 @@
                         >
                             ×
                         </button>
-
                     </div>
-
                 </td>
-
             </tr>
         `;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | SUBMIT
-    |--------------------------------------------------------------------------
-    */
-
     async function handleSubmit(event) {
-
         event.preventDefault();
 
         const form =
@@ -524,36 +468,37 @@
         const data =
             formToObject(form);
 
-        if (!data.first_name && !data.firstName) {
-
+        if (
+            !data.first_name &&
+            !data.firstName
+        ) {
             notify(
                 "Please enter the staff first name.",
                 "error"
             );
-
             return;
         }
 
-        if (!data.last_name && !data.lastName) {
-
+        if (
+            !data.last_name &&
+            !data.lastName
+        ) {
             notify(
                 "Please enter the staff last name.",
                 "error"
             );
-
             return;
         }
 
         try {
-
             if (editingStaffId) {
-
                 await request(
-                    `/api/staff/${editingStaffId}`,
+                    `/staff/${encodeURIComponent(
+                        editingStaffId
+                    )}`,
                     {
                         method: "PUT",
-                        body:
-                            JSON.stringify(data)
+                        body: JSON.stringify(data)
                     }
                 );
 
@@ -561,15 +506,12 @@
                     "Staff record updated successfully.",
                     "success"
                 );
-
             } else {
-
                 await request(
-                    "/api/staff",
+                    "/staff",
                     {
                         method: "POST",
-                        body:
-                            JSON.stringify(data)
+                        body: JSON.stringify(data)
                     }
                 );
 
@@ -582,9 +524,7 @@
             resetForm();
 
             await loadStaff();
-
         } catch (error) {
-
             console.error(
                 "Staff save failed:",
                 error
@@ -598,31 +538,24 @@
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | EDIT STAFF
-    |--------------------------------------------------------------------------
-    */
-
     function editStaff(id) {
-
         const member =
-            staff.find(
-                function (item) {
-
-                    return String(
-                        item.id ||
-                        item.staff_id
-                    ) === String(id);
-                }
-            );
+            staff.find((item) => {
+                return String(
+                    item.id ??
+                    item.staff_id
+                ) === String(id);
+            });
 
         if (!member) {
+            notify(
+                "Staff record could not be found.",
+                "error"
+            );
             return;
         }
 
-        editingStaffId =
-            id;
+        editingStaffId = id;
 
         setFormValue(
             "#firstName",
@@ -702,24 +635,16 @@
 
         setFormValue(
             "#address",
-            member.address
+            member.address ||
+            member.residential_address
         );
 
-        updateFormMode(
-            "Update Staff"
-        );
+        updateFormMode("Update Staff");
 
         scrollToForm();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DELETE STAFF
-    |--------------------------------------------------------------------------
-    */
-
     async function deleteStaff(id) {
-
         if (
             !window.confirm(
                 "Are you sure you want to delete this staff record?"
@@ -729,9 +654,8 @@
         }
 
         try {
-
             await request(
-                `/api/staff/${id}`,
+                `/staff/${encodeURIComponent(id)}`,
                 {
                     method: "DELETE"
                 }
@@ -743,9 +667,7 @@
             );
 
             await loadStaff();
-
         } catch (error) {
-
             console.error(
                 "Staff deletion failed:",
                 error
@@ -759,14 +681,7 @@
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | ACTION CLICK
-    |--------------------------------------------------------------------------
-    */
-
     async function handleActionClick(event) {
-
         const button =
             event.target.closest(
                 "[data-action]"
@@ -790,35 +705,18 @@
             return;
         }
 
-        if (
-            action ===
-            "edit-staff"
-        ) {
-
+        if (action === "edit-staff") {
             editStaff(id);
-
             return;
         }
 
-        if (
-            action ===
-            "delete-staff"
-        ) {
-
+        if (action === "delete-staff") {
             await deleteStaff(id);
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | RESET FORM
-    |--------------------------------------------------------------------------
-    */
-
     function resetForm() {
-
-        editingStaffId =
-            null;
+        editingStaffId = null;
 
         const form =
             document.querySelector(
@@ -829,19 +727,10 @@
             form.reset();
         }
 
-        updateFormMode(
-            "Add Staff"
-        );
+        updateFormMode("Add Staff");
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | UPDATE FORM BUTTON
-    |--------------------------------------------------------------------------
-    */
-
     function updateFormMode(text) {
-
         const form =
             document.querySelector(
                 "#staffForm"
@@ -857,33 +746,21 @@
             );
 
         if (button) {
-            button.textContent =
-                text;
+            button.textContent = text;
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | SUMMARY
-    |--------------------------------------------------------------------------
-    */
-
     function updateSummary() {
-
         const total =
             staff.length;
 
         const active =
-            staff.filter(
-                function (member) {
-
-                    return String(
-                        member.status ||
-                        "Active"
-                    ).toLowerCase() ===
-                    "active";
-                }
-            ).length;
+            staff.filter((member) => {
+                return String(
+                    member.status ||
+                    "Active"
+                ).toLowerCase() === "active";
+            }).length;
 
         const inactive =
             total - active;
@@ -916,44 +793,21 @@
         );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | SET SUMMARY
-    |--------------------------------------------------------------------------
-    */
-
-    function setSummary(
-        selectors,
-        value
-    ) {
-
-        for (
-            const selector of selectors
-        ) {
-
+    function setSummary(selectors, value) {
+        for (const selector of selectors) {
             const element =
                 document.querySelector(
                     selector
                 );
 
             if (element) {
-
-                element.textContent =
-                    value;
-
+                element.textContent = value;
                 return;
             }
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | STAFF NAME
-    |--------------------------------------------------------------------------
-    */
-
     function getStaffName(member) {
-
         return (
             member.full_name ||
             member.fullName ||
@@ -976,20 +830,13 @@
         ) || "Unknown Staff";
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | INITIALS
-    |--------------------------------------------------------------------------
-    */
-
     function getInitials(name) {
-
         if (
             window.App &&
-            typeof App.getInitials ===
+            typeof window.App.getInitials ===
             "function"
         ) {
-            return App.getInitials(name);
+            return window.App.getInitials(name);
         }
 
         return String(name)
@@ -997,55 +844,36 @@
             .filter(Boolean)
             .slice(0, 2)
             .map(
-                word =>
-                    word
-                        .charAt(0)
-                        .toUpperCase()
+                (word) =>
+                    word.charAt(0).toUpperCase()
             )
             .join("");
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | STATUS CLASS
-    |--------------------------------------------------------------------------
-    */
-
     function getStatusClass(status) {
-
         const value =
-            String(status)
-                .toLowerCase();
+            String(status).toLowerCase();
 
-        if (
-            value === "active"
-        ) {
+        if (value === "active") {
             return "active";
         }
 
-        if (
-            value === "inactive"
-        ) {
+        if (value === "inactive") {
             return "inactive";
         }
 
-        if (
-            value === "suspended"
-        ) {
+        if (value === "suspended") {
             return "warning";
+        }
+
+        if (value === "disabled") {
+            return "inactive";
         }
 
         return "";
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DATE
-    |--------------------------------------------------------------------------
-    */
-
     function formatDate(value) {
-
         if (!value) {
             return "-";
         }
@@ -1071,42 +899,30 @@
         );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | FORM OBJECT
-    |--------------------------------------------------------------------------
-    */
-
     function formToObject(form) {
-
         const formData =
             new FormData(form);
 
         const data = {};
 
         formData.forEach(
-            function (value, key) {
-
-                data[key] =
-                    value;
+            (value, key) => {
+                data[key] = value;
             }
         );
+
+        form.querySelectorAll(
+            'input[type="checkbox"]'
+        ).forEach((checkbox) => {
+            data[checkbox.name] =
+                checkbox.checked;
+        });
 
         return data;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | GET VALUE
-    |--------------------------------------------------------------------------
-    */
-
     function getValue(...selectors) {
-
-        for (
-            const selector of selectors
-        ) {
-
+        for (const selector of selectors) {
             const element =
                 document.querySelector(
                     selector
@@ -1120,43 +936,32 @@
         return "";
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | SET FORM VALUE
-    |--------------------------------------------------------------------------
-    */
-
-    function setFormValue(
-        selector,
-        value
-    ) {
-
+    function setFormValue(selector, value) {
         const element =
             document.querySelector(
                 selector
             );
 
-        if (element) {
+        if (!element) {
+            return;
+        }
+
+        if (element.type === "checkbox") {
+            element.checked =
+                Boolean(value);
+        } else {
             element.value =
                 value ?? "";
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | SCROLL TO FORM
-    |--------------------------------------------------------------------------
-    */
-
     function scrollToForm() {
-
         const form =
             document.querySelector(
                 "#staffForm"
             );
 
         if (form) {
-
             form.scrollIntoView({
                 behavior: "smooth",
                 block: "start"
@@ -1164,24 +969,9 @@
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | LOADING
-    |--------------------------------------------------------------------------
-    */
-
     function showLoading() {
-
         const container =
-            document.querySelector(
-                "#staffTableBody"
-            ) ||
-            document.querySelector(
-                "#staff-table-body"
-            ) ||
-            document.querySelector(
-                "tbody[data-staff-body]"
-            );
+            getStaffTableBody();
 
         if (!container) {
             return;
@@ -1191,37 +981,17 @@
             <tr>
                 <td colspan="10">
                     <div class="students-loading">
-
                         <div class="students-loading-spinner"></div>
-
-                        <p>
-                            Loading staff...
-                        </p>
-
+                        <p>Loading staff...</p>
                     </div>
                 </td>
             </tr>
         `;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | ERROR
-    |--------------------------------------------------------------------------
-    */
-
     function showError(message) {
-
         const container =
-            document.querySelector(
-                "#staffTableBody"
-            ) ||
-            document.querySelector(
-                "#staff-table-body"
-            ) ||
-            document.querySelector(
-                "tbody[data-staff-body]"
-            );
+            getStaffTableBody();
 
         if (!container) {
             return;
@@ -1230,45 +1000,34 @@
         container.innerHTML = `
             <tr>
                 <td colspan="10">
-
                     <div class="students-empty">
-
-                        <h3>
-                            Unable to load staff
-                        </h3>
-
+                        <h3>Unable to load staff</h3>
                         <p>
                             ${escapeHtml(message)}
                         </p>
-
                     </div>
-
                 </td>
             </tr>
         `;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | NOTIFICATION
-    |--------------------------------------------------------------------------
-    */
+    function getStaffTableBody() {
+        return (
+            document.querySelector("#staffTableBody") ||
+            document.querySelector("#staff-table-body") ||
+            document.querySelector("tbody[data-staff-body]")
+        );
+    }
 
-    function notify(
-        message,
-        type = "success"
-    ) {
-
+    function notify(message, type = "success") {
         if (
             typeof window.showNotification ===
             "function"
         ) {
-
             window.showNotification(
                 message,
                 type
             );
-
             return;
         }
 
@@ -1278,11 +1037,8 @@
             );
 
         if (!container) {
-
             container =
-                document.createElement(
-                    "div"
-                );
+                document.createElement("div");
 
             container.id =
                 "notification-container";
@@ -1305,9 +1061,7 @@
         }
 
         const notification =
-            document.createElement(
-                "div"
-            );
+            document.createElement("div");
 
         notification.className =
             `alert alert-${type}`;
@@ -1322,38 +1076,13 @@
             notification
         );
 
-        setTimeout(
-            function () {
-                notification.remove();
-            },
-            4000
-        );
+        setTimeout(() => {
+            notification.remove();
+        }, 4000);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | ESCAPE HTML
-    |--------------------------------------------------------------------------
-    */
-
     function escapeHtml(value) {
-
-        if (
-            value === null ||
-            value === undefined
-        ) {
-            return "";
-        }
-
-        if (
-            window.App &&
-            typeof App.escapeHtml ===
-            "function"
-        ) {
-            return App.escapeHtml(value);
-        }
-
-        return String(value)
+        return String(value ?? "")
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;")
@@ -1361,21 +1090,9 @@
             .replace(/'/g, "&#039;");
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | ESCAPE ATTRIBUTE
-    |--------------------------------------------------------------------------
-    */
-
     function escapeAttribute(value) {
         return escapeHtml(value);
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | EXPORT
-    |--------------------------------------------------------------------------
-    */
 
     window.StaffPage = {
         initialize,
@@ -1386,25 +1103,13 @@
         resetForm
     };
 
-    /*
-    |--------------------------------------------------------------------------
-    | START
-    |--------------------------------------------------------------------------
-    */
-
-    if (
-        document.readyState ===
-        "loading"
-    ) {
-
+    if (document.readyState === "loading") {
         document.addEventListener(
             "DOMContentLoaded",
-            initialize
+            initialize,
+            { once: true }
         );
-
     } else {
-
         initialize();
     }
-
 })();

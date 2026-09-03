@@ -1,24 +1,31 @@
+```javascript
+"use strict";
+
 const { query } = require("../config/database");
 
 /*
 |--------------------------------------------------------------------------
 | Term Model
 |--------------------------------------------------------------------------
+| Compatible with the current PostgreSQL schema.
+|--------------------------------------------------------------------------
 |
-| Manages academic terms within an academic session.
+| terms:
+| id
+| school_id
+| term_name
+| term_order
+| start_date
+| end_date
+| is_current
+| is_active
+| created_at
 |
-| Example:
-|
-| 2026/2027
-|   ├── First Term
-|   ├── Second Term
-|   └── Third Term
-|
-| The school can rename terms if it uses another naming system.
-|
+| IMPORTANT:
+| The current database schema does NOT link terms directly to
+| academic_sessions. Terms are school-level records.
 |--------------------------------------------------------------------------
 */
-
 
 /*
 |--------------------------------------------------------------------------
@@ -28,72 +35,74 @@ const { query } = require("../config/database");
 
 async function createTerm({
     schoolId,
-    sessionId,
+    sessionId = null,
     termName,
     termCode = null,
     startDate = null,
     endDate = null,
     description = null,
     displayOrder = 0,
-    status = "upcoming"
+    termOrder = null,
+    status = "upcoming",
+    isCurrent = false,
+    isActive = true
 }) {
-
     if (!schoolId) {
         throw new Error("School ID is required.");
-    }
-
-    if (!sessionId) {
-        throw new Error("Academic session ID is required.");
     }
 
     if (!termName || !termName.trim()) {
         throw new Error("Term name is required.");
     }
 
+    const order =
+        termOrder !== null
+            ? termOrder
+            : Number(displayOrder) || 0;
+
+    const current =
+        isCurrent ||
+        String(status).toLowerCase() === "active";
+
+    if (current) {
+        await query(
+            `
+                UPDATE terms
+                SET is_current = FALSE
+                WHERE school_id = $1
+            `,
+            [schoolId]
+        );
+    }
+
     const sql = `
         INSERT INTO terms (
             school_id,
-            session_id,
             term_name,
-            term_code,
+            term_order,
             start_date,
             end_date,
-            description,
-            display_order,
-            status
+            is_current,
+            is_active
         )
         VALUES (
-            $1,
-            $2,
-            $3,
-            $4,
-            $5,
-            $6,
-            $7,
-            $8,
-            $9
+            $1, $2, $3, $4, $5, $6, $7
         )
         RETURNING *
     `;
 
-    const result = await query(
-        sql,
-        [
-            schoolId,
-            sessionId,
-            termName.trim(),
-            termCode,
-            startDate,
-            endDate,
-            description,
-            displayOrder,
-            status
-        ]
-    );
+    const result = await query(sql, [
+        schoolId,
+        termName.trim(),
+        order,
+        startDate,
+        endDate,
+        current,
+        isActive
+    ]);
 
     return result.rows[0];
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -105,54 +114,30 @@ async function findTermById(
     termId,
     schoolId = null
 ) {
-
     let sql = `
-        SELECT
-
-            t.*,
-
-            s.session_name,
-
-            s.session_code
-
-        FROM terms t
-
-        INNER JOIN academic_sessions s
-            ON s.id = t.session_id
-
-        WHERE t.id = $1
+        SELECT *
+        FROM terms
+        WHERE id = $1
     `;
 
-    const values = [
-        termId
-    ];
-
+    const values = [termId];
 
     if (schoolId) {
+        values.push(schoolId);
 
         sql += `
-            AND t.school_id = $2
+            AND school_id = $${values.length}
         `;
-
-        values.push(
-            schoolId
-        );
     }
-
 
     sql += `
         LIMIT 1
     `;
 
-
-    const result = await query(
-        sql,
-        values
-    );
+    const result = await query(sql, values);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -165,33 +150,21 @@ async function findTermByName(
     termName,
     schoolId
 ) {
-
     const sql = `
         SELECT *
-
         FROM terms
-
-        WHERE session_id = $1
-
-          AND school_id = $2
-
-          AND LOWER(term_name) = LOWER($3)
-
+        WHERE school_id = $1
+          AND LOWER(term_name) = LOWER($2)
         LIMIT 1
     `;
 
-    const result = await query(
-        sql,
-        [
-            sessionId,
-            schoolId,
-            termName.trim()
-        ]
-    );
+    const result = await query(sql, [
+        schoolId,
+        termName.trim()
+    ]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -205,57 +178,42 @@ async function termExists(
     schoolId,
     excludeTermId = null
 ) {
-
     let sql = `
         SELECT EXISTS (
-
             SELECT 1
-
             FROM terms
-
-            WHERE session_id = $1
-
-              AND school_id = $2
-
-              AND LOWER(term_name) = LOWER($3)
+            WHERE school_id = $1
+              AND LOWER(term_name) = LOWER($2)
     `;
 
     const values = [
-        sessionId,
         schoolId,
         termName.trim()
     ];
 
-
     if (excludeTermId) {
+        values.push(excludeTermId);
 
         sql += `
-            AND id <> $4
+            AND id <> $${values.length}
         `;
-
-        values.push(
-            excludeTermId
-        );
     }
-
 
     sql += `
         ) AS exists
     `;
 
-
-    const result = await query(
-        sql,
-        values
-    );
+    const result = await query(sql, values);
 
     return result.rows[0].exists;
 }
 
-
 /*
 |--------------------------------------------------------------------------
-| Find All Terms For A Session
+| Find Terms By Session
+|--------------------------------------------------------------------------
+| Terms are not linked to academic_sessions in the current schema.
+| The sessionId parameter is retained for controller compatibility.
 |--------------------------------------------------------------------------
 */
 
@@ -266,57 +224,31 @@ async function findTermsBySession(
         includeInactive = false
     } = {}
 ) {
-
     let sql = `
-        SELECT
-
-            t.*,
-
-            s.session_name,
-
-            s.session_code
-
-        FROM terms t
-
-        INNER JOIN academic_sessions s
-            ON s.id = t.session_id
-
-        WHERE t.session_id = $1
-
-          AND t.school_id = $2
+        SELECT *
+        FROM terms
+        WHERE school_id = $1
     `;
 
+    const values = [schoolId];
 
     if (!includeInactive) {
-
         sql += `
-            AND t.status <> 'inactive'
+            AND is_active = TRUE
         `;
     }
 
-
     sql += `
         ORDER BY
-
-            t.display_order ASC,
-
-            t.start_date ASC NULLS LAST,
-
-            t.term_name ASC
+            term_order ASC,
+            start_date ASC NULLS LAST,
+            term_name ASC
     `;
 
-
-    const result = await query(
-        sql,
-        [
-            sessionId,
-            schoolId
-        ]
-    );
+    const result = await query(sql, values);
 
     return result.rows;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -327,63 +259,50 @@ async function findTermsBySession(
 async function findTermsBySchool(
     schoolId,
     {
-        status = null
+        status = null,
+        isActive = null
     } = {}
 ) {
-
     let sql = `
-        SELECT
-
-            t.*,
-
-            s.session_name,
-
-            s.session_code
-
-        FROM terms t
-
-        INNER JOIN academic_sessions s
-            ON s.id = t.session_id
-
-        WHERE t.school_id = $1
+        SELECT *
+        FROM terms
+        WHERE school_id = $1
     `;
 
-    const values = [
-        schoolId
-    ];
+    const values = [schoolId];
 
-
-    if (status) {
+    if (isActive !== null) {
+        values.push(isActive);
 
         sql += `
-            AND t.status = $2
+            AND is_active = $${values.length}
         `;
+    } else if (status) {
+        const normalizedStatus =
+            String(status).toLowerCase();
 
-        values.push(
-            status
-        );
+        if (normalizedStatus === "inactive") {
+            sql += `
+                AND is_active = FALSE
+            `;
+        } else {
+            sql += `
+                AND is_active = TRUE
+            `;
+        }
     }
-
 
     sql += `
         ORDER BY
-
-            s.start_date DESC NULLS LAST,
-
-            t.display_order ASC,
-
-            t.start_date ASC NULLS LAST
+            term_order ASC,
+            start_date ASC NULLS LAST,
+            term_name ASC
     `;
 
-
-    const result = await query(
-        sql,
-        values
-    );
+    const result = await query(sql, values);
 
     return result.rows;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -395,60 +314,23 @@ async function findCurrentTerm(
     schoolId,
     sessionId = null
 ) {
-
-    let sql = `
-        SELECT
-
-            t.*,
-
-            s.session_name,
-
-            s.session_code
-
-        FROM terms t
-
-        INNER JOIN academic_sessions s
-            ON s.id = t.session_id
-
-        WHERE t.school_id = $1
-
-          AND t.status = 'active'
-    `;
-
-    const values = [
-        schoolId
-    ];
-
-
-    if (sessionId) {
-
-        sql += `
-            AND t.session_id = $2
-        `;
-
-        values.push(
-            sessionId
-        );
-    }
-
-
-    sql += `
+    const sql = `
+        SELECT *
+        FROM terms
+        WHERE school_id = $1
+          AND is_current = TRUE
+          AND is_active = TRUE
         ORDER BY
-
-            t.start_date DESC NULLS LAST
-
+            term_order ASC
         LIMIT 1
     `;
 
-
-    const result = await query(
-        sql,
-        values
-    );
+    const result = await query(sql, [
+        schoolId
+    ]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -460,56 +342,27 @@ async function findUpcomingTerms(
     schoolId,
     sessionId = null
 ) {
-
-    let sql = `
-        SELECT
-
-            t.*,
-
-            s.session_name
-
-        FROM terms t
-
-        INNER JOIN academic_sessions s
-            ON s.id = t.session_id
-
-        WHERE t.school_id = $1
-
-          AND t.status = 'upcoming'
-    `;
-
-    const values = [
-        schoolId
-    ];
-
-
-    if (sessionId) {
-
-        sql += `
-            AND t.session_id = $2
-        `;
-
-        values.push(
-            sessionId
-        );
-    }
-
-
-    sql += `
+    const sql = `
+        SELECT *
+        FROM terms
+        WHERE school_id = $1
+          AND is_active = TRUE
+          AND is_current = FALSE
+          AND (
+              start_date IS NULL
+              OR start_date > CURRENT_DATE
+          )
         ORDER BY
-
-            t.start_date ASC NULLS LAST
+            start_date ASC NULLS LAST,
+            term_order ASC
     `;
 
-
-    const result = await query(
-        sql,
-        values
-    );
+    const result = await query(sql, [
+        schoolId
+    ]);
 
     return result.rows;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -521,56 +374,23 @@ async function findCompletedTerms(
     schoolId,
     sessionId = null
 ) {
-
-    let sql = `
-        SELECT
-
-            t.*,
-
-            s.session_name
-
-        FROM terms t
-
-        INNER JOIN academic_sessions s
-            ON s.id = t.session_id
-
-        WHERE t.school_id = $1
-
-          AND t.status = 'completed'
-    `;
-
-    const values = [
-        schoolId
-    ];
-
-
-    if (sessionId) {
-
-        sql += `
-            AND t.session_id = $2
-        `;
-
-        values.push(
-            sessionId
-        );
-    }
-
-
-    sql += `
+    const sql = `
+        SELECT *
+        FROM terms
+        WHERE school_id = $1
+          AND end_date IS NOT NULL
+          AND end_date < CURRENT_DATE
         ORDER BY
-
-            t.end_date DESC NULLS LAST
+            end_date DESC NULLS LAST,
+            term_order DESC
     `;
 
-
-    const result = await query(
-        sql,
-        values
-    );
+    const result = await query(sql, [
+        schoolId
+    ]);
 
     return result.rows;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -581,78 +401,89 @@ async function findCompletedTerms(
 async function updateTerm(
     termId,
     schoolId,
-    {
-        sessionId,
-        termName,
-        termCode = null,
-        startDate = null,
-        endDate = null,
-        description = null,
-        displayOrder = 0,
-        status = "upcoming"
-    }
+    data
 ) {
+    const allowedFields = {
+        termName: "term_name",
+        termOrder: "term_order",
+        displayOrder: "term_order",
+        startDate: "start_date",
+        endDate: "end_date",
+        isCurrent: "is_current",
+        isActive: "is_active"
+    };
 
-    if (!sessionId) {
+    const updates = [];
+    const values = [];
+
+    for (const key of Object.keys(data || {})) {
+        if (
+            allowedFields[key] &&
+            data[key] !== undefined
+        ) {
+            values.push(data[key]);
+
+            updates.push(
+                `${allowedFields[key]} = $${values.length}`
+            );
+        }
+    }
+
+    if (updates.length === 0) {
         throw new Error(
-            "Academic session ID is required."
+            "No valid fields supplied for update."
         );
     }
 
-    if (!termName || !termName.trim()) {
-        throw new Error("Term name is required.");
+    if (
+        data.isCurrent === true ||
+        String(data.status || "").toLowerCase() === "active"
+    ) {
+        await query(
+            `
+                UPDATE terms
+                SET is_current = FALSE
+                WHERE school_id = $1
+                  AND id <> $2
+            `,
+            [
+                schoolId,
+                termId
+            ]
+        );
+
+        if (
+            !updates.some(
+                item => item.startsWith("is_current")
+            )
+        ) {
+            values.push(true);
+
+            updates.push(
+                `is_current = $${values.length}`
+            );
+        }
     }
 
+    values.push(termId);
+    const termIdPosition = values.length;
+
+    values.push(schoolId);
+    const schoolIdPosition = values.length;
 
     const sql = `
         UPDATE terms
-
         SET
-
-            session_id = $1,
-
-            term_name = $2,
-
-            term_code = $3,
-
-            start_date = $4,
-
-            end_date = $5,
-
-            description = $6,
-
-            display_order = $7,
-
-            status = $8,
-
-            updated_at = NOW()
-
-        WHERE id = $9
-
-          AND school_id = $10
-
+            ${updates.join(", ")}
+        WHERE id = $${termIdPosition}
+          AND school_id = $${schoolIdPosition}
         RETURNING *
     `;
 
-    const result = await query(
-        sql,
-        [
-            sessionId,
-            termName.trim(),
-            termCode,
-            startDate,
-            endDate,
-            description,
-            displayOrder,
-            status,
-            termId,
-            schoolId
-        ]
-    );
+    const result = await query(sql, values);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -665,49 +496,32 @@ async function renameTerm(
     schoolId,
     newName
 ) {
-
     if (!newName || !newName.trim()) {
         throw new Error(
             "New term name is required."
         );
     }
 
-
     const sql = `
         UPDATE terms
-
-        SET
-
-            term_name = $1,
-
-            updated_at = NOW()
-
+        SET term_name = $1
         WHERE id = $2
-
           AND school_id = $3
-
         RETURNING *
     `;
 
-    const result = await query(
-        sql,
-        [
-            newName.trim(),
-            termId,
-            schoolId
-        ]
-    );
+    const result = await query(sql, [
+        newName.trim(),
+        termId,
+        schoolId
+    ]);
 
     return result.rows[0] || null;
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | Activate Term
-|--------------------------------------------------------------------------
-|
-| Only one term should normally be active within a session.
 |--------------------------------------------------------------------------
 */
 
@@ -715,75 +529,32 @@ async function activateTerm(
     termId,
     schoolId
 ) {
-
-    const currentTerm = await query(
-        `
-            SELECT session_id
-
-            FROM terms
-
-            WHERE id = $1
-
-              AND school_id = $2
-
-            LIMIT 1
-        `,
-        [
-            termId,
-            schoolId
-        ]
+    const term = await findTermById(
+        termId,
+        schoolId
     );
 
-
-    if (!currentTerm.rows[0]) {
+    if (!term) {
         return null;
     }
-
-
-    const sessionId =
-        currentTerm.rows[0].session_id;
-
 
     await query(
         `
             UPDATE terms
-
-            SET
-
-                status = 'completed',
-
-                updated_at = NOW()
-
+            SET is_current = FALSE
             WHERE school_id = $1
-
-              AND session_id = $2
-
-              AND status = 'active'
-
-              AND id <> $3
         `,
-        [
-            schoolId,
-            sessionId,
-            termId
-        ]
+        [schoolId]
     );
-
 
     const result = await query(
         `
             UPDATE terms
-
             SET
-
-                status = 'active',
-
-                updated_at = NOW()
-
+                is_current = TRUE,
+                is_active = TRUE
             WHERE id = $1
-
               AND school_id = $2
-
             RETURNING *
         `,
         [
@@ -792,10 +563,8 @@ async function activateTerm(
         ]
     );
 
-
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -807,34 +576,23 @@ async function setTermUpcoming(
     termId,
     schoolId
 ) {
-
     const sql = `
         UPDATE terms
-
         SET
-
-            status = 'upcoming',
-
-            updated_at = NOW()
-
+            is_current = FALSE,
+            is_active = TRUE
         WHERE id = $1
-
           AND school_id = $2
-
         RETURNING *
     `;
 
-    const result = await query(
-        sql,
-        [
-            termId,
-            schoolId
-        ]
-    );
+    const result = await query(sql, [
+        termId,
+        schoolId
+    ]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -846,34 +604,23 @@ async function completeTerm(
     termId,
     schoolId
 ) {
-
     const sql = `
         UPDATE terms
-
         SET
-
-            status = 'completed',
-
-            updated_at = NOW()
-
+            is_current = FALSE,
+            is_active = FALSE
         WHERE id = $1
-
           AND school_id = $2
-
         RETURNING *
     `;
 
-    const result = await query(
-        sql,
-        [
-            termId,
-            schoolId
-        ]
-    );
+    const result = await query(sql, [
+        termId,
+        schoolId
+    ]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -887,42 +634,29 @@ async function updateTermDates(
     startDate,
     endDate
 ) {
-
     const sql = `
         UPDATE terms
-
         SET
-
             start_date = $1,
-
-            end_date = $2,
-
-            updated_at = NOW()
-
+            end_date = $2
         WHERE id = $3
-
           AND school_id = $4
-
         RETURNING *
     `;
 
-    const result = await query(
-        sql,
-        [
-            startDate,
-            endDate,
-            termId,
-            schoolId
-        ]
-    );
+    const result = await query(sql, [
+        startDate,
+        endDate,
+        termId,
+        schoolId
+    ]);
 
     return result.rows[0] || null;
 }
 
-
 /*
 |--------------------------------------------------------------------------
-| Update Display Order
+| Update Term Order
 |--------------------------------------------------------------------------
 */
 
@@ -931,35 +665,22 @@ async function updateTermOrder(
     schoolId,
     displayOrder
 ) {
-
     const sql = `
         UPDATE terms
-
-        SET
-
-            display_order = $1,
-
-            updated_at = NOW()
-
+        SET term_order = $1
         WHERE id = $2
-
           AND school_id = $3
-
         RETURNING *
     `;
 
-    const result = await query(
-        sql,
-        [
-            displayOrder,
-            termId,
-            schoolId
-        ]
-    );
+    const result = await query(sql, [
+        displayOrder,
+        termId,
+        schoolId
+    ]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -971,55 +692,36 @@ async function searchTerms(
     searchTerm,
     schoolId
 ) {
-
     const sql = `
         SELECT
-
             t.*,
 
-            s.session_name,
-
             CONCAT(
-                s.session_name,
+                t.term_order,
                 ' - ',
                 t.term_name
             ) AS display_name
 
         FROM terms t
 
-        INNER JOIN academic_sessions s
-            ON s.id = t.session_id
-
         WHERE t.school_id = $1
-
           AND (
               t.term_name ILIKE $2
-
-              OR t.term_code ILIKE $2
-
-              OR t.description ILIKE $2
-
-              OR s.session_name ILIKE $2
+              OR CAST(t.term_order AS TEXT) ILIKE $2
           )
 
         ORDER BY
-
-            s.start_date DESC NULLS LAST,
-
-            t.display_order ASC
+            t.term_order ASC,
+            t.term_name ASC
     `;
 
-    const result = await query(
-        sql,
-        [
-            schoolId,
-            `%${searchTerm}%`
-        ]
-    );
+    const result = await query(sql, [
+        schoolId,
+        `%${searchTerm}%`
+    ]);
 
     return result.rows;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -1031,83 +733,59 @@ async function getTermStatistics(
     termId,
     schoolId
 ) {
-
-    const sql = `
-        SELECT
-
-            (
-                SELECT COUNT(*)
-
-                FROM student_enrollments se
-
-                WHERE se.term_id = $1
-
-            ) AS enrolled_students,
-
-            (
-                SELECT COUNT(*)
-
-                FROM results r
-
-                WHERE r.term_id = $1
-
-            ) AS result_records,
-
-            (
-                SELECT COUNT(*)
-
-                FROM attendance a
-
-                WHERE a.term_id = $1
-
-            ) AS attendance_records
-
-        WHERE EXISTS (
-
-            SELECT 1
-
-            FROM terms t
-
-            WHERE t.id = $1
-
-              AND t.school_id = $2
-        )
-    `;
-
-    const result = await query(
-        sql,
+    const existsResult = await query(
+        `
+            SELECT id
+            FROM terms
+            WHERE id = $1
+              AND school_id = $2
+            LIMIT 1
+        `,
         [
             termId,
             schoolId
         ]
     );
 
-
-    if (!result.rows[0]) {
+    if (!existsResult.rows[0]) {
         return null;
     }
 
+    const result = await query(
+        `
+            SELECT
+                (
+                    SELECT COUNT(*)
+                    FROM results r
+                    WHERE r.term_id = $1
+                      AND r.school_id = $2
+                ) AS result_records,
+
+                (
+                    SELECT COUNT(*)
+                    FROM attendance a
+                    WHERE a.term_id = $1
+                      AND a.school_id = $2
+                ) AS attendance_records
+        `,
+        [
+            termId,
+            schoolId
+        ]
+    );
+
+    const row = result.rows[0];
 
     return {
-
-        enrolledStudents:
-            Number(
-                result.rows[0].enrolled_students
-            ),
-
-        resultRecords:
-            Number(
-                result.rows[0].result_records
-            ),
-
-        attendanceRecords:
-            Number(
-                result.rows[0].attendance_records
-            )
-
+        enrolledStudents: 0,
+        resultRecords: Number(
+            row.result_records
+        ),
+        attendanceRecords: Number(
+            row.attendance_records
+        )
     };
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -1119,36 +797,27 @@ async function deleteTerm(
     termId,
     schoolId
 ) {
-
     const sql = `
         DELETE FROM terms
-
         WHERE id = $1
-
           AND school_id = $2
-
         RETURNING
-
             id,
-
-            session_id,
-
             term_name,
-
-            status
+            term_order,
+            start_date,
+            end_date,
+            is_current,
+            is_active
     `;
 
-    const result = await query(
-        sql,
-        [
-            termId,
-            schoolId
-        ]
-    );
+    const result = await query(sql, [
+        termId,
+        schoolId
+    ]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -1157,43 +826,23 @@ async function deleteTerm(
 */
 
 module.exports = {
-
     createTerm,
-
     findTermById,
-
     findTermByName,
-
     termExists,
-
     findTermsBySession,
-
     findTermsBySchool,
-
     findCurrentTerm,
-
     findUpcomingTerms,
-
     findCompletedTerms,
-
     updateTerm,
-
     renameTerm,
-
     activateTerm,
-
     setTermUpcoming,
-
     completeTerm,
-
     updateTermDates,
-
     updateTermOrder,
-
     searchTerms,
-
     getTermStatistics,
-
     deleteTerm
-
 };

@@ -1,18 +1,34 @@
+```javascript
 "use strict";
 
 const { query } = require("../config/database");
-
 
 /*
 |--------------------------------------------------------------------------
 | USER MODEL
 |--------------------------------------------------------------------------
+| Compatible with the current PostgreSQL users schema.
+|--------------------------------------------------------------------------
 |
-| Handles database operations for system users.
+| users:
+| id
+| school_id
+| role_id
+| first_name
+| middle_name
+| last_name
+| email
+| phone
+| username
+| password_hash
+| profile_photo_url
+| last_login_at
+| is_active
+| created_at
+| updated_at
 |
 |--------------------------------------------------------------------------
 */
-
 
 /*
 |--------------------------------------------------------------------------
@@ -27,66 +43,87 @@ async function createUser({
     email,
     passwordHash,
     firstName,
+    middleName = null,
     lastName,
-    phone = null
+    phone = null,
+    profilePhotoUrl = null,
+    isActive = true
 }) {
+    if (!schoolId) {
+        throw new Error("School ID is required.");
+    }
+
+    if (!roleId) {
+        throw new Error("Role ID is required.");
+    }
+
+    if (!username || !username.trim()) {
+        throw new Error("Username is required.");
+    }
+
+    if (!passwordHash) {
+        throw new Error("Password hash is required.");
+    }
+
+    if (!firstName || !firstName.trim()) {
+        throw new Error("First name is required.");
+    }
+
+    if (!lastName || !lastName.trim()) {
+        throw new Error("Last name is required.");
+    }
 
     const sql = `
         INSERT INTO users (
             school_id,
             role_id,
             first_name,
+            middle_name,
             last_name,
             email,
             phone,
             username,
             password_hash,
+            profile_photo_url,
             is_active
         )
-
         VALUES (
-            $1,
-            $2,
-            $3,
-            $4,
-            $5,
-            $6,
-            $7,
-            $8,
-            TRUE
+            $1, $2, $3, $4, $5,
+            $6, $7, $8, $9, $10, $11
         )
-
         RETURNING
             id,
             school_id,
             role_id,
             first_name,
+            middle_name,
             last_name,
             email,
             phone,
             username,
+            profile_photo_url,
             is_active,
             last_login_at,
             created_at,
             updated_at
     `;
 
-    const values = [
+    const result = await query(sql, [
         schoolId,
         roleId,
-        firstName,
-        lastName,
-        email,
+        firstName.trim(),
+        middleName ? middleName.trim() : null,
+        lastName.trim(),
+        email ? email.trim().toLowerCase() : null,
         phone,
-        username,
-        passwordHash
-    ];
-
-    const result = await query(sql, values);
+        username.trim(),
+        passwordHash,
+        profilePhotoUrl,
+        isActive
+    ]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -95,26 +132,20 @@ async function createUser({
 */
 
 async function findUserById(userId) {
-
     const sql = `
         SELECT
             u.id,
             u.school_id,
             u.role_id,
-
             u.first_name,
             u.middle_name,
             u.last_name,
-
             u.email,
             u.phone,
             u.username,
-
             u.profile_photo_url,
-
             u.is_active,
             u.last_login_at,
-
             u.created_at,
             u.updated_at,
 
@@ -133,18 +164,13 @@ async function findUserById(userId) {
             ON s.id = u.school_id
 
         WHERE u.id = $1
-
         LIMIT 1
     `;
 
-    const result = await query(
-        sql,
-        [userId]
-    );
+    const result = await query(sql, [userId]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -153,26 +179,20 @@ async function findUserById(userId) {
 */
 
 async function findUserByUsername(username) {
-
     const sql = `
         SELECT
             u.id,
             u.school_id,
             u.role_id,
-
             u.first_name,
             u.middle_name,
             u.last_name,
-
             u.email,
             u.phone,
             u.username,
-
             u.profile_photo_url,
-
             u.is_active,
             u.last_login_at,
-
             u.created_at,
             u.updated_at,
 
@@ -191,18 +211,13 @@ async function findUserByUsername(username) {
             ON s.id = u.school_id
 
         WHERE LOWER(u.username) = LOWER($1)
-
         LIMIT 1
     `;
 
-    const result = await query(
-        sql,
-        [username]
-    );
+    const result = await query(sql, [username]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -211,26 +226,20 @@ async function findUserByUsername(username) {
 */
 
 async function findUserByEmail(email) {
-
     const sql = `
         SELECT
             u.id,
             u.school_id,
             u.role_id,
-
             u.first_name,
             u.middle_name,
             u.last_name,
-
             u.email,
             u.phone,
             u.username,
-
             u.profile_photo_url,
-
             u.is_active,
             u.last_login_at,
-
             u.created_at,
             u.updated_at,
 
@@ -249,52 +258,36 @@ async function findUserByEmail(email) {
             ON s.id = u.school_id
 
         WHERE LOWER(u.email) = LOWER($1)
-
         LIMIT 1
     `;
 
-    const result = await query(
-        sql,
-        [email]
-    );
+    const result = await query(sql, [email]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
 | FIND USER FOR LOGIN
 |--------------------------------------------------------------------------
-|
-| Login needs password_hash.
-|
-|--------------------------------------------------------------------------
 */
 
 async function findUserForLogin(identifier) {
-
     const sql = `
         SELECT
             u.id,
             u.school_id,
             u.role_id,
-
             u.first_name,
             u.middle_name,
             u.last_name,
-
             u.email,
             u.phone,
             u.username,
-
             u.password_hash,
-
             u.profile_photo_url,
-
             u.is_active,
             u.last_login_at,
-
             u.created_at,
             u.updated_at,
 
@@ -314,22 +307,16 @@ async function findUserForLogin(identifier) {
 
         WHERE
             LOWER(u.username) = LOWER($1)
-
             OR
-
             LOWER(u.email) = LOWER($1)
 
         LIMIT 1
     `;
 
-    const result = await query(
-        sql,
-        [identifier]
-    );
+    const result = await query(sql, [identifier]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -338,30 +325,22 @@ async function findUserForLogin(identifier) {
 */
 
 async function updateLastLogin(userId) {
-
     const sql = `
         UPDATE users
-
         SET
             last_login_at = CURRENT_TIMESTAMP,
             updated_at = CURRENT_TIMESTAMP
-
         WHERE id = $1
-
         RETURNING
             id,
             last_login_at,
             updated_at
     `;
 
-    const result = await query(
-        sql,
-        [userId]
-    );
+    const result = await query(sql, [userId]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -373,32 +352,24 @@ async function updatePassword(
     userId,
     passwordHash
 ) {
-
     const sql = `
         UPDATE users
-
         SET
             password_hash = $1,
             updated_at = CURRENT_TIMESTAMP
-
         WHERE id = $2
-
         RETURNING
             id,
             updated_at
     `;
 
-    const result = await query(
-        sql,
-        [
-            passwordHash,
-            userId
-        ]
-    );
+    const result = await query(sql, [
+        passwordHash,
+        userId
+    ]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -407,16 +378,12 @@ async function updatePassword(
 */
 
 async function activateUser(userId) {
-
     const sql = `
         UPDATE users
-
         SET
             is_active = TRUE,
             updated_at = CURRENT_TIMESTAMP
-
         WHERE id = $1
-
         RETURNING
             id,
             school_id,
@@ -425,14 +392,10 @@ async function activateUser(userId) {
             updated_at
     `;
 
-    const result = await query(
-        sql,
-        [userId]
-    );
+    const result = await query(sql, [userId]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -441,16 +404,12 @@ async function activateUser(userId) {
 */
 
 async function deactivateUser(userId) {
-
     const sql = `
         UPDATE users
-
         SET
             is_active = FALSE,
             updated_at = CURRENT_TIMESTAMP
-
         WHERE id = $1
-
         RETURNING
             id,
             school_id,
@@ -459,14 +418,10 @@ async function deactivateUser(userId) {
             updated_at
     `;
 
-    const result = await query(
-        sql,
-        [userId]
-    );
+    const result = await query(sql, [userId]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -478,61 +433,56 @@ async function updateUserProfile(
     userId,
     {
         firstName,
+        middleName = null,
         lastName,
         email,
-        phone
+        phone,
+        profilePhotoUrl
     }
 ) {
-
     const sql = `
         UPDATE users
-
         SET
-            first_name = $1,
-            last_name = $2,
-            email = $3,
-            phone = $4,
+            first_name = COALESCE($1, first_name),
+            middle_name = $2,
+            last_name = COALESCE($3, last_name),
+            email = COALESCE($4, email),
+            phone = $5,
+            profile_photo_url =
+                COALESCE($6, profile_photo_url),
             updated_at = CURRENT_TIMESTAMP
-
-        WHERE id = $5
-
+        WHERE id = $7
         RETURNING
             id,
             school_id,
             role_id,
-
             first_name,
+            middle_name,
             last_name,
-
             email,
             phone,
             username,
-
             profile_photo_url,
-
             is_active,
             last_login_at,
-
             created_at,
             updated_at
     `;
 
-    const values = [
-        firstName,
-        lastName,
-        email,
-        phone,
+    const result = await query(sql, [
+        firstName || null,
+        middleName,
+        lastName || null,
+        email
+            ? email.trim().toLowerCase()
+            : null,
+        phone || null,
+        profilePhotoUrl || null,
         userId
-    ];
-
-    const result = await query(
-        sql,
-        values
-    );
+    ]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -541,11 +491,11 @@ async function updateUserProfile(
 */
 
 async function findUsersBySchool(schoolId) {
-
     const sql = `
         SELECT
             u.id,
             u.school_id,
+            u.role_id,
 
             u.first_name,
             u.middle_name,
@@ -563,7 +513,6 @@ async function findUsersBySchool(schoolId) {
             u.created_at,
             u.updated_at,
 
-            r.id AS role_id,
             r.role_name
 
         FROM users u
@@ -579,14 +528,10 @@ async function findUsersBySchool(schoolId) {
             u.username ASC
     `;
 
-    const result = await query(
-        sql,
-        [schoolId]
-    );
+    const result = await query(sql, [schoolId]);
 
     return result.rows;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -599,54 +544,39 @@ async function usernameExists(
     excludeUserId = null,
     schoolId = null
 ) {
-
     let sql = `
         SELECT EXISTS (
             SELECT 1
-
             FROM users
-
             WHERE LOWER(username) = LOWER($1)
     `;
 
-    const values = [
-        username
-    ];
+    const values = [username];
 
     if (schoolId) {
+        values.push(schoolId);
 
         sql += `
-            AND school_id = $2
+            AND school_id = $${values.length}
         `;
-
-        values.push(schoolId);
     }
 
     if (excludeUserId) {
-
-        const parameterNumber =
-            values.length + 1;
+        values.push(excludeUserId);
 
         sql += `
-            AND id <> $${parameterNumber}
+            AND id <> $${values.length}
         `;
-
-        values.push(excludeUserId);
     }
 
     sql += `
-        )
-        AS exists
+        ) AS exists
     `;
 
-    const result = await query(
-        sql,
-        values
-    );
+    const result = await query(sql, values);
 
     return result.rows[0].exists;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -659,54 +589,39 @@ async function emailExists(
     excludeUserId = null,
     schoolId = null
 ) {
-
     let sql = `
         SELECT EXISTS (
             SELECT 1
-
             FROM users
-
             WHERE LOWER(email) = LOWER($1)
     `;
 
-    const values = [
-        email
-    ];
+    const values = [email];
 
     if (schoolId) {
+        values.push(schoolId);
 
         sql += `
-            AND school_id = $2
+            AND school_id = $${values.length}
         `;
-
-        values.push(schoolId);
     }
 
     if (excludeUserId) {
-
-        const parameterNumber =
-            values.length + 1;
+        values.push(excludeUserId);
 
         sql += `
-            AND id <> $${parameterNumber}
+            AND id <> $${values.length}
         `;
-
-        values.push(excludeUserId);
     }
 
     sql += `
-        )
-        AS exists
+        ) AS exists
     `;
 
-    const result = await query(
-        sql,
-        values
-    );
+    const result = await query(sql, values);
 
     return result.rows[0].exists;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -715,12 +630,9 @@ async function emailExists(
 */
 
 async function deleteUser(userId) {
-
     const sql = `
         DELETE FROM users
-
         WHERE id = $1
-
         RETURNING
             id,
             school_id,
@@ -728,14 +640,10 @@ async function deleteUser(userId) {
             email
     `;
 
-    const result = await query(
-        sql,
-        [userId]
-    );
+    const result = await query(sql, [userId]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -744,33 +652,18 @@ async function deleteUser(userId) {
 */
 
 module.exports = {
-
     createUser,
-
     findUserById,
-
     findUserByUsername,
-
     findUserByEmail,
-
     findUserForLogin,
-
     updateLastLogin,
-
     updatePassword,
-
     activateUser,
-
     deactivateUser,
-
     updateUserProfile,
-
     findUsersBySchool,
-
     usernameExists,
-
     emailExists,
-
     deleteUser
-
 };

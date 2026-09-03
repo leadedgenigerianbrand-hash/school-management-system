@@ -1,15 +1,14 @@
+```javascript
 const { query } = require("../config/database");
 
 /*
 |--------------------------------------------------------------------------
 | Role Model
 |--------------------------------------------------------------------------
-|
 | Handles system roles and role permissions.
-|
+| Compatible with the current PostgreSQL schema.
 |--------------------------------------------------------------------------
 */
-
 
 /*
 |--------------------------------------------------------------------------
@@ -21,7 +20,6 @@ async function createRole({
     roleName,
     description = null
 }) {
-
     if (!roleName || !roleName.trim()) {
         throw new Error("Role name is required.");
     }
@@ -31,24 +29,17 @@ async function createRole({
             role_name,
             description
         )
-        VALUES (
-            $1,
-            $2
-        )
+        VALUES ($1, $2)
         RETURNING *
     `;
 
-    const result = await query(
-        sql,
-        [
-            roleName.trim(),
-            description
-        ]
-    );
+    const result = await query(sql, [
+        roleName.trim(),
+        description
+    ]);
 
     return result.rows[0];
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -57,7 +48,6 @@ async function createRole({
 */
 
 async function findRoleById(roleId) {
-
     const sql = `
         SELECT
             id,
@@ -69,14 +59,10 @@ async function findRoleById(roleId) {
         LIMIT 1
     `;
 
-    const result = await query(
-        sql,
-        [roleId]
-    );
+    const result = await query(sql, [roleId]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -85,7 +71,6 @@ async function findRoleById(roleId) {
 */
 
 async function findRoleByName(roleName) {
-
     const sql = `
         SELECT
             id,
@@ -97,14 +82,10 @@ async function findRoleByName(roleName) {
         LIMIT 1
     `;
 
-    const result = await query(
-        sql,
-        [roleName]
-    );
+    const result = await query(sql, [roleName]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -113,7 +94,6 @@ async function findRoleByName(roleName) {
 */
 
 async function findRoles() {
-
     const sql = `
         SELECT
             r.id,
@@ -145,7 +125,6 @@ async function findRoles() {
     return result.rows;
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | Update Role
@@ -159,35 +138,27 @@ async function updateRole(
         description = null
     }
 ) {
-
     if (!roleName || !roleName.trim()) {
         throw new Error("Role name is required.");
     }
 
     const sql = `
         UPDATE roles
-
         SET
             role_name = $1,
             description = $2
-
         WHERE id = $3
-
         RETURNING *
     `;
 
-    const result = await query(
-        sql,
-        [
-            roleName.trim(),
-            description,
-            roleId
-        ]
-    );
+    const result = await query(sql, [
+        roleName.trim(),
+        description,
+        roleId
+    ]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -196,21 +167,16 @@ async function updateRole(
 */
 
 async function deleteRole(roleId) {
-
     const sql = `
         DELETE FROM roles
         WHERE id = $1
         RETURNING *
     `;
 
-    const result = await query(
-        sql,
-        [roleId]
-    );
+    const result = await query(sql, [roleId]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -222,31 +188,27 @@ async function assignPermission(
     roleId,
     permissionId
 ) {
-
     const sql = `
         INSERT INTO role_permissions (
             role_id,
             permission_id
         )
-        VALUES (
-            $1,
-            $2
+        VALUES ($1, $2)
+        ON CONFLICT (
+            role_id,
+            permission_id
         )
-        ON CONFLICT DO NOTHING
+        DO NOTHING
         RETURNING *
     `;
 
-    const result = await query(
-        sql,
-        [
-            roleId,
-            permissionId
-        ]
-    );
+    const result = await query(sql, [
+        roleId,
+        permissionId
+    ]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -258,25 +220,20 @@ async function removePermission(
     roleId,
     permissionId
 ) {
-
     const sql = `
         DELETE FROM role_permissions
         WHERE role_id = $1
-        AND permission_id = $2
+          AND permission_id = $2
         RETURNING *
     `;
 
-    const result = await query(
-        sql,
-        [
-            roleId,
-            permissionId
-        ]
-    );
+    const result = await query(sql, [
+        roleId,
+        permissionId
+    ]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -285,10 +242,13 @@ async function removePermission(
 */
 
 async function getRolePermissions(roleId) {
-
     const sql = `
         SELECT
-            p.*
+            p.id,
+            p.permission_name,
+            p.description,
+            p.created_at
+
         FROM permissions p
 
         INNER JOIN role_permissions rp
@@ -297,17 +257,13 @@ async function getRolePermissions(roleId) {
         WHERE rp.role_id = $1
 
         ORDER BY
-            p.name ASC
+            p.permission_name ASC
     `;
 
-    const result = await query(
-        sql,
-        [roleId]
-    );
+    const result = await query(sql, [roleId]);
 
     return result.rows;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -319,10 +275,8 @@ async function hasPermission(
     roleId,
     permissionName
 ) {
-
     const sql = `
         SELECT EXISTS (
-
             SELECT 1
 
             FROM role_permissions rp
@@ -331,32 +285,17 @@ async function hasPermission(
                 ON p.id = rp.permission_id
 
             WHERE rp.role_id = $1
-
-            AND (
-                LOWER(p.name) = LOWER($2)
-
-                OR LOWER(
-                    COALESCE(
-                        p.permission_name,
-                        ''
-                    )
-                ) = LOWER($2)
-            )
-
+              AND LOWER(p.permission_name) = LOWER($2)
         ) AS has_permission
     `;
 
-    const result = await query(
-        sql,
-        [
-            roleId,
-            permissionName
-        ]
-    );
+    const result = await query(sql, [
+        roleId,
+        permissionName
+    ]);
 
     return result.rows[0].has_permission;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -365,10 +304,13 @@ async function hasPermission(
 */
 
 async function getUserRoles(userId) {
-
     const sql = `
         SELECT
-            r.*
+            r.id,
+            r.role_name,
+            r.description,
+            r.created_at
+
         FROM roles r
 
         INNER JOIN users u
@@ -380,14 +322,10 @@ async function getUserRoles(userId) {
             r.role_name ASC
     `;
 
-    const result = await query(
-        sql,
-        [userId]
-    );
+    const result = await query(sql, [userId]);
 
     return result.rows;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -399,7 +337,6 @@ async function getRoleUsers(
     roleId,
     schoolId = null
 ) {
-
     let sql = `
         SELECT
             u.id,
@@ -408,9 +345,12 @@ async function getRoleUsers(
             u.role_id,
             u.school_id,
             u.first_name,
+            u.middle_name,
             u.last_name,
+            u.phone,
             u.is_active,
-            u.created_at
+            u.created_at,
+            u.updated_at
 
         FROM users u
 
@@ -420,7 +360,6 @@ async function getRoleUsers(
     const values = [roleId];
 
     if (schoolId) {
-
         values.push(schoolId);
 
         sql += `
@@ -433,14 +372,10 @@ async function getRoleUsers(
             u.username ASC
     `;
 
-    const result = await query(
-        sql,
-        values
-    );
+    const result = await query(sql, values);
 
     return result.rows;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -449,7 +384,6 @@ async function getRoleUsers(
 */
 
 async function getRoleSummary() {
-
     const sql = `
         SELECT
             r.id,
@@ -486,6 +420,58 @@ async function getRoleSummary() {
     return result.rows;
 }
 
+/*
+|--------------------------------------------------------------------------
+| Role Exists
+|--------------------------------------------------------------------------
+*/
+
+async function roleExists(
+    roleName,
+    excludeRoleId = null
+) {
+    let sql = `
+        SELECT EXISTS (
+            SELECT 1
+            FROM roles
+            WHERE LOWER(role_name) = LOWER($1)
+    `;
+
+    const values = [roleName];
+
+    if (excludeRoleId) {
+        values.push(excludeRoleId);
+
+        sql += `
+            AND id <> $${values.length}
+        `;
+    }
+
+    sql += `
+        ) AS exists
+    `;
+
+    const result = await query(sql, values);
+
+    return result.rows[0].exists;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Count Roles
+|--------------------------------------------------------------------------
+*/
+
+async function countRoles() {
+    const sql = `
+        SELECT COUNT(*)::INTEGER AS count
+        FROM roles
+    `;
+
+    const result = await query(sql);
+
+    return Number(result.rows[0].count);
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -494,31 +480,19 @@ async function getRoleSummary() {
 */
 
 module.exports = {
-
     createRole,
-
     findRoleById,
-
     findRoleByName,
-
     findRoles,
-
     updateRole,
-
     deleteRole,
-
     assignPermission,
-
     removePermission,
-
     getRolePermissions,
-
     hasPermission,
-
     getUserRoles,
-
     getRoleUsers,
-
-    getRoleSummary
-
+    getRoleSummary,
+    roleExists,
+    countRoles
 };

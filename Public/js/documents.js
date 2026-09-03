@@ -1,321 +1,251 @@
-const API_BASE = "/api";
+"use strict";
 
-let documents = [];
+(function () {
+    const API_BASE = "/api";
+    let documents = [];
 
+    const tableBody =
+        document.getElementById("documentsTableBody") ||
+        document.getElementById("documentTableBody") ||
+        document.querySelector("#documentsTable tbody");
 
-/*
-|--------------------------------------------------------------------------
-| DOM ELEMENTS
-|--------------------------------------------------------------------------
-*/
+    const searchInput =
+        document.getElementById("searchInput") ||
+        document.getElementById("documentSearch");
 
-const tableBody =
-    document.getElementById("documentsTableBody") ||
-    document.getElementById("documentTableBody") ||
-    document.querySelector("#documentsTable tbody");
+    const typeFilter =
+        document.getElementById("typeFilter") ||
+        document.getElementById("documentTypeFilter");
 
-const searchInput =
-    document.getElementById("searchInput") ||
-    document.getElementById("documentSearch");
+    const statusFilter =
+        document.getElementById("statusFilter");
 
-const typeFilter =
-    document.getElementById("typeFilter") ||
-    document.getElementById("documentTypeFilter");
+    const messageContainer =
+        document.getElementById("message") ||
+        document.getElementById("messageContainer");
 
-const statusFilter =
-    document.getElementById("statusFilter");
+    async function apiRequest(endpoint, options = {}) {
+        const token =
+            localStorage.getItem("school_management_token") ||
+            sessionStorage.getItem("school_management_token") ||
+            localStorage.getItem("token") ||
+            sessionStorage.getItem("token") ||
+            localStorage.getItem("accessToken") ||
+            sessionStorage.getItem("accessToken") ||
+            "";
 
-const messageContainer =
-    document.getElementById("message") ||
-    document.getElementById("messageContainer");
+        let url = endpoint;
 
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            if (!url.startsWith("/")) {
+                url = `/${url}`;
+            }
 
-/*
-|--------------------------------------------------------------------------
-| AUTHENTICATION
-|--------------------------------------------------------------------------
-*/
+            if (!url.startsWith(`${API_BASE}/`)) {
+                url = `${API_BASE}${url}`;
+            }
+        }
 
-function getToken() {
+        const headers = {
+            Accept: "application/json",
+            ...(options.headers || {})
+        };
 
-    return (
-        localStorage.getItem("token") ||
-        sessionStorage.getItem("token")
-    );
+        if (
+            options.body &&
+            !(options.body instanceof FormData) &&
+            !headers["Content-Type"] &&
+            !headers["content-type"]
+        ) {
+            headers["Content-Type"] = "application/json";
+        }
 
-}
+        if (token) {
+            headers.Authorization = `Bearer ${token}`;
+        }
 
+        let response;
 
-/*
-|--------------------------------------------------------------------------
-| API REQUEST
-|--------------------------------------------------------------------------
-*/
-
-async function apiRequest(
-    url,
-    options = {}
-) {
-
-    const token = getToken();
-
-    const headers = {
-        ...(options.headers || {})
-    };
-
-
-    if (
-        options.body &&
-        !(options.body instanceof FormData)
-    ) {
-
-        headers["Content-Type"] =
-            "application/json";
-
-    }
-
-
-    if (token) {
-
-        headers.Authorization =
-            `Bearer ${token}`;
-
-    }
-
-
-    const response =
-        await fetch(
-            API_BASE + url,
-            {
+        try {
+            response = await fetch(url, {
                 ...options,
                 headers
+            });
+        } catch (error) {
+            console.error("API request failed:", error);
+            throw new Error(
+                "Unable to connect to the server. Please check your connection."
+            );
+        }
+
+        if (response.status === 401) {
+            localStorage.removeItem("school_management_token");
+            localStorage.removeItem("school_management_user");
+            sessionStorage.removeItem("school_management_token");
+            sessionStorage.removeItem("school_management_user");
+
+            if (!window.location.pathname.endsWith("/login.html")) {
+                window.location.replace("/pages/login.html");
             }
-        );
 
+            throw new Error("Authentication required.");
+        }
 
-    let data = null;
+        if (response.status === 403) {
+            throw new Error(
+                "You do not have permission to perform this action."
+            );
+        }
 
+        const contentType =
+            response.headers.get("content-type") || "";
 
-    try {
+        let data;
 
-        data =
-            await response.json();
+        if (contentType.includes("application/json")) {
+            data = await response.json();
+        } else {
+            data = await response.text();
+        }
 
-    } catch (error) {
+        if (!response.ok) {
+            let message = "Request failed.";
 
-        data = null;
+            if (data && typeof data === "object") {
+                message =
+                    data.message ||
+                    data.error ||
+                    message;
+            } else if (typeof data === "string" && data.trim()) {
+                message = data;
+            }
 
+            throw new Error(message);
+        }
+
+        return data;
     }
 
+    function showMessage(text, type = "success") {
+        if (!messageContainer) {
+            return;
+        }
 
-    if (!response.ok) {
+        messageContainer.textContent = text;
+        messageContainer.className = `message ${type}`;
 
-        throw new Error(
-            data?.message ||
-            "Request failed."
-        );
-
+        setTimeout(() => {
+            messageContainer.textContent = "";
+            messageContainer.className = "message";
+        }, 4000);
     }
 
+    async function loadDocuments() {
+        try {
+            showLoading();
 
-    return data;
+            const result =
+                await apiRequest("/documents");
 
-}
+            documents =
+                Array.isArray(result?.data)
+                    ? result.data
+                    : Array.isArray(result?.documents)
+                        ? result.documents
+                        : Array.isArray(result)
+                            ? result
+                            : [];
 
-
-/*
-|--------------------------------------------------------------------------
-| SHOW MESSAGE
-|--------------------------------------------------------------------------
-*/
-
-function showMessage(
-    text,
-    type = "success"
-) {
-
-    if (!messageContainer) {
-        return;
-    }
-
-
-    messageContainer.textContent =
-        text;
-
-
-    messageContainer.className =
-        `message ${type}`;
-
-
-    setTimeout(
-        function() {
-
-            messageContainer.textContent =
-                "";
-
-            messageContainer.className =
-                "message";
-
-        },
-        4000
-    );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| LOAD DOCUMENTS
-|--------------------------------------------------------------------------
-*/
-
-async function loadDocuments() {
-
-    try {
-
-        showLoading();
-
-
-        const result =
-            await apiRequest(
-                "/documents"
+            renderDocuments();
+        } catch (error) {
+            console.error(
+                "Load documents error:",
+                error
             );
 
+            showEmpty(
+                "Unable to load documents."
+            );
 
-        documents =
-            Array.isArray(result?.data)
-                ? result.data
-                : Array.isArray(result?.documents)
-                    ? result.documents
-                    : Array.isArray(result)
-                        ? result
-                        : [];
-
-
-        renderDocuments();
-
-
-    } catch (error) {
-
-        console.error(
-            "Load documents error:",
-            error
-        );
-
-
-        showEmpty(
-            "Unable to load documents."
-        );
-
-
-        showMessage(
-            error.message ||
-            "Unable to load documents.",
-            "error"
-        );
-
+            showMessage(
+                error.message ||
+                "Unable to load documents.",
+                "error"
+            );
+        }
     }
 
-}
+    function renderDocuments() {
+        if (!tableBody) {
+            return;
+        }
 
-
-/*
-|--------------------------------------------------------------------------
-| RENDER DOCUMENTS
-|--------------------------------------------------------------------------
-*/
-
-function renderDocuments() {
-
-    if (!tableBody) {
-        return;
-    }
-
-
-    const searchTerm =
-        searchInput
-            ? searchInput.value
+        const searchTerm =
+            searchInput?.value
                 .trim()
-                .toLowerCase()
-            : "";
+                .toLowerCase() || "";
 
-
-    const selectedType =
-        typeFilter
-            ? typeFilter.value
+        const selectedType =
+            typeFilter?.value
                 .trim()
-                .toLowerCase()
-            : "";
+                .toLowerCase() || "";
 
-
-    const selectedStatus =
-        statusFilter
-            ? statusFilter.value
+        const selectedStatus =
+            statusFilter?.value
                 .trim()
-                .toLowerCase()
-            : "";
+                .toLowerCase() || "";
 
-
-    const filteredDocuments =
-        documents.filter(
-            document => {
-
+        const filteredDocuments =
+            documents.filter(documentRecord => {
                 const name =
                     String(
-                        document.document_name ||
-                        document.documentName ||
-                        document.name ||
-                        document.title ||
+                        documentRecord.document_name ||
+                        documentRecord.documentName ||
+                        documentRecord.name ||
+                        documentRecord.title ||
                         ""
                     ).toLowerCase();
-
 
                 const type =
                     String(
-                        document.document_type ||
-                        document.documentType ||
-                        document.type ||
+                        documentRecord.document_type ||
+                        documentRecord.documentType ||
+                        documentRecord.type ||
                         ""
                     ).toLowerCase();
-
 
                 const description =
                     String(
-                        document.description ||
+                        documentRecord.description ||
                         ""
                     ).toLowerCase();
-
 
                 const fileName =
                     String(
-                        document.file_name ||
-                        document.fileName ||
+                        documentRecord.file_name ||
+                        documentRecord.fileName ||
                         ""
                     ).toLowerCase();
-
 
                 const status =
                     String(
-                        document.status ||
+                        documentRecord.status ||
                         "active"
                     ).toLowerCase();
 
-
                 const studentName =
                     String(
-                        document.student_name ||
-                        document.studentName ||
+                        documentRecord.student_name ||
+                        documentRecord.studentName ||
                         ""
                     ).toLowerCase();
-
 
                 const staffName =
                     String(
-                        document.staff_name ||
-                        document.staffName ||
+                        documentRecord.staff_name ||
+                        documentRecord.staffName ||
                         ""
                     ).toLowerCase();
-
 
                 const matchesSearch =
                     !searchTerm ||
@@ -326,701 +256,406 @@ function renderDocuments() {
                     studentName.includes(searchTerm) ||
                     staffName.includes(searchTerm);
 
-
                 const matchesType =
                     !selectedType ||
                     type === selectedType;
 
-
                 const matchesStatus =
                     !selectedStatus ||
                     status === selectedStatus;
-
 
                 return (
                     matchesSearch &&
                     matchesType &&
                     matchesStatus
                 );
-
-            }
-        );
-
-
-    if (
-        filteredDocuments.length === 0
-    ) {
-
-        showEmpty(
-            "No documents found."
-        );
-
-        return;
-
-    }
-
-
-    tableBody.innerHTML =
-        filteredDocuments
-            .map(
-                document =>
-                    createDocumentRow(
-                        document
-                    )
-            )
-            .join("");
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| CREATE DOCUMENT ROW
-|--------------------------------------------------------------------------
-*/
-
-function createDocumentRow(
-    document
-) {
-
-    const id =
-        document.id;
-
-
-    const name =
-        document.document_name ||
-        document.documentName ||
-        document.name ||
-        document.title ||
-        document.file_name ||
-        document.fileName ||
-        "-";
-
-
-    const type =
-        document.document_type ||
-        document.documentType ||
-        document.type ||
-        "-";
-
-
-    const fileName =
-        document.file_name ||
-        document.fileName ||
-        "-";
-
-
-    const description =
-        document.description ||
-        "-";
-
-
-    const status =
-        String(
-            document.status ||
-            "active"
-        ).toLowerCase();
-
-
-    const studentName =
-        document.student_name ||
-        document.studentName ||
-        "-";
-
-
-    const staffName =
-        document.staff_name ||
-        document.staffName ||
-        "-";
-
-
-    const owner =
-        studentName !== "-"
-            ? studentName
-            : staffName;
-
-
-    const createdAt =
-        document.created_at ||
-        document.createdAt;
-
-
-    const fileUrl =
-        document.file_url ||
-        document.fileUrl ||
-        document.url ||
-        document.path ||
-        "";
-
-
-    return `
-        <tr>
-
-            <td>
-                ${escapeHtml(name)}
-            </td>
-
-            <td>
-                ${escapeHtml(fileName)}
-            </td>
-
-            <td>
-                ${escapeHtml(type)}
-            </td>
-
-            <td>
-                ${escapeHtml(owner)}
-            </td>
-
-            <td>
-                <span class="status-badge status-${escapeHtml(status)}">
-                    ${formatStatus(status)}
-                </span>
-            </td>
-
-            <td>
-                ${formatDate(createdAt)}
-            </td>
-
-            <td>
-
-                <div class="action-buttons">
-
-                    ${
-                        fileUrl
-                            ? `
-                                <button
-                                    type="button"
-                                    class="btn btn-sm btn-primary"
-                                    onclick="viewDocument('${escapeJs(fileUrl)}')"
-                                >
-                                    View
-                                </button>
-                            `
-                            : ""
-                    }
-
-                    <button
-                        type="button"
-                        class="btn btn-sm btn-danger"
-                        onclick="deleteDocument('${escapeJs(id)}')"
-                    >
-                        Delete
-                    </button>
-
-                </div>
-
-            </td>
-
-        </tr>
-    `;
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| ADD DOCUMENT
-|--------------------------------------------------------------------------
-*/
-
-function addDocument() {
-
-    window.location.href =
-        "document-form.html";
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| EDIT DOCUMENT
-|--------------------------------------------------------------------------
-*/
-
-function editDocument(
-    id
-) {
-
-    window.location.href =
-        `document-form.html?id=${encodeURIComponent(id)}`;
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| VIEW DOCUMENT
-|--------------------------------------------------------------------------
-*/
-
-function viewDocument(
-    url
-) {
-
-    if (!url) {
-
-        showMessage(
-            "Document file is not available.",
-            "error"
-        );
-
-        return;
-
-    }
-
-
-    window.open(
-        url,
-        "_blank",
-        "noopener,noreferrer"
-    );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| DOWNLOAD DOCUMENT
-|--------------------------------------------------------------------------
-*/
-
-function downloadDocument(
-    url,
-    fileName = "document"
-) {
-
-    if (!url) {
-
-        showMessage(
-            "Document file is not available.",
-            "error"
-        );
-
-        return;
-
-    }
-
-
-    const link =
-        document.createElement("a");
-
-
-    link.href =
-        url;
-
-
-    link.download =
-        fileName;
-
-
-    link.target =
-        "_blank";
-
-
-    link.rel =
-        "noopener";
-
-
-    document.body.appendChild(
-        link
-    );
-
-
-    link.click();
-
-
-    link.remove();
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| DELETE DOCUMENT
-|--------------------------------------------------------------------------
-*/
-
-async function deleteDocument(
-    id
-) {
-
-    const documentRecord =
-        documents.find(
-            item =>
-                String(item.id) ===
-                String(id)
-        );
-
-
-    const documentName =
-        documentRecord
-            ? (
-                documentRecord.document_name ||
-                documentRecord.documentName ||
-                documentRecord.name ||
-                documentRecord.title ||
-                documentRecord.file_name ||
-                documentRecord.fileName ||
-                "this document"
-            )
-            : "this document";
-
-
-    const confirmed =
-        window.confirm(
-            `Are you sure you want to delete "${documentName}"?`
-        );
-
-
-    if (!confirmed) {
-        return;
-    }
-
-
-    try {
-
-        await apiRequest(
-            `/documents/${id}`,
-            {
-                method: "DELETE"
-            }
-        );
-
-
-        showMessage(
-            "Document deleted successfully.",
-            "success"
-        );
-
-
-        await loadDocuments();
-
-
-    } catch (error) {
-
-        console.error(
-            "Delete document error:",
-            error
-        );
-
-
-        showMessage(
-            error.message ||
-            "Unable to delete document.",
-            "error"
-        );
-
-    }
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| SEARCH
-|--------------------------------------------------------------------------
-*/
-
-if (searchInput) {
-
-    searchInput.addEventListener(
-        "input",
-        renderDocuments
-    );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| TYPE FILTER
-|--------------------------------------------------------------------------
-*/
-
-if (typeFilter) {
-
-    typeFilter.addEventListener(
-        "change",
-        renderDocuments
-    );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| STATUS FILTER
-|--------------------------------------------------------------------------
-*/
-
-if (statusFilter) {
-
-    statusFilter.addEventListener(
-        "change",
-        renderDocuments
-    );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| LOADING STATE
-|--------------------------------------------------------------------------
-*/
-
-function showLoading() {
-
-    if (!tableBody) {
-        return;
-    }
-
-
-    tableBody.innerHTML = `
-        <tr>
-
-            <td
-                colspan="7"
-                style="
-                    text-align:center;
-                    padding:30px;
-                "
-            >
-                Loading documents...
-            </td>
-
-        </tr>
-    `;
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| EMPTY STATE
-|--------------------------------------------------------------------------
-*/
-
-function showEmpty(
-    text
-) {
-
-    if (!tableBody) {
-        return;
-    }
-
-
-    tableBody.innerHTML = `
-        <tr>
-
-            <td
-                colspan="7"
-                style="
-                    text-align:center;
-                    padding:30px;
-                "
-            >
-                ${escapeHtml(text)}
-            </td>
-
-        </tr>
-    `;
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| FORMAT STATUS
-|--------------------------------------------------------------------------
-*/
-
-function formatStatus(
-    status
-) {
-
-    const labels = {
-
-        active:
-            "Active",
-
-        inactive:
-            "Inactive",
-
-        archived:
-            "Archived",
-
-        pending:
-            "Pending",
-
-        approved:
-            "Approved"
-
-    };
-
-
-    return (
-        labels[status] ||
-        status
-            .replace(
-                /_/g,
-                " "
-            )
-            .replace(
-                /\b\w/g,
-                letter =>
-                    letter.toUpperCase()
-            )
-    );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| FORMAT DATE
-|--------------------------------------------------------------------------
-*/
-
-function formatDate(
-    value
-) {
-
-    if (!value) {
-        return "-";
-    }
-
-
-    const date =
-        new Date(value);
-
-
-    if (
-        Number.isNaN(
-            date.getTime()
-        )
-    ) {
-
-        return "-";
-
-    }
-
-
-    return date.toLocaleDateString(
-        "en-NG",
-        {
-            year: "numeric",
-            month: "short",
-            day: "numeric"
+            });
+
+        if (!filteredDocuments.length) {
+            showEmpty("No documents found.");
+            return;
         }
-    );
 
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| ESCAPE HTML
-|--------------------------------------------------------------------------
-*/
-
-function escapeHtml(
-    value
-) {
-
-    return String(
-        value ?? ""
-    )
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
-        );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| ESCAPE JAVASCRIPT
-|--------------------------------------------------------------------------
-*/
-
-function escapeJs(
-    value
-) {
-
-    return String(
-        value ?? ""
-    )
-        .replace(
-            /\\/g,
-            "\\\\"
-        )
-        .replace(
-            /'/g,
-            "\\'"
-        )
-        .replace(
-            /"/g,
-            '\\"'
-        );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| GLOBAL FUNCTIONS
-|--------------------------------------------------------------------------
-*/
-
-window.loadDocuments =
-    loadDocuments;
-
-window.addDocument =
-    addDocument;
-
-window.editDocument =
-    editDocument;
-
-window.viewDocument =
-    viewDocument;
-
-window.downloadDocument =
-    downloadDocument;
-
-window.deleteDocument =
-    deleteDocument;
-
-
-/*
-|--------------------------------------------------------------------------
-| INITIALISE
-|--------------------------------------------------------------------------
-*/
-
-document.addEventListener(
-    "DOMContentLoaded",
-    function() {
-
-        loadDocuments();
-
+        tableBody.innerHTML =
+            filteredDocuments
+                .map(createDocumentRow)
+                .join("");
     }
-);
+
+    function createDocumentRow(documentRecord) {
+        const id =
+            documentRecord.id;
+
+        const name =
+            documentRecord.document_name ||
+            documentRecord.documentName ||
+            documentRecord.name ||
+            documentRecord.title ||
+            documentRecord.file_name ||
+            documentRecord.fileName ||
+            "-";
+
+        const type =
+            documentRecord.document_type ||
+            documentRecord.documentType ||
+            documentRecord.type ||
+            "-";
+
+        const fileName =
+            documentRecord.file_name ||
+            documentRecord.fileName ||
+            "-";
+
+        const description =
+            documentRecord.description ||
+            "-";
+
+        const status =
+            String(
+                documentRecord.status ||
+                "active"
+            ).toLowerCase();
+
+        const studentName =
+            documentRecord.student_name ||
+            documentRecord.studentName ||
+            "-";
+
+        const staffName =
+            documentRecord.staff_name ||
+            documentRecord.staffName ||
+            "-";
+
+        const owner =
+            studentName !== "-"
+                ? studentName
+                : staffName;
+
+        const createdAt =
+            documentRecord.created_at ||
+            documentRecord.createdAt;
+
+        const fileUrl =
+            documentRecord.file_url ||
+            documentRecord.fileUrl ||
+            documentRecord.url ||
+            documentRecord.path ||
+            "";
+
+        return `
+            <tr>
+                <td>
+                    ${escapeHtml(name)}
+                </td>
+
+                <td>
+                    ${escapeHtml(fileName)}
+                </td>
+
+                <td>
+                    ${escapeHtml(type)}
+                </td>
+
+                <td>
+                    ${escapeHtml(owner)}
+                </td>
+
+                <td>
+                    ${escapeHtml(description)}
+                </td>
+
+                <td>
+                    <span class="status-badge status-${escapeHtml(status)}">
+                        ${escapeHtml(formatStatus(status))}
+                    </span>
+                </td>
+
+                <td>
+                    ${escapeHtml(formatDate(createdAt))}
+                </td>
+
+                <td>
+                    <div class="action-buttons">
+                        ${
+                            fileUrl
+                                ? `
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm btn-primary"
+                                        onclick="viewDocument('${escapeJs(fileUrl)}')"
+                                    >
+                                        View
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm btn-secondary"
+                                        onclick="downloadDocument('${escapeJs(fileUrl)}', '${escapeJs(fileName)}')"
+                                    >
+                                        Download
+                                    </button>
+                                `
+                                : ""
+                        }
+
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-danger"
+                            onclick="deleteDocument('${escapeJs(id)}')"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    function addDocument() {
+        window.location.href =
+            "document-form.html";
+    }
+
+    function editDocument(id) {
+        window.location.href =
+            `document-form.html?id=${encodeURIComponent(id)}`;
+    }
+
+    function viewDocument(url) {
+        if (!url) {
+            showMessage(
+                "Document file is not available.",
+                "error"
+            );
+            return;
+        }
+
+        window.open(
+            url,
+            "_blank",
+            "noopener,noreferrer"
+        );
+    }
+
+    function downloadDocument(url, fileName = "document") {
+        if (!url) {
+            showMessage(
+                "Document file is not available.",
+                "error"
+            );
+            return;
+        }
+
+        const link =
+            document.createElement("a");
+
+        link.href = url;
+        link.download = fileName;
+        link.target = "_blank";
+        link.rel = "noopener";
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+    }
+
+    async function deleteDocument(id) {
+        const documentRecord =
+            documents.find(
+                item =>
+                    String(item.id) === String(id)
+            );
+
+        const documentName =
+            documentRecord
+                ? (
+                    documentRecord.document_name ||
+                    documentRecord.documentName ||
+                    documentRecord.name ||
+                    documentRecord.title ||
+                    documentRecord.file_name ||
+                    documentRecord.fileName ||
+                    "this document"
+                )
+                : "this document";
+
+        const confirmed =
+            window.confirm(
+                `Are you sure you want to delete "${documentName}"?`
+            );
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            await apiRequest(
+                `/documents/${encodeURIComponent(id)}`,
+                {
+                    method: "DELETE"
+                }
+            );
+
+            showMessage(
+                "Document deleted successfully.",
+                "success"
+            );
+
+            await loadDocuments();
+        } catch (error) {
+            console.error(
+                "Delete document error:",
+                error
+            );
+
+            showMessage(
+                error.message ||
+                "Unable to delete document.",
+                "error"
+            );
+        }
+    }
+
+    function showLoading() {
+        if (!tableBody) {
+            return;
+        }
+
+        tableBody.innerHTML = `
+            <tr>
+                <td
+                    colspan="8"
+                    style="text-align:center; padding:30px;"
+                >
+                    Loading documents...
+                </td>
+            </tr>
+        `;
+    }
+
+    function showEmpty(text) {
+        if (!tableBody) {
+            return;
+        }
+
+        tableBody.innerHTML = `
+            <tr>
+                <td
+                    colspan="8"
+                    style="text-align:center; padding:30px;"
+                >
+                    ${escapeHtml(text)}
+                </td>
+            </tr>
+        `;
+    }
+
+    function formatStatus(status) {
+        const normalized =
+            String(status || "active")
+                .toLowerCase();
+
+        const labels = {
+            active: "Active",
+            inactive: "Inactive",
+            archived: "Archived",
+            pending: "Pending",
+            approved: "Approved"
+        };
+
+        return (
+            labels[normalized] ||
+            normalized
+                .replace(/_/g, " ")
+                .replace(/\b\w/g, letter =>
+                    letter.toUpperCase()
+                )
+        );
+    }
+
+    function formatDate(value) {
+        if (!value) {
+            return "-";
+        }
+
+        const date =
+            new Date(value);
+
+        if (Number.isNaN(date.getTime())) {
+            return "-";
+        }
+
+        return date.toLocaleDateString(
+            "en-NG",
+            {
+                year: "numeric",
+                month: "short",
+                day: "numeric"
+            }
+        );
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function escapeJs(value) {
+        return String(value ?? "")
+            .replace(/\\/g, "\\\\")
+            .replace(/'/g, "\\'");
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener(
+            "input",
+            renderDocuments
+        );
+    }
+
+    if (typeFilter) {
+        typeFilter.addEventListener(
+            "change",
+            renderDocuments
+        );
+    }
+
+    if (statusFilter) {
+        statusFilter.addEventListener(
+            "change",
+            renderDocuments
+        );
+    }
+
+    window.loadDocuments =
+        loadDocuments;
+
+    window.addDocument =
+        addDocument;
+
+    window.editDocument =
+        editDocument;
+
+    window.viewDocument =
+        viewDocument;
+
+    window.downloadDocument =
+        downloadDocument;
+
+    window.deleteDocument =
+        deleteDocument;
+
+    if (document.readyState === "loading") {
+        document.addEventListener(
+            "DOMContentLoaded",
+            loadDocuments,
+            { once: true }
+        );
+    } else {
+        loadDocuments();
+    }
+})();

@@ -1,844 +1,580 @@
-const API_BASE = "/api";
+"use strict";
 
-let roles = [];
+(function () {
+    let roles = [];
 
-
-/*
-|--------------------------------------------------------------------------
-| DOM ELEMENTS
-|--------------------------------------------------------------------------
-*/
-
-const tableBody =
-    document.getElementById("rolesTableBody") ||
-    document.getElementById("roleTableBody") ||
-    document.querySelector("#rolesTable tbody");
-
-const searchInput =
-    document.getElementById("searchInput") ||
-    document.getElementById("roleSearch");
-
-const statusFilter =
-    document.getElementById("statusFilter") ||
-    document.getElementById("roleStatusFilter");
-
-const messageContainer =
-    document.getElementById("message") ||
-    document.getElementById("messageContainer");
-
-
-/*
-|--------------------------------------------------------------------------
-| AUTHENTICATION
-|--------------------------------------------------------------------------
-*/
-
-function getToken() {
-
-    return (
-        localStorage.getItem("token") ||
-        sessionStorage.getItem("token")
-    );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| API REQUEST
-|--------------------------------------------------------------------------
-*/
-
-async function apiRequest(
-    url,
-    options = {}
-) {
-
-    const token = getToken();
-
-    const headers = {
-        ...(options.headers || {})
-    };
-
-
-    if (
-        options.body &&
-        !(options.body instanceof FormData)
-    ) {
-
-        headers["Content-Type"] =
-            "application/json";
-
+    function getToken() {
+        return (
+            localStorage.getItem("school_management_token") ||
+            sessionStorage.getItem("school_management_token") ||
+            localStorage.getItem("token") ||
+            sessionStorage.getItem("token") ||
+            localStorage.getItem("accessToken") ||
+            sessionStorage.getItem("accessToken") ||
+            ""
+        );
     }
 
+    async function request(endpoint, options = {}) {
+        if (typeof window.apiRequest === "function") {
+            return window.apiRequest(endpoint, options);
+        }
 
-    if (token) {
+        let url = endpoint;
 
-        headers.Authorization =
-            `Bearer ${token}`;
+        if (
+            !url.startsWith("http://") &&
+            !url.startsWith("https://")
+        ) {
+            if (!url.startsWith("/")) {
+                url = "/" + url;
+            }
 
-    }
+            if (!url.startsWith("/api/")) {
+                url = "/api" + url;
+            }
+        }
 
+        const headers = {
+            ...(options.headers || {})
+        };
 
-    const response =
-        await fetch(
-            API_BASE + url,
-            {
+        const token = getToken();
+
+        if (token) {
+            headers.Authorization = `Bearer ${token}`;
+        }
+
+        if (
+            options.body &&
+            !(options.body instanceof FormData) &&
+            !headers["Content-Type"] &&
+            !headers["content-type"]
+        ) {
+            headers["Content-Type"] = "application/json";
+        }
+
+        let response;
+
+        try {
+            response = await fetch(url, {
                 ...options,
                 headers
+            });
+        } catch (error) {
+            console.error("Roles API error:", error);
+            throw new Error(
+                "Unable to connect to the server."
+            );
+        }
+
+        if (response.status === 401) {
+            localStorage.removeItem("school_management_token");
+            localStorage.removeItem("school_management_user");
+            sessionStorage.removeItem("school_management_token");
+            sessionStorage.removeItem("school_management_user");
+
+            if (!window.location.pathname.endsWith("/login.html")) {
+                window.location.href = "/pages/login.html";
             }
-        );
 
+            throw new Error("Authentication required.");
+        }
 
-    let data = null;
+        if (response.status === 403) {
+            throw new Error(
+                "You do not have permission to perform this action."
+            );
+        }
 
+        const contentType =
+            response.headers.get("content-type") || "";
 
-    try {
+        const data = contentType.includes("application/json")
+            ? await response.json()
+            : await response.text();
 
-        data =
-            await response.json();
+        if (!response.ok) {
+            throw new Error(
+                typeof data === "object"
+                    ? data.message ||
+                      data.error ||
+                      "Request failed."
+                    : data || "Request failed."
+            );
+        }
 
-    } catch (error) {
-
-        data = null;
-
+        return data;
     }
 
+    function getElements() {
+        return {
+            tableBody:
+                document.getElementById("rolesTableBody") ||
+                document.getElementById("roleTableBody") ||
+                document.querySelector("#rolesTable tbody"),
 
-    if (!response.ok) {
+            searchInput:
+                document.getElementById("searchInput") ||
+                document.getElementById("roleSearch"),
 
-        throw new Error(
-            data?.message ||
-            "Request failed."
-        );
+            statusFilter:
+                document.getElementById("statusFilter") ||
+                document.getElementById("roleStatusFilter"),
 
+            message:
+                document.getElementById("message") ||
+                document.getElementById("messageContainer")
+        };
     }
 
+    function showMessage(text, type = "success") {
+        const { message } = getElements();
 
-    return data;
+        if (!message) {
+            return;
+        }
 
-}
+        message.textContent = text;
+        message.className = `message ${type}`;
 
-
-/*
-|--------------------------------------------------------------------------
-| SHOW MESSAGE
-|--------------------------------------------------------------------------
-*/
-
-function showMessage(
-    text,
-    type = "success"
-) {
-
-    if (!messageContainer) {
-        return;
+        setTimeout(() => {
+            message.textContent = "";
+            message.className = "message";
+        }, 4000);
     }
 
-
-    messageContainer.textContent =
-        text;
-
-
-    messageContainer.className =
-        `message ${type}`;
-
-
-    setTimeout(
-        function() {
-
-            messageContainer.textContent =
-                "";
-
-            messageContainer.className =
-                "message";
-
-        },
-        4000
-    );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| LOAD ROLES
-|--------------------------------------------------------------------------
-*/
-
-async function loadRoles() {
-
-    try {
-
+    async function loadRoles() {
         showLoading();
 
+        try {
+            const result = await request("/roles");
 
-        const result =
-            await apiRequest(
-                "/roles"
+            roles =
+                Array.isArray(result)
+                    ? result
+                    : Array.isArray(result?.data)
+                        ? result.data
+                        : Array.isArray(result?.roles)
+                            ? result.roles
+                            : Array.isArray(result?.records)
+                                ? result.records
+                                : [];
+
+            renderRoles();
+        } catch (error) {
+            console.error(
+                "Load roles error:",
+                error
             );
 
+            roles = [];
 
-        roles =
-            Array.isArray(result?.data)
-                ? result.data
-                : Array.isArray(result?.roles)
-                    ? result.roles
-                    : Array.isArray(result)
-                        ? result
-                        : [];
+            showEmpty("Unable to load roles.");
 
-
-        renderRoles();
-
-
-    } catch (error) {
-
-        console.error(
-            "Load roles error:",
-            error
-        );
-
-
-        showEmpty(
-            "Unable to load roles."
-        );
-
-
-        showMessage(
-            error.message ||
-            "Unable to load roles.",
-            "error"
-        );
-
+            showMessage(
+                error.message ||
+                "Unable to load roles.",
+                "error"
+            );
+        }
     }
 
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| RENDER ROLES
-|--------------------------------------------------------------------------
-*/
-
-function renderRoles() {
-
-    if (!tableBody) {
-        return;
-    }
-
-
-    const searchTerm =
-        searchInput
-            ? searchInput.value
-                .trim()
-                .toLowerCase()
-            : "";
-
-
-    const selectedStatus =
-        statusFilter
-            ? statusFilter.value
-                .trim()
-                .toLowerCase()
-            : "";
-
-
-    const filteredRoles =
-        roles.filter(
-            role => {
-
-                const name =
-                    String(
-                        role.name ||
-                        role.role_name ||
-                        role.roleName ||
-                        ""
-                    ).toLowerCase();
-
-
-                const description =
-                    String(
-                        role.description ||
-                        ""
-                    ).toLowerCase();
-
-
-                const status =
-                    String(
-                        role.status ||
-                        "active"
-                    ).toLowerCase();
-
-
-                const matchesSearch =
-                    !searchTerm ||
-                    name.includes(searchTerm) ||
-                    description.includes(searchTerm);
-
-
-                const matchesStatus =
-                    !selectedStatus ||
-                    status === selectedStatus;
-
-
-                return (
-                    matchesSearch &&
-                    matchesStatus
-                );
-
-            }
-        );
-
-
-    if (
-        filteredRoles.length === 0
-    ) {
-
-        showEmpty(
-            "No roles found."
-        );
-
-        return;
-
-    }
-
-
-    tableBody.innerHTML =
-        filteredRoles
-            .map(
-                role =>
-                    createRoleRow(
-                        role
-                    )
-            )
-            .join("");
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| CREATE ROLE ROW
-|--------------------------------------------------------------------------
-*/
-
-function createRoleRow(
-    role
-) {
-
-    const id =
-        role.id;
-
-
-    const name =
-        role.name ||
-        role.role_name ||
-        role.roleName ||
-        "-";
-
-
-    const description =
-        role.description ||
-        "-";
-
-
-    const status =
-        String(
-            role.status ||
-            "active"
-        ).toLowerCase();
-
-
-    const createdAt =
-        role.created_at ||
-        role.createdAt;
-
-
-    const permissionsCount =
-        role.permissions_count ??
-        role.permission_count ??
-        role.permissionsCount ??
-        "";
-
-
-    return `
-        <tr>
-
-            <td>
-                ${escapeHtml(name)}
-            </td>
-
-            <td>
-                ${escapeHtml(description)}
-            </td>
-
-            <td>
-                ${
-                    permissionsCount !== ""
-                        ? escapeHtml(permissionsCount)
-                        : "-"
-                }
-            </td>
-
-            <td>
-
-                <span class="status-badge status-${escapeHtml(status)}">
-                    ${formatStatus(status)}
-                </span>
-
-            </td>
-
-            <td>
-                ${formatDate(createdAt)}
-            </td>
-
-            <td>
-
-                <div class="action-buttons">
-
-                    <button
-                        type="button"
-                        class="btn btn-sm btn-primary"
-                        onclick="viewRole('${escapeJs(id)}')"
-                    >
-                        View
-                    </button>
-
-                    <button
-                        type="button"
-                        class="btn btn-sm btn-secondary"
-                        onclick="editRole('${escapeJs(id)}')"
-                    >
-                        Edit
-                    </button>
-
-                    <button
-                        type="button"
-                        class="btn btn-sm btn-danger"
-                        onclick="deleteRole('${escapeJs(id)}')"
-                    >
-                        Delete
-                    </button>
-
-                </div>
-
-            </td>
-
-        </tr>
-    `;
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| ADD ROLE
-|--------------------------------------------------------------------------
-*/
-
-function addRole() {
-
-    window.location.href =
-        "role-form.html";
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| VIEW ROLE
-|--------------------------------------------------------------------------
-*/
-
-function viewRole(
-    id
-) {
-
-    window.location.href =
-        `role-profile.html?id=${encodeURIComponent(id)}`;
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| EDIT ROLE
-|--------------------------------------------------------------------------
-*/
-
-function editRole(
-    id
-) {
-
-    window.location.href =
-        `role-form.html?id=${encodeURIComponent(id)}`;
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| DELETE ROLE
-|--------------------------------------------------------------------------
-*/
-
-async function deleteRole(
-    id
-) {
-
-    const role =
-        roles.find(
-            item =>
-                String(item.id) ===
-                String(id)
-        );
-
-
-    const roleName =
-        role
-            ? (
+    function renderRoles() {
+        const {
+            tableBody,
+            searchInput,
+            statusFilter
+        } = getElements();
+
+        if (!tableBody) {
+            return;
+        }
+
+        const searchTerm =
+            searchInput?.value.trim().toLowerCase() || "";
+
+        const selectedStatus =
+            statusFilter?.value.trim().toLowerCase() || "";
+
+        const filteredRoles = roles.filter((role) => {
+            const name = String(
                 role.name ||
                 role.role_name ||
                 role.roleName ||
-                "this role"
-            )
-            : "this role";
+                ""
+            ).toLowerCase();
 
+            const description = String(
+                role.description || ""
+            ).toLowerCase();
 
-    const confirmed =
-        window.confirm(
-            `Are you sure you want to delete "${roleName}"?`
-        );
+            const status = String(
+                role.status || "active"
+            ).toLowerCase();
 
+            const matchesSearch =
+                !searchTerm ||
+                name.includes(searchTerm) ||
+                description.includes(searchTerm);
 
-    if (!confirmed) {
-        return;
+            const matchesStatus =
+                !selectedStatus ||
+                status === selectedStatus;
+
+            return matchesSearch && matchesStatus;
+        });
+
+        if (!filteredRoles.length) {
+            showEmpty("No roles found.");
+            return;
+        }
+
+        tableBody.innerHTML =
+            filteredRoles
+                .map(createRoleRow)
+                .join("");
     }
 
+    function createRoleRow(role) {
+        const id =
+            role.id ??
+            role.role_id ??
+            "";
 
-    try {
+        const name =
+            role.name ||
+            role.role_name ||
+            role.roleName ||
+            "-";
 
-        await apiRequest(
-            `/roles/${id}`,
+        const description =
+            role.description ||
+            "-";
+
+        const status =
+            String(
+                role.status || "active"
+            ).toLowerCase();
+
+        const createdAt =
+            role.created_at ||
+            role.createdAt;
+
+        const permissionsCount =
+            role.permissions_count ??
+            role.permission_count ??
+            role.permissionsCount ??
+            "";
+
+        return `
+            <tr>
+                <td>
+                    ${escapeHtml(name)}
+                </td>
+
+                <td>
+                    ${escapeHtml(description)}
+                </td>
+
+                <td>
+                    ${
+                        permissionsCount !== ""
+                            ? escapeHtml(permissionsCount)
+                            : "-"
+                    }
+                </td>
+
+                <td>
+                    <span
+                        class="status-badge status-${escapeAttribute(status)}"
+                    >
+                        ${escapeHtml(
+                            formatStatus(status)
+                        )}
+                    </span>
+                </td>
+
+                <td>
+                    ${formatDate(createdAt)}
+                </td>
+
+                <td>
+                    <div class="action-buttons">
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-primary"
+                            data-action="view-role"
+                            data-id="${escapeAttribute(id)}"
+                        >
+                            View
+                        </button>
+
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-secondary"
+                            data-action="edit-role"
+                            data-id="${escapeAttribute(id)}"
+                        >
+                            Edit
+                        </button>
+
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-danger"
+                            data-action="delete-role"
+                            data-id="${escapeAttribute(id)}"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    function addRole() {
+        window.location.href =
+            "role-form.html";
+    }
+
+    function viewRole(id) {
+        window.location.href =
+            `role-profile.html?id=${encodeURIComponent(id)}`;
+    }
+
+    function editRole(id) {
+        window.location.href =
+            `role-form.html?id=${encodeURIComponent(id)}`;
+    }
+
+    async function deleteRole(id) {
+        const role = roles.find(
+            (item) =>
+                String(
+                    item.id ??
+                    item.role_id
+                ) === String(id)
+        );
+
+        const roleName =
+            role?.name ||
+            role?.role_name ||
+            role?.roleName ||
+            "this role";
+
+        if (
+            !window.confirm(
+                `Are you sure you want to delete "${roleName}"?`
+            )
+        ) {
+            return;
+        }
+
+        try {
+            await request(
+                `/roles/${encodeURIComponent(id)}`,
+                {
+                    method: "DELETE"
+                }
+            );
+
+            showMessage(
+                "Role deleted successfully.",
+                "success"
+            );
+
+            await loadRoles();
+        } catch (error) {
+            console.error(
+                "Delete role error:",
+                error
+            );
+
+            showMessage(
+                error.message ||
+                "Unable to delete role.",
+                "error"
+            );
+        }
+    }
+
+    function showLoading() {
+        const { tableBody } = getElements();
+
+        if (!tableBody) {
+            return;
+        }
+
+        tableBody.innerHTML = `
+            <tr>
+                <td
+                    colspan="6"
+                    style="text-align:center;padding:30px;"
+                >
+                    Loading roles...
+                </td>
+            </tr>
+        `;
+    }
+
+    function showEmpty(text) {
+        const { tableBody } = getElements();
+
+        if (!tableBody) {
+            return;
+        }
+
+        tableBody.innerHTML = `
+            <tr>
+                <td
+                    colspan="6"
+                    style="text-align:center;padding:30px;"
+                >
+                    ${escapeHtml(text)}
+                </td>
+            </tr>
+        `;
+    }
+
+    function formatStatus(status) {
+        const labels = {
+            active: "Active",
+            inactive: "Inactive",
+            suspended: "Suspended",
+            disabled: "Disabled"
+        };
+
+        return (
+            labels[status] ||
+            String(status)
+                .replace(/_/g, " ")
+                .replace(/\b\w/g, (letter) =>
+                    letter.toUpperCase()
+                )
+        );
+    }
+
+    function formatDate(value) {
+        if (!value) {
+            return "-";
+        }
+
+        const date = new Date(value);
+
+        if (Number.isNaN(date.getTime())) {
+            return "-";
+        }
+
+        return date.toLocaleDateString(
+            "en-NG",
             {
-                method: "DELETE"
+                year: "numeric",
+                month: "short",
+                day: "numeric"
             }
         );
-
-
-        showMessage(
-            "Role deleted successfully.",
-            "success"
-        );
-
-
-        await loadRoles();
-
-
-    } catch (error) {
-
-        console.error(
-            "Delete role error:",
-            error
-        );
-
-
-        showMessage(
-            error.message ||
-            "Unable to delete role.",
-            "error"
-        );
-
     }
 
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| SEARCH
-|--------------------------------------------------------------------------
-*/
-
-if (searchInput) {
-
-    searchInput.addEventListener(
-        "input",
-        renderRoles
-    );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| STATUS FILTER
-|--------------------------------------------------------------------------
-*/
-
-if (statusFilter) {
-
-    statusFilter.addEventListener(
-        "change",
-        renderRoles
-    );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| LOADING STATE
-|--------------------------------------------------------------------------
-*/
-
-function showLoading() {
-
-    if (!tableBody) {
-        return;
+    function escapeHtml(value) {
+        return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
     }
 
-
-    tableBody.innerHTML = `
-        <tr>
-
-            <td
-                colspan="6"
-                style="
-                    text-align:center;
-                    padding:30px;
-                "
-            >
-                Loading roles...
-            </td>
-
-        </tr>
-    `;
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| EMPTY STATE
-|--------------------------------------------------------------------------
-*/
-
-function showEmpty(
-    text
-) {
-
-    if (!tableBody) {
-        return;
+    function escapeAttribute(value) {
+        return escapeHtml(value);
     }
 
+    function setupEvents() {
+        const {
+            searchInput,
+            statusFilter
+        } = getElements();
 
-    tableBody.innerHTML = `
-        <tr>
+        if (searchInput) {
+            searchInput.addEventListener(
+                "input",
+                renderRoles
+            );
+        }
 
-            <td
-                colspan="6"
-                style="
-                    text-align:center;
-                    padding:30px;
-                "
-            >
-                ${escapeHtml(text)}
-            </td>
+        if (statusFilter) {
+            statusFilter.addEventListener(
+                "change",
+                renderRoles
+            );
+        }
 
-        </tr>
-    `;
+        document.addEventListener(
+            "click",
+            async (event) => {
+                const button =
+                    event.target.closest(
+                        "[data-action]"
+                    );
 
-}
+                if (!button) {
+                    return;
+                }
 
+                const action =
+                    button.dataset.action;
 
-/*
-|--------------------------------------------------------------------------
-| FORMAT STATUS
-|--------------------------------------------------------------------------
-*/
+                const id =
+                    button.dataset.id;
 
-function formatStatus(
-    status
-) {
+                if (!id) {
+                    return;
+                }
 
-    const labels = {
+                if (action === "view-role") {
+                    viewRole(id);
+                    return;
+                }
 
-        active:
-            "Active",
+                if (action === "edit-role") {
+                    editRole(id);
+                    return;
+                }
 
-        inactive:
-            "Inactive",
+                if (action === "delete-role") {
+                    await deleteRole(id);
+                }
+            }
+        );
+    }
 
-        suspended:
-            "Suspended",
+    window.loadRoles = loadRoles;
+    window.addRole = addRole;
+    window.viewRole = viewRole;
+    window.editRole = editRole;
+    window.deleteRole = deleteRole;
 
-        disabled:
-            "Disabled"
-
+    window.RolesPage = {
+        initialize: loadRoles,
+        loadRoles,
+        addRole,
+        viewRole,
+        editRole,
+        deleteRole
     };
 
-
-    return (
-        labels[status] ||
-        String(status)
-            .replace(
-                /_/g,
-                " "
-            )
-            .replace(
-                /\b\w/g,
-                letter =>
-                    letter.toUpperCase()
-            )
-    );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| FORMAT DATE
-|--------------------------------------------------------------------------
-*/
-
-function formatDate(
-    value
-) {
-
-    if (!value) {
-        return "-";
-    }
-
-
-    const date =
-        new Date(value);
-
-
-    if (
-        Number.isNaN(
-            date.getTime()
-        )
-    ) {
-
-        return "-";
-
-    }
-
-
-    return date.toLocaleDateString(
-        "en-NG",
-        {
-            year: "numeric",
-            month: "short",
-            day: "numeric"
-        }
-    );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| ESCAPE HTML
-|--------------------------------------------------------------------------
-*/
-
-function escapeHtml(
-    value
-) {
-
-    return String(
-        value ?? ""
-    )
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
-        );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| ESCAPE JAVASCRIPT
-|--------------------------------------------------------------------------
-*/
-
-function escapeJs(
-    value
-) {
-
-    return String(
-        value ?? ""
-    )
-        .replace(
-            /\\/g,
-            "\\\\"
-        )
-        .replace(
-            /'/g,
-            "\\'"
-        )
-        .replace(
-            /"/g,
-            '\\"'
-        );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| GLOBAL FUNCTIONS
-|--------------------------------------------------------------------------
-*/
-
-window.loadRoles =
-    loadRoles;
-
-window.addRole =
-    addRole;
-
-window.viewRole =
-    viewRole;
-
-window.editRole =
-    editRole;
-
-window.deleteRole =
-    deleteRole;
-
-
-/*
-|--------------------------------------------------------------------------
-| INITIALISE
-|--------------------------------------------------------------------------
-*/
-
-document.addEventListener(
-    "DOMContentLoaded",
-    function() {
-
+    function initialize() {
+        setupEvents();
         loadRoles();
-
     }
-);
+
+    if (document.readyState === "loading") {
+        document.addEventListener(
+            "DOMContentLoaded",
+            initialize,
+            { once: true }
+        );
+    } else {
+        initialize();
+    }
+})();

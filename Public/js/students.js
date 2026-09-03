@@ -1,23 +1,5 @@
 "use strict";
 
-/*
-|--------------------------------------------------------------------------
-| SCHOOL MANAGEMENT SYSTEM
-|--------------------------------------------------------------------------
-| STUDENTS PAGE
-|--------------------------------------------------------------------------
-| Handles:
-| - Loading students
-| - Searching
-| - Filtering
-| - Pagination
-| - Statistics
-| - View student
-| - Edit student
-| - Delete student
-|--------------------------------------------------------------------------
-*/
-
 const STUDENTS_API = "/api/students";
 
 let students = [];
@@ -41,39 +23,24 @@ document.addEventListener(
     initializeStudentsPage
 );
 
-
 async function initializeStudentsPage() {
 
-    /*
-     * Protect page if authentication system exists
-     */
-
-    if (
-        typeof protectPage === "function"
-    ) {
+    if (typeof protectPage === "function") {
 
         try {
-
             await protectPage();
-
         } catch (error) {
-
             console.error(
                 "Page protection error:",
                 error
             );
-
         }
-
     }
 
-
     initializeElements();
-
     initializeEvents();
 
     await loadStudents();
-
 }
 
 
@@ -84,7 +51,6 @@ async function initializeStudentsPage() {
 */
 
 let tableBody;
-
 let searchInput;
 let statusFilter;
 let genderFilter;
@@ -120,110 +86,68 @@ let cancelDeleteButton;
 function initializeElements() {
 
     tableBody =
-        document.getElementById(
-            "studentsTableBody"
-        );
+        document.getElementById("studentsTableBody");
 
     searchInput =
-        document.getElementById(
-            "searchInput"
-        );
+        document.getElementById("searchInput");
 
     statusFilter =
-        document.getElementById(
-            "statusFilter"
-        );
+        document.getElementById("statusFilter");
 
     genderFilter =
-        document.getElementById(
-            "genderFilter"
-        );
+        document.getElementById("genderFilter");
 
     refreshButton =
-        document.getElementById(
-            "refreshButton"
-        );
+        document.getElementById("refreshButton");
 
     addStudentButton =
-        document.getElementById(
-            "addStudentButton"
-        );
+        document.getElementById("addStudentButton");
 
     previousButton =
-        document.getElementById(
-            "previousButton"
-        );
+        document.getElementById("previousButton");
 
     nextButton =
-        document.getElementById(
-            "nextButton"
-        );
+        document.getElementById("nextButton");
 
     pageNumber =
-        document.getElementById(
-            "pageNumber"
-        );
+        document.getElementById("pageNumber");
 
     showingFrom =
-        document.getElementById(
-            "showingFrom"
-        );
+        document.getElementById("showingFrom");
 
     showingTo =
-        document.getElementById(
-            "showingTo"
-        );
+        document.getElementById("showingTo");
 
     totalResults =
-        document.getElementById(
-            "totalResults"
-        );
+        document.getElementById("totalResults");
 
     totalStudents =
-        document.getElementById(
-            "totalStudents"
-        );
+        document.getElementById("totalStudents");
 
     activeStudents =
-        document.getElementById(
-            "activeStudents"
-        );
+        document.getElementById("activeStudents");
 
     maleStudents =
-        document.getElementById(
-            "maleStudents"
-        );
+        document.getElementById("maleStudents");
 
     femaleStudents =
-        document.getElementById(
-            "femaleStudents"
-        );
+        document.getElementById("femaleStudents");
 
     deleteModal =
-        document.getElementById(
-            "deleteModal"
-        );
+        document.getElementById("deleteModal");
 
     deleteStudentName =
-        document.getElementById(
-            "deleteStudentName"
-        );
+        document.getElementById("deleteStudentName");
 
     confirmDeleteButton =
-        document.getElementById(
-            "confirmDeleteButton"
-        );
+        document.getElementById("confirmDeleteButton");
 
     closeDeleteModalButton =
-        document.getElementById(
-            "closeDeleteModal"
-        );
+        document.getElementById("closeDeleteModal");
 
     cancelDeleteButton =
-        document.getElementById(
-            "cancelDeleteButton"
-        );
-
+        document.getElementById("cancelDeleteModal") ||
+        document.getElementById("cancelDeleteButton");
 }
 
 
@@ -235,113 +159,59 @@ function initializeElements() {
 
 function initializeEvents() {
 
-    /*
-     * Search
-     */
-
     if (searchInput) {
-
         searchInput.addEventListener(
             "input",
             handleFilters
         );
-
     }
 
-
-    /*
-     * Status filter
-     */
-
     if (statusFilter) {
-
         statusFilter.addEventListener(
             "change",
             handleFilters
         );
-
     }
 
-
-    /*
-     * Gender filter
-     */
-
     if (genderFilter) {
-
         genderFilter.addEventListener(
             "change",
             handleFilters
         );
-
     }
 
-
-    /*
-     * Refresh
-     */
-
     if (refreshButton) {
-
         refreshButton.addEventListener(
             "click",
             loadStudents
         );
-
     }
 
-
-    /*
-     * Add student
-     */
-
     if (addStudentButton) {
-
         addStudentButton.addEventListener(
             "click",
             function () {
-
                 window.location.href =
                     "/pages/student-form.html";
-
             }
         );
-
     }
 
-
-    /*
-     * Previous page
-     */
-
     if (previousButton) {
-
         previousButton.addEventListener(
             "click",
             function () {
 
-                if (
-                    currentPage > 1
-                ) {
-
+                if (currentPage > 1) {
                     currentPage--;
-
                     renderStudents();
-
                 }
 
             }
         );
-
     }
 
-
-    /*
-     * Next page
-     */
-
     if (nextButton) {
-
         nextButton.addEventListener(
             "click",
             function () {
@@ -349,95 +219,55 @@ function initializeEvents() {
                 const totalPages =
                     getTotalPages();
 
-                if (
-                    currentPage <
-                    totalPages
-                ) {
-
+                if (currentPage < totalPages) {
                     currentPage++;
-
                     renderStudents();
-
                 }
 
             }
         );
-
     }
 
-
-    /*
-     * Table actions
-     */
-
     if (tableBody) {
-
         tableBody.addEventListener(
             "click",
             handleTableAction
         );
-
     }
 
-
-    /*
-     * Delete modal
-     */
-
     if (closeDeleteModalButton) {
-
         closeDeleteModalButton.addEventListener(
             "click",
             closeDeleteModal
         );
-
     }
 
-
     if (cancelDeleteButton) {
-
         cancelDeleteButton.addEventListener(
             "click",
             closeDeleteModal
         );
-
     }
 
-
     if (confirmDeleteButton) {
-
         confirmDeleteButton.addEventListener(
             "click",
             confirmDeleteStudent
         );
-
     }
 
-
     if (deleteModal) {
-
         deleteModal.addEventListener(
             "click",
             function (event) {
 
-                if (
-                    event.target ===
-                    deleteModal
-                ) {
-
+                if (event.target === deleteModal) {
                     closeDeleteModal();
-
                 }
 
             }
         );
-
     }
-
-
-    /*
-     * Escape key
-     */
 
     document.addEventListener(
         "keydown",
@@ -448,14 +278,11 @@ function initializeEvents() {
                 deleteModal &&
                 !deleteModal.hidden
             ) {
-
                 closeDeleteModal();
-
             }
 
         }
     );
-
 }
 
 
@@ -468,58 +295,42 @@ function initializeEvents() {
 async function loadStudents() {
 
     if (!tableBody) {
-
         return;
-
     }
-
 
     showLoading();
 
-
     try {
 
-        const response =
-            await fetch(
-                STUDENTS_API,
-                {
-                    method: "GET",
-                    headers: {
-                        "Accept":
-                            "application/json"
-                    }
-                }
-            );
-
-
-        if (!response.ok) {
-
+        if (typeof apiGet !== "function") {
             throw new Error(
-                await getResponseError(
-                    response,
-                    "Unable to load students."
-                )
+                "API service is not available."
             );
-
         }
 
+        /*
+         * IMPORTANT:
+         * Use the complete API path.
+         * This sends the JWT through apiGet().
+         */
 
         const data =
-            await response.json();
+            await apiGet(STUDENTS_API);
 
+        if (!data) {
+            throw new Error(
+                "Unable to load students."
+            );
+        }
 
         students =
             extractStudents(data);
 
-
         updateStatistics();
-
 
         currentPage = 1;
 
-
         applyFilters();
-
 
     } catch (error) {
 
@@ -528,25 +339,18 @@ async function loadStudents() {
             error
         );
 
-
         students = [];
-
         filteredStudents = [];
 
-
         updateStatistics();
-
         renderStudents();
-
 
         showMessage(
             error.message ||
             "Unable to load students.",
             "error"
         );
-
     }
-
 }
 
 
@@ -558,66 +362,40 @@ async function loadStudents() {
 
 function extractStudents(data) {
 
-    if (
-        Array.isArray(data)
-    ) {
-
+    if (Array.isArray(data)) {
         return data;
-
     }
-
 
     if (
         data &&
-        Array.isArray(
-            data.students
-        )
+        Array.isArray(data.students)
     ) {
-
         return data.students;
-
     }
-
 
     if (
         data &&
-        Array.isArray(
-            data.data
-        )
+        Array.isArray(data.data)
     ) {
-
         return data.data;
-
     }
-
 
     if (
         data &&
         data.data &&
-        Array.isArray(
-            data.data.students
-        )
+        Array.isArray(data.data.students)
     ) {
-
         return data.data.students;
-
     }
-
 
     if (
         data &&
-        Array.isArray(
-            data.rows
-        )
+        Array.isArray(data.rows)
     ) {
-
         return data.rows;
-
     }
 
-
     return [];
-
 }
 
 
@@ -632,7 +410,6 @@ function handleFilters() {
     currentPage = 1;
 
     applyFilters();
-
 }
 
 
@@ -645,14 +422,12 @@ function applyFilters() {
                 .toLowerCase()
             : "";
 
-
     const selectedStatus =
         statusFilter
             ? statusFilter.value
                 .trim()
                 .toLowerCase()
             : "";
-
 
     const selectedGender =
         genderFilter
@@ -661,17 +436,13 @@ function applyFilters() {
                 .toLowerCase()
             : "";
 
-
     filteredStudents =
         students.filter(
             function (student) {
 
                 const name =
-                    getStudentName(
-                        student
-                    )
+                    getStudentName(student)
                         .toLowerCase();
-
 
                 const admissionNumber =
                     String(
@@ -680,9 +451,16 @@ function applyFilters() {
                             "admission_number",
                             "admissionNumber"
                         ) || ""
-                    )
-                        .toLowerCase();
+                    ).toLowerCase();
 
+                const studentNumber =
+                    String(
+                        getField(
+                            student,
+                            "student_number",
+                            "studentNumber"
+                        ) || ""
+                    ).toLowerCase();
 
                 const phone =
                     String(
@@ -691,9 +469,7 @@ function applyFilters() {
                             "phone",
                             "phoneNumber"
                         ) || ""
-                    )
-                        .toLowerCase();
-
+                    ).toLowerCase();
 
                 const email =
                     String(
@@ -702,9 +478,7 @@ function applyFilters() {
                             "email",
                             "email"
                         ) || ""
-                    )
-                        .toLowerCase();
-
+                    ).toLowerCase();
 
                 const status =
                     String(
@@ -713,9 +487,7 @@ function applyFilters() {
                             "status",
                             "status"
                         ) || "active"
-                    )
-                        .toLowerCase();
-
+                    ).toLowerCase();
 
                 const gender =
                     String(
@@ -724,56 +496,33 @@ function applyFilters() {
                             "gender",
                             "gender"
                         ) || ""
-                    )
-                        .toLowerCase();
-
+                    ).toLowerCase();
 
                 const matchesSearch =
                     !search ||
-
-                    name.includes(
-                        search
-                    ) ||
-
-                    admissionNumber.includes(
-                        search
-                    ) ||
-
-                    phone.includes(
-                        search
-                    ) ||
-
-                    email.includes(
-                        search
-                    );
-
+                    name.includes(search) ||
+                    admissionNumber.includes(search) ||
+                    studentNumber.includes(search) ||
+                    phone.includes(search) ||
+                    email.includes(search);
 
                 const matchesStatus =
                     !selectedStatus ||
-
-                    status ===
-                    selectedStatus;
-
+                    status === selectedStatus;
 
                 const matchesGender =
                     !selectedGender ||
-
-                    gender ===
-                    selectedGender;
-
+                    gender === selectedGender;
 
                 return (
                     matchesSearch &&
                     matchesStatus &&
                     matchesGender
                 );
-
             }
         );
 
-
     renderStudents();
-
 }
 
 
@@ -786,35 +535,21 @@ function applyFilters() {
 function renderStudents() {
 
     if (!tableBody) {
-
         return;
-
     }
-
 
     const total =
         filteredStudents.length;
 
-
     const totalPages =
         getTotalPages();
 
-
-    if (
-        currentPage >
-        totalPages
-    ) {
-
-        currentPage =
-            totalPages;
-
+    if (currentPage > totalPages) {
+        currentPage = totalPages;
     }
 
-
     const start =
-        (currentPage - 1) *
-        PAGE_SIZE;
-
+        (currentPage - 1) * PAGE_SIZE;
 
     const end =
         Math.min(
@@ -822,58 +557,36 @@ function renderStudents() {
             total
         );
 
-
     const pageStudents =
         filteredStudents.slice(
             start,
             end
         );
 
-
     tableBody.innerHTML = "";
 
-
-    if (
-        pageStudents.length === 0
-    ) {
+    if (pageStudents.length === 0) {
 
         tableBody.innerHTML = `
-
             <tr>
-
                 <td
                     colspan="9"
                     class="empty-cell"
                 >
-
                     No students found.
-
                 </td>
-
             </tr>
-
         `;
-
     }
 
-
     pageStudents.forEach(
-        function (
-            student,
-            index
-        ) {
+        function (student, index) {
 
             const id =
-                getStudentId(
-                    student
-                );
-
+                getStudentId(student);
 
             const name =
-                getStudentName(
-                    student
-                );
-
+                getStudentName(student);
 
             const admissionNumber =
                 getField(
@@ -882,14 +595,12 @@ function renderStudents() {
                     "admissionNumber"
                 );
 
-
             const gender =
                 getField(
                     student,
                     "gender",
                     "gender"
                 );
-
 
             const className =
                 getField(
@@ -908,7 +619,6 @@ function renderStudents() {
                     "classLevel"
                 );
 
-
             const classArm =
                 getField(
                     student,
@@ -921,7 +631,6 @@ function renderStudents() {
                     "classArm"
                 );
 
-
             const phone =
                 getField(
                     student,
@@ -929,181 +638,108 @@ function renderStudents() {
                     "phoneNumber"
                 );
 
-
             const status =
                 getField(
                     student,
                     "status",
                     "status"
-                ) ||
-                "active";
-
+                ) || "active";
 
             const row =
-                document.createElement(
-                    "tr"
-                );
-
+                document.createElement("tr");
 
             row.innerHTML = `
-
                 <td>
-                    ${
-                        start +
-                        index +
-                        1
-                    }
+                    ${start + index + 1}
                 </td>
 
-
                 <td>
-
-                    <span
-                        class="admission-number"
-                    >
-                        ${
-                            escapeHtml(
-                                valueOrDash(
-                                    admissionNumber
-                                )
+                    <span class="admission-number">
+                        ${escapeHtml(
+                            valueOrDash(
+                                admissionNumber
                             )
-                        }
+                        )}
                     </span>
-
                 </td>
 
-
                 <td>
-
-                    <span
-                        class="student-name"
-                    >
-                        ${
-                            escapeHtml(
-                                valueOrDash(
-                                    name
-                                )
-                            )
-                        }
+                    <span class="student-name">
+                        ${escapeHtml(
+                            valueOrDash(name)
+                        )}
                     </span>
-
                 </td>
 
-
                 <td>
-                    ${
-                        escapeHtml(
-                            valueOrDash(
-                                gender
-                            )
-                        )
-                    }
+                    ${escapeHtml(
+                        valueOrDash(gender)
+                    )}
                 </td>
 
-
                 <td>
-                    ${
-                        escapeHtml(
-                            valueOrDash(
-                                className
-                            )
-                        )
-                    }
+                    ${escapeHtml(
+                        valueOrDash(className)
+                    )}
                 </td>
 
-
                 <td>
-                    ${
-                        escapeHtml(
-                            valueOrDash(
-                                classArm
-                            )
-                        )
-                    }
+                    ${escapeHtml(
+                        valueOrDash(classArm)
+                    )}
                 </td>
 
-
                 <td>
-                    ${
-                        escapeHtml(
-                            valueOrDash(
-                                phone
-                            )
-                        )
-                    }
+                    ${escapeHtml(
+                        valueOrDash(phone)
+                    )}
                 </td>
 
-
                 <td>
-
                     <span
-                        class="${getStatusClass(
-                            status
-                        )}"
+                        class="${getStatusClass(status)}"
                     >
-                        ${
-                            escapeHtml(
-                                status
-                            )
-                        }
+                        ${escapeHtml(status)}
                     </span>
-
                 </td>
 
-
                 <td>
-
                     <div class="actions">
 
                         <button
                             type="button"
                             class="action-button view-button"
                             data-action="view"
-                            data-id="${escapeHtml(
-                                id
-                            )}"
+                            data-id="${escapeHtml(id)}"
                         >
                             View
                         </button>
-
 
                         <button
                             type="button"
                             class="action-button edit-button"
                             data-action="edit"
-                            data-id="${escapeHtml(
-                                id
-                            )}"
+                            data-id="${escapeHtml(id)}"
                         >
                             Edit
                         </button>
-
 
                         <button
                             type="button"
                             class="action-button delete-button"
                             data-action="delete"
-                            data-id="${escapeHtml(
-                                id
-                            )}"
+                            data-id="${escapeHtml(id)}"
                         >
                             Delete
                         </button>
 
                     </div>
-
                 </td>
-
             `;
 
-
-            tableBody.appendChild(
-                row
-            );
-
+            tableBody.appendChild(row);
         }
     );
-
 
     updatePagination(
         total,
@@ -1111,7 +747,6 @@ function renderStudents() {
         end,
         totalPages
     );
-
 }
 
 
@@ -1121,30 +756,22 @@ function renderStudents() {
 |--------------------------------------------------------------------------
 */
 
-function handleTableAction(
-    event
-) {
+function handleTableAction(event) {
 
     const button =
         event.target.closest(
             "[data-action]"
         );
 
-
     if (!button) {
-
         return;
-
     }
-
 
     const action =
         button.dataset.action;
 
-
     const id =
         button.dataset.id;
-
 
     if (!id) {
 
@@ -1154,36 +781,19 @@ function handleTableAction(
         );
 
         return;
-
     }
 
-
-    if (
-        action === "view"
-    ) {
-
+    if (action === "view") {
         viewStudent(id);
-
     }
 
-
-    if (
-        action === "edit"
-    ) {
-
+    if (action === "edit") {
         editStudent(id);
-
     }
 
-
-    if (
-        action === "delete"
-    ) {
-
+    if (action === "delete") {
         openDeleteModal(id);
-
     }
-
 }
 
 
@@ -1193,16 +803,11 @@ function handleTableAction(
 |--------------------------------------------------------------------------
 */
 
-function viewStudent(
-    id
-) {
+function viewStudent(id) {
 
     window.location.href =
         "/pages/student-profile.html?id=" +
-        encodeURIComponent(
-            id
-        );
-
+        encodeURIComponent(id);
 }
 
 
@@ -1212,43 +817,30 @@ function viewStudent(
 |--------------------------------------------------------------------------
 */
 
-function editStudent(
-    id
-) {
+function editStudent(id) {
 
     window.location.href =
         "/pages/student-form.html?id=" +
-        encodeURIComponent(
-            id
-        );
-
+        encodeURIComponent(id);
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| OPEN DELETE MODAL
+| DELETE MODAL
 |--------------------------------------------------------------------------
 */
 
-function openDeleteModal(
-    id
-) {
+function openDeleteModal(id) {
 
     const student =
         students.find(
             function (item) {
-
                 return String(
-                    getStudentId(
-                        item
-                    )
-                ) ===
-                String(id);
-
+                    getStudentId(item)
+                ) === String(id);
             }
         );
-
 
     if (!student) {
 
@@ -1258,125 +850,81 @@ function openDeleteModal(
         );
 
         return;
-
     }
 
-
-    studentToDelete =
-        id;
-
+    studentToDelete = id;
 
     if (deleteStudentName) {
-
         deleteStudentName.textContent =
-            getStudentName(
-                student
-            ) ||
+            getStudentName(student) ||
             "this student";
-
     }
-
 
     if (deleteModal) {
-
-        deleteModal.hidden =
-            false;
-
+        deleteModal.hidden = false;
     }
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| CLOSE DELETE MODAL
-|--------------------------------------------------------------------------
-*/
 
 function closeDeleteModal() {
 
-    studentToDelete =
-        null;
-
+    studentToDelete = null;
 
     if (deleteModal) {
-
-        deleteModal.hidden =
-            true;
-
+        deleteModal.hidden = true;
     }
-
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| CONFIRM DELETE
+| DELETE STUDENT
 |--------------------------------------------------------------------------
 */
 
 async function confirmDeleteStudent() {
 
     if (!studentToDelete) {
-
         return;
-
     }
-
 
     try {
 
         if (confirmDeleteButton) {
-
-            confirmDeleteButton.disabled =
-                true;
-
+            confirmDeleteButton.disabled = true;
             confirmDeleteButton.textContent =
                 "Deleting...";
-
         }
 
+        if (typeof apiDelete !== "function") {
+            throw new Error(
+                "API service is not available."
+            );
+        }
 
-        const response =
-            await fetch(
+        const data =
+            await apiDelete(
                 STUDENTS_API +
                 "/" +
                 encodeURIComponent(
                     studentToDelete
-                ),
-                {
-                    method: "DELETE",
-                    headers: {
-                        "Accept":
-                            "application/json"
-                    }
-                }
-            );
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                await getResponseError(
-                    response,
-                    "Unable to delete student."
                 )
             );
 
+        if (!data) {
+            throw new Error(
+                "Unable to delete student."
+            );
         }
 
-
         closeDeleteModal();
-
 
         showMessage(
             "Student deleted successfully.",
             "success"
         );
 
-
         await loadStudents();
-
 
     } catch (error) {
 
@@ -1384,7 +932,6 @@ async function confirmDeleteStudent() {
             "Delete student error:",
             error
         );
-
 
         showMessage(
             error.message ||
@@ -1395,17 +942,11 @@ async function confirmDeleteStudent() {
     } finally {
 
         if (confirmDeleteButton) {
-
-            confirmDeleteButton.disabled =
-                false;
-
+            confirmDeleteButton.disabled = false;
             confirmDeleteButton.textContent =
                 "Delete Student";
-
         }
-
     }
-
 }
 
 
@@ -1420,7 +961,6 @@ function updateStatistics() {
     const total =
         students.length;
 
-
     const active =
         students.filter(
             function (student) {
@@ -1434,10 +974,8 @@ function updateStatistics() {
                 )
                     .toLowerCase() ===
                     "active";
-
             }
         ).length;
-
 
     const male =
         students.filter(
@@ -1452,10 +990,8 @@ function updateStatistics() {
                 )
                     .toLowerCase() ===
                     "male";
-
             }
         ).length;
-
 
     const female =
         students.filter(
@@ -1470,42 +1006,24 @@ function updateStatistics() {
                 )
                     .toLowerCase() ===
                     "female";
-
             }
         ).length;
 
-
     if (totalStudents) {
-
-        totalStudents.textContent =
-            total;
-
+        totalStudents.textContent = total;
     }
-
 
     if (activeStudents) {
-
-        activeStudents.textContent =
-            active;
-
+        activeStudents.textContent = active;
     }
-
 
     if (maleStudents) {
-
-        maleStudents.textContent =
-            male;
-
+        maleStudents.textContent = male;
     }
-
 
     if (femaleStudents) {
-
-        femaleStudents.textContent =
-            female;
-
+        femaleStudents.textContent = female;
     }
-
 }
 
 
@@ -1524,7 +1042,6 @@ function getTotalPages() {
             PAGE_SIZE
         )
     );
-
 }
 
 
@@ -1536,54 +1053,37 @@ function updatePagination(
 ) {
 
     if (showingFrom) {
-
         showingFrom.textContent =
             total === 0
                 ? 0
                 : start + 1;
-
     }
-
 
     if (showingTo) {
-
-        showingTo.textContent =
-            end;
-
+        showingTo.textContent = end;
     }
-
 
     if (totalResults) {
-
-        totalResults.textContent =
-            total;
-
+        totalResults.textContent = total;
     }
-
 
     if (pageNumber) {
-
         pageNumber.textContent =
-            `Page ${currentPage} of ${totalPages}`;
-
+            "Page " +
+            currentPage +
+            " of " +
+            totalPages;
     }
-
 
     if (previousButton) {
-
         previousButton.disabled =
             currentPage <= 1;
-
     }
-
 
     if (nextButton) {
-
         nextButton.disabled =
             currentPage >= totalPages;
-
     }
-
 }
 
 
@@ -1596,29 +1096,19 @@ function updatePagination(
 function showLoading() {
 
     if (!tableBody) {
-
         return;
-
     }
 
-
     tableBody.innerHTML = `
-
         <tr>
-
             <td
                 colspan="9"
                 class="loading-cell"
             >
-
                 Loading students...
-
             </td>
-
         </tr>
-
     `;
-
 }
 
 
@@ -1638,68 +1128,43 @@ function showMessage(
             "pageMessage"
         );
 
-
     if (!element) {
-
-        console.log(
-            message
-        );
-
+        console.log(message);
         return;
-
     }
 
-
-    element.textContent =
-        message;
-
+    element.textContent = message;
 
     element.className =
-        "message " +
-        type;
-
+        "message " + type;
 
     setTimeout(
         function () {
-
             element.className =
                 "message";
-
         },
         4000
     );
-
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| GET STUDENT NAME
+| STUDENT NAME
 |--------------------------------------------------------------------------
 */
 
-function getStudentName(
-    student
-) {
+function getStudentName(student) {
 
     if (!student) {
-
         return "";
-
     }
 
-
-    if (
-        student.name
-    ) {
-
+    if (student.name) {
         return student.name;
-
     }
-
 
     return [
-
         student.first_name ||
         student.firstName ||
         "",
@@ -1711,32 +1176,23 @@ function getStudentName(
         student.last_name ||
         student.lastName ||
         ""
-
     ]
-
         .filter(Boolean)
-
         .join(" ");
-
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| GET STUDENT ID
+| STUDENT ID
 |--------------------------------------------------------------------------
 */
 
-function getStudentId(
-    student
-) {
+function getStudentId(student) {
 
     if (!student) {
-
         return "";
-
     }
-
 
     return (
         student.id ||
@@ -1744,13 +1200,12 @@ function getStudentId(
         student.studentId ||
         ""
     );
-
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| GET FIELD
+| FIELD
 |--------------------------------------------------------------------------
 */
 
@@ -1761,17 +1216,13 @@ function getField(
 ) {
 
     if (!student) {
-
         return "";
-
     }
-
 
     return (
         student[snakeCase] ??
         student[camelCase]
     );
-
 }
 
 
@@ -1781,23 +1232,17 @@ function getField(
 |--------------------------------------------------------------------------
 */
 
-function valueOrDash(
-    value
-) {
+function valueOrDash(value) {
 
     if (
         value === null ||
         value === undefined ||
         value === ""
     ) {
-
         return "—";
-
     }
 
-
     return value;
-
 }
 
 
@@ -1807,14 +1252,11 @@ function valueOrDash(
 |--------------------------------------------------------------------------
 */
 
-function getStatusClass(
-    status
-) {
+function getStatusClass(status) {
 
     const normalized =
         String(
-            status ||
-            "active"
+            status || "active"
         )
             .toLowerCase()
             .replace(
@@ -1822,12 +1264,10 @@ function getStatusClass(
                 "-"
             );
 
-
     return (
         "status status-" +
         normalized
     );
-
 }
 
 
@@ -1837,73 +1277,29 @@ function getStatusClass(
 |--------------------------------------------------------------------------
 */
 
-function escapeHtml(
-    value
-) {
+function escapeHtml(value) {
 
-    return String(
-        value ?? ""
-    )
-
+    return String(value ?? "")
         .replace(
             /&/g,
             "&amp;"
         )
-
         .replace(
             /</g,
             "&lt;"
         )
-
         .replace(
             />/g,
             "&gt;"
         )
-
         .replace(
             /"/g,
             "&quot;"
         )
-
         .replace(
             /'/g,
             "&#039;"
         );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| RESPONSE ERROR
-|--------------------------------------------------------------------------
-*/
-
-async function getResponseError(
-    response,
-    fallback
-) {
-
-    try {
-
-        const data =
-            await response.json();
-
-
-        return (
-            data.message ||
-            data.error ||
-            fallback
-        );
-
-    } catch (
-        error
-    ) {
-
-        return fallback;
-
-    }
-
 }
 
 
@@ -1913,8 +1309,7 @@ async function getResponseError(
 |--------------------------------------------------------------------------
 */
 
-window.students =
-    students;
+window.students = students;
 
 window.loadStudents =
     loadStudents;

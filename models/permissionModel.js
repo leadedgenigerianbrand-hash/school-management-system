@@ -1,32 +1,25 @@
+```javascript
 const { query } = require("../config/database");
 
 /*
 |--------------------------------------------------------------------------
 | Permission Model
 |--------------------------------------------------------------------------
+| Compatible with the current PostgreSQL schema.
 |
-| Handles the permissions used by the school management system.
+| permissions:
+| id
+| permission_name
+| description
+| created_at
 |
-| Examples:
-|
-| students.view
-| students.create
-| students.update
-| students.delete
-|
-| results.view
-| results.enter
-| results.approve
-|
-| fees.view
-| fees.collect
-|
-| attendance.view
-| attendance.mark
-|
+| role_permissions:
+| id
+| role_id
+| permission_id
+| created_at
 |--------------------------------------------------------------------------
 */
-
 
 /*
 |--------------------------------------------------------------------------
@@ -36,43 +29,32 @@ const { query } = require("../config/database");
 
 async function createPermission({
     name,
-    description = null,
-    module = null
+    permissionName,
+    description = null
 }) {
+    const finalName =
+        permissionName || name;
 
-    if (!name || !name.trim()) {
+    if (!finalName || !String(finalName).trim()) {
         throw new Error("Permission name is required.");
     }
 
-
     const sql = `
         INSERT INTO permissions (
-            name,
-            description,
-            module
+            permission_name,
+            description
         )
-        VALUES (
-            $1,
-            $2,
-            $3
-        )
+        VALUES ($1, $2)
         RETURNING *
     `;
 
-
-    const result = await query(
-        sql,
-        [
-            name.trim(),
-            description,
-            module
-        ]
-    );
-
+    const result = await query(sql, [
+        String(finalName).trim(),
+        description
+    ]);
 
     return result.rows[0];
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -80,32 +62,20 @@ async function createPermission({
 |--------------------------------------------------------------------------
 */
 
-async function findPermissionById(
-    permissionId
-) {
-
+async function findPermissionById(permissionId) {
     const sql = `
         SELECT *
-
         FROM permissions
-
         WHERE id = $1
-
         LIMIT 1
     `;
 
-
-    const result = await query(
-        sql,
-        [
-            permissionId
-        ]
-    );
-
+    const result = await query(sql, [
+        permissionId
+    ]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -116,29 +86,19 @@ async function findPermissionById(
 async function findPermissionByName(
     permissionName
 ) {
-
     const sql = `
         SELECT *
-
         FROM permissions
-
-        WHERE LOWER(name) = LOWER($1)
-
+        WHERE LOWER(permission_name) = LOWER($1)
         LIMIT 1
     `;
 
-
-    const result = await query(
-        sql,
-        [
-            permissionName
-        ]
-    );
-
+    const result = await query(sql, [
+        permissionName
+    ]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -149,47 +109,35 @@ async function findPermissionByName(
 async function findPermissions({
     module = null
 } = {}) {
-
     let sql = `
         SELECT *
-
         FROM permissions
-
         WHERE 1 = 1
     `;
 
-
     const values = [];
 
-
+    /*
+     * The database does not have a module column.
+     * For compatibility, module filtering is based on
+     * the conventional "module.action" permission name.
+     */
     if (module) {
-
-        values.push(module);
+        values.push(`${module}.%`);
 
         sql += `
-            AND module = $${values.length}
+            AND permission_name ILIKE $${values.length}
         `;
     }
 
-
     sql += `
-        ORDER BY
-
-            module ASC NULLS LAST,
-
-            name ASC
+        ORDER BY permission_name ASC
     `;
 
-
-    const result = await query(
-        sql,
-        values
-    );
-
+    const result = await query(sql, values);
 
     return result.rows;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -201,51 +149,36 @@ async function updatePermission(
     permissionId,
     {
         name,
-        description = null,
-        module = null
+        permissionName,
+        description = null
     }
 ) {
+    const finalName =
+        permissionName || name;
 
-    if (!name || !name.trim()) {
+    if (!finalName || !String(finalName).trim()) {
         throw new Error(
             "Permission name is required."
         );
     }
 
-
     const sql = `
         UPDATE permissions
-
         SET
-
-            name = $1,
-
-            description = $2,
-
-            module = $3,
-
-            updated_at = NOW()
-
-        WHERE id = $4
-
+            permission_name = $1,
+            description = $2
+        WHERE id = $3
         RETURNING *
     `;
 
-
-    const result = await query(
-        sql,
-        [
-            name.trim(),
-            description,
-            module,
-            permissionId
-        ]
-    );
-
+    const result = await query(sql, [
+        String(finalName).trim(),
+        description,
+        permissionId
+    ]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -256,27 +189,18 @@ async function updatePermission(
 async function deletePermission(
     permissionId
 ) {
-
     const sql = `
         DELETE FROM permissions
-
         WHERE id = $1
-
         RETURNING *
     `;
 
-
-    const result = await query(
-        sql,
-        [
-            permissionId
-        ]
-    );
-
+    const result = await query(sql, [
+        permissionId
+    ]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -287,72 +211,53 @@ async function deletePermission(
 async function searchPermissions(
     searchTerm
 ) {
-
     const sql = `
         SELECT *
-
         FROM permissions
-
         WHERE
-
-            name ILIKE $1
-
+            permission_name ILIKE $1
             OR description ILIKE $1
-
-            OR module ILIKE $1
-
-        ORDER BY
-
-            name ASC
+        ORDER BY permission_name ASC
+        LIMIT 100
     `;
 
-
-    const result = await query(
-        sql,
-        [
-            `%${searchTerm}%`
-        ]
-    );
-
+    const result = await query(sql, [
+        `%${String(searchTerm || "").trim()}%`
+    ]);
 
     return result.rows;
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | Get Permissions By Module
+|--------------------------------------------------------------------------
+|
+| There is no module column in the database.
+| Module is derived from permission_name.
+|
+| Example:
+| students.view  -> students
+| results.enter  -> results
 |--------------------------------------------------------------------------
 */
 
 async function getPermissionsByModule(
     module
 ) {
-
     const sql = `
         SELECT *
-
         FROM permissions
-
-        WHERE module = $1
-
-        ORDER BY
-
-            name ASC
+        WHERE permission_name ILIKE $1
+        ORDER BY permission_name ASC
     `;
 
-
-    const result = await query(
-        sql,
-        [
-            module
-        ]
-    );
-
+    const result = await query(sql, [
+        `${module}.%`
+    ]);
 
     return result.rows;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -361,34 +266,37 @@ async function getPermissionsByModule(
 */
 
 async function getPermissionModules() {
-
     const sql = `
-        SELECT DISTINCT
-
-            module
-
+        SELECT permission_name
         FROM permissions
-
-        WHERE module IS NOT NULL
-
-          AND module <> ''
-
-        ORDER BY
-
-            module ASC
+        WHERE permission_name IS NOT NULL
+          AND TRIM(permission_name) <> ''
+        ORDER BY permission_name ASC
     `;
 
+    const result = await query(sql);
 
-    const result = await query(
-        sql
-    );
+    const modules = new Set();
 
+    for (const row of result.rows) {
+        const permissionName =
+            String(row.permission_name);
 
-    return result.rows.map(
-        row => row.module
-    );
+        const separatorIndex =
+            permissionName.indexOf(".");
+
+        if (separatorIndex > 0) {
+            modules.add(
+                permissionName.substring(
+                    0,
+                    separatorIndex
+                )
+            );
+        }
+    }
+
+    return Array.from(modules).sort();
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -399,36 +307,22 @@ async function getPermissionModules() {
 async function getPermissionRoles(
     permissionId
 ) {
-
     const sql = `
         SELECT
-
             r.*
-
         FROM roles r
-
         INNER JOIN role_permissions rp
             ON rp.role_id = r.id
-
         WHERE rp.permission_id = $1
-
-        ORDER BY
-
-            r.name ASC
+        ORDER BY r.role_name ASC
     `;
 
-
-    const result = await query(
-        sql,
-        [
-            permissionId
-        ]
-    );
-
+    const result = await query(sql, [
+        permissionId
+    ]);
 
     return result.rows;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -437,37 +331,39 @@ async function getPermissionRoles(
 */
 
 async function permissionExists(
-    permissionName
+    permissionName,
+    excludePermissionId = null
 ) {
-
-    const sql = `
-        SELECT
-
-            EXISTS (
-
-                SELECT 1
-
-                FROM permissions
-
-                WHERE LOWER(name)
-                    =
-                    LOWER($1)
-
-            ) AS exists
+    let sql = `
+        SELECT EXISTS (
+            SELECT 1
+            FROM permissions
+            WHERE LOWER(permission_name) = LOWER($1)
     `;
 
+    const values = [
+        permissionName
+    ];
+
+    if (excludePermissionId) {
+        values.push(excludePermissionId);
+
+        sql += `
+            AND id <> $${values.length}
+        `;
+    }
+
+    sql += `
+        ) AS exists
+    `;
 
     const result = await query(
         sql,
-        [
-            permissionName
-        ]
+        values
     );
-
 
     return result.rows[0].exists;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -478,42 +374,28 @@ async function permissionExists(
 async function countPermissions(
     module = null
 ) {
-
     let sql = `
-        SELECT
-
-            COUNT(*) AS permission_count
-
+        SELECT COUNT(*) AS permission_count
         FROM permissions
-
         WHERE 1 = 1
     `;
 
-
     const values = [];
 
-
     if (module) {
-
-        values.push(module);
+        values.push(`${module}.%`);
 
         sql += `
-            AND module = $${values.length}
+            AND permission_name ILIKE $${values.length}
         `;
     }
 
-
-    const result = await query(
-        sql,
-        values
-    );
-
+    const result = await query(sql, values);
 
     return Number(
         result.rows[0].permission_count
     );
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -522,11 +404,13 @@ async function countPermissions(
 */
 
 async function getPermissionSummary() {
-
     const sql = `
         SELECT
-
-            p.module,
+            split_part(
+                p.permission_name,
+                '.',
+                1
+            ) AS module,
 
             COUNT(p.id)::INTEGER
                 AS permission_count,
@@ -542,23 +426,19 @@ async function getPermissionSummary() {
             ON rp.permission_id = p.id
 
         GROUP BY
+            split_part(
+                p.permission_name,
+                '.',
+                1
+            )
 
-            p.module
-
-        ORDER BY
-
-            p.module ASC NULLS LAST
+        ORDER BY module ASC
     `;
 
-
-    const result = await query(
-        sql
-    );
-
+    const result = await query(sql);
 
     return result.rows;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -567,31 +447,17 @@ async function getPermissionSummary() {
 */
 
 module.exports = {
-
     createPermission,
-
     findPermissionById,
-
     findPermissionByName,
-
     findPermissions,
-
     updatePermission,
-
     deletePermission,
-
     searchPermissions,
-
     getPermissionsByModule,
-
     getPermissionModules,
-
     getPermissionRoles,
-
     permissionExists,
-
     countPermissions,
-
     getPermissionSummary
-
 };

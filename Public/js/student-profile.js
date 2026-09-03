@@ -1,3 +1,4 @@
+```javascript
 "use strict";
 
 /*
@@ -5,371 +6,283 @@
 | SCHOOL MANAGEMENT SYSTEM
 | STUDENT PROFILE JAVASCRIPT
 |--------------------------------------------------------------------------
-|
-| Loads one student from the backend and displays:
-| - Personal information
-| - Academic information
-| - Guardian information
-| - Documents
-| - Record information
-| - Links to attendance, fees and results
-|
-|--------------------------------------------------------------------------
 */
 
-
-/*
-|--------------------------------------------------------------------------
-| CONFIGURATION
-|--------------------------------------------------------------------------
-*/
-
-const STUDENT_API = "/api/students";
-
-
-/*
-|--------------------------------------------------------------------------
-| PAGE INITIALIZATION
-|--------------------------------------------------------------------------
-*/
+const STUDENT_API = "/students";
 
 document.addEventListener(
     "DOMContentLoaded",
-    initializeStudentProfile
+    initializeStudentProfile,
+    { once: true }
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| INITIALIZE
-|--------------------------------------------------------------------------
-*/
-
 async function initializeStudentProfile() {
-
     if (typeof protectPage === "function") {
+        const protectedResult = await protectPage();
 
-        await protectPage();
-
+        if (protectedResult === false) {
+            return;
+        }
     }
 
-
-    const studentId =
-        getStudentIdFromUrl();
-
+    const studentId = getStudentIdFromUrl();
 
     if (!studentId) {
-
-        showProfileError(
-            "No student ID was supplied."
-        );
-
+        showProfileError("No student ID was supplied.");
         return;
-
     }
 
+    initializeProfileButtons(studentId);
 
-    initializeProfileButtons(
-        studentId
-    );
-
-
-    await loadStudentProfile(
-        studentId
-    );
-
+    await loadStudentProfile(studentId);
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| GET STUDENT ID FROM URL
-|--------------------------------------------------------------------------
-*/
-
 function getStudentIdFromUrl() {
-
-    const params =
-        new URLSearchParams(
-            window.location.search
-        );
-
+    const params = new URLSearchParams(
+        window.location.search
+    );
 
     return (
         params.get("id") ||
         params.get("student_id") ||
         params.get("studentId")
     );
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| LOAD STUDENT PROFILE
-|--------------------------------------------------------------------------
-*/
-
-async function loadStudentProfile(
-    studentId
-) {
-
+async function loadStudentProfile(studentId) {
     showProfileLoading();
 
-
     try {
+        const data = await request(
+            `${STUDENT_API}/${encodeURIComponent(studentId)}`
+        );
 
-        const response =
-            await fetch(
-                `${STUDENT_API}/${encodeURIComponent(studentId)}`,
-                {
-                    method: "GET",
-                    headers: {
-                        "Accept": "application/json"
-                    },
-                    credentials: "same-origin"
-                }
-            );
-
-
-        const data =
-            await parseResponse(
-                response
-            );
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                data?.message ||
-                data?.error ||
-                "Unable to load student profile."
-            );
-
-        }
-
-
-        const student =
-            extractStudent(
-                data
-            );
-
+        const student = extractStudent(data);
 
         if (!student) {
-
             throw new Error(
                 "Student record was not found."
             );
-
         }
 
-
-        renderStudentProfile(
-            student
-        );
-
+        renderStudentProfile(student);
 
         hideProfileLoading();
-
         showProfileContent();
 
-
     } catch (error) {
-
         console.error(
             "Load student profile error:",
             error
         );
 
-
         hideProfileLoading();
-
 
         showProfileError(
             error.message ||
             "Unable to load student profile."
         );
-
     }
-
 }
 
+async function request(endpoint, options = {}) {
+    if (typeof window.apiRequest === "function") {
+        return window.apiRequest(
+            endpoint,
+            options
+        );
+    }
 
-/*
-|--------------------------------------------------------------------------
-| PARSE RESPONSE
-|--------------------------------------------------------------------------
-*/
+    let url = endpoint;
 
-async function parseResponse(
-    response
-) {
+    if (
+        !url.startsWith("http://") &&
+        !url.startsWith("https://")
+    ) {
+        if (!url.startsWith("/")) {
+            url = "/" + url;
+        }
+
+        if (!url.startsWith("/api/")) {
+            url = "/api" + url;
+        }
+    }
+
+    const token =
+        localStorage.getItem(
+            "school_management_token"
+        ) ||
+        sessionStorage.getItem(
+            "school_management_token"
+        ) ||
+        localStorage.getItem("token") ||
+        sessionStorage.getItem("token") ||
+        localStorage.getItem("accessToken") ||
+        sessionStorage.getItem("accessToken") ||
+        "";
+
+    const headers = {
+        Accept: "application/json",
+        ...(options.headers || {})
+    };
+
+    if (token) {
+        headers.Authorization =
+            `Bearer ${token}`;
+    }
+
+    if (
+        options.body &&
+        !(options.body instanceof FormData) &&
+        !headers["Content-Type"] &&
+        !headers["content-type"]
+    ) {
+        headers["Content-Type"] =
+            "application/json";
+    }
+
+    let response;
+
+    try {
+        response = await fetch(
+            url,
+            {
+                ...options,
+                headers
+            }
+        );
+    } catch (error) {
+        console.error(
+            "Student profile API error:",
+            error
+        );
+
+        throw new Error(
+            "Unable to connect to the server."
+        );
+    }
+
+    if (response.status === 401) {
+        if (
+            typeof window.clearApiAuthentication ===
+            "function"
+        ) {
+            window.clearApiAuthentication();
+        } else {
+            localStorage.removeItem(
+                "school_management_token"
+            );
+
+            localStorage.removeItem(
+                "school_management_user"
+            );
+
+            sessionStorage.removeItem(
+                "school_management_token"
+            );
+
+            sessionStorage.removeItem(
+                "school_management_user"
+            );
+        }
+
+        if (
+            !window.location.pathname.endsWith(
+                "/login.html"
+            )
+        ) {
+            window.location.href =
+                "/pages/login.html";
+        }
+
+        throw new Error(
+            "Authentication required."
+        );
+    }
+
+    if (response.status === 403) {
+        throw new Error(
+            "You do not have permission to view this student."
+        );
+    }
 
     const contentType =
         response.headers.get(
             "content-type"
         ) || "";
 
-
-    if (
+    const data =
         contentType.includes(
             "application/json"
         )
-    ) {
+            ? await response.json()
+            : await response.text();
 
-        return await response.json();
-
+    if (!response.ok) {
+        throw new Error(
+            typeof data === "object"
+                ? data?.message ||
+                  data?.error ||
+                  "Unable to load student profile."
+                : data ||
+                  "Unable to load student profile."
+        );
     }
 
-
-    const text =
-        await response.text();
-
-
-    try {
-
-        return JSON.parse(text);
-
-    } catch {
-
-        return {
-            message:
-                text ||
-                "The server returned an invalid response."
-        };
-
-    }
-
+    return data;
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| EXTRACT STUDENT
-|--------------------------------------------------------------------------
-*/
-
-function extractStudent(
-    response
-) {
-
+function extractStudent(response) {
     if (!response) {
-
         return null;
-
     }
-
-
-    /*
-     * Direct student object
-     */
 
     if (
         response.id ||
         response.student_id
     ) {
-
         return response;
-
     }
 
-
-    /*
-     * Common API formats
-     */
-
-    if (
-        response.student
-    ) {
-
+    if (response.student) {
         return response.student;
-
     }
-
 
     if (
         response.data &&
-        !Array.isArray(
-            response.data
-        )
+        !Array.isArray(response.data)
     ) {
+        if (response.data.student) {
+            return response.data.student;
+        }
 
         return response.data;
-
     }
-
-
-    if (
-        response.data?.student
-    ) {
-
-        return response.data.student;
-
-    }
-
 
     return null;
-
 }
 
+function renderStudentProfile(student) {
+    renderSummary(student);
 
-/*
-|--------------------------------------------------------------------------
-| RENDER COMPLETE PROFILE
-|--------------------------------------------------------------------------
-*/
+    renderPersonalInformation(student);
 
-function renderStudentProfile(
-    student
-) {
-
-    renderSummary(
-        student
-    );
-
-
-    renderPersonalInformation(
-        student
-    );
-
-
-    renderAcademicInformation(
-        student
-    );
-
+    renderAcademicInformation(student);
 
     renderGuardians(
         getGuardians(student)
     );
 
-
     renderDocuments(
         getDocuments(student)
     );
 
-
-    renderRecordInformation(
-        student
-    );
-
+    renderRecordInformation(student);
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| SUMMARY
-|--------------------------------------------------------------------------
-*/
-
-function renderSummary(
-    student
-) {
-
+function renderSummary(student) {
     const name =
-        getStudentName(
-            student
-        );
-
+        getStudentName(student);
 
     const admissionNumber =
         getField(
@@ -378,70 +291,42 @@ function renderSummary(
             "admissionNumber"
         );
 
-
     const status =
         getField(
             student,
             "status",
             "status"
-        ) ||
-        "active";
-
+        ) || "active";
 
     setText(
         "studentName",
         name || "Unknown Student"
     );
 
-
     setText(
         "studentAdmissionNumber",
-        valueOrDash(
-            admissionNumber
-        )
+        valueOrDash(admissionNumber)
     );
-
 
     const statusElement =
         document.getElementById(
             "studentStatus"
         );
 
-
     if (statusElement) {
-
         statusElement.textContent =
             status;
 
-
         statusElement.className =
             `status ${getStatusClass(status)}`;
-
     }
 
+    renderStudentPhoto(student);
 
-    renderStudentPhoto(
-        student
-    );
-
-
-    renderStudentInitials(
-        name
-    );
-
+    renderStudentInitials(name);
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| PERSONAL INFORMATION
-|--------------------------------------------------------------------------
-*/
-
-function renderPersonalInformation(
-    student
-) {
-
+function renderPersonalInformation(student) {
     setText(
         "firstName",
         getField(
@@ -450,7 +335,6 @@ function renderPersonalInformation(
             "firstName"
         )
     );
-
 
     setText(
         "middleName",
@@ -461,7 +345,6 @@ function renderPersonalInformation(
         )
     );
 
-
     setText(
         "lastName",
         getField(
@@ -470,7 +353,6 @@ function renderPersonalInformation(
             "lastName"
         )
     );
-
 
     setText(
         "gender",
@@ -481,7 +363,6 @@ function renderPersonalInformation(
         )
     );
 
-
     const dateOfBirth =
         getField(
             student,
@@ -489,22 +370,15 @@ function renderPersonalInformation(
             "dateOfBirth"
         );
 
-
     setText(
         "dateOfBirth",
-        formatDate(
-            dateOfBirth
-        )
+        formatDate(dateOfBirth)
     );
-
 
     setText(
         "age",
-        calculateAge(
-            dateOfBirth
-        )
+        calculateAge(dateOfBirth)
     );
-
 
     setText(
         "phone",
@@ -515,7 +389,6 @@ function renderPersonalInformation(
         )
     );
 
-
     setText(
         "email",
         getField(
@@ -525,8 +398,12 @@ function renderPersonalInformation(
         )
     );
 
-
     const address =
+        getField(
+            student,
+            "residential_address",
+            "residentialAddress"
+        ) ||
         getField(
             student,
             "address",
@@ -538,25 +415,72 @@ function renderPersonalInformation(
             "homeAddress"
         );
 
-
     setText(
         "address",
         address
     );
 
+    setText(
+        "stateOfOrigin",
+        getField(
+            student,
+            "state_of_origin",
+            "stateOfOrigin"
+        )
+    );
+
+    setText(
+        "localGovernment",
+        getField(
+            student,
+            "local_government_area",
+            "localGovernmentArea"
+        ) ||
+        getField(
+            student,
+            "lga",
+            "lga"
+        )
+    );
+
+    setText(
+        "nationality",
+        getField(
+            student,
+            "nationality",
+            "nationality"
+        )
+    );
+
+    setText(
+        "religion",
+        getField(
+            student,
+            "religion",
+            "religion"
+        )
+    );
+
+    setText(
+        "bloodGroup",
+        getField(
+            student,
+            "blood_group",
+            "bloodGroup"
+        )
+    );
+
+    setText(
+        "genotype",
+        getField(
+            student,
+            "genotype",
+            "genotype"
+        )
+    );
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| ACADEMIC INFORMATION
-|--------------------------------------------------------------------------
-*/
-
-function renderAcademicInformation(
-    student
-) {
-
+function renderAcademicInformation(student) {
     setText(
         "academicAdmissionNumber",
         getField(
@@ -565,7 +489,6 @@ function renderAcademicInformation(
             "admissionNumber"
         )
     );
-
 
     const className =
         getField(
@@ -579,12 +502,10 @@ function renderAcademicInformation(
             "class"
         );
 
-
     setText(
         "className",
         className
     );
-
 
     const classArm =
         getField(
@@ -598,12 +519,10 @@ function renderAcademicInformation(
             "classArm"
         );
 
-
     setText(
         "classArm",
         classArm
     );
-
 
     const session =
         getField(
@@ -622,12 +541,10 @@ function renderAcademicInformation(
             "academicSession"
         );
 
-
     setText(
         "academicSession",
         session
     );
-
 
     const academicLevel =
         getField(
@@ -646,12 +563,10 @@ function renderAcademicInformation(
             "academicLevel"
         );
 
-
     setText(
         "academicLevel",
         academicLevel
     );
-
 
     const department =
         getField(
@@ -665,12 +580,10 @@ function renderAcademicInformation(
             "department"
         );
 
-
     setText(
         "department",
         department
     );
-
 
     setText(
         "house",
@@ -681,7 +594,6 @@ function renderAcademicInformation(
         )
     );
 
-
     const admissionDate =
         getField(
             student,
@@ -689,69 +601,37 @@ function renderAcademicInformation(
             "admissionDate"
         );
 
-
     setText(
         "admissionDate",
-        formatDate(
-            admissionDate
-        )
+        formatDate(admissionDate)
     );
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| GUARDIANS
-|--------------------------------------------------------------------------
-*/
-
-function getGuardians(
-    student
-) {
-
+function getGuardians(student) {
     return (
         student.guardians ||
         student.guardian ||
         student.student_guardians ||
         []
     );
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| RENDER GUARDIANS
-|--------------------------------------------------------------------------
-*/
-
-function renderGuardians(
-    guardians
-) {
-
+function renderGuardians(guardians) {
     const container =
         document.getElementById(
             "guardiansContainer"
         );
 
-
     if (!container) {
-
         return;
-
     }
 
-
-    container.innerHTML =
-        "";
-
+    container.innerHTML = "";
 
     if (
         !Array.isArray(guardians) ||
         guardians.length === 0
     ) {
-
         container.innerHTML = `
             <div class="empty-state">
                 No guardian information available.
@@ -759,22 +639,17 @@ function renderGuardians(
         `;
 
         return;
-
     }
 
-
     guardians.forEach(
-        function (guardian) {
-
+        (guardian) => {
             const card =
                 document.createElement(
                     "div"
                 );
 
-
             card.className =
                 "guardian-card";
-
 
             const name =
                 guardian.full_name ||
@@ -782,29 +657,24 @@ function renderGuardians(
                 guardian.name ||
                 "Unknown Guardian";
 
-
             const relationship =
                 guardian.relationship ||
+                guardian.relationship_name ||
                 "Guardian";
-
 
             const phone =
                 guardian.phone ||
                 guardian.phone_number ||
                 guardian.phoneNumber;
 
-
             const email =
                 guardian.email;
-
 
             const isPrimary =
                 guardian.is_primary === true ||
                 guardian.isPrimary === true;
 
-
             card.innerHTML = `
-
                 <strong>
                     ${escapeHtml(name)}
                 </strong>
@@ -821,18 +691,14 @@ function renderGuardians(
                 <span>
                     Phone:
                     ${escapeHtml(
-                        valueOrDash(
-                            phone
-                        )
+                        valueOrDash(phone)
                     )}
                 </span>
 
                 <span>
                     Email:
                     ${escapeHtml(
-                        valueOrDash(
-                            email
-                        )
+                        valueOrDash(email)
                     )}
                 </span>
 
@@ -845,71 +711,37 @@ function renderGuardians(
                         `
                         : ""
                 }
-
             `;
 
-
-            container.appendChild(
-                card
-            );
-
+            container.appendChild(card);
         }
     );
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| DOCUMENTS
-|--------------------------------------------------------------------------
-*/
-
-function getDocuments(
-    student
-) {
-
+function getDocuments(student) {
     return (
         student.documents ||
         student.student_documents ||
         []
     );
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| RENDER DOCUMENTS
-|--------------------------------------------------------------------------
-*/
-
-function renderDocuments(
-    documents
-) {
-
+function renderDocuments(documents) {
     const container =
         document.getElementById(
             "documentsContainer"
         );
 
-
     if (!container) {
-
         return;
-
     }
 
-
-    container.innerHTML =
-        "";
-
+    container.innerHTML = "";
 
     if (
         !Array.isArray(documents) ||
         documents.length === 0
     ) {
-
         container.innerHTML = `
             <div class="empty-state">
                 No documents available.
@@ -917,22 +749,17 @@ function renderDocuments(
         `;
 
         return;
-
     }
 
-
     documents.forEach(
-        function (documentItem) {
-
+        (documentItem) => {
             const card =
                 document.createElement(
                     "div"
                 );
 
-
             card.className =
                 "document-card";
-
 
             const name =
                 documentItem.document_name ||
@@ -941,13 +768,11 @@ function renderDocuments(
                 documentItem.title ||
                 "Student Document";
 
-
             const type =
                 documentItem.document_type ||
                 documentItem.documentType ||
                 documentItem.type ||
                 "Document";
-
 
             const url =
                 documentItem.file_url ||
@@ -955,19 +780,15 @@ function renderDocuments(
                 documentItem.url ||
                 documentItem.path;
 
-
             const info =
                 document.createElement(
                     "div"
                 );
 
-
             info.className =
                 "document-info";
 
-
             info.innerHTML = `
-
                 <strong>
                     ${escapeHtml(name)}
                 </strong>
@@ -975,72 +796,59 @@ function renderDocuments(
                 <span>
                     ${escapeHtml(type)}
                 </span>
-
             `;
 
-
-            card.appendChild(
-                info
-            );
-
+            card.appendChild(info);
 
             if (url) {
-
                 const link =
                     document.createElement(
                         "a"
                     );
 
+                link.href = normalizeFileUrl(
+                    url
+                );
 
-                link.href =
-                    url;
-
-
-                link.target =
-                    "_blank";
-
+                link.target = "_blank";
 
                 link.rel =
                     "noopener noreferrer";
 
-
                 link.className =
                     "document-link";
 
+                link.textContent = "View";
 
-                link.textContent =
-                    "View";
-
-
-                card.appendChild(
-                    link
-                );
-
+                card.appendChild(link);
             }
 
-
-            container.appendChild(
-                card
-            );
-
+            container.appendChild(card);
         }
     );
-
 }
 
+function normalizeFileUrl(url) {
+    const value =
+        String(url || "");
 
-/*
-|--------------------------------------------------------------------------
-| RECORD INFORMATION
-|--------------------------------------------------------------------------
-*/
+    if (
+        value.startsWith("http://") ||
+        value.startsWith("https://") ||
+        value.startsWith("data:")
+    ) {
+        return value;
+    }
 
-function renderRecordInformation(
-    student
-) {
+    if (value.startsWith("/")) {
+        return value;
+    }
 
-    setText(
-        "studentId",
+    return "/" + value;
+}
+
+function renderRecordInformation(student) {
+    const studentId =
         getField(
             student,
             "id",
@@ -1050,9 +858,12 @@ function renderRecordInformation(
             student,
             "student_id",
             "studentId"
-        )
-    );
+        );
 
+    setText(
+        "studentId",
+        studentId
+    );
 
     setText(
         "createdAt",
@@ -1065,7 +876,6 @@ function renderRecordInformation(
         )
     );
 
-
     setText(
         "updatedAt",
         formatDateTime(
@@ -1076,32 +886,17 @@ function renderRecordInformation(
             )
         )
     );
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| STUDENT PHOTO
-|--------------------------------------------------------------------------
-*/
-
-function renderStudentPhoto(
-    student
-) {
-
+function renderStudentPhoto(student) {
     const image =
         document.getElementById(
             "studentPhoto"
         );
 
-
     if (!image) {
-
         return;
-
     }
-
 
     const photo =
         getField(
@@ -1125,58 +920,30 @@ function renderStudentPhoto(
             "imageUrl"
         );
 
-
     if (!photo) {
-
-        image.hidden =
-            true;
-
+        image.hidden = true;
         return;
-
     }
 
-
     image.src =
-        photo;
+        normalizeFileUrl(photo);
 
+    image.hidden = false;
 
-    image.hidden =
-        false;
-
-
-    image.onerror =
-        function () {
-
-            image.hidden =
-                true;
-
-        };
-
+    image.onerror = function () {
+        image.hidden = true;
+    };
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| INITIALS
-|--------------------------------------------------------------------------
-*/
-
-function renderStudentInitials(
-    name
-) {
-
+function renderStudentInitials(name) {
     const element =
         document.getElementById(
             "studentInitials"
         );
 
-
     if (!element) {
-
         return;
-
     }
-
 
     const words =
         String(
@@ -1186,201 +953,140 @@ function renderStudentInitials(
             .split(/\s+/)
             .filter(Boolean);
 
-
-    let initials =
-        "ST";
-
+    let initials = "ST";
 
     if (words.length === 1) {
-
         initials =
             words[0]
-                .substring(
-                    0,
-                    2
-                )
+                .substring(0, 2)
                 .toUpperCase();
-
-    } else if (
-        words.length >= 2
-    ) {
-
+    } else if (words.length >= 2) {
         initials =
             (
                 words[0][0] +
                 words[words.length - 1][0]
-            )
-                .toUpperCase();
-
+            ).toUpperCase();
     }
-
 
     element.textContent =
         initials;
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| PROFILE BUTTONS
-|--------------------------------------------------------------------------
-*/
-
-function initializeProfileButtons(
-    studentId
-) {
+function initializeProfileButtons(studentId) {
+    const encodedId =
+        encodeURIComponent(studentId);
 
     const backButton =
         document.getElementById(
             "backButton"
         );
 
-
     if (backButton) {
-
         backButton.addEventListener(
             "click",
-            function () {
-
+            () => {
                 window.location.href =
                     "/pages/students.html";
-
-            }
+            },
+            { once: true }
         );
-
     }
-
 
     const editButton =
         document.getElementById(
             "editStudentButton"
         );
 
-
     if (editButton) {
-
         editButton.addEventListener(
             "click",
-            function () {
-
+            () => {
                 window.location.href =
-                    `/pages/student-form.html?id=${encodeURIComponent(studentId)}`;
-
-            }
+                    `/pages/student-form.html?id=${encodedId}`;
+            },
+            { once: true }
         );
-
     }
-
 
     const attendanceButton =
         document.getElementById(
             "attendanceButton"
         );
 
-
     if (attendanceButton) {
-
         attendanceButton.addEventListener(
             "click",
-            function () {
-
+            () => {
                 window.location.href =
-                    `/pages/student-attendance.html?id=${encodeURIComponent(studentId)}`;
-
-            }
+                    `/pages/student-attendance.html?id=${encodedId}`;
+            },
+            { once: true }
         );
-
     }
-
 
     const feesButton =
         document.getElementById(
             "feesButton"
         );
 
-
     if (feesButton) {
-
         feesButton.addEventListener(
             "click",
-            function () {
-
+            () => {
                 window.location.href =
-                    `/pages/student-fees.html?id=${encodeURIComponent(studentId)}`;
-
-            }
+                    `/pages/student-fees.html?id=${encodedId}`;
+            },
+            { once: true }
         );
-
     }
-
 
     const resultsButton =
         document.getElementById(
             "resultsButton"
         );
 
-
     if (resultsButton) {
-
         resultsButton.addEventListener(
             "click",
-            function () {
-
+            () => {
                 window.location.href =
-                    `/pages/student-results.html?id=${encodeURIComponent(studentId)}`;
-
-            }
+                    `/pages/student-results.html?id=${encodedId}`;
+            },
+            { once: true }
         );
-
     }
-
 
     const retryButton =
         document.getElementById(
             "retryButton"
         );
 
-
     if (retryButton) {
-
         retryButton.addEventListener(
             "click",
-            function () {
-
+            () => {
                 loadStudentProfile(
                     studentId
                 );
-
             }
         );
-
     }
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| GET STUDENT NAME
-|--------------------------------------------------------------------------
-*/
-
-function getStudentName(
-    student
-) {
-
-    if (
-        student.name
-    ) {
-
+function getStudentName(student) {
+    if (student.name) {
         return student.name;
-
     }
 
+    if (student.full_name) {
+        return student.full_name;
+    }
+
+    if (student.fullName) {
+        return student.fullName;
+    }
 
     return [
-
         getField(
             student,
             "first_name",
@@ -1398,145 +1104,69 @@ function getStudentName(
             "last_name",
             "lastName"
         )
-
     ]
         .filter(Boolean)
         .join(" ");
-
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| GET FIELD
-|--------------------------------------------------------------------------
-*/
 
 function getField(
     object,
     snakeCase,
     camelCase
 ) {
-
     if (!object) {
-
         return null;
-
     }
 
-
-    if (
-        snakeCase === camelCase
-    ) {
-
+    if (snakeCase === camelCase) {
         return object[snakeCase];
-
     }
-
 
     return (
         object[snakeCase] ??
         object[camelCase]
     );
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| VALUE OR DASH
-|--------------------------------------------------------------------------
-*/
-
-function valueOrDash(
-    value
-) {
-
+function valueOrDash(value) {
     if (
         value === null ||
         value === undefined ||
         value === ""
     ) {
-
         return "—";
-
     }
 
-
-    return String(
-        value
-    );
-
+    return String(value);
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| SET TEXT
-|--------------------------------------------------------------------------
-*/
-
-function setText(
-    id,
-    value
-) {
-
+function setText(id, value) {
     const element =
-        document.getElementById(
-            id
-        );
-
+        document.getElementById(id);
 
     if (!element) {
-
         return;
-
     }
-
 
     element.textContent =
-        valueOrDash(
-            value
-        );
-
+        valueOrDash(value);
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| FORMAT DATE
-|--------------------------------------------------------------------------
-*/
-
-function formatDate(
-    value
-) {
-
+function formatDate(value) {
     if (!value) {
-
         return "—";
-
     }
 
-
     const date =
-        new Date(
-            value
-        );
-
+        new Date(value);
 
     if (
         Number.isNaN(
             date.getTime()
         )
     ) {
-
-        return String(
-            value
-        );
-
+        return String(value);
     }
-
 
     return new Intl.DateTimeFormat(
         "en-NG",
@@ -1545,48 +1175,24 @@ function formatDate(
             month: "short",
             day: "numeric"
         }
-    ).format(
-        date
-    );
-
+    ).format(date);
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| FORMAT DATE AND TIME
-|--------------------------------------------------------------------------
-*/
-
-function formatDateTime(
-    value
-) {
-
+function formatDateTime(value) {
     if (!value) {
-
         return "—";
-
     }
 
-
     const date =
-        new Date(
-            value
-        );
-
+        new Date(value);
 
     if (
         Number.isNaN(
             date.getTime()
         )
     ) {
-
-        return String(
-            value
-        );
-
+        return String(value);
     }
-
 
     return new Intl.DateTimeFormat(
         "en-NG",
@@ -1597,60 +1203,35 @@ function formatDateTime(
             hour: "numeric",
             minute: "2-digit"
         }
-    ).format(
-        date
-    );
-
+    ).format(date);
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| CALCULATE AGE
-|--------------------------------------------------------------------------
-*/
-
-function calculateAge(
-    dateOfBirth
-) {
-
+function calculateAge(dateOfBirth) {
     if (!dateOfBirth) {
-
         return "—";
-
     }
 
-
     const birth =
-        new Date(
-            dateOfBirth
-        );
-
+        new Date(dateOfBirth);
 
     if (
         Number.isNaN(
             birth.getTime()
         )
     ) {
-
         return "—";
-
     }
-
 
     const today =
         new Date();
-
 
     let age =
         today.getFullYear() -
         birth.getFullYear();
 
-
     const monthDifference =
         today.getMonth() -
         birth.getMonth();
-
 
     if (
         monthDifference < 0 ||
@@ -1660,38 +1241,18 @@ function calculateAge(
             birth.getDate()
         )
     ) {
-
         age--;
-
     }
 
-
-    if (age < 0) {
-
-        return "—";
-
-    }
-
-
-    return age;
-
+    return age >= 0
+        ? age
+        : "—";
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| STATUS CLASS
-|--------------------------------------------------------------------------
-*/
-
-function getStatusClass(
-    status
-) {
-
+function getStatusClass(status) {
     const normalized =
         String(
-            status ||
-            "active"
+            status || "active"
         )
             .toLowerCase()
             .replace(
@@ -1699,308 +1260,187 @@ function getStatusClass(
                 "-"
             );
 
-
     const allowed = [
-
         "active",
-
         "inactive",
-
         "graduated",
-
         "withdrawn",
-
         "transferred",
-
         "suspended"
-
     ];
-
 
     if (
         allowed.includes(
             normalized
         )
     ) {
-
         return `status-${normalized}`;
-
     }
 
-
     return "status-pending";
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| ESCAPE HTML
-|--------------------------------------------------------------------------
-*/
-
-function escapeHtml(
-    value
-) {
-
+function escapeHtml(value) {
     return String(
         value ?? ""
     )
-
         .replace(
             /&/g,
             "&amp;"
         )
-
         .replace(
             /</g,
             "&lt;"
         )
-
         .replace(
             />/g,
             "&gt;"
         )
-
         .replace(
             /"/g,
             "&quot;"
         )
-
         .replace(
             /'/g,
             "&#039;"
         );
-
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| LOADING / CONTENT / ERROR
-|--------------------------------------------------------------------------
-*/
 
 function showProfileLoading() {
-
     const loading =
         document.getElementById(
             "profileLoading"
         );
-
 
     const content =
         document.getElementById(
             "profileContent"
         );
 
-
     const error =
         document.getElementById(
             "profileError"
         );
 
-
     if (loading) {
-
-        loading.hidden =
-            false;
-
+        loading.hidden = false;
     }
-
 
     if (content) {
-
-        content.hidden =
-            true;
-
+        content.hidden = true;
     }
-
 
     if (error) {
-
-        error.hidden =
-            true;
-
+        error.hidden = true;
     }
-
 }
-
 
 function hideProfileLoading() {
-
     const loading =
         document.getElementById(
             "profileLoading"
         );
-
 
     if (loading) {
-
-        loading.hidden =
-            true;
-
+        loading.hidden = true;
     }
-
 }
 
-
 function showProfileContent() {
-
     const content =
         document.getElementById(
             "profileContent"
         );
-
 
     const error =
         document.getElementById(
             "profileError"
         );
 
-
     if (content) {
-
-        content.hidden =
-            false;
-
+        content.hidden = false;
     }
-
 
     if (error) {
-
-        error.hidden =
-            true;
-
+        error.hidden = true;
     }
-
 }
 
-
-function showProfileError(
-    message
-) {
-
+function showProfileError(message) {
     const loading =
         document.getElementById(
             "profileLoading"
         );
 
-
     const content =
         document.getElementById(
             "profileContent"
         );
 
-
     const error =
         document.getElementById(
             "profileError"
         );
-
 
     const errorMessage =
         document.getElementById(
             "profileErrorMessage"
         );
 
-
     if (loading) {
-
-        loading.hidden =
-            true;
-
+        loading.hidden = true;
     }
-
 
     if (content) {
-
-        content.hidden =
-            true;
-
+        content.hidden = true;
     }
 
-
     if (errorMessage) {
-
         errorMessage.textContent =
             message ||
             "Unable to load student.";
-
     }
-
 
     if (error) {
-
-        error.hidden =
-            false;
-
+        error.hidden = false;
     }
-
 
     showMessage(
         message ||
         "Unable to load student.",
         "error"
     );
-
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| MESSAGE
-|--------------------------------------------------------------------------
-*/
 
 function showMessage(
     message,
     type = "info"
 ) {
-
     const element =
         document.getElementById(
             "pageMessage"
         );
 
-
     if (!element) {
-
         return;
-
     }
-
 
     element.textContent =
         message;
 
-
     element.className =
         `message ${type}`;
 
-
     if (type !== "error") {
-
         setTimeout(
-            function () {
-
+            () => {
                 element.className =
                     "message";
-
             },
             4000
         );
-
     }
-
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| EXPORTS
-|--------------------------------------------------------------------------
-*/
 
 window.initializeStudentProfile =
     initializeStudentProfile;

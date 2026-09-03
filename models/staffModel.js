@@ -1,15 +1,35 @@
+```javascript
+"use strict";
+
 const { query } = require("../config/database");
 
 /*
 |--------------------------------------------------------------------------
 | Staff Model
 |--------------------------------------------------------------------------
+| Compatible with the current PostgreSQL staff schema.
+|--------------------------------------------------------------------------
 |
-| Handles teachers and other school staff.
+| staff columns:
+| id
+| school_id
+| user_id
+| staff_number
+| first_name
+| middle_name
+| last_name
+| email
+| phone
+| position
+| department
+| employment_date
+| profile_photo_url
+| status
+| created_at
+| updated_at
 |
 |--------------------------------------------------------------------------
 */
-
 
 /*
 |--------------------------------------------------------------------------
@@ -19,111 +39,76 @@ const { query } = require("../config/database");
 
 async function createStaff({
     schoolId,
+    userId = null,
     staffNumber,
     firstName,
     middleName = null,
     lastName,
-    gender = null,
-    dateOfBirth = null,
-    phone = null,
     email = null,
-    address = null,
-    departmentId = null,
-    designation = null,
+    phone = null,
+    position = null,
+    department = null,
     employmentDate = null,
-    employmentType = null,
-    qualification = null,
-    specialization = null,
-    status = "active"
+    profilePhotoUrl = null,
+    status = "Active"
 }) {
-
     if (!schoolId) {
         throw new Error("School ID is required.");
     }
 
-    if (!staffNumber) {
+    if (!staffNumber || !staffNumber.trim()) {
         throw new Error("Staff number is required.");
     }
 
-    if (!firstName) {
+    if (!firstName || !firstName.trim()) {
         throw new Error("First name is required.");
     }
 
-    if (!lastName) {
+    if (!lastName || !lastName.trim()) {
         throw new Error("Last name is required.");
     }
-
 
     const sql = `
         INSERT INTO staff (
             school_id,
+            user_id,
             staff_number,
             first_name,
             middle_name,
             last_name,
-            gender,
-            date_of_birth,
-            phone,
             email,
-            address,
-            department_id,
-            designation,
+            phone,
+            position,
+            department,
             employment_date,
-            employment_type,
-            qualification,
-            specialization,
+            profile_photo_url,
             status
         )
         VALUES (
-            $1,
-            $2,
-            $3,
-            $4,
-            $5,
-            $6,
-            $7,
-            $8,
-            $9,
-            $10,
-            $11,
-            $12,
-            $13,
-            $14,
-            $15,
-            $16,
-            $17
+            $1, $2, $3, $4, $5, $6, $7,
+            $8, $9, $10, $11, $12, $13
         )
         RETURNING *
     `;
 
-
-    const result = await query(
-        sql,
-        [
-            schoolId,
-            staffNumber.trim(),
-            firstName.trim(),
-            middleName,
-            lastName.trim(),
-            gender,
-            dateOfBirth,
-            phone,
-            email,
-            address,
-            departmentId,
-            designation,
-            employmentDate,
-            employmentType,
-            qualification,
-            specialization,
-            status
-        ]
-    );
-
+    const result = await query(sql, [
+        schoolId,
+        userId,
+        staffNumber.trim(),
+        firstName.trim(),
+        middleName,
+        lastName.trim(),
+        email,
+        phone,
+        position,
+        department,
+        employmentDate,
+        profilePhotoUrl,
+        status
+    ]);
 
     return result.rows[0];
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -135,30 +120,19 @@ async function findStaffById(
     staffId,
     schoolId = null
 ) {
-
     let sql = `
         SELECT
-
             st.*,
-
-            d.department_name
-
+            s.school_name
         FROM staff st
-
-        LEFT JOIN departments d
-            ON d.id = st.department_id
-
+        LEFT JOIN schools s
+            ON s.id = st.school_id
         WHERE st.id = $1
     `;
 
-
-    const values = [
-        staffId
-    ];
-
+    const values = [staffId];
 
     if (schoolId) {
-
         values.push(schoolId);
 
         sql += `
@@ -166,21 +140,14 @@ async function findStaffById(
         `;
     }
 
-
     sql += `
         LIMIT 1
     `;
 
-
-    const result = await query(
-        sql,
-        values
-    );
-
+    const result = await query(sql, values);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -192,23 +159,15 @@ async function findStaffByNumber(
     staffNumber,
     schoolId = null
 ) {
-
     let sql = `
         SELECT *
-
         FROM staff
-
         WHERE staff_number = $1
     `;
 
-
-    const values = [
-        staffNumber
-    ];
-
+    const values = [staffNumber];
 
     if (schoolId) {
-
         values.push(schoolId);
 
         sql += `
@@ -216,69 +175,53 @@ async function findStaffByNumber(
         `;
     }
 
-
     sql += `
         LIMIT 1
     `;
 
-
-    const result = await query(
-        sql,
-        values
-    );
-
+    const result = await query(sql, values);
 
     return result.rows[0] || null;
 }
 
-
 /*
 |--------------------------------------------------------------------------
-| List Staff
+| Find Staff
 |--------------------------------------------------------------------------
 */
 
 async function findStaff({
     schoolId,
-    departmentId = null,
+    department = null,
     status = null,
     limit = 100,
     offset = 0
 }) {
+    if (!schoolId) {
+        throw new Error("School ID is required.");
+    }
 
     let sql = `
         SELECT
-
             st.*,
-
-            d.department_name
-
+            s.school_name
         FROM staff st
-
-        LEFT JOIN departments d
-            ON d.id = st.department_id
-
+        LEFT JOIN schools s
+            ON s.id = st.school_id
         WHERE st.school_id = $1
     `;
 
+    const values = [schoolId];
 
-    const values = [
-        schoolId
-    ];
-
-
-    if (departmentId) {
-
-        values.push(departmentId);
+    if (department) {
+        values.push(department);
 
         sql += `
-            AND st.department_id = $${values.length}
+            AND st.department = $${values.length}
         `;
     }
 
-
     if (status) {
-
         values.push(status);
 
         sql += `
@@ -286,36 +229,35 @@ async function findStaff({
         `;
     }
 
+    const safeLimit = Math.min(
+        Math.max(Number(limit) || 100, 1),
+        100
+    );
 
-    values.push(limit);
+    const safeOffset = Math.max(
+        Number(offset) || 0,
+        0
+    );
+
+    values.push(safeLimit);
 
     sql += `
         ORDER BY
-
             st.last_name ASC,
-
             st.first_name ASC
-
         LIMIT $${values.length}
     `;
 
-
-    values.push(offset);
+    values.push(safeOffset);
 
     sql += `
         OFFSET $${values.length}
     `;
 
-
-    const result = await query(
-        sql,
-        values
-    );
-
+    const result = await query(sql, values);
 
     return result.rows;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -327,63 +269,41 @@ async function searchStaff(
     searchTerm,
     schoolId
 ) {
+    if (!schoolId || !searchTerm) {
+        return [];
+    }
 
     const sql = `
         SELECT
-
             st.*,
-
-            d.department_name
-
+            s.school_name
         FROM staff st
-
-        LEFT JOIN departments d
-            ON d.id = st.department_id
-
+        LEFT JOIN schools s
+            ON s.id = st.school_id
         WHERE st.school_id = $1
-
           AND (
-
               st.staff_number ILIKE $2
-
               OR st.first_name ILIKE $2
-
               OR st.middle_name ILIKE $2
-
               OR st.last_name ILIKE $2
-
-              OR st.phone ILIKE $2
-
               OR st.email ILIKE $2
-
-              OR st.designation ILIKE $2
-
-              OR d.department_name ILIKE $2
-
+              OR st.phone ILIKE $2
+              OR st.position ILIKE $2
+              OR st.department ILIKE $2
           )
-
         ORDER BY
-
             st.last_name ASC,
-
             st.first_name ASC
-
         LIMIT 100
     `;
 
-
-    const result = await query(
-        sql,
-        [
-            schoolId,
-            `%${searchTerm}%`
-        ]
-    );
-
+    const result = await query(sql, [
+        schoolId,
+        `%${searchTerm.trim()}%`
+    ]);
 
     return result.rows;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -396,78 +316,44 @@ async function updateStaff(
     schoolId,
     data
 ) {
-
     const allowedFields = {
-
-        staffNumber:
-            "staff_number",
-
-        firstName:
-            "first_name",
-
-        middleName:
-            "middle_name",
-
-        lastName:
-            "last_name",
-
-        gender:
-            "gender",
-
-        dateOfBirth:
-            "date_of_birth",
-
-        phone:
-            "phone",
-
-        email:
-            "email",
-
-        address:
-            "address",
-
-        departmentId:
-            "department_id",
-
-        designation:
-            "designation",
-
-        employmentDate:
-            "employment_date",
-
-        employmentType:
-            "employment_type",
-
-        qualification:
-            "qualification",
-
-        specialization:
-            "specialization",
-
-        status:
-            "status"
-
+        userId: "user_id",
+        staffNumber: "staff_number",
+        firstName: "first_name",
+        middleName: "middle_name",
+        lastName: "last_name",
+        email: "email",
+        phone: "phone",
+        position: "position",
+        department: "department",
+        employmentDate: "employment_date",
+        profilePhotoUrl: "profile_photo_url",
+        status: "status"
     };
 
-
     const updates = [];
-
     const values = [];
 
-
-    for (
-        const key of Object.keys(data)
-    ) {
-
+    for (const key of Object.keys(data || {})) {
         if (
             allowedFields[key] &&
             data[key] !== undefined
         ) {
+            let value = data[key];
 
-            values.push(
-                data[key]
-            );
+            if (
+                [
+                    "staffNumber",
+                    "firstName",
+                    "middleName",
+                    "lastName"
+                ].includes(key) &&
+                typeof value === "string"
+            ) {
+                value = value.trim();
+            }
 
+            values.push(value);
 
             updates.push(
                 `${allowedFields[key]} = $${values.length}`
@@ -475,52 +361,32 @@ async function updateStaff(
         }
     }
 
-
     if (updates.length === 0) {
         throw new Error(
             "No valid fields supplied for update."
         );
     }
 
-
     values.push(staffId);
-
-    const staffIdPosition =
-        values.length;
-
+    const staffIdPosition = values.length;
 
     values.push(schoolId);
-
-    const schoolIdPosition =
-        values.length;
-
+    const schoolIdPosition = values.length;
 
     const sql = `
         UPDATE staff
-
         SET
-
             ${updates.join(", ")},
-
             updated_at = NOW()
-
         WHERE id = $${staffIdPosition}
-
           AND school_id = $${schoolIdPosition}
-
         RETURNING *
     `;
 
-
-    const result = await query(
-        sql,
-        values
-    );
-
+    const result = await query(sql, values);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -532,30 +398,20 @@ async function deleteStaff(
     staffId,
     schoolId
 ) {
-
     const sql = `
         DELETE FROM staff
-
         WHERE id = $1
-
           AND school_id = $2
-
         RETURNING *
     `;
 
-
-    const result = await query(
-        sql,
-        [
-            staffId,
-            schoolId
-        ]
-    );
-
+    const result = await query(sql, [
+        staffId,
+        schoolId
+    ]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -567,25 +423,15 @@ async function countStaff(
     schoolId,
     status = null
 ) {
-
     let sql = `
-        SELECT
-
-            COUNT(*) AS staff_count
-
+        SELECT COUNT(*)::INTEGER AS staff_count
         FROM staff
-
         WHERE school_id = $1
     `;
 
-
-    const values = [
-        schoolId
-    ];
-
+    const values = [schoolId];
 
     if (status) {
-
         values.push(status);
 
         sql += `
@@ -593,18 +439,12 @@ async function countStaff(
         `;
     }
 
-
-    const result = await query(
-        sql,
-        values
-    );
-
+    const result = await query(sql, values);
 
     return Number(
         result.rows[0].staff_count
     );
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -615,82 +455,42 @@ async function countStaff(
 async function getStaffStatistics(
     schoolId
 ) {
-
     const sql = `
         SELECT
+            COUNT(*)::INTEGER AS total_staff,
 
-            COUNT(*)::INTEGER
-                AS total_staff,
+            COUNT(*) FILTER (
+                WHERE LOWER(status) = 'active'
+            )::INTEGER AS active_staff,
 
-            COUNT(
-                CASE
-                    WHEN status = 'active'
-                    THEN 1
-                END
-            )::INTEGER
-                AS active_staff,
+            COUNT(*) FILTER (
+                WHERE LOWER(status) = 'inactive'
+            )::INTEGER AS inactive_staff,
 
-            COUNT(
-                CASE
-                    WHEN status = 'inactive'
-                    THEN 1
-                END
-            )::INTEGER
-                AS inactive_staff,
+            COUNT(*) FILTER (
+                WHERE LOWER(status) = 'suspended'
+            )::INTEGER AS suspended_staff,
 
-            COUNT(
-                CASE
-                    WHEN gender = 'male'
-                    THEN 1
-                END
-            )::INTEGER
-                AS male_staff,
-
-            COUNT(
-                CASE
-                    WHEN gender = 'female'
-                    THEN 1
-                END
-            )::INTEGER
-                AS female_staff
+            COUNT(*) FILTER (
+                WHERE LOWER(status) = 'resigned'
+            )::INTEGER AS resigned_staff
 
         FROM staff
-
         WHERE school_id = $1
     `;
 
-
-    const result = await query(
-        sql,
-        [
-            schoolId
-        ]
-    );
-
+    const result = await query(sql, [schoolId]);
 
     const row = result.rows[0];
 
-
     return {
-
-        totalStaff:
-            Number(row.total_staff),
-
-        activeStaff:
-            Number(row.active_staff),
-
-        inactiveStaff:
-            Number(row.inactive_staff),
-
-        maleStaff:
-            Number(row.male_staff),
-
-        femaleStaff:
-            Number(row.female_staff)
-
+        totalStaff: Number(row.total_staff),
+        activeStaff: Number(row.active_staff),
+        inactiveStaff: Number(row.inactive_staff),
+        suspendedStaff: Number(row.suspended_staff),
+        resignedStaff: Number(row.resigned_staff)
     };
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -700,45 +500,29 @@ async function getStaffStatistics(
 
 async function getStaffByDepartment(
     schoolId,
-    departmentId
+    department
 ) {
-
     const sql = `
         SELECT
-
             st.*,
-
-            d.department_name
-
+            s.school_name
         FROM staff st
-
-        LEFT JOIN departments d
-            ON d.id = st.department_id
-
+        LEFT JOIN schools s
+            ON s.id = st.school_id
         WHERE st.school_id = $1
-
-          AND st.department_id = $2
-
+          AND st.department = $2
         ORDER BY
-
             st.last_name ASC,
-
             st.first_name ASC
     `;
 
-
-    const result = await query(
-        sql,
-        [
-            schoolId,
-            departmentId
-        ]
-    );
-
+    const result = await query(sql, [
+        schoolId,
+        department
+    ]);
 
     return result.rows;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -748,38 +532,38 @@ async function getStaffByDepartment(
 
 async function staffNumberExists(
     staffNumber,
-    schoolId
+    schoolId,
+    excludeStaffId = null
 ) {
-
-    const sql = `
-        SELECT
-
-            EXISTS (
-
-                SELECT 1
-
-                FROM staff
-
-                WHERE staff_number = $1
-
-                  AND school_id = $2
-
-            ) AS exists
+    let sql = `
+        SELECT EXISTS (
+            SELECT 1
+            FROM staff
+            WHERE staff_number = $1
+              AND school_id = $2
     `;
 
+    const values = [
+        staffNumber,
+        schoolId
+    ];
 
-    const result = await query(
-        sql,
-        [
-            staffNumber,
-            schoolId
-        ]
-    );
+    if (excludeStaffId) {
+        values.push(excludeStaffId);
 
+        sql += `
+            AND id <> $${values.length}
+        `;
+    }
+
+    sql += `
+        ) AS exists
+    `;
+
+    const result = await query(sql, values);
 
     return result.rows[0].exists;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -788,27 +572,15 @@ async function staffNumberExists(
 */
 
 module.exports = {
-
     createStaff,
-
     findStaffById,
-
     findStaffByNumber,
-
     findStaff,
-
     searchStaff,
-
     updateStaff,
-
     deleteStaff,
-
     countStaff,
-
     getStaffStatistics,
-
     getStaffByDepartment,
-
     staffNumberExists
-
 };

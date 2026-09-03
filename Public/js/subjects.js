@@ -1,40 +1,110 @@
-/*
-|--------------------------------------------------------------------------
-| SUBJECTS.JS
-|--------------------------------------------------------------------------
-| Handles subject listing, searching, adding, editing and deleting.
-|--------------------------------------------------------------------------
-*/
+```javascript
+"use strict";
 
 (function () {
-    "use strict";
-
     let subjects = [];
     let editingSubjectId = null;
 
-    /*
-    |--------------------------------------------------------------------------
-    | API HELPER
-    |--------------------------------------------------------------------------
-    */
-
-    async function request(url, options = {}) {
-
-        if (
-            window.API &&
-            typeof window.API.request === "function"
-        ) {
-            return window.API.request(url, options);
+    async function request(endpoint, options = {}) {
+        if (typeof window.apiRequest === "function") {
+            return window.apiRequest(endpoint, options);
         }
 
-        const response = await fetch(url, {
-            credentials: "include",
-            ...options,
-            headers: {
-                "Content-Type": "application/json",
-                ...(options.headers || {})
+        let url = endpoint;
+
+        if (
+            !url.startsWith("http://") &&
+            !url.startsWith("https://")
+        ) {
+            if (!url.startsWith("/")) {
+                url = "/" + url;
             }
-        });
+
+            if (!url.startsWith("/api/")) {
+                url = "/api" + url;
+            }
+        }
+
+        const token =
+            localStorage.getItem("school_management_token") ||
+            sessionStorage.getItem("school_management_token") ||
+            localStorage.getItem("token") ||
+            sessionStorage.getItem("token") ||
+            localStorage.getItem("accessToken") ||
+            sessionStorage.getItem("accessToken") ||
+            "";
+
+        const headers = {
+            Accept: "application/json",
+            ...(options.headers || {})
+        };
+
+        if (token) {
+            headers.Authorization = `Bearer ${token}`;
+        }
+
+        if (
+            options.body &&
+            !(options.body instanceof FormData) &&
+            !headers["Content-Type"] &&
+            !headers["content-type"]
+        ) {
+            headers["Content-Type"] = "application/json";
+        }
+
+        let response;
+
+        try {
+            response = await fetch(url, {
+                ...options,
+                headers
+            });
+        } catch (error) {
+            console.error("Subjects API error:", error);
+
+            throw new Error(
+                "Unable to connect to the server."
+            );
+        }
+
+        if (response.status === 401) {
+            if (
+                typeof window.clearApiAuthentication ===
+                "function"
+            ) {
+                window.clearApiAuthentication();
+            } else {
+                localStorage.removeItem(
+                    "school_management_token"
+                );
+                localStorage.removeItem(
+                    "school_management_user"
+                );
+                sessionStorage.removeItem(
+                    "school_management_token"
+                );
+                sessionStorage.removeItem(
+                    "school_management_user"
+                );
+            }
+
+            if (
+                !window.location.pathname.endsWith(
+                    "/login.html"
+                )
+            ) {
+                window.location.href =
+                    "/pages/login.html";
+            }
+
+            throw new Error("Authentication required.");
+        }
+
+        if (response.status === 403) {
+            throw new Error(
+                "You do not have permission to perform this action."
+            );
+        }
 
         const contentType =
             response.headers.get("content-type") || "";
@@ -46,38 +116,25 @@
 
         if (!response.ok) {
             throw new Error(
-                data?.message ||
-                data?.error ||
-                "Request failed."
+                typeof data === "object"
+                    ? data?.message ||
+                      data?.error ||
+                      "Request failed."
+                    : data ||
+                      "Request failed."
             );
         }
 
         return data;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | INITIALIZE
-    |--------------------------------------------------------------------------
-    */
-
     async function initialize() {
-
         setupEvents();
-
         await loadSubjects();
-
         updateSummary();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | EVENTS
-    |--------------------------------------------------------------------------
-    */
-
     function setupEvents() {
-
         const form =
             document.querySelector("#subjectForm") ||
             document.querySelector(
@@ -98,7 +155,6 @@
             );
 
         if (search) {
-
             search.addEventListener(
                 "input",
                 renderSubjects
@@ -111,39 +167,28 @@
         );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | LOAD SUBJECTS
-    |--------------------------------------------------------------------------
-    */
-
     async function loadSubjects() {
-
         showLoading();
 
         try {
-
             const data =
-                await request(
-                    "/api/subjects"
-                );
+                await request("/subjects");
 
             subjects =
                 Array.isArray(data)
                     ? data
-                    : (
-                        data?.data ||
-                        data?.subjects ||
-                        data?.records ||
-                        []
-                    );
+                    : Array.isArray(data?.data)
+                        ? data.data
+                        : Array.isArray(data?.subjects)
+                            ? data.subjects
+                            : Array.isArray(data?.records)
+                                ? data.records
+                                : [];
 
             renderSubjects();
-
             updateSummary();
 
         } catch (error) {
-
             console.error(
                 "Unable to load subjects:",
                 error
@@ -155,17 +200,12 @@
                 error.message ||
                 "Unable to load subjects."
             );
+
+            updateSummary();
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | RENDER SUBJECTS
-    |--------------------------------------------------------------------------
-    */
-
     function renderSubjects() {
-
         const container =
             document.querySelector(
                 "#subjectsTableBody"
@@ -188,54 +228,65 @@
             getValue(
                 "#subjectSearch",
                 "[name='subject_search']"
-            ).toLowerCase();
+            )
+                .trim()
+                .toLowerCase();
 
-        let records =
-            subjects;
+        let records = subjects;
 
         if (search) {
+            records = subjects.filter(
+                (subject) => {
+                    const name =
+                        String(
+                            subject.name ||
+                            subject.subject_name ||
+                            ""
+                        ).toLowerCase();
 
-            records =
-                subjects.filter(
-                    function (subject) {
+                    const code =
+                        String(
+                            subject.code ||
+                            subject.subject_code ||
+                            ""
+                        ).toLowerCase();
 
-                        const name =
-                            String(
-                                subject.name ||
-                                subject.subject_name ||
-                                ""
-                            ).toLowerCase();
+                    const description =
+                        String(
+                            subject.description ||
+                            ""
+                        ).toLowerCase();
 
-                        const code =
-                            String(
-                                subject.code ||
-                                subject.subject_code ||
-                                ""
-                            ).toLowerCase();
+                    const department =
+                        String(
+                            subject.department_name ||
+                            subject.department ||
+                            ""
+                        ).toLowerCase();
 
-                        const description =
-                            String(
-                                subject.description ||
-                                ""
-                            ).toLowerCase();
+                    const className =
+                        String(
+                            subject.class_name ||
+                            subject.class ||
+                            ""
+                        ).toLowerCase();
 
-                        return (
-                            name.includes(search) ||
-                            code.includes(search) ||
-                            description.includes(search)
-                        );
-                    }
-                );
+                    return (
+                        name.includes(search) ||
+                        code.includes(search) ||
+                        description.includes(search) ||
+                        department.includes(search) ||
+                        className.includes(search)
+                    );
+                }
+            );
         }
 
         if (!records.length) {
-
             container.innerHTML = `
                 <tr>
                     <td colspan="8">
-
                         <div class="students-empty">
-
                             <div class="students-empty-icon">
                                 S
                             </div>
@@ -247,9 +298,7 @@
                             <p>
                                 There are no subject records to display.
                             </p>
-
                         </div>
-
                     </td>
                 </tr>
             `;
@@ -263,17 +312,11 @@
                 .join("");
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | SUBJECT ROW
-    |--------------------------------------------------------------------------
-    */
-
     function renderSubjectRow(subject) {
-
         const id =
-            subject.id ||
-            subject.subject_id;
+            subject.id ??
+            subject.subject_id ??
+            "";
 
         const name =
             subject.name ||
@@ -305,22 +348,19 @@
 
         return `
             <tr>
-
                 <td>
                     <div class="student-name">
-
                         <div class="student-avatar">
-                            ${getInitials(name)}
+                            ${escapeHtml(
+                                getInitials(name)
+                            )}
                         </div>
 
                         <div class="student-name-text">
-
                             <strong>
                                 ${escapeHtml(name)}
                             </strong>
-
                         </div>
-
                     </div>
                 </td>
 
@@ -341,7 +381,9 @@
                 </td>
 
                 <td>
-                    <span class="status-badge ${getStatusClass(status)}">
+                    <span class="status-badge ${escapeAttribute(
+                        getStatusClass(status)
+                    )}">
                         ${escapeHtml(status)}
                     </span>
                 </td>
@@ -354,9 +396,7 @@
                 </td>
 
                 <td>
-
                     <div class="student-actions">
-
                         <button
                             type="button"
                             class="student-action-btn"
@@ -376,23 +416,13 @@
                         >
                             ×
                         </button>
-
                     </div>
-
                 </td>
-
             </tr>
         `;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | SUBMIT
-    |--------------------------------------------------------------------------
-    */
-
     async function handleSubmit(event) {
-
         event.preventDefault();
 
         const form =
@@ -406,7 +436,6 @@
             data.subject_name;
 
         if (!name) {
-
             notify(
                 "Please enter the subject name.",
                 "error"
@@ -416,15 +445,14 @@
         }
 
         try {
-
             if (editingSubjectId) {
-
                 await request(
-                    `/api/subjects/${editingSubjectId}`,
+                    `/subjects/${encodeURIComponent(
+                        editingSubjectId
+                    )}`,
                     {
                         method: "PUT",
-                        body:
-                            JSON.stringify(data)
+                        body: JSON.stringify(data)
                     }
                 );
 
@@ -432,15 +460,12 @@
                     "Subject updated successfully.",
                     "success"
                 );
-
             } else {
-
                 await request(
-                    "/api/subjects",
+                    "/subjects",
                     {
                         method: "POST",
-                        body:
-                            JSON.stringify(data)
+                        body: JSON.stringify(data)
                     }
                 );
 
@@ -455,7 +480,6 @@
             await loadSubjects();
 
         } catch (error) {
-
             console.error(
                 "Subject save failed:",
                 error
@@ -469,31 +493,26 @@
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | EDIT SUBJECT
-    |--------------------------------------------------------------------------
-    */
-
     function editSubject(id) {
-
         const subject =
             subjects.find(
-                function (item) {
-
-                    return String(
-                        item.id ||
+                (item) =>
+                    String(
+                        item.id ??
                         item.subject_id
-                    ) === String(id);
-                }
+                    ) === String(id)
             );
 
         if (!subject) {
+            notify(
+                "Subject record could not be found.",
+                "error"
+            );
+
             return;
         }
 
-        editingSubjectId =
-            id;
+        editingSubjectId = id;
 
         setFormValue(
             "#subjectName",
@@ -537,14 +556,7 @@
         scrollToForm();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DELETE SUBJECT
-    |--------------------------------------------------------------------------
-    */
-
     async function deleteSubject(id) {
-
         if (
             !window.confirm(
                 "Are you sure you want to delete this subject?"
@@ -554,9 +566,8 @@
         }
 
         try {
-
             await request(
-                `/api/subjects/${id}`,
+                `/subjects/${encodeURIComponent(id)}`,
                 {
                     method: "DELETE"
                 }
@@ -570,7 +581,6 @@
             await loadSubjects();
 
         } catch (error) {
-
             console.error(
                 "Subject deletion failed:",
                 error
@@ -584,14 +594,7 @@
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | ACTION CLICK
-    |--------------------------------------------------------------------------
-    */
-
     async function handleActionClick(event) {
-
         const button =
             event.target.closest(
                 "[data-action]"
@@ -616,34 +619,21 @@
         }
 
         if (
-            action ===
-            "edit-subject"
+            action === "edit-subject"
         ) {
-
             editSubject(id);
-
             return;
         }
 
         if (
-            action ===
-            "delete-subject"
+            action === "delete-subject"
         ) {
-
             await deleteSubject(id);
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | RESET FORM
-    |--------------------------------------------------------------------------
-    */
-
     function resetForm() {
-
-        editingSubjectId =
-            null;
+        editingSubjectId = null;
 
         const form =
             document.querySelector(
@@ -659,14 +649,7 @@
         );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | FORM MODE
-    |--------------------------------------------------------------------------
-    */
-
     function updateFormMode(text) {
-
         const form =
             document.querySelector(
                 "#subjectForm"
@@ -682,32 +665,22 @@
             );
 
         if (button) {
-            button.textContent =
-                text;
+            button.textContent = text;
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | SUMMARY
-    |--------------------------------------------------------------------------
-    */
-
     function updateSummary() {
-
         const total =
             subjects.length;
 
         const active =
             subjects.filter(
-                function (subject) {
-
-                    return String(
+                (subject) =>
+                    String(
                         subject.status ||
                         "Active"
                     ).toLowerCase() ===
-                    "active";
-                }
+                    "active"
             ).length;
 
         const inactive =
@@ -741,58 +714,39 @@
         );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | SET SUMMARY
-    |--------------------------------------------------------------------------
-    */
-
     function setSummary(
         selectors,
         value
     ) {
-
-        for (
-            const selector of selectors
-        ) {
-
+        for (const selector of selectors) {
             const element =
                 document.querySelector(
                     selector
                 );
 
             if (element) {
-
-                element.textContent =
-                    value;
-
+                element.textContent = value;
                 return;
             }
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | INITIALS
-    |--------------------------------------------------------------------------
-    */
-
     function getInitials(name) {
-
         if (
             window.App &&
-            typeof App.getInitials ===
+            typeof window.App.getInitials ===
             "function"
         ) {
-            return App.getInitials(name);
+            return window.App.getInitials(name);
         }
 
         return String(name)
-            .split(" ")
+            .trim()
+            .split(/\s+/)
             .filter(Boolean)
             .slice(0, 2)
             .map(
-                word =>
+                (word) =>
                     word
                         .charAt(0)
                         .toUpperCase()
@@ -800,47 +754,27 @@
             .join("");
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | STATUS CLASS
-    |--------------------------------------------------------------------------
-    */
-
     function getStatusClass(status) {
-
         const value =
-            String(status)
+            String(status || "active")
                 .toLowerCase();
 
-        if (
-            value === "active"
-        ) {
+        if (value === "active") {
             return "active";
         }
 
-        if (
-            value === "inactive"
-        ) {
+        if (value === "inactive") {
             return "inactive";
         }
 
-        if (
-            value === "suspended"
-        ) {
+        if (value === "suspended") {
             return "warning";
         }
 
         return "";
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DATE
-    |--------------------------------------------------------------------------
-    */
-
     function formatDate(value) {
-
         if (!value) {
             return "-";
         }
@@ -866,42 +800,32 @@
         );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | FORM TO OBJECT
-    |--------------------------------------------------------------------------
-    */
-
     function formToObject(form) {
-
         const formData =
             new FormData(form);
 
         const data = {};
 
         formData.forEach(
-            function (value, key) {
+            (value, key) => {
+                data[key] = value;
+            }
+        );
 
-                data[key] =
-                    value;
+        form.querySelectorAll(
+            'input[type="checkbox"]'
+        ).forEach(
+            (checkbox) => {
+                data[checkbox.name] =
+                    checkbox.checked;
             }
         );
 
         return data;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | GET VALUE
-    |--------------------------------------------------------------------------
-    */
-
     function getValue(...selectors) {
-
-        for (
-            const selector of selectors
-        ) {
-
+        for (const selector of selectors) {
             const element =
                 document.querySelector(
                     selector
@@ -915,17 +839,10 @@
         return "";
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | SET FORM VALUE
-    |--------------------------------------------------------------------------
-    */
-
     function setFormValue(
         selector,
         value
     ) {
-
         const element =
             document.querySelector(
                 selector
@@ -937,21 +854,13 @@
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | SCROLL TO FORM
-    |--------------------------------------------------------------------------
-    */
-
     function scrollToForm() {
-
         const form =
             document.querySelector(
                 "#subjectForm"
             );
 
         if (form) {
-
             form.scrollIntoView({
                 behavior: "smooth",
                 block: "start"
@@ -959,27 +868,9 @@
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | LOADING
-    |--------------------------------------------------------------------------
-    */
-
     function showLoading() {
-
         const container =
-            document.querySelector(
-                "#subjectsTableBody"
-            ) ||
-            document.querySelector(
-                "#subjectTableBody"
-            ) ||
-            document.querySelector(
-                "#subjects-table-body"
-            ) ||
-            document.querySelector(
-                "tbody[data-subjects-body]"
-            );
+            getSubjectsTableBody();
 
         if (!container) {
             return;
@@ -988,43 +879,20 @@
         container.innerHTML = `
             <tr>
                 <td colspan="8">
-
                     <div class="students-loading">
-
                         <div class="students-loading-spinner"></div>
-
                         <p>
                             Loading subjects...
                         </p>
-
                     </div>
-
                 </td>
             </tr>
         `;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | ERROR
-    |--------------------------------------------------------------------------
-    */
-
     function showError(message) {
-
         const container =
-            document.querySelector(
-                "#subjectsTableBody"
-            ) ||
-            document.querySelector(
-                "#subjectTableBody"
-            ) ||
-            document.querySelector(
-                "#subjects-table-body"
-            ) ||
-            document.querySelector(
-                "tbody[data-subjects-body]"
-            );
+            getSubjectsTableBody();
 
         if (!container) {
             return;
@@ -1033,9 +901,7 @@
         container.innerHTML = `
             <tr>
                 <td colspan="8">
-
                     <div class="students-empty">
-
                         <h3>
                             Unable to load subjects
                         </h3>
@@ -1043,30 +909,37 @@
                         <p>
                             ${escapeHtml(message)}
                         </p>
-
                     </div>
-
                 </td>
             </tr>
         `;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | NOTIFICATION
-    |--------------------------------------------------------------------------
-    */
+    function getSubjectsTableBody() {
+        return (
+            document.querySelector(
+                "#subjectsTableBody"
+            ) ||
+            document.querySelector(
+                "#subjectTableBody"
+            ) ||
+            document.querySelector(
+                "#subjects-table-body"
+            ) ||
+            document.querySelector(
+                "tbody[data-subjects-body]"
+            )
+        );
+    }
 
     function notify(
         message,
         type = "success"
     ) {
-
         if (
             typeof window.showNotification ===
             "function"
         ) {
-
             window.showNotification(
                 message,
                 type
@@ -1081,7 +954,6 @@
             );
 
         if (!container) {
-
             container =
                 document.createElement(
                     "div"
@@ -1126,21 +998,14 @@
         );
 
         setTimeout(
-            function () {
+            () => {
                 notification.remove();
             },
             4000
         );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | ESCAPE HTML
-    |--------------------------------------------------------------------------
-    */
-
     function escapeHtml(value) {
-
         if (
             value === null ||
             value === undefined
@@ -1148,37 +1013,32 @@
             return "";
         }
 
-        if (
-            window.App &&
-            typeof App.escapeHtml ===
-            "function"
-        ) {
-            return App.escapeHtml(value);
-        }
-
         return String(value)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
+            .replace(
+                /&/g,
+                "&amp;"
+            )
+            .replace(
+                /</g,
+                "&lt;"
+            )
+            .replace(
+                />/g,
+                "&gt;"
+            )
+            .replace(
+                /"/g,
+                "&quot;"
+            )
+            .replace(
+                /'/g,
+                "&#039;"
+            );
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | ESCAPE ATTRIBUTE
-    |--------------------------------------------------------------------------
-    */
 
     function escapeAttribute(value) {
         return escapeHtml(value);
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | EXPORT
-    |--------------------------------------------------------------------------
-    */
 
     window.SubjectsPage = {
         initialize,
@@ -1189,25 +1049,17 @@
         resetForm
     };
 
-    /*
-    |--------------------------------------------------------------------------
-    | START
-    |--------------------------------------------------------------------------
-    */
-
     if (
         document.readyState ===
         "loading"
     ) {
-
         document.addEventListener(
             "DOMContentLoaded",
-            initialize
+            initialize,
+            { once: true }
         );
-
     } else {
-
         initialize();
     }
-
 })();
+```

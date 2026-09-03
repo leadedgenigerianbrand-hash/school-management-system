@@ -1,24 +1,25 @@
+```javascript
 const { query } = require("../config/database");
 
 /*
 |--------------------------------------------------------------------------
 | Document Model
 |--------------------------------------------------------------------------
+| Compatible with the current PostgreSQL student_documents table.
 |
-| Handles student document records.
-|
-| Examples:
-| - Birth certificate
-| - Passport photograph
-| - Previous school result
-| - Transfer certificate
-| - Medical record
-| - Identification document
-| - Other student documents
-|
+| student_documents:
+| id
+| student_id
+| school_id
+| document_name
+| document_type
+| file_url
+| file_size
+| mime_type
+| uploaded_by
+| created_at
 |--------------------------------------------------------------------------
 */
-
 
 /*
 |--------------------------------------------------------------------------
@@ -29,16 +30,13 @@ const { query } = require("../config/database");
 async function createDocument({
     schoolId,
     studentId,
-    documentType,
+    documentType = null,
     documentName,
-    filePath,
-    fileUrl = null,
+    fileUrl,
     fileSize = null,
     mimeType = null,
-    description = null,
     uploadedBy = null
 }) {
-
     if (!schoolId) {
         throw new Error("School ID is required.");
     }
@@ -47,70 +45,44 @@ async function createDocument({
         throw new Error("Student ID is required.");
     }
 
-    if (!documentType || !documentType.trim()) {
-        throw new Error("Document type is required.");
-    }
-
     if (!documentName || !documentName.trim()) {
         throw new Error("Document name is required.");
     }
 
-    if (!filePath && !fileUrl) {
-        throw new Error(
-            "A document file path or URL is required."
-        );
+    if (!fileUrl || !String(fileUrl).trim()) {
+        throw new Error("Document file URL is required.");
     }
-
 
     const sql = `
         INSERT INTO student_documents (
-            school_id,
             student_id,
-            document_type,
+            school_id,
             document_name,
-            file_path,
+            document_type,
             file_url,
             file_size,
             mime_type,
-            description,
             uploaded_by
         )
-        VALUES (
-            $1,
-            $2,
-            $3,
-            $4,
-            $5,
-            $6,
-            $7,
-            $8,
-            $9,
-            $10
-        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING *
     `;
 
-
-    const result = await query(
-        sql,
-        [
-            schoolId,
-            studentId,
-            documentType.trim(),
-            documentName.trim(),
-            filePath,
-            fileUrl,
-            fileSize,
-            mimeType,
-            description,
-            uploadedBy
-        ]
-    );
-
+    const result = await query(sql, [
+        studentId,
+        schoolId,
+        documentName.trim(),
+        documentType
+            ? documentType.trim()
+            : null,
+        String(fileUrl).trim(),
+        fileSize,
+        mimeType,
+        uploadedBy
+    ]);
 
     return result.rows[0];
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -122,60 +94,36 @@ async function findDocumentById(
     documentId,
     schoolId = null
 ) {
-
     let sql = `
         SELECT
-
             d.*,
-
+            s.student_number,
             s.admission_number,
-
             s.first_name,
-
             s.middle_name,
-
             s.last_name
-
         FROM student_documents d
-
         INNER JOIN students s
             ON s.id = d.student_id
-
         WHERE d.id = $1
     `;
 
-
-    const values = [
-        documentId
-    ];
-
+    const values = [documentId];
 
     if (schoolId) {
+        values.push(schoolId);
 
         sql += `
-            AND d.school_id = $2
+            AND d.school_id = $${values.length}
         `;
-
-        values.push(
-            schoolId
-        );
     }
 
+    sql += ` LIMIT 1`;
 
-    sql += `
-        LIMIT 1
-    `;
-
-
-    const result = await query(
-        sql,
-        values
-    );
-
+    const result = await query(sql, values);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -188,63 +136,42 @@ async function findStudentDocuments({
     studentId,
     documentType = null
 }) {
-
     let sql = `
         SELECT
-
             d.*,
-
+            s.student_number,
             s.admission_number,
-
             s.first_name,
-
             s.middle_name,
-
             s.last_name
-
         FROM student_documents d
-
         INNER JOIN students s
             ON s.id = d.student_id
-
         WHERE d.school_id = $1
-
           AND d.student_id = $2
     `;
-
 
     const values = [
         schoolId,
         studentId
     ];
 
-
     if (documentType) {
-
         values.push(documentType);
 
         sql += `
-            AND d.document_type = $${values.length}
+            AND LOWER(d.document_type) = LOWER($${values.length})
         `;
     }
 
-
     sql += `
-        ORDER BY
-
-            d.created_at DESC
+        ORDER BY d.created_at DESC
     `;
 
-
-    const result = await query(
-        sql,
-        values
-    );
-
+    const result = await query(sql, values);
 
     return result.rows;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -260,54 +187,36 @@ async function findSchoolDocuments(
         offset = 0
     } = {}
 ) {
-
     let sql = `
         SELECT
-
             d.*,
-
+            s.student_number,
             s.admission_number,
-
             s.first_name,
-
             s.middle_name,
-
             s.last_name
-
         FROM student_documents d
-
         INNER JOIN students s
             ON s.id = d.student_id
-
         WHERE d.school_id = $1
     `;
 
-
-    const values = [
-        schoolId
-    ];
-
+    const values = [schoolId];
 
     if (documentType) {
-
         values.push(documentType);
 
         sql += `
-            AND d.document_type = $${values.length}
+            AND LOWER(d.document_type) = LOWER($${values.length})
         `;
     }
-
 
     values.push(limit);
 
     sql += `
-        ORDER BY
-
-            d.created_at DESC
-
+        ORDER BY d.created_at DESC
         LIMIT $${values.length}
     `;
-
 
     values.push(offset);
 
@@ -315,16 +224,10 @@ async function findSchoolDocuments(
         OFFSET $${values.length}
     `;
 
-
-    const result = await query(
-        sql,
-        values
-    );
-
+    const result = await query(sql, values);
 
     return result.rows;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -335,89 +238,70 @@ async function findSchoolDocuments(
 async function updateDocument(
     documentId,
     schoolId,
-    {
-        documentType,
-        documentName,
-        filePath = null,
-        fileUrl = null,
-        fileSize = null,
-        mimeType = null,
-        description = null
-    }
+    data
 ) {
+    const allowedFields = {
+        documentName: "document_name",
+        documentType: "document_type",
+        fileUrl: "file_url",
+        fileSize: "file_size",
+        mimeType: "mime_type"
+    };
 
-    const existing =
-        await findDocumentById(
-            documentId,
-            schoolId
-        );
+    const updates = [];
+    const values = [];
 
+    for (const key of Object.keys(data || {})) {
+        if (
+            allowedFields[key] &&
+            data[key] !== undefined
+        ) {
+            let value = data[key];
 
-    if (!existing) {
-        return null;
+            if (
+                (
+                    key === "documentName" ||
+                    key === "documentType" ||
+                    key === "fileUrl"
+                ) &&
+                typeof value === "string"
+            ) {
+                value = value.trim();
+            }
+
+            values.push(value);
+
+            updates.push(
+                `${allowedFields[key]} = $${values.length}`
+            );
+        }
     }
 
+    if (updates.length === 0) {
+        throw new Error(
+            "No valid fields supplied for update."
+        );
+    }
+
+    values.push(documentId);
+    const documentIdPosition = values.length;
+
+    values.push(schoolId);
+    const schoolIdPosition = values.length;
 
     const sql = `
         UPDATE student_documents
-
         SET
-
-            document_type = $1,
-
-            document_name = $2,
-
-            file_path = COALESCE(
-                $3,
-                file_path
-            ),
-
-            file_url = COALESCE(
-                $4,
-                file_url
-            ),
-
-            file_size = COALESCE(
-                $5,
-                file_size
-            ),
-
-            mime_type = COALESCE(
-                $6,
-                mime_type
-            ),
-
-            description = $7,
-
-            updated_at = NOW()
-
-        WHERE id = $8
-
-          AND school_id = $9
-
+            ${updates.join(", ")}
+        WHERE id = $${documentIdPosition}
+          AND school_id = $${schoolIdPosition}
         RETURNING *
     `;
 
-
-    const result = await query(
-        sql,
-        [
-            documentType,
-            documentName,
-            filePath,
-            fileUrl,
-            fileSize,
-            mimeType,
-            description,
-            documentId,
-            schoolId
-        ]
-    );
-
+    const result = await query(sql, values);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -429,30 +313,20 @@ async function deleteDocument(
     documentId,
     schoolId
 ) {
-
     const sql = `
         DELETE FROM student_documents
-
         WHERE id = $1
-
           AND school_id = $2
-
         RETURNING *
     `;
 
-
-    const result = await query(
-        sql,
-        [
-            documentId,
-            schoolId
-        ]
-    );
-
+    const result = await query(sql, [
+        documentId,
+        schoolId
+    ]);
 
     return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -464,61 +338,40 @@ async function searchDocuments(
     searchTerm,
     schoolId
 ) {
+    const term = String(searchTerm || "").trim();
 
     const sql = `
         SELECT
-
             d.*,
-
+            s.student_number,
             s.admission_number,
-
             s.first_name,
-
             s.middle_name,
-
             s.last_name
-
         FROM student_documents d
-
         INNER JOIN students s
             ON s.id = d.student_id
-
         WHERE d.school_id = $1
-
           AND (
-
               d.document_name ILIKE $2
-
               OR d.document_type ILIKE $2
-
-              OR d.description ILIKE $2
-
+              OR s.student_number ILIKE $2
               OR s.admission_number ILIKE $2
-
               OR s.first_name ILIKE $2
-
+              OR s.middle_name ILIKE $2
               OR s.last_name ILIKE $2
-
           )
-
-        ORDER BY
-
-            d.created_at DESC
+        ORDER BY d.created_at DESC
+        LIMIT 100
     `;
 
-
-    const result = await query(
-        sql,
-        [
-            schoolId,
-            `%${searchTerm}%`
-        ]
-    );
-
+    const result = await query(sql, [
+        schoolId,
+        `%${term}%`
+    ]);
 
     return result.rows;
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -530,34 +383,55 @@ async function countStudentDocuments(
     studentId,
     schoolId
 ) {
-
     const sql = `
-        SELECT
-
-            COUNT(*) AS document_count
-
+        SELECT COUNT(*) AS document_count
         FROM student_documents
-
         WHERE student_id = $1
-
           AND school_id = $2
     `;
 
-
-    const result = await query(
-        sql,
-        [
-            studentId,
-            schoolId
-        ]
-    );
-
+    const result = await query(sql, [
+        studentId,
+        schoolId
+    ]);
 
     return Number(
         result.rows[0].document_count
     );
 }
 
+/*
+|--------------------------------------------------------------------------
+| Count School Documents
+|--------------------------------------------------------------------------
+*/
+
+async function countSchoolDocuments(
+    schoolId,
+    documentType = null
+) {
+    let sql = `
+        SELECT COUNT(*) AS document_count
+        FROM student_documents
+        WHERE school_id = $1
+    `;
+
+    const values = [schoolId];
+
+    if (documentType) {
+        values.push(documentType);
+
+        sql += `
+            AND LOWER(document_type) = LOWER($${values.length})
+        `;
+    }
+
+    const result = await query(sql, values);
+
+    return Number(
+        result.rows[0].document_count
+    );
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -568,39 +442,62 @@ async function countStudentDocuments(
 async function getDocumentTypes(
     schoolId
 ) {
-
     const sql = `
         SELECT DISTINCT
-
             document_type
-
         FROM student_documents
-
         WHERE school_id = $1
-
           AND document_type IS NOT NULL
-
-          AND document_type <> ''
-
-        ORDER BY
-
-            document_type ASC
+          AND TRIM(document_type) <> ''
+        ORDER BY document_type ASC
     `;
 
-
-    const result = await query(
-        sql,
-        [
-            schoolId
-        ]
-    );
-
+    const result = await query(sql, [
+        schoolId
+    ]);
 
     return result.rows.map(
         row => row.document_type
     );
 }
 
+/*
+|--------------------------------------------------------------------------
+| Get Student Document Summary
+|--------------------------------------------------------------------------
+*/
+
+async function getStudentDocumentSummary(
+    studentId,
+    schoolId
+) {
+    const sql = `
+        SELECT
+            COUNT(*)::INTEGER AS total_documents,
+            COUNT(
+                CASE
+                    WHEN LOWER(mime_type) = 'application/pdf'
+                    THEN 1
+                END
+            )::INTEGER AS pdf_documents,
+            COUNT(
+                CASE
+                    WHEN mime_type ILIKE 'image/%'
+                    THEN 1
+                END
+            )::INTEGER AS image_documents
+        FROM student_documents
+        WHERE student_id = $1
+          AND school_id = $2
+    `;
+
+    const result = await query(sql, [
+        studentId,
+        schoolId
+    ]);
+
+    return result.rows[0];
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -609,23 +506,15 @@ async function getDocumentTypes(
 */
 
 module.exports = {
-
     createDocument,
-
     findDocumentById,
-
     findStudentDocuments,
-
     findSchoolDocuments,
-
     updateDocument,
-
     deleteDocument,
-
     searchDocuments,
-
     countStudentDocuments,
-
-    getDocumentTypes
-
+    countSchoolDocuments,
+    getDocumentTypes,
+    getStudentDocumentSummary
 };

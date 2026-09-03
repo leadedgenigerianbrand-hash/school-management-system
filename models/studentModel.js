@@ -4,26 +4,6 @@ const { query } = require("../config/database");
 |--------------------------------------------------------------------------
 | Student Model
 |--------------------------------------------------------------------------
-|
-| Handles everything related to student records.
-|
-| Main areas:
-|
-| - Student profiles
-| - Student search
-| - Student enrollment
-| - Guardians
-| - Documents
-| - Student statistics
-|
-|--------------------------------------------------------------------------
-*/
-
-
-/*
-|--------------------------------------------------------------------------
-| Create Student
-|--------------------------------------------------------------------------
 */
 
 async function createStudent({
@@ -44,7 +24,7 @@ async function createStudent({
     bloodGroup = null,
     genotype = null,
     admissionDate = null,
-    status = "active"
+    status = "Active"
 }) {
 
     if (!schoolId) {
@@ -52,27 +32,37 @@ async function createStudent({
     }
 
     if (!admissionNumber) {
-        throw new Error(
-            "Admission number is required."
-        );
+        throw new Error("Admission number is required.");
     }
 
     if (!firstName) {
-        throw new Error(
-            "First name is required."
-        );
+        throw new Error("First name is required.");
     }
 
     if (!lastName) {
-        throw new Error(
-            "Last name is required."
-        );
+        throw new Error("Last name is required.");
     }
 
+    /*
+    |----------------------------------------------------------------------
+    | Generate Student Number
+    |----------------------------------------------------------------------
+    */
+
+    const studentNumber = `STU-${Date.now()}-${Math.floor(
+        Math.random() * 1000
+    )}`;
+
+    /*
+    |----------------------------------------------------------------------
+    | Insert Student
+    |----------------------------------------------------------------------
+    */
 
     const sql = `
         INSERT INTO students (
             school_id,
+            student_number,
             admission_number,
             first_name,
             middle_name,
@@ -81,9 +71,9 @@ async function createStudent({
             date_of_birth,
             phone,
             email,
-            address,
+            residential_address,
             state_of_origin,
-            lga,
+            local_government_area,
             nationality,
             religion,
             blood_group,
@@ -109,16 +99,17 @@ async function createStudent({
             $15,
             $16,
             $17,
-            $18
+            $18,
+            $19
         )
         RETURNING *
     `;
-
 
     const result = await query(
         sql,
         [
             schoolId,
+            studentNumber,
             admissionNumber,
             firstName.trim(),
             middleName,
@@ -139,7 +130,6 @@ async function createStudent({
         ]
     );
 
-
     return result.rows[0];
 }
 
@@ -150,27 +140,17 @@ async function createStudent({
 |--------------------------------------------------------------------------
 */
 
-async function findStudentById(
-    studentId,
-    schoolId = null
-) {
+async function findStudentById(studentId, schoolId = null) {
 
     let sql = `
         SELECT *
-
         FROM students
-
         WHERE id = $1
     `;
 
-
-    const values = [
-        studentId
-    ];
-
+    const values = [studentId];
 
     if (schoolId) {
-
         values.push(schoolId);
 
         sql += `
@@ -178,17 +158,11 @@ async function findStudentById(
         `;
     }
 
-
     sql += `
         LIMIT 1
     `;
 
-
-    const result = await query(
-        sql,
-        values
-    );
-
+    const result = await query(sql, values);
 
     return result.rows[0] || null;
 }
@@ -207,20 +181,13 @@ async function findStudentByAdmissionNumber(
 
     let sql = `
         SELECT *
-
         FROM students
-
         WHERE admission_number = $1
     `;
 
-
-    const values = [
-        admissionNumber
-    ];
-
+    const values = [admissionNumber];
 
     if (schoolId) {
-
         values.push(schoolId);
 
         sql += `
@@ -228,17 +195,11 @@ async function findStudentByAdmissionNumber(
         `;
     }
 
-
     sql += `
         LIMIT 1
     `;
 
-
-    const result = await query(
-        sql,
-        values
-    );
-
+    const result = await query(sql, values);
 
     return result.rows[0] || null;
 }
@@ -250,33 +211,20 @@ async function findStudentByAdmissionNumber(
 |--------------------------------------------------------------------------
 */
 
-async function getStudentProfile(
-    studentId,
-    schoolId
-) {
+async function getStudentProfile(studentId, schoolId) {
 
     const sql = `
         SELECT
-
             s.*,
 
             COALESCE(
                 json_agg(
                     DISTINCT jsonb_build_object(
-                        'id',
-                        g.id,
-
-                        'name',
-                        g.full_name,
-
-                        'relationship',
-                        sg.relationship,
-
-                        'phone',
-                        g.phone,
-
-                        'email',
-                        g.email
+                        'id', g.id,
+                        'name', g.full_name,
+                        'relationship', sg.relationship,
+                        'phone', g.phone,
+                        'email', g.email
                     )
                 )
                 FILTER (
@@ -294,14 +242,12 @@ async function getStudentProfile(
             ON g.id = sg.guardian_id
 
         WHERE s.id = $1
-
           AND s.school_id = $2
 
         GROUP BY s.id
 
         LIMIT 1
     `;
-
 
     const result = await query(
         sql,
@@ -310,7 +256,6 @@ async function getStudentProfile(
             schoolId
         ]
     );
-
 
     return result.rows[0] || null;
 }
@@ -331,53 +276,38 @@ async function findStudents({
 }) {
 
     let sql = `
-        SELECT
-
-            s.*
-
-        FROM students s
-
-        WHERE s.school_id = $1
+        SELECT *
+        FROM students
+        WHERE school_id = $1
     `;
 
-
-    const values = [
-        schoolId
-    ];
-
+    const values = [schoolId];
 
     if (status) {
-
         values.push(status);
 
         sql += `
-            AND s.status = $${values.length}
+            AND status = $${values.length}
         `;
     }
 
-
     if (gender) {
-
         values.push(gender);
 
         sql += `
-            AND s.gender = $${values.length}
+            AND gender = $${values.length}
         `;
     }
-
 
     values.push(limit);
 
     sql += `
         ORDER BY
-
-            s.last_name ASC,
-
-            s.first_name ASC
+            last_name ASC,
+            first_name ASC
 
         LIMIT $${values.length}
     `;
-
 
     values.push(offset);
 
@@ -385,12 +315,7 @@ async function findStudents({
         OFFSET $${values.length}
     `;
 
-
-    const result = await query(
-        sql,
-        values
-    );
-
+    const result = await query(sql, values);
 
     return result.rows;
 }
@@ -402,43 +327,30 @@ async function findStudents({
 |--------------------------------------------------------------------------
 */
 
-async function searchStudents(
-    searchTerm,
-    schoolId
-) {
+async function searchStudents(searchTerm, schoolId) {
 
     const sql = `
         SELECT *
-
         FROM students
 
         WHERE school_id = $1
 
           AND (
-
               admission_number ILIKE $2
-
+              OR student_number ILIKE $2
               OR first_name ILIKE $2
-
               OR middle_name ILIKE $2
-
               OR last_name ILIKE $2
-
               OR phone ILIKE $2
-
               OR email ILIKE $2
-
           )
 
         ORDER BY
-
             last_name ASC,
-
             first_name ASC
 
         LIMIT 100
     `;
-
 
     const result = await query(
         sql,
@@ -447,7 +359,6 @@ async function searchStudents(
             `%${searchTerm}%`
         ]
     );
-
 
     return result.rows;
 }
@@ -489,13 +400,13 @@ async function updateStudent(
             "email",
 
         address:
-            "address",
+            "residential_address",
 
         stateOfOrigin:
             "state_of_origin",
 
         lga:
-            "lga",
+            "local_government_area",
 
         nationality:
             "nationality",
@@ -517,25 +428,17 @@ async function updateStudent(
 
     };
 
-
     const updates = [];
-
     const values = [];
 
-
-    for (
-        const key of Object.keys(data)
-    ) {
+    for (const key of Object.keys(data)) {
 
         if (
             allowedFields[key] &&
             data[key] !== undefined
         ) {
 
-            values.push(
-                data[key]
-            );
-
+            values.push(data[key]);
 
             updates.push(
                 `${allowedFields[key]} = $${values.length}`
@@ -543,48 +446,37 @@ async function updateStudent(
         }
     }
 
-
     if (updates.length === 0) {
         throw new Error(
             "No valid fields supplied for update."
         );
     }
 
-
     values.push(studentId);
 
-    const studentIdPosition =
-        values.length;
-
+    const studentIdPosition = values.length;
 
     values.push(schoolId);
 
-    const schoolIdPosition =
-        values.length;
-
+    const schoolIdPosition = values.length;
 
     const sql = `
         UPDATE students
 
         SET
-
             ${updates.join(", ")},
-
             updated_at = NOW()
 
         WHERE id = $${studentIdPosition}
-
           AND school_id = $${schoolIdPosition}
 
         RETURNING *
     `;
 
-
     const result = await query(
         sql,
         values
     );
-
 
     return result.rows[0] || null;
 }
@@ -605,12 +497,10 @@ async function deleteStudent(
         DELETE FROM students
 
         WHERE id = $1
-
           AND school_id = $2
 
         RETURNING *
     `;
-
 
     const result = await query(
         sql,
@@ -619,7 +509,6 @@ async function deleteStudent(
             schoolId
         ]
     );
-
 
     return result.rows[0] || null;
 }
@@ -637,20 +526,12 @@ async function countStudents(
 ) {
 
     let sql = `
-        SELECT
-
-            COUNT(*) AS student_count
-
+        SELECT COUNT(*) AS student_count
         FROM students
-
         WHERE school_id = $1
     `;
 
-
-    const values = [
-        schoolId
-    ];
-
+    const values = [schoolId];
 
     if (status) {
 
@@ -661,12 +542,10 @@ async function countStudents(
         `;
     }
 
-
     const result = await query(
         sql,
         values
     );
-
 
     return Number(
         result.rows[0].student_count
@@ -680,9 +559,7 @@ async function countStudents(
 |--------------------------------------------------------------------------
 */
 
-async function getStudentStatistics(
-    schoolId
-) {
+async function getStudentStatistics(schoolId) {
 
     const sql = `
         SELECT
@@ -692,7 +569,7 @@ async function getStudentStatistics(
 
             COUNT(
                 CASE
-                    WHEN status = 'active'
+                    WHEN LOWER(status) = 'active'
                     THEN 1
                 END
             )::INTEGER
@@ -700,7 +577,7 @@ async function getStudentStatistics(
 
             COUNT(
                 CASE
-                    WHEN status = 'inactive'
+                    WHEN LOWER(status) = 'inactive'
                     THEN 1
                 END
             )::INTEGER
@@ -708,7 +585,7 @@ async function getStudentStatistics(
 
             COUNT(
                 CASE
-                    WHEN gender = 'male'
+                    WHEN LOWER(gender) = 'male'
                     THEN 1
                 END
             )::INTEGER
@@ -716,7 +593,7 @@ async function getStudentStatistics(
 
             COUNT(
                 CASE
-                    WHEN gender = 'female'
+                    WHEN LOWER(gender) = 'female'
                     THEN 1
                 END
             )::INTEGER
@@ -727,17 +604,12 @@ async function getStudentStatistics(
         WHERE school_id = $1
     `;
 
-
     const result = await query(
         sql,
-        [
-            schoolId
-        ]
+        [schoolId]
     );
 
-
     const row = result.rows[0];
-
 
     return {
 
@@ -799,16 +671,12 @@ async function getStudentEnrollment(
             ON t.id = se.term_id
 
         WHERE se.student_id = $1
-
           AND se.school_id = $2
 
-        ORDER BY
-
-            ses.start_date DESC
+        ORDER BY ses.start_date DESC
 
         LIMIT 1
     `;
-
 
     const result = await query(
         sql,
@@ -817,7 +685,6 @@ async function getStudentEnrollment(
             schoolId
         ]
     );
-
 
     return result.rows[0] || null;
 }
@@ -858,15 +725,11 @@ async function enrollStudent({
             $4,
             $5,
             $6,
-            COALESCE(
-                $7,
-                CURRENT_DATE
-            ),
+            COALESCE($7, CURRENT_DATE),
             $8
         )
         RETURNING *
     `;
-
 
     const result = await query(
         sql,
@@ -881,7 +744,6 @@ async function enrollStudent({
             status
         ]
     );
-
 
     return result.rows[0];
 }
@@ -900,18 +762,13 @@ async function getStudentDocuments(
 
     const sql = `
         SELECT *
-
         FROM student_documents
 
         WHERE student_id = $1
-
           AND school_id = $2
 
-        ORDER BY
-
-            created_at DESC
+        ORDER BY created_at DESC
     `;
-
 
     const result = await query(
         sql,
@@ -920,7 +777,6 @@ async function getStudentDocuments(
             schoolId
         ]
     );
-
 
     return result.rows;
 }
@@ -952,16 +808,12 @@ async function getStudentGuardians(
             ON sg.guardian_id = g.id
 
         WHERE sg.student_id = $1
-
           AND g.school_id = $2
 
         ORDER BY
-
             sg.is_primary DESC,
-
             g.full_name ASC
     `;
-
 
     const result = await query(
         sql,
@@ -970,7 +822,6 @@ async function getStudentGuardians(
             schoolId
         ]
     );
-
 
     return result.rows;
 }
@@ -989,20 +840,15 @@ async function searchStudentByName(
 
     const sql = `
         SELECT *
-
         FROM students
 
         WHERE school_id = $1
 
           AND (
-
               CONCAT(
                   first_name,
                   ' ',
-                  COALESCE(
-                      middle_name,
-                      ''
-                  ),
+                  COALESCE(middle_name, ''),
                   ' ',
                   last_name
               ) ILIKE $2
@@ -1010,18 +856,14 @@ async function searchStudentByName(
               OR first_name ILIKE $2
 
               OR last_name ILIKE $2
-
           )
 
         ORDER BY
-
             last_name ASC,
-
             first_name ASC
 
         LIMIT 100
     `;
-
 
     const result = await query(
         sql,
@@ -1030,7 +872,6 @@ async function searchStudentByName(
             `%${name}%`
         ]
     );
-
 
     return result.rows;
 }
@@ -1048,21 +889,17 @@ async function admissionNumberExists(
 ) {
 
     const sql = `
-        SELECT
+        SELECT EXISTS (
 
-            EXISTS (
+            SELECT 1
 
-                SELECT 1
+            FROM students
 
-                FROM students
+            WHERE admission_number = $1
+              AND school_id = $2
 
-                WHERE admission_number = $1
-
-                  AND school_id = $2
-
-            ) AS exists
+        ) AS exists
     `;
-
 
     const result = await query(
         sql,
@@ -1071,7 +908,6 @@ async function admissionNumberExists(
             schoolId
         ]
     );
-
 
     return result.rows[0].exists;
 }
