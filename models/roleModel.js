@@ -1,4 +1,5 @@
-```javascript
+"use strict";
+
 const { query } = require("../config/database");
 
 /*
@@ -6,9 +7,9 @@ const { query } = require("../config/database");
 | Role Model
 |--------------------------------------------------------------------------
 | Handles system roles and role permissions.
-| Compatible with the current PostgreSQL schema.
 |--------------------------------------------------------------------------
 */
+
 
 /*
 |--------------------------------------------------------------------------
@@ -41,6 +42,7 @@ async function createRole({
     return result.rows[0];
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Find Role By ID
@@ -64,6 +66,7 @@ async function findRoleById(roleId) {
     return result.rows[0] || null;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Find Role By Name
@@ -86,6 +89,7 @@ async function findRoleByName(roleName) {
 
     return result.rows[0] || null;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -125,6 +129,7 @@ async function findRoles() {
     return result.rows;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Update Role
@@ -160,6 +165,7 @@ async function updateRole(
     return result.rows[0] || null;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Delete Role
@@ -177,6 +183,7 @@ async function deleteRole(roleId) {
 
     return result.rows[0] || null;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -210,6 +217,7 @@ async function assignPermission(
     return result.rows[0] || null;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Remove Permission From Role
@@ -234,6 +242,7 @@ async function removePermission(
 
     return result.rows[0] || null;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -265,6 +274,7 @@ async function getRolePermissions(roleId) {
     return result.rows;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Check Role Permission
@@ -278,7 +288,6 @@ async function hasPermission(
     const sql = `
         SELECT EXISTS (
             SELECT 1
-
             FROM role_permissions rp
 
             INNER JOIN permissions p
@@ -296,6 +305,7 @@ async function hasPermission(
 
     return result.rows[0].has_permission;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -326,6 +336,7 @@ async function getUserRoles(userId) {
 
     return result.rows;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -377,6 +388,7 @@ async function getRoleUsers(
     return result.rows;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Get Role Summary
@@ -420,6 +432,7 @@ async function getRoleSummary() {
     return result.rows;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Role Exists
@@ -456,6 +469,7 @@ async function roleExists(
     return result.rows[0].exists;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Count Roles
@@ -464,7 +478,8 @@ async function roleExists(
 
 async function countRoles() {
     const sql = `
-        SELECT COUNT(*)::INTEGER AS count
+        SELECT
+            COUNT(*)::INTEGER AS count
         FROM roles
     `;
 
@@ -472,6 +487,7 @@ async function countRoles() {
 
     return Number(result.rows[0].count);
 }
+
 
 /*
 |--------------------------------------------------------------------------

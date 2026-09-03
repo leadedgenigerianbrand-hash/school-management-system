@@ -1,4 +1,5 @@
-```javascript
+"use strict";
+
 const { query } = require("../config/database");
 
 /*
@@ -21,6 +22,7 @@ const { query } = require("../config/database");
 |--------------------------------------------------------------------------
 */
 
+
 /*
 |--------------------------------------------------------------------------
 | Create Permission
@@ -32,8 +34,7 @@ async function createPermission({
     permissionName,
     description = null
 }) {
-    const finalName =
-        permissionName || name;
+    const finalName = permissionName || name;
 
     if (!finalName || !String(finalName).trim()) {
         throw new Error("Permission name is required.");
@@ -56,6 +57,7 @@ async function createPermission({
     return result.rows[0];
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Find Permission By ID
@@ -77,15 +79,14 @@ async function findPermissionById(permissionId) {
     return result.rows[0] || null;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Find Permission By Name
 |--------------------------------------------------------------------------
 */
 
-async function findPermissionByName(
-    permissionName
-) {
+async function findPermissionByName(permissionName) {
     const sql = `
         SELECT *
         FROM permissions
@@ -99,6 +100,7 @@ async function findPermissionByName(
 
     return result.rows[0] || null;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -118,12 +120,17 @@ async function findPermissions({
     const values = [];
 
     /*
-     * The database does not have a module column.
-     * For compatibility, module filtering is based on
-     * the conventional "module.action" permission name.
+     * There is no module column in the database.
+     * Module filtering is based on permission_name.
+     *
+     * Example:
+     * students.view
+     * students.create
+     * students.update
      */
+
     if (module) {
-        values.push(`${module}.%`);
+        values.push(`${String(module).trim()}.%`);
 
         sql += `
             AND permission_name ILIKE $${values.length}
@@ -139,6 +146,7 @@ async function findPermissions({
     return result.rows;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Update Permission
@@ -153,13 +161,10 @@ async function updatePermission(
         description = null
     }
 ) {
-    const finalName =
-        permissionName || name;
+    const finalName = permissionName || name;
 
     if (!finalName || !String(finalName).trim()) {
-        throw new Error(
-            "Permission name is required."
-        );
+        throw new Error("Permission name is required.");
     }
 
     const sql = `
@@ -180,15 +185,14 @@ async function updatePermission(
     return result.rows[0] || null;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Delete Permission
 |--------------------------------------------------------------------------
 */
 
-async function deletePermission(
-    permissionId
-) {
+async function deletePermission(permissionId) {
     const sql = `
         DELETE FROM permissions
         WHERE id = $1
@@ -202,15 +206,14 @@ async function deletePermission(
     return result.rows[0] || null;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Search Permissions
 |--------------------------------------------------------------------------
 */
 
-async function searchPermissions(
-    searchTerm
-) {
+async function searchPermissions(searchTerm) {
     const sql = `
         SELECT *
         FROM permissions
@@ -228,23 +231,18 @@ async function searchPermissions(
     return result.rows;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Get Permissions By Module
 |--------------------------------------------------------------------------
-|
-| There is no module column in the database.
-| Module is derived from permission_name.
-|
-| Example:
-| students.view  -> students
-| results.enter  -> results
-|--------------------------------------------------------------------------
 */
 
-async function getPermissionsByModule(
-    module
-) {
+async function getPermissionsByModule(module) {
+    if (!module || !String(module).trim()) {
+        return [];
+    }
+
     const sql = `
         SELECT *
         FROM permissions
@@ -253,11 +251,12 @@ async function getPermissionsByModule(
     `;
 
     const result = await query(sql, [
-        `${module}.%`
+        `${String(module).trim()}.%`
     ]);
 
     return result.rows;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -279,8 +278,9 @@ async function getPermissionModules() {
     const modules = new Set();
 
     for (const row of result.rows) {
-        const permissionName =
-            String(row.permission_name);
+        const permissionName = String(
+            row.permission_name
+        );
 
         const separatorIndex =
             permissionName.indexOf(".");
@@ -298,15 +298,14 @@ async function getPermissionModules() {
     return Array.from(modules).sort();
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Get Roles With Permission
 |--------------------------------------------------------------------------
 */
 
-async function getPermissionRoles(
-    permissionId
-) {
+async function getPermissionRoles(permissionId) {
     const sql = `
         SELECT
             r.*
@@ -323,6 +322,7 @@ async function getPermissionRoles(
 
     return result.rows;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -345,7 +345,7 @@ async function permissionExists(
         permissionName
     ];
 
-    if (excludePermissionId) {
+    if (excludePermissionId !== null) {
         values.push(excludePermissionId);
 
         sql += `
@@ -365,15 +365,14 @@ async function permissionExists(
     return result.rows[0].exists;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Count Permissions
 |--------------------------------------------------------------------------
 */
 
-async function countPermissions(
-    module = null
-) {
+async function countPermissions(module = null) {
     let sql = `
         SELECT COUNT(*) AS permission_count
         FROM permissions
@@ -383,19 +382,23 @@ async function countPermissions(
     const values = [];
 
     if (module) {
-        values.push(`${module}.%`);
+        values.push(`${String(module).trim()}.%`);
 
         sql += `
             AND permission_name ILIKE $${values.length}
         `;
     }
 
-    const result = await query(sql, values);
+    const result = await query(
+        sql,
+        values
+    );
 
     return Number(
         result.rows[0].permission_count
     );
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -439,6 +442,7 @@ async function getPermissionSummary() {
 
     return result.rows;
 }
+
 
 /*
 |--------------------------------------------------------------------------

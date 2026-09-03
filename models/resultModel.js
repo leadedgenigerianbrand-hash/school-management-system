@@ -1,17 +1,31 @@
-```javascript
+"use strict";
+
 const { query } = require("../config/database");
 
 /*
 |--------------------------------------------------------------------------
-| Result Model
+| RESULT MODEL
 |--------------------------------------------------------------------------
-| Compatible with the current PostgreSQL results schema.
+| Handles:
+| - Creating results
+| - Bulk result entry
+| - Finding results
+| - Student results
+| - Class results
+| - Updating results
+| - Publishing/unpublishing
+| - Student summaries
+| - Class summaries
+| - Subject summaries
+| - Result statistics
+| - Published results
 |--------------------------------------------------------------------------
 */
 
+
 /*
 |--------------------------------------------------------------------------
-| Create Result
+| CREATE RESULT
 |--------------------------------------------------------------------------
 */
 
@@ -59,20 +73,24 @@ async function createResult({
     const ca = Number(caScore || 0);
     const exam = Number(examScore || 0);
 
-    if (ca < 0 || ca > 40) {
+    if (!Number.isFinite(ca) || ca < 0 || ca > 40) {
         throw new Error("CA score must be between 0 and 40.");
     }
 
-    if (exam < 0 || exam > 60) {
+    if (!Number.isFinite(exam) || exam < 0 || exam > 60) {
         throw new Error("Exam score must be between 0 and 60.");
     }
 
     const calculatedTotal =
-        totalScore !== null
+        totalScore !== null && totalScore !== undefined
             ? Number(totalScore)
             : ca + exam;
 
-    if (calculatedTotal < 0 || calculatedTotal > 100) {
+    if (
+        !Number.isFinite(calculatedTotal) ||
+        calculatedTotal < 0 ||
+        calculatedTotal > 100
+    ) {
         throw new Error("Total score must be between 0 and 100.");
     }
 
@@ -154,9 +172,10 @@ async function createResult({
     return result.rows[0];
 }
 
+
 /*
 |--------------------------------------------------------------------------
-| Create Bulk Results
+| CREATE BULK RESULTS
 |--------------------------------------------------------------------------
 */
 
@@ -176,13 +195,25 @@ async function createBulkResults(results) {
     return savedResults;
 }
 
+
 /*
 |--------------------------------------------------------------------------
-| Find Result By ID
+| FIND RESULT BY ID
 |--------------------------------------------------------------------------
 */
 
-async function findResultById(resultId, schoolId) {
+async function findResultById(
+    resultId,
+    schoolId
+) {
+    if (!resultId) {
+        throw new Error("Result ID is required.");
+    }
+
+    if (!schoolId) {
+        throw new Error("School ID is required.");
+    }
+
     const sql = `
         SELECT
             r.*,
@@ -234,9 +265,10 @@ async function findResultById(resultId, schoolId) {
     return result.rows[0] || null;
 }
 
+
 /*
 |--------------------------------------------------------------------------
-| Get Student Results
+| GET STUDENT RESULTS
 |--------------------------------------------------------------------------
 */
 
@@ -246,6 +278,22 @@ async function getStudentResults({
     sessionId,
     termId
 }) {
+    if (!schoolId) {
+        throw new Error("School ID is required.");
+    }
+
+    if (!studentId) {
+        throw new Error("Student ID is required.");
+    }
+
+    if (!sessionId) {
+        throw new Error("Academic session ID is required.");
+    }
+
+    if (!termId) {
+        throw new Error("Term ID is required.");
+    }
+
     const sql = `
         SELECT
             r.*,
@@ -294,9 +342,10 @@ async function getStudentResults({
     return result.rows;
 }
 
+
 /*
 |--------------------------------------------------------------------------
-| Get Class Results
+| GET CLASS RESULTS
 |--------------------------------------------------------------------------
 */
 
@@ -307,6 +356,22 @@ async function getClassResults({
     termId,
     subjectId = null
 }) {
+    if (!schoolId) {
+        throw new Error("School ID is required.");
+    }
+
+    if (!classId) {
+        throw new Error("Class ID is required.");
+    }
+
+    if (!sessionId) {
+        throw new Error("Academic session ID is required.");
+    }
+
+    if (!termId) {
+        throw new Error("Term ID is required.");
+    }
+
     let sql = `
         SELECT
             r.*,
@@ -360,9 +425,10 @@ async function getClassResults({
     return result.rows;
 }
 
+
 /*
 |--------------------------------------------------------------------------
-| Update Result
+| UPDATE RESULT
 |--------------------------------------------------------------------------
 */
 
@@ -371,6 +437,18 @@ async function updateResult(
     schoolId,
     data
 ) {
+    if (!resultId) {
+        throw new Error("Result ID is required.");
+    }
+
+    if (!schoolId) {
+        throw new Error("School ID is required.");
+    }
+
+    if (!data || typeof data !== "object") {
+        throw new Error("Update data is required.");
+    }
+
     const allowedFields = {
         classId: "class_id",
         subjectId: "subject_id",
@@ -417,12 +495,22 @@ async function updateResult(
                 ? Number(data.examScore)
                 : null;
 
-        if (ca !== null && (ca < 0 || ca > 40)) {
-            throw new Error("CA score must be between 0 and 40.");
+        if (
+            ca !== null &&
+            (!Number.isFinite(ca) || ca < 0 || ca > 40)
+        ) {
+            throw new Error(
+                "CA score must be between 0 and 40."
+            );
         }
 
-        if (exam !== null && (exam < 0 || exam > 60)) {
-            throw new Error("Exam score must be between 0 and 60.");
+        if (
+            exam !== null &&
+            (!Number.isFinite(exam) || exam < 0 || exam > 60)
+        ) {
+            throw new Error(
+                "Exam score must be between 0 and 60."
+            );
         }
 
         if (ca !== null && exam !== null) {
@@ -441,9 +529,11 @@ async function updateResult(
     }
 
     values.push(resultId);
+
     const resultIdPosition = values.length;
 
     values.push(schoolId);
+
     const schoolIdPosition = values.length;
 
     const sql = `
@@ -464,9 +554,10 @@ async function updateResult(
     return result.rows[0] || null;
 }
 
+
 /*
 |--------------------------------------------------------------------------
-| Delete Result
+| DELETE RESULT
 |--------------------------------------------------------------------------
 */
 
@@ -474,6 +565,14 @@ async function deleteResult(
     resultId,
     schoolId
 ) {
+    if (!resultId) {
+        throw new Error("Result ID is required.");
+    }
+
+    if (!schoolId) {
+        throw new Error("School ID is required.");
+    }
+
     const sql = `
         DELETE FROM results
 
@@ -491,9 +590,10 @@ async function deleteResult(
     return result.rows[0] || null;
 }
 
+
 /*
 |--------------------------------------------------------------------------
-| Publish Result
+| PUBLISH RESULT
 |--------------------------------------------------------------------------
 */
 
@@ -501,6 +601,14 @@ async function publishResult(
     resultId,
     schoolId
 ) {
+    if (!resultId) {
+        throw new Error("Result ID is required.");
+    }
+
+    if (!schoolId) {
+        throw new Error("School ID is required.");
+    }
+
     const sql = `
         UPDATE results
 
@@ -522,9 +630,10 @@ async function publishResult(
     return result.rows[0] || null;
 }
 
+
 /*
 |--------------------------------------------------------------------------
-| Unpublish Result
+| UNPUBLISH RESULT
 |--------------------------------------------------------------------------
 */
 
@@ -532,6 +641,14 @@ async function unpublishResult(
     resultId,
     schoolId
 ) {
+    if (!resultId) {
+        throw new Error("Result ID is required.");
+    }
+
+    if (!schoolId) {
+        throw new Error("School ID is required.");
+    }
+
     const sql = `
         UPDATE results
 
@@ -553,9 +670,10 @@ async function unpublishResult(
     return result.rows[0] || null;
 }
 
+
 /*
 |--------------------------------------------------------------------------
-| Student Result Summary
+| STUDENT RESULT SUMMARY
 |--------------------------------------------------------------------------
 */
 
@@ -565,6 +683,22 @@ async function getStudentResultSummary({
     sessionId,
     termId
 }) {
+    if (!schoolId) {
+        throw new Error("School ID is required.");
+    }
+
+    if (!studentId) {
+        throw new Error("Student ID is required.");
+    }
+
+    if (!sessionId) {
+        throw new Error("Academic session ID is required.");
+    }
+
+    if (!termId) {
+        throw new Error("Term ID is required.");
+    }
+
     const sql = `
         SELECT
             COUNT(*)::INTEGER AS subject_count,
@@ -604,30 +738,31 @@ async function getStudentResultSummary({
         termId
     ]);
 
-    const row = result.rows[0];
+    const row = result.rows[0] || {};
 
     return {
-        subjectCount: Number(row.subject_count),
+        subjectCount: Number(row.subject_count || 0),
 
-        totalScore: Number(row.total_score),
+        totalScore: Number(row.total_score || 0),
 
         averageScore: Number(
-            Number(row.average_score).toFixed(2)
+            Number(row.average_score || 0).toFixed(2)
         ),
 
         totalGradePoint: Number(
-            row.total_grade_point
+            row.total_grade_point || 0
         ),
 
         averageGradePoint: Number(
-            Number(row.average_grade_point).toFixed(2)
+            Number(row.average_grade_point || 0).toFixed(2)
         )
     };
 }
 
+
 /*
 |--------------------------------------------------------------------------
-| Class Result Summary
+| CLASS RESULT SUMMARY
 |--------------------------------------------------------------------------
 */
 
@@ -637,6 +772,22 @@ async function getClassResultSummary({
     sessionId,
     termId
 }) {
+    if (!schoolId) {
+        throw new Error("School ID is required.");
+    }
+
+    if (!classId) {
+        throw new Error("Class ID is required.");
+    }
+
+    if (!sessionId) {
+        throw new Error("Academic session ID is required.");
+    }
+
+    if (!termId) {
+        throw new Error("Term ID is required.");
+    }
+
     const sql = `
         SELECT
             s.id AS student_id,
@@ -701,38 +852,46 @@ async function getClassResultSummary({
 
     return result.rows.map((row, index) => ({
         studentId: row.student_id,
-        admissionNumber: row.admission_number,
-        firstName: row.first_name,
-        middleName: row.middle_name,
-        lastName: row.last_name,
 
-        subjectCount: Number(
-            row.subject_count
-        ),
+        admissionNumber:
+            row.admission_number,
 
-        totalScore: Number(
-            row.total_score
-        ),
+        firstName:
+            row.first_name,
 
-        averageScore: Number(
-            Number(row.average_score).toFixed(2)
-        ),
+        middleName:
+            row.middle_name,
 
-        totalGradePoint: Number(
-            row.total_grade_point
-        ),
+        lastName:
+            row.last_name,
 
-        averageGradePoint: Number(
-            Number(row.average_grade_point).toFixed(2)
-        ),
+        subjectCount:
+            Number(row.subject_count || 0),
+
+        totalScore:
+            Number(row.total_score || 0),
+
+        averageScore:
+            Number(
+                Number(row.average_score || 0).toFixed(2)
+            ),
+
+        totalGradePoint:
+            Number(row.total_grade_point || 0),
+
+        averageGradePoint:
+            Number(
+                Number(row.average_grade_point || 0).toFixed(2)
+            ),
 
         position: index + 1
     }));
 }
 
+
 /*
 |--------------------------------------------------------------------------
-| Subject Result Summary
+| SUBJECT RESULT SUMMARY
 |--------------------------------------------------------------------------
 */
 
@@ -743,6 +902,26 @@ async function getSubjectResultSummary({
     sessionId,
     termId
 }) {
+    if (!schoolId) {
+        throw new Error("School ID is required.");
+    }
+
+    if (!classId) {
+        throw new Error("Class ID is required.");
+    }
+
+    if (!subjectId) {
+        throw new Error("Subject ID is required.");
+    }
+
+    if (!sessionId) {
+        throw new Error("Academic session ID is required.");
+    }
+
+    if (!termId) {
+        throw new Error("Term ID is required.");
+    }
+
     const sql = `
         SELECT
             COUNT(*)::INTEGER AS student_count,
@@ -779,30 +958,29 @@ async function getSubjectResultSummary({
         termId
     ]);
 
-    const row = result.rows[0];
+    const row = result.rows[0] || {};
 
     return {
-        studentCount: Number(
-            row.student_count
-        ),
+        studentCount:
+            Number(row.student_count || 0),
 
-        averageScore: Number(
-            Number(row.average_score).toFixed(2)
-        ),
+        averageScore:
+            Number(
+                Number(row.average_score || 0).toFixed(2)
+            ),
 
-        highestScore: Number(
-            row.highest_score
-        ),
+        highestScore:
+            Number(row.highest_score || 0),
 
-        lowestScore: Number(
-            row.lowest_score
-        )
+        lowestScore:
+            Number(row.lowest_score || 0)
     };
 }
 
+
 /*
 |--------------------------------------------------------------------------
-| Result Statistics
+| RESULT STATISTICS
 |--------------------------------------------------------------------------
 */
 
@@ -811,6 +989,10 @@ async function getResultStatistics(
     sessionId = null,
     termId = null
 ) {
+    if (!schoolId) {
+        throw new Error("School ID is required.");
+    }
+
     let sql = `
         SELECT
             COUNT(*)::INTEGER AS total_results,
@@ -868,29 +1050,42 @@ async function getResultStatistics(
     }
 
     const result = await query(sql, values);
-    const row = result.rows[0];
+
+    const row = result.rows[0] || {};
 
     return {
-        totalResults: Number(
-            row.total_results
-        ),
+        totalResults:
+            Number(row.total_results || 0),
 
-        averageScore: Number(
-            Number(row.average_score).toFixed(2)
-        ),
+        averageScore:
+            Number(
+                Number(row.average_score || 0).toFixed(2)
+            ),
 
-        gradeA: Number(row.grade_a),
-        gradeB: Number(row.grade_b),
-        gradeC: Number(row.grade_c),
-        gradeD: Number(row.grade_d),
-        gradeE: Number(row.grade_e),
-        gradeF: Number(row.grade_f)
+        gradeA:
+            Number(row.grade_a || 0),
+
+        gradeB:
+            Number(row.grade_b || 0),
+
+        gradeC:
+            Number(row.grade_c || 0),
+
+        gradeD:
+            Number(row.grade_d || 0),
+
+        gradeE:
+            Number(row.grade_e || 0),
+
+        gradeF:
+            Number(row.grade_f || 0)
     };
 }
 
+
 /*
 |--------------------------------------------------------------------------
-| Get Published Results
+| GET PUBLISHED RESULTS
 |--------------------------------------------------------------------------
 */
 
@@ -901,6 +1096,10 @@ async function getPublishedResults({
     termId = null,
     classId = null
 }) {
+    if (!schoolId) {
+        throw new Error("School ID is required.");
+    }
+
     let sql = `
         SELECT
             r.*,
@@ -977,9 +1176,10 @@ async function getPublishedResults({
     return result.rows;
 }
 
+
 /*
 |--------------------------------------------------------------------------
-| Export
+| EXPORT
 |--------------------------------------------------------------------------
 */
 

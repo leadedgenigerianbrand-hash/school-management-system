@@ -1,17 +1,19 @@
-```javascript
+"use strict";
+
 const { query } = require("../config/database");
 
 /*
 |--------------------------------------------------------------------------
 | Class Model
 |--------------------------------------------------------------------------
-| Compatible with the current PostgreSQL schema.
+| Compatible with the current PostgreSQL school_management schema.
 |
 | classes:
 | id, school_id, academic_level_id, class_name, class_code,
 | class_order, description, is_active, created_at, updated_at
 |--------------------------------------------------------------------------
 */
+
 
 /*
 |--------------------------------------------------------------------------
@@ -63,6 +65,7 @@ async function createClass({
     return result.rows[0];
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Find Class By ID
@@ -85,15 +88,21 @@ async function findClassById(classId, schoolId = null) {
 
     if (schoolId) {
         values.push(schoolId);
-        sql += ` AND c.school_id = $${values.length}`;
+
+        sql += `
+            AND c.school_id = $${values.length}
+        `;
     }
 
-    sql += ` LIMIT 1`;
+    sql += `
+        LIMIT 1
+    `;
 
     const result = await query(sql, values);
 
     return result.rows[0] || null;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -151,6 +160,7 @@ async function findClasses({
     return result.rows;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Search Classes
@@ -191,6 +201,7 @@ async function searchClasses(searchTerm, schoolId) {
     return result.rows;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Check Whether Class Exists
@@ -223,12 +234,15 @@ async function classExists(
         `;
     }
 
-    sql += `) AS exists`;
+    sql += `
+        ) AS exists
+    `;
 
     const result = await query(sql, values);
 
     return result.rows[0].exists;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -302,6 +316,7 @@ async function updateClass(
     return result.rows[0] || null;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Activate / Deactivate Class
@@ -331,6 +346,7 @@ async function setClassActive(
 
     return result.rows[0] || null;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -362,6 +378,7 @@ async function updateClassOrder(
     return result.rows[0] || null;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Get Class Arms
@@ -388,6 +405,7 @@ async function getClassArms(
 
     return result.rows;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -423,6 +441,7 @@ async function findClassArmById(
 
     return result.rows[0] || null;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -502,6 +521,7 @@ async function getStudentsInClass({
     return result.rows;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Count Students In Class
@@ -560,8 +580,11 @@ async function countStudentsInClass({
 
     const result = await query(sql, values);
 
-    return Number(result.rows[0].student_count);
+    return Number(
+        result.rows[0].student_count
+    );
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -612,6 +635,7 @@ async function getClassStatistics(schoolId) {
         totalEnrollments: Number(row.total_enrollments)
     };
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -672,6 +696,7 @@ async function getClassDetails(
     return result.rows[0] || null;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Delete Class
@@ -696,6 +721,7 @@ async function deleteClass(
 
     return result.rows[0] || null;
 }
+
 
 /*
 |--------------------------------------------------------------------------

@@ -1,4 +1,3 @@
-```javascript
 "use strict";
 
 const { query } = require("../config/database");

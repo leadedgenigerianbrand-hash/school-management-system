@@ -1,13 +1,13 @@
-```javascript
+"use strict";
+
 const { query } = require("../config/database");
 
 /*
 |--------------------------------------------------------------------------
 | Report Model
 |--------------------------------------------------------------------------
-| Compatible with the current PostgreSQL schema.
-|--------------------------------------------------------------------------
 */
+
 
 /*
 |--------------------------------------------------------------------------
@@ -77,6 +77,7 @@ async function getSchoolOverview(schoolId) {
     };
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Student Statistics
@@ -105,6 +106,7 @@ async function getStudentStatistics(schoolId) {
             )::INTEGER AS female_students
 
         FROM students
+
         WHERE school_id = $1
     `;
 
@@ -120,12 +122,10 @@ async function getStudentStatistics(schoolId) {
     };
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Students By Class
-|--------------------------------------------------------------------------
-|
-| Student class placement is stored in student_enrollments.
 |--------------------------------------------------------------------------
 */
 
@@ -149,13 +149,11 @@ async function getStudentsByClass(
                 'Promoted',
                 'Repeated'
            )
+
+        WHERE c.school_id = $1
     `;
 
     const values = [schoolId];
-
-    sql += `
-        WHERE c.school_id = $1
-    `;
 
     if (sessionId) {
         values.push(sessionId);
@@ -185,6 +183,7 @@ async function getStudentsByClass(
     }));
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Staff Statistics
@@ -205,6 +204,7 @@ async function getStaffStatistics(schoolId) {
             )::INTEGER AS inactive_staff
 
         FROM staff
+
         WHERE school_id = $1
     `;
 
@@ -218,20 +218,20 @@ async function getStaffStatistics(schoolId) {
     };
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Staff By Department
-|--------------------------------------------------------------------------
-|
-| Staff table stores department as text, not department_id.
 |--------------------------------------------------------------------------
 */
 
 async function getStaffByDepartment(schoolId) {
     const sql = `
         SELECT
-            COALESCE(NULLIF(TRIM(department), ''), 'Unassigned')
-                AS department_name,
+            COALESCE(
+                NULLIF(TRIM(department), ''),
+                'Unassigned'
+            ) AS department_name,
 
             COUNT(*)::INTEGER AS staff_count
 
@@ -240,7 +240,10 @@ async function getStaffByDepartment(schoolId) {
         WHERE school_id = $1
 
         GROUP BY
-            COALESCE(NULLIF(TRIM(department), ''), 'Unassigned')
+            COALESCE(
+                NULLIF(TRIM(department), ''),
+                'Unassigned'
+            )
 
         ORDER BY
             department_name ASC
@@ -254,15 +257,10 @@ async function getStaffByDepartment(schoolId) {
     }));
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Fee Statistics
-|--------------------------------------------------------------------------
-|
-| Fees are represented by:
-| fee_structures
-| student_fees
-| payments
 |--------------------------------------------------------------------------
 */
 
@@ -313,6 +311,7 @@ async function getFeeStatistics(schoolId) {
         totalRecords: Number(row.total_records)
     };
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -400,6 +399,7 @@ async function getAttendanceStatistics(
     };
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Result Statistics
@@ -476,6 +476,7 @@ async function getResultStatistics(
     };
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Academic Session Report
@@ -547,6 +548,7 @@ async function getAcademicSessionReport(
     };
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Class Report
@@ -606,6 +608,7 @@ async function getClassReport(
             c.id,
             c.class_name,
             c.class_code
+
         LIMIT 1
     `;
 
@@ -625,6 +628,7 @@ async function getClassReport(
         subjectCount: Number(row.subject_count)
     };
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -658,6 +662,7 @@ async function getDashboardReport(schoolId) {
         results
     };
 }
+
 
 /*
 |--------------------------------------------------------------------------

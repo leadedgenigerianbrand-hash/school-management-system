@@ -1,4 +1,3 @@
-```javascript
 "use strict";
 
 const { query } = require("../config/database");
@@ -8,25 +7,6 @@ const { query } = require("../config/database");
 | Subject Model
 |--------------------------------------------------------------------------
 | Compatible with the current PostgreSQL schema.
-|--------------------------------------------------------------------------
-|
-| subjects:
-| id
-| school_id
-| subject_name
-| subject_code
-| description
-| is_compulsory
-| is_active
-| created_at
-|
-| class_subjects:
-| id
-| class_id
-| subject_id
-| is_compulsory
-| created_at
-|
 |--------------------------------------------------------------------------
 */
 
@@ -77,6 +57,7 @@ async function createSubject({
     return result.rows[0];
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Find Subject By ID
@@ -112,6 +93,7 @@ async function findSubjectById(
     return result.rows[0] || null;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Find Subject By Code
@@ -138,6 +120,7 @@ async function findSubjectByCode(
     return result.rows[0] || null;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Find Subjects
@@ -149,6 +132,10 @@ async function findSubjects({
     isActive = null,
     isCompulsory = null
 } = {}) {
+    if (!schoolId) {
+        throw new Error("School ID is required.");
+    }
+
     let sql = `
         SELECT *
         FROM subjects
@@ -181,6 +168,7 @@ async function findSubjects({
 
     return result.rows;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -216,6 +204,7 @@ async function searchSubjects(
 
     return result.rows;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -287,6 +276,7 @@ async function updateSubject(
     return result.rows[0] || null;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Delete Subject
@@ -311,6 +301,7 @@ async function deleteSubject(
 
     return result.rows[0] || null;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -356,6 +347,7 @@ async function assignSubjectToClass({
     return result.rows[0];
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Get Subjects For Class
@@ -373,20 +365,15 @@ async function getSubjectsForClass(
             cs.subject_id,
             cs.is_compulsory,
             cs.created_at,
-
             sub.subject_name,
             sub.subject_code,
             sub.description,
             sub.is_active
-
         FROM class_subjects cs
-
         INNER JOIN subjects sub
             ON sub.id = cs.subject_id
-
         WHERE cs.class_id = $1
           AND sub.school_id = $2
-
         ORDER BY
             sub.subject_name ASC
     `;
@@ -398,6 +385,7 @@ async function getSubjectsForClass(
 
     return result.rows;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -426,6 +414,7 @@ async function removeSubjectFromClass(
     return result.rows[0] || null;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Subject Statistics
@@ -438,17 +427,13 @@ async function getSubjectStatistics(
     const sql = `
         SELECT
             COUNT(*)::INTEGER AS total_subjects,
-
             COUNT(*) FILTER (
                 WHERE is_active = TRUE
             )::INTEGER AS active_subjects,
-
             COUNT(*) FILTER (
                 WHERE is_compulsory = TRUE
             )::INTEGER AS compulsory_subjects
-
         FROM subjects
-
         WHERE school_id = $1
     `;
 
@@ -462,6 +447,7 @@ async function getSubjectStatistics(
         compulsorySubjects: Number(row.compulsory_subjects)
     };
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -508,6 +494,7 @@ async function subjectCodeExists(
     return result.rows[0].exists;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Subject Name Exists
@@ -552,6 +539,7 @@ async function subjectNameExists(
 
     return result.rows[0].exists;
 }
+
 
 /*
 |--------------------------------------------------------------------------

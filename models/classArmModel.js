@@ -1,4 +1,5 @@
-```javascript
+"use strict";
+
 const { query } = require("../config/database");
 
 /*
@@ -12,6 +13,7 @@ const { query } = require("../config/database");
 | is_active, created_at, updated_at
 |--------------------------------------------------------------------------
 */
+
 
 /*
 |--------------------------------------------------------------------------
@@ -64,6 +66,7 @@ async function createClassArm({
     return result.rows[0];
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Find Class Arm By ID
@@ -90,16 +93,22 @@ async function findClassArmById(armId, schoolId = null) {
     const values = [armId];
 
     if (schoolId) {
-        sql += ` AND ca.school_id = $2`;
         values.push(schoolId);
+
+        sql += `
+            AND ca.school_id = $${values.length}
+        `;
     }
 
-    sql += ` LIMIT 1`;
+    sql += `
+        LIMIT 1
+    `;
 
     const result = await query(sql, values);
 
     return result.rows[0] || null;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -133,6 +142,7 @@ async function findClassArmsByClass(classId, schoolId) {
     return result.rows;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Find All Class Arms For A School
@@ -165,13 +175,18 @@ async function findClassArmsBySchool(schoolId) {
     return result.rows;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Find Class Arm By Name
 |--------------------------------------------------------------------------
 */
 
-async function findClassArmByName(classId, armName, schoolId) {
+async function findClassArmByName(
+    classId,
+    armName,
+    schoolId
+) {
     const sql = `
         SELECT
             ca.*,
@@ -198,6 +213,7 @@ async function findClassArmByName(classId, armName, schoolId) {
 
     return result.rows[0] || null;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -227,16 +243,22 @@ async function classArmExists(
     ];
 
     if (excludeArmId) {
-        sql += ` AND id <> $4`;
         values.push(excludeArmId);
+
+        sql += `
+            AND id <> $${values.length}
+        `;
     }
 
-    sql += `) AS exists`;
+    sql += `
+        ) AS exists
+    `;
 
     const result = await query(sql, values);
 
     return result.rows[0].exists;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -290,6 +312,7 @@ async function updateClassArm(
     return result.rows[0] || null;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Rename Class Arm
@@ -324,6 +347,7 @@ async function renameClassArm(
     return result.rows[0] || null;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Activate / Deactivate Class Arm
@@ -353,6 +377,7 @@ async function setClassArmActive(
 
     return result.rows[0] || null;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -388,6 +413,7 @@ async function getStudentCount(
     return Number(result.rows[0].total_students);
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Get Class Arm Details
@@ -406,6 +432,7 @@ async function getClassArmDetails(
             al.id AS academic_level_id,
             al.level_name,
             al.level_code,
+
             (
                 SELECT COUNT(*)
                 FROM student_enrollments se
@@ -421,13 +448,18 @@ async function getClassArmDetails(
                   AND s.school_id = ca.school_id
                   AND LOWER(s.status) = 'active'
             ) AS total_students
+
         FROM class_arms ca
+
         INNER JOIN classes c
             ON c.id = ca.class_id
+
         INNER JOIN academic_levels al
             ON al.id = c.academic_level_id
+
         WHERE ca.id = $1
           AND ca.school_id = $2
+
         LIMIT 1
     `;
 
@@ -438,6 +470,7 @@ async function getClassArmDetails(
 
     return result.rows[0] || null;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -453,6 +486,16 @@ async function getStudents(
         offset = 0
     } = {}
 ) {
+    const safeLimit = Math.max(
+        1,
+        Math.min(Number(limit) || 100, 500)
+    );
+
+    const safeOffset = Math.max(
+        0,
+        Number(offset) || 0
+    );
+
     const sql = `
         SELECT
             s.id,
@@ -495,12 +538,13 @@ async function getStudents(
     const result = await query(sql, [
         armId,
         schoolId,
-        limit,
-        offset
+        safeLimit,
+        safeOffset
     ]);
 
     return result.rows;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -512,6 +556,8 @@ async function searchClassArms(
     searchTerm,
     schoolId
 ) {
+    const term = String(searchTerm || "").trim();
+
     const sql = `
         SELECT
             ca.*,
@@ -547,11 +593,12 @@ async function searchClassArms(
 
     const result = await query(sql, [
         schoolId,
-        `%${searchTerm}%`
+        `%${term}%`
     ]);
 
     return result.rows;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -587,6 +634,7 @@ async function moveClassArm(
     return result.rows[0] || null;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Delete Class Arm
@@ -614,6 +662,7 @@ async function deleteClassArm(
 
     return result.rows[0] || null;
 }
+
 
 /*
 |--------------------------------------------------------------------------

@@ -1,4 +1,3 @@
-```javascript
 const { query, pool } = require("../config/database");
 
 /*
@@ -20,12 +19,12 @@ const { query, pool } = require("../config/database");
 |--------------------------------------------------------------------------
 */
 
-
 /*
 |--------------------------------------------------------------------------
 | CREATE ACADEMIC SESSION
 |--------------------------------------------------------------------------
 */
+
 async function createAcademicSession({
     schoolId,
     sessionName,
@@ -105,12 +104,12 @@ async function createAcademicSession({
     }
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | FIND SESSION BY ID
 |--------------------------------------------------------------------------
 */
+
 async function findAcademicSessionById(
     sessionId,
     schoolId = null
@@ -131,19 +130,21 @@ async function findAcademicSessionById(
         `;
     }
 
-    sql += ` LIMIT 1`;
+    sql += `
+        LIMIT 1
+    `;
 
     const result = await query(sql, values);
 
     return result.rows[0] || null;
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | FIND SESSION BY NAME
 |--------------------------------------------------------------------------
 */
+
 async function findAcademicSessionByName(
     schoolId,
     sessionName
@@ -164,12 +165,12 @@ async function findAcademicSessionByName(
     return result.rows[0] || null;
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | CHECK WHETHER SESSION EXISTS
 |--------------------------------------------------------------------------
 */
+
 async function sessionExists(
     schoolId,
     sessionName,
@@ -205,12 +206,12 @@ async function sessionExists(
     return result.rows[0].exists;
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | FIND ALL SESSIONS FOR A SCHOOL
 |--------------------------------------------------------------------------
 */
+
 async function findAcademicSessionsBySchool(
     schoolId,
     {
@@ -225,7 +226,7 @@ async function findAcademicSessionsBySchool(
 
     const values = [schoolId];
 
-    if (isActive !== null) {
+    if (isActive !== null && isActive !== undefined) {
         values.push(isActive);
 
         sql += `
@@ -244,12 +245,12 @@ async function findAcademicSessionsBySchool(
     return result.rows;
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | FIND CURRENT SESSION
 |--------------------------------------------------------------------------
 */
+
 async function findCurrentSession(schoolId) {
     const sql = `
         SELECT *
@@ -266,15 +267,12 @@ async function findCurrentSession(schoolId) {
     return result.rows[0] || null;
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | FIND UPCOMING SESSIONS
 |--------------------------------------------------------------------------
-| There is no "status" column in the database.
-| Upcoming means active sessions whose start date is in the future.
-|--------------------------------------------------------------------------
 */
+
 async function findUpcomingSessions(schoolId) {
     const sql = `
         SELECT *
@@ -292,14 +290,12 @@ async function findUpcomingSessions(schoolId) {
     return result.rows;
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | FIND COMPLETED SESSIONS
 |--------------------------------------------------------------------------
-| Completed means the end date has passed.
-|--------------------------------------------------------------------------
 */
+
 async function findCompletedSessions(schoolId) {
     const sql = `
         SELECT *
@@ -316,12 +312,12 @@ async function findCompletedSessions(schoolId) {
     return result.rows;
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | UPDATE ACADEMIC SESSION
 |--------------------------------------------------------------------------
 */
+
 async function updateAcademicSession(
     sessionId,
     schoolId,
@@ -397,12 +393,12 @@ async function updateAcademicSession(
     }
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | RENAME SESSION
 |--------------------------------------------------------------------------
 */
+
 async function renameAcademicSession(
     sessionId,
     schoolId,
@@ -433,12 +429,12 @@ async function renameAcademicSession(
     return result.rows[0] || null;
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | ACTIVATE / MAKE CURRENT SESSION
 |--------------------------------------------------------------------------
 */
+
 async function activateSession(
     sessionId,
     schoolId
@@ -511,15 +507,12 @@ async function activateSession(
     }
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | SET SESSION UPCOMING
 |--------------------------------------------------------------------------
-| There is no status field.
-| This makes the session active but not current.
-|--------------------------------------------------------------------------
 */
+
 async function setSessionUpcoming(
     sessionId,
     schoolId
@@ -543,15 +536,12 @@ async function setSessionUpcoming(
     return result.rows[0] || null;
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | COMPLETE SESSION
 |--------------------------------------------------------------------------
-| A completed session is represented by is_active = FALSE
-| and is_current = FALSE.
-|--------------------------------------------------------------------------
 */
+
 async function completeSession(
     sessionId,
     schoolId
@@ -575,12 +565,12 @@ async function completeSession(
     return result.rows[0] || null;
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | UPDATE SESSION DATES
 |--------------------------------------------------------------------------
 */
+
 async function updateSessionDates(
     sessionId,
     schoolId,
@@ -608,12 +598,12 @@ async function updateSessionDates(
     return result.rows[0] || null;
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | SEARCH ACADEMIC SESSIONS
 |--------------------------------------------------------------------------
 */
+
 async function searchAcademicSessions(
     searchTerm,
     schoolId
@@ -630,18 +620,18 @@ async function searchAcademicSessions(
 
     const result = await query(sql, [
         schoolId,
-        `%${searchTerm}%`
+        `%${String(searchTerm || "").trim()}%`
     ]);
 
     return result.rows;
 }
-
 
 /*
 |--------------------------------------------------------------------------
 | DELETE ACADEMIC SESSION
 |--------------------------------------------------------------------------
 */
+
 async function deleteAcademicSession(
     sessionId,
     schoolId
@@ -668,12 +658,12 @@ async function deleteAcademicSession(
     return result.rows[0] || null;
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | GET SESSION STATISTICS
 |--------------------------------------------------------------------------
 */
+
 async function getSessionStatistics(
     sessionId,
     schoolId
@@ -720,31 +710,21 @@ async function getSessionStatistics(
         enrolledStudents: Number(
             result.rows[0].enrolled_students
         ),
-
         resultRecords: Number(
             result.rows[0].result_records
         ),
-
         attendanceRecords: Number(
             result.rows[0].attendance_records
         )
     };
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | GET SESSION WITH TERMS
 |--------------------------------------------------------------------------
-| IMPORTANT:
-|
-| Our current database schema does NOT contain
-| academic_session_id in the terms table.
-|
-| Terms belong directly to a school, so we return
-| the selected session together with the school's terms.
-|--------------------------------------------------------------------------
 */
+
 async function getSessionWithTerms(
     sessionId,
     schoolId
@@ -800,12 +780,12 @@ async function getSessionWithTerms(
     }));
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | EXPORTS
 |--------------------------------------------------------------------------
 */
+
 module.exports = {
     createAcademicSession,
     findAcademicSessionById,

@@ -1,4 +1,3 @@
-```javascript
 const { query } = require("../config/database");
 
 /*
@@ -63,10 +62,7 @@ async function createDepartment({
 |--------------------------------------------------------------------------
 */
 
-async function findDepartmentById(
-    departmentId,
-    schoolId = null
-) {
+async function findDepartmentById(departmentId, schoolId = null) {
     let sql = `
         SELECT
             d.*,
@@ -81,7 +77,10 @@ async function findDepartmentById(
 
     if (schoolId) {
         values.push(schoolId);
-        sql += ` AND d.school_id = $${values.length}`;
+
+        sql += `
+            AND d.school_id = $${values.length}
+        `;
     }
 
     sql += `
@@ -100,10 +99,7 @@ async function findDepartmentById(
 |--------------------------------------------------------------------------
 */
 
-async function findDepartmentByCode(
-    departmentCode,
-    schoolId
-) {
+async function findDepartmentByCode(departmentCode, schoolId) {
     const sql = `
         SELECT *
         FROM departments
@@ -152,7 +148,9 @@ async function departmentExists(
         `;
     }
 
-    sql += `) AS exists`;
+    sql += `
+        ) AS exists
+    `;
 
     const result = await query(sql, values);
 
@@ -433,9 +431,7 @@ async function getDepartmentStaff(
 |--------------------------------------------------------------------------
 */
 
-async function getDepartmentSummary(
-    schoolId
-) {
+async function getDepartmentSummary(schoolId) {
     const sql = `
         SELECT
             d.id,

@@ -1,13 +1,13 @@
-```javascript
+"use strict";
+
 const { query } = require("../config/database");
 
 /*
 |--------------------------------------------------------------------------
 | Document Model
 |--------------------------------------------------------------------------
-| Compatible with the current PostgreSQL student_documents table.
+| Compatible with the student_documents table:
 |
-| student_documents:
 | id
 | student_id
 | school_id
@@ -20,6 +20,7 @@ const { query } = require("../config/database");
 | created_at
 |--------------------------------------------------------------------------
 */
+
 
 /*
 |--------------------------------------------------------------------------
@@ -84,6 +85,7 @@ async function createDocument({
     return result.rows[0];
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Find Document By ID
@@ -118,12 +120,15 @@ async function findDocumentById(
         `;
     }
 
-    sql += ` LIMIT 1`;
+    sql += `
+        LIMIT 1
+    `;
 
     const result = await query(sql, values);
 
     return result.rows[0] || null;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -172,6 +177,7 @@ async function findStudentDocuments({
 
     return result.rows;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -228,6 +234,7 @@ async function findSchoolDocuments(
 
     return result.rows;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -303,6 +310,7 @@ async function updateDocument(
     return result.rows[0] || null;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Delete Document
@@ -327,6 +335,7 @@ async function deleteDocument(
 
     return result.rows[0] || null;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -373,6 +382,7 @@ async function searchDocuments(
     return result.rows;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Count Student Documents
@@ -399,6 +409,7 @@ async function countStudentDocuments(
         result.rows[0].document_count
     );
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -433,6 +444,7 @@ async function countSchoolDocuments(
     );
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Get Document Types
@@ -461,6 +473,7 @@ async function getDocumentTypes(
     );
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | Get Student Document Summary
@@ -474,18 +487,21 @@ async function getStudentDocumentSummary(
     const sql = `
         SELECT
             COUNT(*)::INTEGER AS total_documents,
+
             COUNT(
                 CASE
                     WHEN LOWER(mime_type) = 'application/pdf'
                     THEN 1
                 END
             )::INTEGER AS pdf_documents,
+
             COUNT(
                 CASE
                     WHEN mime_type ILIKE 'image/%'
                     THEN 1
                 END
             )::INTEGER AS image_documents
+
         FROM student_documents
         WHERE student_id = $1
           AND school_id = $2
@@ -498,6 +514,7 @@ async function getStudentDocumentSummary(
 
     return result.rows[0];
 }
+
 
 /*
 |--------------------------------------------------------------------------

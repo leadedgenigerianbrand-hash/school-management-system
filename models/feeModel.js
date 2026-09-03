@@ -1,4 +1,3 @@
-```javascript
 "use strict";
 
 const { query } = require("../config/database");
@@ -7,12 +6,15 @@ const { query } = require("../config/database");
 |--------------------------------------------------------------------------
 | FEE MODEL
 |--------------------------------------------------------------------------
-| Uses the actual school-management database structure:
-|
-| fee_structures
-| student_fees
-| payments
-|
+| Handles:
+| - Fee structures
+| - Student fee assignments
+| - Payments
+| - Fee balances
+| - Payment history
+| - Student fee summaries
+| - School fee summaries
+| - Fee searching
 |--------------------------------------------------------------------------
 */
 
@@ -113,10 +115,15 @@ async function findFeeStructureById(
 
     if (schoolId) {
         values.push(schoolId);
-        sql += ` AND fs.school_id = $${values.length}`;
+
+        sql += `
+            AND fs.school_id = $${values.length}
+        `;
     }
 
-    sql += ` LIMIT 1`;
+    sql += `
+        LIMIT 1
+    `;
 
     const result = await query(sql, values);
 
@@ -277,7 +284,10 @@ async function deleteFeeStructure(
           AND school_id = $2
         RETURNING *
         `,
-        [feeStructureId, schoolId]
+        [
+            feeStructureId,
+            schoolId
+        ]
     );
 
     return result.rows[0] || null;
@@ -408,7 +418,9 @@ async function findStudentFeeById(
         `;
     }
 
-    sql += ` LIMIT 1`;
+    sql += `
+        LIMIT 1
+    `;
 
     const result = await query(sql, values);
 

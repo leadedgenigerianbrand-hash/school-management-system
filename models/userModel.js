@@ -1,40 +1,6 @@
-```javascript
 "use strict";
 
 const { query } = require("../config/database");
-
-/*
-|--------------------------------------------------------------------------
-| USER MODEL
-|--------------------------------------------------------------------------
-| Compatible with the current PostgreSQL users schema.
-|--------------------------------------------------------------------------
-|
-| users:
-| id
-| school_id
-| role_id
-| first_name
-| middle_name
-| last_name
-| email
-| phone
-| username
-| password_hash
-| profile_photo_url
-| last_login_at
-| is_active
-| created_at
-| updated_at
-|
-|--------------------------------------------------------------------------
-*/
-
-/*
-|--------------------------------------------------------------------------
-| CREATE USER
-|--------------------------------------------------------------------------
-*/
 
 async function createUser({
     schoolId,
@@ -49,29 +15,12 @@ async function createUser({
     profilePhotoUrl = null,
     isActive = true
 }) {
-    if (!schoolId) {
-        throw new Error("School ID is required.");
-    }
-
-    if (!roleId) {
-        throw new Error("Role ID is required.");
-    }
-
-    if (!username || !username.trim()) {
-        throw new Error("Username is required.");
-    }
-
-    if (!passwordHash) {
-        throw new Error("Password hash is required.");
-    }
-
-    if (!firstName || !firstName.trim()) {
-        throw new Error("First name is required.");
-    }
-
-    if (!lastName || !lastName.trim()) {
-        throw new Error("Last name is required.");
-    }
+    if (!schoolId) throw new Error("School ID is required.");
+    if (!roleId) throw new Error("Role ID is required.");
+    if (!username || !username.trim()) throw new Error("Username is required.");
+    if (!passwordHash) throw new Error("Password hash is required.");
+    if (!firstName || !firstName.trim()) throw new Error("First name is required.");
+    if (!lastName || !lastName.trim()) throw new Error("Last name is required.");
 
     const sql = `
         INSERT INTO users (
@@ -115,21 +64,15 @@ async function createUser({
         middleName ? middleName.trim() : null,
         lastName.trim(),
         email ? email.trim().toLowerCase() : null,
-        phone,
+        phone || null,
         username.trim(),
         passwordHash,
-        profilePhotoUrl,
+        profilePhotoUrl || null,
         isActive
     ]);
 
     return result.rows[0] || null;
 }
-
-/*
-|--------------------------------------------------------------------------
-| FIND USER BY ID
-|--------------------------------------------------------------------------
-*/
 
 async function findUserById(userId) {
     const sql = `
@@ -148,35 +91,20 @@ async function findUserById(userId) {
             u.last_login_at,
             u.created_at,
             u.updated_at,
-
             r.role_name,
-
             s.school_name,
             s.school_code,
             s.status AS school_status
-
         FROM users u
-
-        LEFT JOIN roles r
-            ON r.id = u.role_id
-
-        LEFT JOIN schools s
-            ON s.id = u.school_id
-
+        LEFT JOIN roles r ON r.id = u.role_id
+        LEFT JOIN schools s ON s.id = u.school_id
         WHERE u.id = $1
         LIMIT 1
     `;
 
     const result = await query(sql, [userId]);
-
     return result.rows[0] || null;
 }
-
-/*
-|--------------------------------------------------------------------------
-| FIND USER BY USERNAME
-|--------------------------------------------------------------------------
-*/
 
 async function findUserByUsername(username) {
     const sql = `
@@ -195,35 +123,20 @@ async function findUserByUsername(username) {
             u.last_login_at,
             u.created_at,
             u.updated_at,
-
             r.role_name,
-
             s.school_name,
             s.school_code,
             s.status AS school_status
-
         FROM users u
-
-        LEFT JOIN roles r
-            ON r.id = u.role_id
-
-        LEFT JOIN schools s
-            ON s.id = u.school_id
-
+        LEFT JOIN roles r ON r.id = u.role_id
+        LEFT JOIN schools s ON s.id = u.school_id
         WHERE LOWER(u.username) = LOWER($1)
         LIMIT 1
     `;
 
     const result = await query(sql, [username]);
-
     return result.rows[0] || null;
 }
-
-/*
-|--------------------------------------------------------------------------
-| FIND USER BY EMAIL
-|--------------------------------------------------------------------------
-*/
 
 async function findUserByEmail(email) {
     const sql = `
@@ -242,35 +155,20 @@ async function findUserByEmail(email) {
             u.last_login_at,
             u.created_at,
             u.updated_at,
-
             r.role_name,
-
             s.school_name,
             s.school_code,
             s.status AS school_status
-
         FROM users u
-
-        LEFT JOIN roles r
-            ON r.id = u.role_id
-
-        LEFT JOIN schools s
-            ON s.id = u.school_id
-
+        LEFT JOIN roles r ON r.id = u.role_id
+        LEFT JOIN schools s ON s.id = u.school_id
         WHERE LOWER(u.email) = LOWER($1)
         LIMIT 1
     `;
 
     const result = await query(sql, [email]);
-
     return result.rows[0] || null;
 }
-
-/*
-|--------------------------------------------------------------------------
-| FIND USER FOR LOGIN
-|--------------------------------------------------------------------------
-*/
 
 async function findUserForLogin(identifier) {
     const sql = `
@@ -290,39 +188,22 @@ async function findUserForLogin(identifier) {
             u.last_login_at,
             u.created_at,
             u.updated_at,
-
             r.role_name,
-
             s.school_name,
             s.school_code,
             s.status AS school_status
-
         FROM users u
-
-        LEFT JOIN roles r
-            ON r.id = u.role_id
-
-        LEFT JOIN schools s
-            ON s.id = u.school_id
-
+        LEFT JOIN roles r ON r.id = u.role_id
+        LEFT JOIN schools s ON s.id = u.school_id
         WHERE
             LOWER(u.username) = LOWER($1)
-            OR
-            LOWER(u.email) = LOWER($1)
-
+            OR LOWER(u.email) = LOWER($1)
         LIMIT 1
     `;
 
     const result = await query(sql, [identifier]);
-
     return result.rows[0] || null;
 }
-
-/*
-|--------------------------------------------------------------------------
-| UPDATE LAST LOGIN
-|--------------------------------------------------------------------------
-*/
 
 async function updateLastLogin(userId) {
     const sql = `
@@ -338,20 +219,10 @@ async function updateLastLogin(userId) {
     `;
 
     const result = await query(sql, [userId]);
-
     return result.rows[0] || null;
 }
 
-/*
-|--------------------------------------------------------------------------
-| UPDATE PASSWORD
-|--------------------------------------------------------------------------
-*/
-
-async function updatePassword(
-    userId,
-    passwordHash
-) {
+async function updatePassword(userId, passwordHash) {
     const sql = `
         UPDATE users
         SET
@@ -363,19 +234,9 @@ async function updatePassword(
             updated_at
     `;
 
-    const result = await query(sql, [
-        passwordHash,
-        userId
-    ]);
-
+    const result = await query(sql, [passwordHash, userId]);
     return result.rows[0] || null;
 }
-
-/*
-|--------------------------------------------------------------------------
-| ACTIVATE USER
-|--------------------------------------------------------------------------
-*/
 
 async function activateUser(userId) {
     const sql = `
@@ -393,15 +254,8 @@ async function activateUser(userId) {
     `;
 
     const result = await query(sql, [userId]);
-
     return result.rows[0] || null;
 }
-
-/*
-|--------------------------------------------------------------------------
-| DEACTIVATE USER
-|--------------------------------------------------------------------------
-*/
 
 async function deactivateUser(userId) {
     const sql = `
@@ -419,15 +273,8 @@ async function deactivateUser(userId) {
     `;
 
     const result = await query(sql, [userId]);
-
     return result.rows[0] || null;
 }
-
-/*
-|--------------------------------------------------------------------------
-| UPDATE USER PROFILE
-|--------------------------------------------------------------------------
-*/
 
 async function updateUserProfile(
     userId,
@@ -448,8 +295,7 @@ async function updateUserProfile(
             last_name = COALESCE($3, last_name),
             email = COALESCE($4, email),
             phone = $5,
-            profile_photo_url =
-                COALESCE($6, profile_photo_url),
+            profile_photo_url = COALESCE($6, profile_photo_url),
             updated_at = CURRENT_TIMESTAMP
         WHERE id = $7
         RETURNING
@@ -473,9 +319,7 @@ async function updateUserProfile(
         firstName || null,
         middleName,
         lastName || null,
-        email
-            ? email.trim().toLowerCase()
-            : null,
+        email ? email.trim().toLowerCase() : null,
         phone || null,
         profilePhotoUrl || null,
         userId
@@ -484,44 +328,27 @@ async function updateUserProfile(
     return result.rows[0] || null;
 }
 
-/*
-|--------------------------------------------------------------------------
-| FIND USERS BY SCHOOL
-|--------------------------------------------------------------------------
-*/
-
 async function findUsersBySchool(schoolId) {
     const sql = `
         SELECT
             u.id,
             u.school_id,
             u.role_id,
-
             u.first_name,
             u.middle_name,
             u.last_name,
-
             u.email,
             u.phone,
             u.username,
-
             u.profile_photo_url,
-
             u.is_active,
             u.last_login_at,
-
             u.created_at,
             u.updated_at,
-
             r.role_name
-
         FROM users u
-
-        LEFT JOIN roles r
-            ON r.id = u.role_id
-
+        LEFT JOIN roles r ON r.id = u.role_id
         WHERE u.school_id = $1
-
         ORDER BY
             u.first_name ASC,
             u.last_name ASC,
@@ -529,15 +356,8 @@ async function findUsersBySchool(schoolId) {
     `;
 
     const result = await query(sql, [schoolId]);
-
     return result.rows;
 }
-
-/*
-|--------------------------------------------------------------------------
-| CHECK USERNAME
-|--------------------------------------------------------------------------
-*/
 
 async function usernameExists(
     username,
@@ -555,34 +375,19 @@ async function usernameExists(
 
     if (schoolId) {
         values.push(schoolId);
-
-        sql += `
-            AND school_id = $${values.length}
-        `;
+        sql += ` AND school_id = $${values.length}`;
     }
 
     if (excludeUserId) {
         values.push(excludeUserId);
-
-        sql += `
-            AND id <> $${values.length}
-        `;
+        sql += ` AND id <> $${values.length}`;
     }
 
-    sql += `
-        ) AS exists
-    `;
+    sql += ` ) AS exists`;
 
     const result = await query(sql, values);
-
     return result.rows[0].exists;
 }
-
-/*
-|--------------------------------------------------------------------------
-| CHECK EMAIL
-|--------------------------------------------------------------------------
-*/
 
 async function emailExists(
     email,
@@ -600,34 +405,19 @@ async function emailExists(
 
     if (schoolId) {
         values.push(schoolId);
-
-        sql += `
-            AND school_id = $${values.length}
-        `;
+        sql += ` AND school_id = $${values.length}`;
     }
 
     if (excludeUserId) {
         values.push(excludeUserId);
-
-        sql += `
-            AND id <> $${values.length}
-        `;
+        sql += ` AND id <> $${values.length}`;
     }
 
-    sql += `
-        ) AS exists
-    `;
+    sql += ` ) AS exists`;
 
     const result = await query(sql, values);
-
     return result.rows[0].exists;
 }
-
-/*
-|--------------------------------------------------------------------------
-| DELETE USER
-|--------------------------------------------------------------------------
-*/
 
 async function deleteUser(userId) {
     const sql = `
@@ -641,15 +431,8 @@ async function deleteUser(userId) {
     `;
 
     const result = await query(sql, [userId]);
-
     return result.rows[0] || null;
 }
-
-/*
-|--------------------------------------------------------------------------
-| EXPORT
-|--------------------------------------------------------------------------
-*/
 
 module.exports = {
     createUser,

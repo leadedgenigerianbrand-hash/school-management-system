@@ -1,12 +1,14 @@
-```javascript
-const { query, pool } = require("../config/database");
+"use strict";
+
+const { query } = require("../config/database");
 
 /*
 |--------------------------------------------------------------------------
 | Attendance Model
 |--------------------------------------------------------------------------
-| Uses the actual attendance schema:
+| Uses the current attendance schema:
 |
+| school_id
 | academic_session_id
 | term_id
 | class_id
@@ -16,15 +18,24 @@ const { query, pool } = require("../config/database");
 | status
 | remarks
 | recorded_by
+| created_at
+| updated_at
 |--------------------------------------------------------------------------
 */
 
+const ALLOWED_STATUSES = [
+    "present",
+    "absent",
+    "late",
+    "excused"
+];
 
 /*
 |--------------------------------------------------------------------------
 | RECORD ATTENDANCE
 |--------------------------------------------------------------------------
 */
+
 async function recordAttendance({
     schoolId,
     studentId,
@@ -37,26 +48,41 @@ async function recordAttendance({
     remarks = null,
     recordedBy = null
 }) {
-    if (!schoolId) throw new Error("School ID is required.");
-    if (!studentId) throw new Error("Student ID is required.");
-    if (!classId) throw new Error("Class ID is required.");
-    if (!sessionId) throw new Error("Academic session is required.");
-    if (!termId) throw new Error("Term is required.");
-    if (!attendanceDate) throw new Error("Attendance date is required.");
-    if (!status) throw new Error("Attendance status is required.");
+    if (!schoolId) {
+        throw new Error("School ID is required.");
+    }
 
-    const allowedStatuses = [
-        "present",
-        "absent",
-        "late",
-        "excused"
-    ];
+    if (!studentId) {
+        throw new Error("Student ID is required.");
+    }
 
-    const normalizedStatus = String(status).toLowerCase();
+    if (!classId) {
+        throw new Error("Class ID is required.");
+    }
 
-    if (!allowedStatuses.includes(normalizedStatus)) {
+    if (!sessionId) {
+        throw new Error("Academic session is required.");
+    }
+
+    if (!termId) {
+        throw new Error("Term is required.");
+    }
+
+    if (!attendanceDate) {
+        throw new Error("Attendance date is required.");
+    }
+
+    if (!status) {
+        throw new Error("Attendance status is required.");
+    }
+
+    const normalizedStatus = String(status).toLowerCase().trim();
+
+    if (!ALLOWED_STATUSES.includes(normalizedStatus)) {
         throw new Error(
-            `Invalid attendance status. Allowed values: ${allowedStatuses.join(", ")}.`
+            "Invalid attendance status. Allowed values: " +
+            ALLOWED_STATUSES.join(", ") +
+            "."
         );
     }
 
@@ -117,12 +143,12 @@ async function recordAttendance({
     return result.rows[0];
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | RECORD BULK ATTENDANCE
 |--------------------------------------------------------------------------
 */
+
 async function recordBulkAttendance(records) {
     if (!Array.isArray(records) || records.length === 0) {
         throw new Error("Attendance records are required.");
@@ -131,20 +157,19 @@ async function recordBulkAttendance(records) {
     const results = [];
 
     for (const record of records) {
-        results.push(
-            await recordAttendance(record)
-        );
+        const result = await recordAttendance(record);
+        results.push(result);
     }
 
     return results;
 }
-
 
 /*
 |--------------------------------------------------------------------------
 | FIND ATTENDANCE BY ID
 |--------------------------------------------------------------------------
 */
+
 async function findAttendanceById(
     attendanceId,
     schoolId
@@ -187,12 +212,12 @@ async function findAttendanceById(
     return result.rows[0] || null;
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | GET STUDENT ATTENDANCE
 |--------------------------------------------------------------------------
 */
+
 async function getStudentAttendance({
     schoolId,
     studentId,
@@ -260,14 +285,14 @@ async function getStudentAttendance({
         `;
     }
 
-    values.push(limit);
+    values.push(Number(limit));
 
     sql += `
         ORDER BY a.attendance_date DESC
         LIMIT $${values.length}
     `;
 
-    values.push(offset);
+    values.push(Number(offset));
 
     sql += `
         OFFSET $${values.length}
@@ -278,12 +303,12 @@ async function getStudentAttendance({
     return result.rows;
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | GET CLASS ATTENDANCE FOR DATE
 |--------------------------------------------------------------------------
 */
+
 async function getClassAttendance({
     schoolId,
     classId,
@@ -331,15 +356,13 @@ async function getClassAttendance({
     const values = [
         schoolId,
         classId,
-        null,
+        classArmId,
         attendanceDate,
         sessionId,
         termId
     ];
 
     if (classArmId) {
-        values[2] = classArmId;
-
         sql += `
             AND se.class_arm_id = $3
         `;
@@ -363,12 +386,12 @@ async function getClassAttendance({
     return result.rows;
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | GET ATTENDANCE BY DATE
 |--------------------------------------------------------------------------
 */
+
 async function getAttendanceByDate(
     schoolId,
     attendanceDate,
@@ -428,12 +451,12 @@ async function getAttendanceByDate(
     return result.rows;
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | UPDATE ATTENDANCE
 |--------------------------------------------------------------------------
 */
+
 async function updateAttendance(
     attendanceId,
     schoolId,
@@ -452,7 +475,7 @@ async function updateAttendance(
     const updates = [];
     const values = [];
 
-    for (const key of Object.keys(data)) {
+    for (const key of Object.keys(data || {})) {
         if (
             allowedFields[key] &&
             data[key] !== undefined
@@ -460,16 +483,9 @@ async function updateAttendance(
             let value = data[key];
 
             if (key === "status") {
-                value = String(value).toLowerCase();
+                value = String(value).toLowerCase().trim();
 
-                if (
-                    ![
-                        "present",
-                        "absent",
-                        "late",
-                        "excused"
-                    ].includes(value)
-                ) {
+                if (!ALLOWED_STATUSES.includes(value)) {
                     throw new Error(
                         "Invalid attendance status."
                     );
@@ -516,12 +532,12 @@ async function updateAttendance(
     return result.rows[0] || null;
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | DELETE ATTENDANCE
 |--------------------------------------------------------------------------
 */
+
 async function deleteAttendance(
     attendanceId,
     schoolId
@@ -541,12 +557,12 @@ async function deleteAttendance(
     return result.rows[0] || null;
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | STUDENT ATTENDANCE SUMMARY
 |--------------------------------------------------------------------------
 */
+
 async function getStudentAttendanceSummary({
     schoolId,
     studentId,
@@ -652,8 +668,7 @@ async function getStudentAttendanceSummary({
             totalDays > 0
                 ? Number(
                     (
-                        presentDays /
-                        totalDays *
+                        (presentDays / totalDays) *
                         100
                     ).toFixed(2)
                 )
@@ -661,12 +676,12 @@ async function getStudentAttendanceSummary({
     };
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | CLASS ATTENDANCE SUMMARY
 |--------------------------------------------------------------------------
 */
+
 async function getClassAttendanceSummary({
     schoolId,
     classId,
@@ -747,9 +762,11 @@ async function getClassAttendanceSummary({
 
         presentRecords,
 
-        absentRecords: Number(row.absent_records),
+        absentRecords:
+            Number(row.absent_records),
 
-        lateRecords: Number(row.late_records),
+        lateRecords:
+            Number(row.late_records),
 
         studentsRecorded:
             Number(row.students_recorded),
@@ -758,8 +775,7 @@ async function getClassAttendanceSummary({
             totalRecords > 0
                 ? Number(
                     (
-                        presentRecords /
-                        totalRecords *
+                        (presentRecords / totalRecords) *
                         100
                     ).toFixed(2)
                 )
@@ -767,12 +783,12 @@ async function getClassAttendanceSummary({
     };
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | ATTENDANCE STATISTICS
 |--------------------------------------------------------------------------
 */
+
 async function getAttendanceStatistics(
     schoolId,
     attendanceDate = null
@@ -846,12 +862,12 @@ async function getAttendanceStatistics(
     };
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | EXPORTS
 |--------------------------------------------------------------------------
 */
+
 module.exports = {
     recordAttendance,
     recordBulkAttendance,

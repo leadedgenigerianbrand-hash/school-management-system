@@ -1,4 +1,5 @@
-```javascript
+"use strict";
+
 const { query } = require("../config/database");
 
 /*
@@ -14,6 +15,7 @@ const { query } = require("../config/database");
 | Create Guardian
 |--------------------------------------------------------------------------
 */
+
 async function createGuardian({
     schoolId,
     firstName,
@@ -32,11 +34,11 @@ async function createGuardian({
         throw new Error("School ID is required.");
     }
 
-    if (!firstName) {
+    if (!firstName || !firstName.trim()) {
         throw new Error("Guardian first name is required.");
     }
 
-    if (!lastName) {
+    if (!lastName || !lastName.trim()) {
         throw new Error("Guardian last name is required.");
     }
 
@@ -56,8 +58,18 @@ async function createGuardian({
             emergency_contact
         )
         VALUES (
-            $1, $2, $3, $4, $5, $6,
-            $7, $8, $9, $10, $11, $12
+            $1,
+            $2,
+            $3,
+            $4,
+            $5,
+            $6,
+            $7,
+            $8,
+            $9,
+            $10,
+            $11,
+            $12
         )
         RETURNING *
     `;
@@ -86,6 +98,7 @@ async function createGuardian({
 | Find Guardian By ID
 |--------------------------------------------------------------------------
 */
+
 async function findGuardianById(guardianId, schoolId) {
     const sql = `
         SELECT *
@@ -109,24 +122,41 @@ async function findGuardianById(guardianId, schoolId) {
 | Find Guardians
 |--------------------------------------------------------------------------
 */
+
 async function findGuardians({
     schoolId,
     limit = 100,
     offset = 0
 }) {
+    if (!schoolId) {
+        throw new Error("School ID is required.");
+    }
+
+    const safeLimit = Math.min(
+        Math.max(Number(limit) || 100, 1),
+        100
+    );
+
+    const safeOffset = Math.max(
+        Number(offset) || 0,
+        0
+    );
+
     const sql = `
         SELECT *
         FROM guardians
         WHERE school_id = $1
-        ORDER BY last_name ASC, first_name ASC
+        ORDER BY
+            last_name ASC,
+            first_name ASC
         LIMIT $2
         OFFSET $3
     `;
 
     const result = await query(sql, [
         schoolId,
-        limit,
-        offset
+        safeLimit,
+        safeOffset
     ]);
 
     return result.rows;
@@ -138,7 +168,12 @@ async function findGuardians({
 | Search Guardians
 |--------------------------------------------------------------------------
 */
+
 async function searchGuardians(searchTerm, schoolId) {
+    if (!schoolId || !searchTerm || !searchTerm.trim()) {
+        return [];
+    }
+
     const sql = `
         SELECT *
         FROM guardians
@@ -154,13 +189,15 @@ async function searchGuardians(searchTerm, schoolId) {
                 OR employer ILIKE $2
                 OR relationship ILIKE $2
           )
-        ORDER BY last_name ASC, first_name ASC
+        ORDER BY
+            last_name ASC,
+            first_name ASC
         LIMIT 100
     `;
 
     const result = await query(sql, [
         schoolId,
-        `%${searchTerm}%`
+        `%${searchTerm.trim()}%`
     ]);
 
     return result.rows;
@@ -172,7 +209,12 @@ async function searchGuardians(searchTerm, schoolId) {
 | Update Guardian
 |--------------------------------------------------------------------------
 */
-async function updateGuardian(guardianId, schoolId, data) {
+
+async function updateGuardian(
+    guardianId,
+    schoolId,
+    data
+) {
     const allowedFields = {
         firstName: "first_name",
         middleName: "middle_name",
@@ -195,7 +237,20 @@ async function updateGuardian(guardianId, schoolId, data) {
             allowedFields[key] &&
             data[key] !== undefined
         ) {
-            values.push(data[key]);
+            let value = data[key];
+
+            if (
+                [
+                    "firstName",
+                    "middleName",
+                    "lastName"
+                ].includes(key) &&
+                typeof value === "string"
+            ) {
+                value = value.trim();
+            }
+
+            values.push(value);
 
             updates.push(
                 `${allowedFields[key]} = $${values.length}`
@@ -236,7 +291,11 @@ async function updateGuardian(guardianId, schoolId, data) {
 | Delete Guardian
 |--------------------------------------------------------------------------
 */
-async function deleteGuardian(guardianId, schoolId) {
+
+async function deleteGuardian(
+    guardianId,
+    schoolId
+) {
     const sql = `
         DELETE FROM guardians
         WHERE id = $1
@@ -258,6 +317,7 @@ async function deleteGuardian(guardianId, schoolId) {
 | Link Guardian To Student
 |--------------------------------------------------------------------------
 */
+
 async function linkGuardianToStudent({
     studentId,
     guardianId,
@@ -277,7 +337,11 @@ async function linkGuardianToStudent({
             guardian_id,
             is_primary
         )
-        VALUES ($1, $2, $3)
+        VALUES (
+            $1,
+            $2,
+            $3
+        )
         ON CONFLICT (student_id, guardian_id)
         DO UPDATE SET
             is_primary = EXCLUDED.is_primary
@@ -299,6 +363,7 @@ async function linkGuardianToStudent({
 | Unlink Guardian From Student
 |--------------------------------------------------------------------------
 */
+
 async function unlinkGuardianFromStudent(
     studentId,
     guardianId
@@ -324,6 +389,7 @@ async function unlinkGuardianFromStudent(
 | Get Guardian's Students
 |--------------------------------------------------------------------------
 */
+
 async function getGuardianStudents(
     guardianId,
     schoolId
@@ -379,6 +445,7 @@ async function getGuardianStudents(
 | Get Student's Guardians
 |--------------------------------------------------------------------------
 */
+
 async function getStudentGuardians(
     studentId,
     schoolId
@@ -415,6 +482,7 @@ async function getStudentGuardians(
 | Set Primary Guardian
 |--------------------------------------------------------------------------
 */
+
 async function setPrimaryGuardian(
     studentId,
     guardianId,
@@ -461,7 +529,12 @@ async function setPrimaryGuardian(
 | Count Guardians
 |--------------------------------------------------------------------------
 */
+
 async function countGuardians(schoolId) {
+    if (!schoolId) {
+        throw new Error("School ID is required.");
+    }
+
     const sql = `
         SELECT COUNT(*) AS guardian_count
         FROM guardians
@@ -483,6 +556,7 @@ async function countGuardians(schoolId) {
 | Export
 |--------------------------------------------------------------------------
 */
+
 module.exports = {
     createGuardian,
     findGuardianById,

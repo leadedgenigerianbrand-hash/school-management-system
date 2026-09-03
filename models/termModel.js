@@ -1,4 +1,3 @@
-```javascript
 "use strict";
 
 const { query } = require("../config/database");
@@ -86,7 +85,13 @@ async function createTerm({
             is_active
         )
         VALUES (
-            $1, $2, $3, $4, $5, $6, $7
+            $1,
+            $2,
+            $3,
+            $4,
+            $5,
+            $6,
+            $7
         )
         RETURNING *
     `;
@@ -110,10 +115,7 @@ async function createTerm({
 |--------------------------------------------------------------------------
 */
 
-async function findTermById(
-    termId,
-    schoolId = null
-) {
+async function findTermById(termId, schoolId = null) {
     let sql = `
         SELECT *
         FROM terms
@@ -145,11 +147,7 @@ async function findTermById(
 |--------------------------------------------------------------------------
 */
 
-async function findTermByName(
-    sessionId,
-    termName,
-    schoolId
-) {
+async function findTermByName(sessionId, termName, schoolId) {
     const sql = `
         SELECT *
         FROM terms
@@ -325,9 +323,7 @@ async function findCurrentTerm(
         LIMIT 1
     `;
 
-    const result = await query(sql, [
-        schoolId
-    ]);
+    const result = await query(sql, [schoolId]);
 
     return result.rows[0] || null;
 }
@@ -357,9 +353,7 @@ async function findUpcomingTerms(
             term_order ASC
     `;
 
-    const result = await query(sql, [
-        schoolId
-    ]);
+    const result = await query(sql, [schoolId]);
 
     return result.rows;
 }
@@ -385,9 +379,7 @@ async function findCompletedTerms(
             term_order DESC
     `;
 
-    const result = await query(sql, [
-        schoolId
-    ]);
+    const result = await query(sql, [schoolId]);
 
     return result.rows;
 }
