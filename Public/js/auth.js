@@ -1,26 +1,33 @@
 "use strict";
 
 /*
- * ============================================================
- * SCHOOL MANAGEMENT SYSTEM
- * Authentication Controller
- * ============================================================
- *
- * Handles:
- * - Login
- * - Logout
- * - Token storage
- * - Current-user verification
- * - Protected-page protection
- * - Role information
- * - Dashboard redirection
- *
- * Backend endpoints:
- * POST /api/auth/login
- * GET  /api/auth/me
- * POST /api/auth/logout
- * ============================================================
- */
+|--------------------------------------------------------------------------
+| SCHOOL MANAGEMENT SYSTEM
+| AUTH.JS
+|--------------------------------------------------------------------------
+| Central frontend authentication controller.
+|
+| Responsibilities:
+| - Login
+| - Logout
+| - Token storage
+| - Current-user verification
+| - Protected-page protection
+| - Role information
+| - Dashboard redirection
+|
+| IMPORTANT:
+| The only frontend authentication keys are:
+|
+| school_management_token
+| school_management_user
+|--------------------------------------------------------------------------
+*/
+
+
+/* ============================================================
+   CONFIGURATION
+   ============================================================ */
 
 const LOGIN_PAGE = "/pages/login.html";
 const DASHBOARD_PAGE = "/pages/dashboard.html";
@@ -28,26 +35,30 @@ const DASHBOARD_PAGE = "/pages/dashboard.html";
 const TOKEN_KEY = "school_management_token";
 const USER_KEY = "school_management_user";
 
-const API_BASE = "";
-
 
 /* ============================================================
    PAGE HELPERS
    ============================================================ */
 
 function isLoginPage() {
-    return window.location.pathname.toLowerCase().endsWith("/login.html");
+    return window.location.pathname
+        .toLowerCase()
+        .endsWith("/login.html");
 }
+
 
 function isPublicPage() {
-    const path = window.location.pathname.toLowerCase();
+    const path =
+        window.location.pathname
+            .toLowerCase();
 
     return (
-        path.endsWith("/login.html") ||
-        path.endsWith("/") ||
-        path === ""
+        path === "/" ||
+        path === "" ||
+        path.endsWith("/login.html")
     );
 }
+
 
 function getLoginRedirect() {
     return DASHBOARD_PAGE;
@@ -55,37 +66,92 @@ function getLoginRedirect() {
 
 
 /* ============================================================
-   STORAGE HELPERS
+   STORAGE
    ============================================================ */
+
+/*
+ * Get the one official authentication token.
+ *
+ * IMPORTANT:
+ * We do not use:
+ *
+ * token
+ * accessToken
+ *
+ * The application uses only:
+ *
+ * school_management_token
+ */
 
 function getStoredToken() {
     return (
         localStorage.getItem(TOKEN_KEY) ||
-        sessionStorage.getItem(TOKEN_KEY)
+        sessionStorage.getItem(TOKEN_KEY) ||
+        ""
     );
 }
 
+
 function getStoredUser() {
     try {
-        const user =
+        const storedUser =
             localStorage.getItem(USER_KEY) ||
             sessionStorage.getItem(USER_KEY);
 
-        return user ? JSON.parse(user) : null;
+        if (!storedUser) {
+            return null;
+        }
+
+        return JSON.parse(storedUser);
+
     } catch (error) {
-        console.error("Unable to read stored user:", error);
+        console.error(
+            "Unable to read stored user:",
+            error
+        );
+
         return null;
     }
 }
 
-function storeAuthentication(token, user, rememberMe) {
+
+/*
+ * Store authentication in exactly one storage location.
+ *
+ * Remember Me checked:
+ *     localStorage
+ *
+ * Remember Me unchecked:
+ *     sessionStorage
+ */
+
+function storeAuthentication(
+    token,
+    user = {},
+    rememberMe = false
+) {
     clearAuthentication();
 
-    const storage = rememberMe ? localStorage : sessionStorage;
+    const storage =
+        rememberMe
+            ? localStorage
+            : sessionStorage;
 
-    storage.setItem(TOKEN_KEY, token);
-    storage.setItem(USER_KEY, JSON.stringify(user));
+    storage.setItem(
+        TOKEN_KEY,
+        token
+    );
+
+    storage.setItem(
+        USER_KEY,
+        JSON.stringify(user || {})
+    );
 }
+
+
+/*
+ * Clear all official authentication data.
+ */
 
 function clearAuthentication() {
     localStorage.removeItem(TOKEN_KEY);
@@ -97,14 +163,17 @@ function clearAuthentication() {
 
 
 /* ============================================================
-   API HELPERS
+   RESPONSE PARSING
    ============================================================ */
 
 async function parseJsonResponse(response) {
-    const contentType = response.headers.get("content-type") || "";
+    const contentType =
+        response.headers.get("content-type") || "";
 
     if (!contentType.includes("application/json")) {
-        const text = await response.text();
+
+        const text =
+            await response.text();
 
         console.error(
             "Expected JSON response but received:",
@@ -120,29 +189,54 @@ async function parseJsonResponse(response) {
 }
 
 
-async function apiRequest(endpoint, options = {}) {
-    const token = getStoredToken();
+/* ============================================================
+   AUTHENTICATION REQUEST
+   ============================================================ */
+
+/*
+ * This is the authentication-specific request helper.
+ *
+ * It uses exactly the same token:
+ *
+ * school_management_token
+ *
+ * and exactly the same Bearer format as api.js.
+ */
+
+async function authenticationRequest(
+    endpoint,
+    options = {}
+) {
+    const token =
+        getStoredToken();
 
     const headers = {
         Accept: "application/json",
-        ...options.headers
+        ...(options.headers || {})
     };
 
-    if (options.body && !headers["Content-Type"]) {
-        headers["Content-Type"] = "application/json";
+    if (
+        options.body &&
+        !headers["Content-Type"] &&
+        !headers["content-type"]
+    ) {
+        headers["Content-Type"] =
+            "application/json";
     }
 
     if (token) {
-        headers.Authorization = `Bearer ${token}`;
+        headers.Authorization =
+            `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE}${endpoint}`, {
-        ...options,
-        headers,
-        credentials: "include"
-    });
-
-    return response;
+    return fetch(
+        endpoint,
+        {
+            ...options,
+            headers,
+            credentials: "include"
+        }
+    );
 }
 
 
@@ -151,66 +245,109 @@ async function apiRequest(endpoint, options = {}) {
    ============================================================ */
 
 async function getCurrentUser() {
-    const token = getStoredToken();
+
+    const token =
+        getStoredToken();
+
+    /*
+     * No token means there is no authenticated user.
+     */
 
     if (!token) {
         return null;
     }
 
     try {
-        const response = await apiRequest("/api/auth/me", {
-            method: "GET"
-        });
 
-        if (response.status === 401 || response.status === 403) {
+        const response =
+            await authenticationRequest(
+                "/api/auth/me",
+                {
+                    method: "GET"
+                }
+            );
+
+
+        /*
+         * Token rejected by backend.
+         */
+
+        if (
+            response.status === 401 ||
+            response.status === 403
+        ) {
             clearAuthentication();
             return null;
         }
 
-        const data = await parseJsonResponse(response);
+
+        const data =
+            await parseJsonResponse(response);
+
 
         if (!response.ok) {
-            console.error("Authentication verification failed:", data);
+
+            console.error(
+                "Authentication verification failed:",
+                data
+            );
+
             return null;
         }
 
+
         if (!data.success) {
+
             console.error(
                 "Authentication verification unsuccessful:",
                 data
             );
+
             return null;
         }
 
+
         /*
-         * Support common response formats:
+         * Support:
          *
          * {
-         *   success: true,
-         *   user: {...}
+         *     success: true,
+         *     user: {...}
          * }
          *
-         * or
+         * and:
          *
          * {
-         *   success: true,
-         *   data: {...}
+         *     success: true,
+         *     data: {...}
          * }
          */
 
-        const user = data.user || data.data || null;
+        const user =
+            data.user ||
+            data.data ||
+            null;
+
 
         if (!user) {
+
             console.error(
                 "Authentication verification returned no user."
             );
+
             return null;
         }
+
 
         return user;
 
     } catch (error) {
-        console.error("Login verification error:", error);
+
+        console.error(
+            "Current-user verification error:",
+            error
+        );
+
         return null;
     }
 }
@@ -220,90 +357,159 @@ async function getCurrentUser() {
    LOGIN
    ============================================================ */
 
-async function login(identifier, password, rememberMe = false) {
+async function login(
+    identifier,
+    password,
+    rememberMe = false
+) {
+
     try {
-        const response = await fetch("/api/auth/login", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json"
-            },
-            credentials: "include",
-            body: JSON.stringify({
-                identifier,
-                password
-            })
-        });
 
-        const data = await parseJsonResponse(response);
+        const response =
+            await fetch(
+                "/api/auth/login",
+                {
+                    method: "POST",
 
-        if (!response.ok || !data.success) {
+                    headers: {
+                        "Content-Type":
+                            "application/json",
+
+                        Accept:
+                            "application/json"
+                    },
+
+                    credentials:
+                        "include",
+
+                    body:
+                        JSON.stringify({
+                            identifier,
+                            password
+                        })
+                }
+            );
+
+
+        const data =
+            await parseJsonResponse(response);
+
+
+        /*
+         * Backend rejected login.
+         */
+
+        if (
+            !response.ok ||
+            !data.success
+        ) {
+
             return {
                 success: false,
+
                 message:
                     data.message ||
                     "Invalid username or password."
             };
         }
 
+
+        /*
+         * Login must return a JWT/token.
+         */
+
         if (!data.token) {
-            console.error("Login response did not contain a token.");
+
+            console.error(
+                "Login response did not contain a token."
+            );
 
             return {
                 success: false,
+
                 message:
                     "Login succeeded but no authentication token was received."
             };
         }
 
+
         /*
-         * Save the token and the user returned by login.
+         * Store the token using the ONE official
+         * authentication key.
          */
+
         storeAuthentication(
             data.token,
             data.user || {},
             rememberMe
         );
 
+
         /*
-         * IMPORTANT:
-         * Verify the token against /api/auth/me before allowing
-         * the user into the protected application.
+         * Immediately verify the token.
+         *
+         * This confirms that the same token we just stored
+         * can successfully access /api/auth/me.
          */
-        const verifiedUser = await getCurrentUser();
+
+        const verifiedUser =
+            await getCurrentUser();
+
 
         if (!verifiedUser) {
+
             clearAuthentication();
 
             return {
                 success: false,
+
                 message:
                     "Login succeeded, but your session could not be verified."
             };
         }
 
+
         /*
-         * Store the verified user.
+         * Store the verified user in the same storage
+         * location as the token.
          */
-        const storage = rememberMe
-            ? localStorage
-            : sessionStorage;
+
+        const storage =
+            rememberMe
+                ? localStorage
+                : sessionStorage;
+
 
         storage.setItem(
             USER_KEY,
             JSON.stringify(verifiedUser)
         );
 
+
+        /*
+         * Make the verified user available globally.
+         */
+
+        window.currentUser =
+            verifiedUser;
+
+
         return {
             success: true,
             user: verifiedUser
         };
 
+
     } catch (error) {
-        console.error("Login error:", error);
+
+        console.error(
+            "Login error:",
+            error
+        );
 
         return {
             success: false,
+
             message:
                 error.message ||
                 "Unable to connect to the server."
@@ -317,29 +523,52 @@ async function login(identifier, password, rememberMe = false) {
    ============================================================ */
 
 async function logout() {
-    const token = getStoredToken();
+
+    const token =
+        getStoredToken();
+
 
     try {
+
         if (token) {
-            await fetch("/api/auth/logout", {
-                method: "POST",
-                headers: {
-                    Accept: "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                credentials: "include"
-            });
+
+            await fetch(
+                "/api/auth/logout",
+                {
+                    method: "POST",
+
+                    headers: {
+                        Accept:
+                            "application/json",
+
+                        Authorization:
+                            `Bearer ${token}`
+                    },
+
+                    credentials:
+                        "include"
+                }
+            );
         }
+
     } catch (error) {
+
         console.warn(
-            "Logout request failed, clearing local session anyway:",
+            "Logout request failed. Clearing local session anyway:",
             error
         );
     }
 
+
     clearAuthentication();
 
-    window.location.replace(LOGIN_PAGE);
+    window.currentUser =
+        null;
+
+
+    window.location.replace(
+        LOGIN_PAGE
+    );
 }
 
 
@@ -348,111 +577,159 @@ async function logout() {
    ============================================================ */
 
 function initializeLoginForm() {
+
     const form =
         document.querySelector("#loginForm") ||
         document.querySelector("form");
 
+
     if (!form) {
-        console.warn("Login form was not found.");
+
+        console.warn(
+            "Login form was not found."
+        );
+
         return;
     }
+
 
     /*
-     * Prevent duplicate event listeners.
+     * Prevent duplicate listeners.
      */
-    if (form.dataset.authInitialized === "true") {
+
+    if (
+        form.dataset.authInitialized ===
+        "true"
+    ) {
         return;
     }
 
-    form.dataset.authInitialized = "true";
 
-    form.addEventListener("submit", async function (event) {
-        event.preventDefault();
+    form.dataset.authInitialized =
+        "true";
 
-        const identifierInput =
-            document.querySelector("#identifier") ||
-            document.querySelector("#username") ||
-            document.querySelector("#email");
 
-        const passwordInput =
-            document.querySelector("#password");
+    form.addEventListener(
+        "submit",
+        async function (event) {
 
-        const rememberMeInput =
-            document.querySelector("#rememberMe");
+            event.preventDefault();
 
-        if (!identifierInput || !passwordInput) {
-            console.error(
-                "Login identifier or password field was not found."
-            );
-            return;
-        }
 
-        const identifier =
-            identifierInput.value.trim();
+            const identifierInput =
+                document.querySelector("#identifier") ||
+                document.querySelector("#username") ||
+                document.querySelector("#email");
 
-        const password =
-            passwordInput.value;
 
-        const rememberMe =
-            rememberMeInput
-                ? rememberMeInput.checked
-                : false;
+            const passwordInput =
+                document.querySelector("#password");
 
-        if (!identifier || !password) {
+
+            const rememberMeInput =
+                document.querySelector("#rememberMe");
+
+
+            if (
+                !identifierInput ||
+                !passwordInput
+            ) {
+
+                console.error(
+                    "Login identifier or password field was not found."
+                );
+
+                return;
+            }
+
+
+            const identifier =
+                identifierInput.value.trim();
+
+
+            const password =
+                passwordInput.value;
+
+
+            const rememberMe =
+                rememberMeInput
+                    ? rememberMeInput.checked
+                    : false;
+
+
+            if (
+                !identifier ||
+                !password
+            ) {
+
+                showLoginMessage(
+                    "Please enter your username/email and password.",
+                    "error"
+                );
+
+                return;
+            }
+
+
+            setLoginButtonState(true);
+
+
             showLoginMessage(
-                "Please enter your username/email and password.",
-                "error"
+                "Signing in...",
+                "info"
             );
 
-            return;
-        }
 
-        setLoginButtonState(true);
+            const result =
+                await login(
+                    identifier,
+                    password,
+                    rememberMe
+                );
 
-        showLoginMessage(
-            "Signing in...",
-            "info"
-        );
 
-        const result = await login(
-            identifier,
-            password,
-            rememberMe
-        );
+            if (!result.success) {
 
-        if (!result.success) {
+                showLoginMessage(
+                    result.message,
+                    "error"
+                );
+
+                setLoginButtonState(false);
+
+                return;
+            }
+
+
             showLoginMessage(
-                result.message,
-                "error"
+                "Login successful. Opening dashboard...",
+                "success"
             );
 
-            setLoginButtonState(false);
-            return;
+
+            setTimeout(
+                function () {
+
+                    window.location.replace(
+                        getLoginRedirect()
+                    );
+
+                },
+                300
+            );
         }
-
-        showLoginMessage(
-            "Login successful. Opening dashboard...",
-            "success"
-        );
-
-        /*
-         * Give the browser a moment to finish storage operations,
-         * then navigate to the dashboard.
-         */
-        setTimeout(function () {
-            window.location.replace(
-                getLoginRedirect()
-            );
-        }, 300);
-    });
+    );
 }
 
 
 /* ============================================================
-   LOGIN UI
+   LOGIN BUTTON
    ============================================================ */
 
-function setLoginButtonState(disabled) {
+function setLoginButtonState(
+    disabled
+) {
+
     const button =
         document.querySelector(
             '#loginForm button[type="submit"]'
@@ -461,20 +738,32 @@ function setLoginButtonState(disabled) {
             'form button[type="submit"]'
         );
 
+
     if (!button) {
         return;
     }
 
-    button.disabled = disabled;
+
+    button.disabled =
+        disabled;
+
 
     if (disabled) {
-        if (!button.dataset.originalText) {
+
+        if (
+            !button.dataset.originalText
+        ) {
+
             button.dataset.originalText =
                 button.textContent;
         }
 
-        button.textContent = "Signing in...";
+
+        button.textContent =
+            "Signing in...";
+
     } else {
+
         button.textContent =
             button.dataset.originalText ||
             "Login";
@@ -482,37 +771,52 @@ function setLoginButtonState(disabled) {
 }
 
 
-function showLoginMessage(message, type = "info") {
+/* ============================================================
+   LOGIN MESSAGE
+   ============================================================ */
+
+function showLoginMessage(
+    message,
+    type = "info"
+) {
+
     let messageElement =
         document.querySelector("#loginMessage") ||
         document.querySelector(".login-message") ||
         document.querySelector("#loginError");
 
-    /*
-     * If the existing login page does not have a message element,
-     * create one without changing the HTML file.
-     */
+
     if (!messageElement) {
+
         messageElement =
             document.createElement("div");
 
-        messageElement.id = "loginMessage";
+        messageElement.id =
+            "loginMessage";
+
         messageElement.className =
             "login-message";
+
 
         const form =
             document.querySelector("#loginForm") ||
             document.querySelector("form");
+
 
         if (form) {
             form.prepend(messageElement);
         }
     }
 
-    messageElement.textContent = message;
-    messageElement.dataset.type = type;
 
-    messageElement.style.display = "block";
+    messageElement.textContent =
+        message;
+
+    messageElement.dataset.type =
+        type;
+
+    messageElement.style.display =
+        "block";
 }
 
 
@@ -521,53 +825,100 @@ function showLoginMessage(message, type = "info") {
    ============================================================ */
 
 async function protectPage() {
-    const token = getStoredToken();
 
-    if (!token) {
-        window.location.replace(LOGIN_PAGE);
-        return;
-    }
+    const token =
+        getStoredToken();
 
-    const user = await getCurrentUser();
-
-    if (!user) {
-        clearAuthentication();
-
-        window.location.replace(LOGIN_PAGE);
-        return;
-    }
 
     /*
-     * Store the verified user.
+     * No authentication token.
      */
+
+    if (!token) {
+
+        window.location.replace(
+            LOGIN_PAGE
+        );
+
+        return;
+    }
+
+
+    /*
+     * Verify the token with the backend.
+     */
+
+    const user =
+        await getCurrentUser();
+
+
+    /*
+     * Token is invalid/expired/rejected.
+     */
+
+    if (!user) {
+
+        clearAuthentication();
+
+        window.location.replace(
+            LOGIN_PAGE
+        );
+
+        return;
+    }
+
+
+    /*
+     * Determine where the token is stored.
+     */
+
     const storage =
         localStorage.getItem(TOKEN_KEY)
             ? localStorage
             : sessionStorage;
+
+
+    /*
+     * Store the verified user alongside
+     * the authenticated token.
+     */
 
     storage.setItem(
         USER_KEY,
         JSON.stringify(user)
     );
 
-    /*
-     * Make the user available globally.
-     */
-    window.currentUser = user;
 
     /*
-     * Populate user information on the page.
+     * Make user globally available.
      */
-    populateUserInformation(user);
+
+    window.currentUser =
+        user;
+
+
+    /*
+     * Populate page user information.
+     */
+
+    populateUserInformation(
+        user
+    );
+
 
     /*
      * Apply role-based visibility.
      */
-    applyRolePermissions(user);
+
+    applyRolePermissions(
+        user
+    );
+
 
     /*
-     * Activate logout buttons.
+     * Initialize logout controls.
      */
+
     initializeLogoutButtons();
 }
 
@@ -576,7 +927,10 @@ async function protectPage() {
    USER INFORMATION
    ============================================================ */
 
-function populateUserInformation(user) {
+function populateUserInformation(
+    user
+) {
+
     const fullName =
         [
             user.firstName,
@@ -587,60 +941,100 @@ function populateUserInformation(user) {
         user.username ||
         "User";
 
+
     const roleName =
         user.roleName ||
         user.role_name ||
         user.role ||
         "User";
 
+
     const username =
         user.username ||
         "";
 
+
     const email =
         user.email ||
         "";
+
 
     const schoolName =
         user.schoolName ||
         user.school_name ||
         "";
 
-    document
-        .querySelectorAll("[data-user-name]")
-        .forEach(function (element) {
-            element.textContent = fullName;
-        });
 
     document
-        .querySelectorAll("[data-user-full-name]")
-        .forEach(function (element) {
-            element.textContent = fullName;
-        });
+        .querySelectorAll(
+            "[data-user-name]"
+        )
+        .forEach(
+            function (element) {
+                element.textContent =
+                    fullName;
+            }
+        );
+
 
     document
-        .querySelectorAll("[data-user-username]")
-        .forEach(function (element) {
-            element.textContent = username;
-        });
+        .querySelectorAll(
+            "[data-user-full-name]"
+        )
+        .forEach(
+            function (element) {
+                element.textContent =
+                    fullName;
+            }
+        );
+
 
     document
-        .querySelectorAll("[data-user-email]")
-        .forEach(function (element) {
-            element.textContent = email;
-        });
+        .querySelectorAll(
+            "[data-user-username]"
+        )
+        .forEach(
+            function (element) {
+                element.textContent =
+                    username;
+            }
+        );
+
 
     document
-        .querySelectorAll("[data-user-role]")
-        .forEach(function (element) {
-            element.textContent = roleName;
-        });
+        .querySelectorAll(
+            "[data-user-email]"
+        )
+        .forEach(
+            function (element) {
+                element.textContent =
+                    email;
+            }
+        );
+
 
     document
-        .querySelectorAll("[data-school-name]")
-        .forEach(function (element) {
-            element.textContent = schoolName;
-        });
+        .querySelectorAll(
+            "[data-user-role]"
+        )
+        .forEach(
+            function (element) {
+                element.textContent =
+                    roleName;
+            }
+        );
+
+
+    document
+        .querySelectorAll(
+            "[data-school-name]"
+        )
+        .forEach(
+            function (element) {
+                element.textContent =
+                    schoolName;
+            }
+        );
 }
 
 
@@ -648,49 +1042,57 @@ function populateUserInformation(user) {
    ROLE PERMISSIONS
    ============================================================ */
 
-function applyRolePermissions(user) {
+function applyRolePermissions(
+    user
+) {
+
     const roleName =
         (
             user.roleName ||
             user.role_name ||
             user.role ||
             ""
-        ).toLowerCase();
+        )
+            .toLowerCase();
 
-    /*
-     * Store role on body for CSS/other scripts.
-     */
-    document.body.dataset.role = roleName;
 
-    /*
-     * Elements can use:
-     *
-     * data-role="Administrator"
-     *
-     * or:
-     *
-     * data-role="Administrator,Account Officer"
-     */
+    document.body.dataset.role =
+        roleName;
+
+
     document
-        .querySelectorAll("[data-role]")
-        .forEach(function (element) {
-            const allowedRoles =
-                element
-                    .dataset
-                    .role
-                    .split(",")
-                    .map(function (role) {
-                        return role
-                            .trim()
-                            .toLowerCase();
-                    });
+        .querySelectorAll(
+            "[data-role]"
+        )
+        .forEach(
+            function (element) {
 
-            const allowed =
-                allowedRoles.includes(roleName);
+                const allowedRoles =
+                    element
+                        .dataset
+                        .role
+                        .split(",")
+                        .map(
+                            function (role) {
+                                return role
+                                    .trim()
+                                    .toLowerCase();
+                            }
+                        );
 
-            element.style.display =
-                allowed ? "" : "none";
-        });
+
+                const allowed =
+                    allowedRoles.includes(
+                        roleName
+                    );
+
+
+                element.style.display =
+                    allowed
+                        ? ""
+                        : "none";
+            }
+        );
 }
 
 
@@ -699,23 +1101,39 @@ function applyRolePermissions(user) {
    ============================================================ */
 
 function initializeLogoutButtons() {
+
     const logoutButtons =
         document.querySelectorAll(
             '[data-action="logout"], #logoutButton, #logoutBtn, .logout-button'
         );
 
-    logoutButtons.forEach(function (button) {
-        if (button.dataset.logoutInitialized === "true") {
-            return;
+
+    logoutButtons.forEach(
+        function (button) {
+
+            if (
+                button.dataset.logoutInitialized ===
+                "true"
+            ) {
+                return;
+            }
+
+
+            button.dataset.logoutInitialized =
+                "true";
+
+
+            button.addEventListener(
+                "click",
+                function (event) {
+
+                    event.preventDefault();
+
+                    logout();
+                }
+            );
         }
-
-        button.dataset.logoutInitialized = "true";
-
-        button.addEventListener("click", function (event) {
-            event.preventDefault();
-            logout();
-        });
-    });
+    );
 }
 
 
@@ -724,22 +1142,38 @@ function initializeLogoutButtons() {
    ============================================================ */
 
 async function initializeAuthentication() {
+
     /*
-     * Login page:
-     * Do not protect it.
+     * LOGIN PAGE
      */
+
     if (isLoginPage()) {
+
+        const token =
+            getStoredToken();
+
+
         /*
-         * If already authenticated, verify the session.
-         * If valid, go straight to dashboard.
+         * If an existing token is present,
+         * verify it.
          */
-        const token = getStoredToken();
 
         if (token) {
-            const user = await getCurrentUser();
+
+            const user =
+                await getCurrentUser();
+
+
+            /*
+             * Valid session:
+             * go to dashboard.
+             */
 
             if (user) {
-                window.currentUser = user;
+
+                window.currentUser =
+                    user;
+
 
                 window.location.replace(
                     getLoginRedirect()
@@ -749,21 +1183,31 @@ async function initializeAuthentication() {
             }
         }
 
+
+        /*
+         * No valid session:
+         * initialize login form.
+         */
+
         initializeLoginForm();
+
         return;
     }
 
+
     /*
-     * Public page:
-     * Nothing else required.
+     * PUBLIC PAGE
      */
+
     if (isPublicPage()) {
         return;
     }
 
+
     /*
-     * Every other page is protected.
+     * ALL OTHER PAGES ARE PROTECTED.
      */
+
     await protectPage();
 }
 
@@ -773,29 +1217,41 @@ async function initializeAuthentication() {
    ============================================================ */
 
 window.Auth = {
+
     login,
+
     logout,
+
     getCurrentUser,
+
     getStoredToken,
+
     getStoredUser,
+
     clearAuthentication,
+
     protectPage
+
 };
 
 
 /* ============================================================
-   START
+   START AUTHENTICATION
    ============================================================ */
 
 document.addEventListener(
     "DOMContentLoaded",
     function () {
+
         initializeAuthentication()
-            .catch(function (error) {
-                console.error(
-                    "Authentication initialization error:",
-                    error
-                );
-            });
+            .catch(
+                function (error) {
+
+                    console.error(
+                        "Authentication initialization error:",
+                        error
+                    );
+                }
+            );
     }
 );

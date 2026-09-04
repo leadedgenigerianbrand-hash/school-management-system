@@ -6,7 +6,6 @@ let students = [];
 let filteredStudents = [];
 
 let currentPage = 1;
-
 const PAGE_SIZE = 10;
 
 let studentToDelete = null;
@@ -16,6 +15,9 @@ let studentToDelete = null;
 |--------------------------------------------------------------------------
 | INITIALIZE
 |--------------------------------------------------------------------------
+| Authentication is handled centrally by auth.js.
+| Do NOT call protectPage() here.
+|--------------------------------------------------------------------------
 */
 
 document.addEventListener(
@@ -23,19 +25,8 @@ document.addEventListener(
     initializeStudentsPage
 );
 
+
 async function initializeStudentsPage() {
-
-    if (typeof protectPage === "function") {
-
-        try {
-            await protectPage();
-        } catch (error) {
-            console.error(
-                "Page protection error:",
-                error
-            );
-        }
-    }
 
     initializeElements();
     initializeEvents();
@@ -160,58 +151,76 @@ function initializeElements() {
 function initializeEvents() {
 
     if (searchInput) {
+
         searchInput.addEventListener(
             "input",
             handleFilters
         );
     }
 
+
     if (statusFilter) {
+
         statusFilter.addEventListener(
             "change",
             handleFilters
         );
     }
 
+
     if (genderFilter) {
+
         genderFilter.addEventListener(
             "change",
             handleFilters
         );
     }
 
+
     if (refreshButton) {
+
         refreshButton.addEventListener(
             "click",
             loadStudents
         );
     }
 
+
     if (addStudentButton) {
+
         addStudentButton.addEventListener(
             "click",
             function () {
+
                 window.location.href =
                     "/pages/student-form.html";
+
             }
         );
     }
 
+
     if (previousButton) {
+
         previousButton.addEventListener(
             "click",
             function () {
 
                 if (currentPage > 1) {
+
                     currentPage--;
+
                     renderStudents();
+
                 }
 
             }
         );
     }
 
+
     if (nextButton) {
+
         nextButton.addEventListener(
             "click",
             function () {
@@ -220,54 +229,70 @@ function initializeEvents() {
                     getTotalPages();
 
                 if (currentPage < totalPages) {
+
                     currentPage++;
+
                     renderStudents();
+
                 }
 
             }
         );
     }
 
+
     if (tableBody) {
+
         tableBody.addEventListener(
             "click",
             handleTableAction
         );
     }
 
+
     if (closeDeleteModalButton) {
+
         closeDeleteModalButton.addEventListener(
             "click",
             closeDeleteModal
         );
     }
 
+
     if (cancelDeleteButton) {
+
         cancelDeleteButton.addEventListener(
             "click",
             closeDeleteModal
         );
     }
 
+
     if (confirmDeleteButton) {
+
         confirmDeleteButton.addEventListener(
             "click",
             confirmDeleteStudent
         );
     }
 
+
     if (deleteModal) {
+
         deleteModal.addEventListener(
             "click",
             function (event) {
 
                 if (event.target === deleteModal) {
+
                     closeDeleteModal();
+
                 }
 
             }
         );
     }
+
 
     document.addEventListener(
         "keydown",
@@ -278,7 +303,9 @@ function initializeEvents() {
                 deleteModal &&
                 !deleteModal.hidden
             ) {
+
                 closeDeleteModal();
+
             }
 
         }
@@ -298,39 +325,46 @@ async function loadStudents() {
         return;
     }
 
+
     showLoading();
+
 
     try {
 
         if (typeof apiGet !== "function") {
+
             throw new Error(
                 "API service is not available."
             );
+
         }
 
-        /*
-         * IMPORTANT:
-         * Use the complete API path.
-         * This sends the JWT through apiGet().
-         */
 
         const data =
             await apiGet(STUDENTS_API);
 
+
         if (!data) {
+
             throw new Error(
                 "Unable to load students."
             );
+
         }
+
 
         students =
             extractStudents(data);
 
+
         updateStatistics();
+
 
         currentPage = 1;
 
+
         applyFilters();
+
 
     } catch (error) {
 
@@ -339,17 +373,21 @@ async function loadStudents() {
             error
         );
 
+
         students = [];
         filteredStudents = [];
 
+
         updateStatistics();
         renderStudents();
+
 
         showMessage(
             error.message ||
             "Unable to load students.",
             "error"
         );
+
     }
 }
 
@@ -363,37 +401,52 @@ async function loadStudents() {
 function extractStudents(data) {
 
     if (Array.isArray(data)) {
+
         return data;
+
     }
+
 
     if (
         data &&
         Array.isArray(data.students)
     ) {
+
         return data.students;
+
     }
+
 
     if (
         data &&
         Array.isArray(data.data)
     ) {
+
         return data.data;
+
     }
+
 
     if (
         data &&
         data.data &&
         Array.isArray(data.data.students)
     ) {
+
         return data.data.students;
+
     }
+
 
     if (
         data &&
         Array.isArray(data.rows)
     ) {
+
         return data.rows;
+
     }
+
 
     return [];
 }
@@ -422,12 +475,14 @@ function applyFilters() {
                 .toLowerCase()
             : "";
 
+
     const selectedStatus =
         statusFilter
             ? statusFilter.value
                 .trim()
                 .toLowerCase()
             : "";
+
 
     const selectedGender =
         genderFilter
@@ -436,6 +491,7 @@ function applyFilters() {
                 .toLowerCase()
             : "";
 
+
     filteredStudents =
         students.filter(
             function (student) {
@@ -443,6 +499,7 @@ function applyFilters() {
                 const name =
                     getStudentName(student)
                         .toLowerCase();
+
 
                 const admissionNumber =
                     String(
@@ -453,6 +510,7 @@ function applyFilters() {
                         ) || ""
                     ).toLowerCase();
 
+
                 const studentNumber =
                     String(
                         getField(
@@ -461,6 +519,7 @@ function applyFilters() {
                             "studentNumber"
                         ) || ""
                     ).toLowerCase();
+
 
                 const phone =
                     String(
@@ -471,6 +530,7 @@ function applyFilters() {
                         ) || ""
                     ).toLowerCase();
 
+
                 const email =
                     String(
                         getField(
@@ -479,6 +539,7 @@ function applyFilters() {
                             "email"
                         ) || ""
                     ).toLowerCase();
+
 
                 const status =
                     String(
@@ -489,6 +550,7 @@ function applyFilters() {
                         ) || "active"
                     ).toLowerCase();
 
+
                 const gender =
                     String(
                         getField(
@@ -498,6 +560,7 @@ function applyFilters() {
                         ) || ""
                     ).toLowerCase();
 
+
                 const matchesSearch =
                     !search ||
                     name.includes(search) ||
@@ -506,21 +569,26 @@ function applyFilters() {
                     phone.includes(search) ||
                     email.includes(search);
 
+
                 const matchesStatus =
                     !selectedStatus ||
                     status === selectedStatus;
 
+
                 const matchesGender =
                     !selectedGender ||
                     gender === selectedGender;
+
 
                 return (
                     matchesSearch &&
                     matchesStatus &&
                     matchesGender
                 );
+
             }
         );
+
 
     renderStudents();
 }
@@ -538,18 +606,25 @@ function renderStudents() {
         return;
     }
 
+
     const total =
         filteredStudents.length;
+
 
     const totalPages =
         getTotalPages();
 
+
     if (currentPage > totalPages) {
+
         currentPage = totalPages;
+
     }
+
 
     const start =
         (currentPage - 1) * PAGE_SIZE;
+
 
     const end =
         Math.min(
@@ -557,13 +632,16 @@ function renderStudents() {
             total
         );
 
+
     const pageStudents =
         filteredStudents.slice(
             start,
             end
         );
 
+
     tableBody.innerHTML = "";
+
 
     if (pageStudents.length === 0) {
 
@@ -577,7 +655,9 @@ function renderStudents() {
                 </td>
             </tr>
         `;
+
     }
+
 
     pageStudents.forEach(
         function (student, index) {
@@ -585,8 +665,10 @@ function renderStudents() {
             const id =
                 getStudentId(student);
 
+
             const name =
                 getStudentName(student);
+
 
             const admissionNumber =
                 getField(
@@ -595,12 +677,14 @@ function renderStudents() {
                     "admissionNumber"
                 );
 
+
             const gender =
                 getField(
                     student,
                     "gender",
                     "gender"
                 );
+
 
             const className =
                 getField(
@@ -619,6 +703,7 @@ function renderStudents() {
                     "classLevel"
                 );
 
+
             const classArm =
                 getField(
                     student,
@@ -631,12 +716,14 @@ function renderStudents() {
                     "classArm"
                 );
 
+
             const phone =
                 getField(
                     student,
                     "phone",
                     "phoneNumber"
                 );
+
 
             const status =
                 getField(
@@ -645,8 +732,10 @@ function renderStudents() {
                     "status"
                 ) || "active";
 
+
             const row =
                 document.createElement("tr");
+
 
             row.innerHTML = `
                 <td>
@@ -737,9 +826,12 @@ function renderStudents() {
                 </td>
             `;
 
+
             tableBody.appendChild(row);
+
         }
     );
+
 
     updatePagination(
         total,
@@ -763,15 +855,19 @@ function handleTableAction(event) {
             "[data-action]"
         );
 
+
     if (!button) {
         return;
     }
 
+
     const action =
         button.dataset.action;
 
+
     const id =
         button.dataset.id;
+
 
     if (!id) {
 
@@ -781,18 +877,28 @@ function handleTableAction(event) {
         );
 
         return;
+
     }
+
 
     if (action === "view") {
+
         viewStudent(id);
+
     }
+
 
     if (action === "edit") {
+
         editStudent(id);
+
     }
 
+
     if (action === "delete") {
+
         openDeleteModal(id);
+
     }
 }
 
@@ -836,11 +942,14 @@ function openDeleteModal(id) {
     const student =
         students.find(
             function (item) {
+
                 return String(
                     getStudentId(item)
                 ) === String(id);
+
             }
         );
+
 
     if (!student) {
 
@@ -850,18 +959,26 @@ function openDeleteModal(id) {
         );
 
         return;
+
     }
+
 
     studentToDelete = id;
 
+
     if (deleteStudentName) {
+
         deleteStudentName.textContent =
             getStudentName(student) ||
             "this student";
+
     }
 
+
     if (deleteModal) {
+
         deleteModal.hidden = false;
+
     }
 }
 
@@ -870,8 +987,11 @@ function closeDeleteModal() {
 
     studentToDelete = null;
 
+
     if (deleteModal) {
+
         deleteModal.hidden = true;
+
     }
 }
 
@@ -888,19 +1008,27 @@ async function confirmDeleteStudent() {
         return;
     }
 
+
     try {
 
         if (confirmDeleteButton) {
+
             confirmDeleteButton.disabled = true;
+
             confirmDeleteButton.textContent =
                 "Deleting...";
+
         }
 
+
         if (typeof apiDelete !== "function") {
+
             throw new Error(
                 "API service is not available."
             );
+
         }
+
 
         const data =
             await apiDelete(
@@ -911,20 +1039,27 @@ async function confirmDeleteStudent() {
                 )
             );
 
+
         if (!data) {
+
             throw new Error(
                 "Unable to delete student."
             );
+
         }
 
+
         closeDeleteModal();
+
 
         showMessage(
             "Student deleted successfully.",
             "success"
         );
 
+
         await loadStudents();
+
 
     } catch (error) {
 
@@ -933,19 +1068,25 @@ async function confirmDeleteStudent() {
             error
         );
 
+
         showMessage(
             error.message ||
             "Unable to delete student.",
             "error"
         );
 
+
     } finally {
 
         if (confirmDeleteButton) {
+
             confirmDeleteButton.disabled = false;
+
             confirmDeleteButton.textContent =
                 "Delete Student";
+
         }
+
     }
 }
 
@@ -961,6 +1102,7 @@ function updateStatistics() {
     const total =
         students.length;
 
+
     const active =
         students.filter(
             function (student) {
@@ -974,8 +1116,10 @@ function updateStatistics() {
                 )
                     .toLowerCase() ===
                     "active";
+
             }
         ).length;
+
 
     const male =
         students.filter(
@@ -990,8 +1134,10 @@ function updateStatistics() {
                 )
                     .toLowerCase() ===
                     "male";
+
             }
         ).length;
+
 
     const female =
         students.filter(
@@ -1006,23 +1152,40 @@ function updateStatistics() {
                 )
                     .toLowerCase() ===
                     "female";
+
             }
         ).length;
 
+
     if (totalStudents) {
-        totalStudents.textContent = total;
+
+        totalStudents.textContent =
+            total;
+
     }
+
 
     if (activeStudents) {
-        activeStudents.textContent = active;
+
+        activeStudents.textContent =
+            active;
+
     }
+
 
     if (maleStudents) {
-        maleStudents.textContent = male;
+
+        maleStudents.textContent =
+            male;
+
     }
 
+
     if (femaleStudents) {
-        femaleStudents.textContent = female;
+
+        femaleStudents.textContent =
+            female;
+
     }
 }
 
@@ -1053,36 +1216,55 @@ function updatePagination(
 ) {
 
     if (showingFrom) {
+
         showingFrom.textContent =
             total === 0
                 ? 0
                 : start + 1;
+
     }
+
 
     if (showingTo) {
-        showingTo.textContent = end;
+
+        showingTo.textContent =
+            end;
+
     }
+
 
     if (totalResults) {
-        totalResults.textContent = total;
+
+        totalResults.textContent =
+            total;
+
     }
 
+
     if (pageNumber) {
+
         pageNumber.textContent =
             "Page " +
             currentPage +
             " of " +
             totalPages;
+
     }
+
 
     if (previousButton) {
+
         previousButton.disabled =
             currentPage <= 1;
+
     }
 
+
     if (nextButton) {
+
         nextButton.disabled =
             currentPage >= totalPages;
+
     }
 }
 
@@ -1098,6 +1280,7 @@ function showLoading() {
     if (!tableBody) {
         return;
     }
+
 
     tableBody.innerHTML = `
         <tr>
@@ -1128,20 +1311,30 @@ function showMessage(
             "pageMessage"
         );
 
+
     if (!element) {
+
         console.log(message);
+
         return;
+
     }
 
-    element.textContent = message;
+
+    element.textContent =
+        message;
+
 
     element.className =
         "message " + type;
 
+
     setTimeout(
         function () {
+
             element.className =
                 "message";
+
         },
         4000
     );
@@ -1160,9 +1353,13 @@ function getStudentName(student) {
         return "";
     }
 
+
     if (student.name) {
+
         return student.name;
+
     }
+
 
     return [
         student.first_name ||
@@ -1194,6 +1391,7 @@ function getStudentId(student) {
         return "";
     }
 
+
     return (
         student.id ||
         student.student_id ||
@@ -1219,6 +1417,7 @@ function getField(
         return "";
     }
 
+
     return (
         student[snakeCase] ??
         student[camelCase]
@@ -1239,8 +1438,11 @@ function valueOrDash(value) {
         value === undefined ||
         value === ""
     ) {
+
         return "—";
+
     }
+
 
     return value;
 }
@@ -1263,6 +1465,7 @@ function getStatusClass(status) {
                 /\s+/g,
                 "-"
             );
+
 
     return (
         "status status-" +
@@ -1309,7 +1512,8 @@ function escapeHtml(value) {
 |--------------------------------------------------------------------------
 */
 
-window.students = students;
+window.students =
+    students;
 
 window.loadStudents =
     loadStudents;
