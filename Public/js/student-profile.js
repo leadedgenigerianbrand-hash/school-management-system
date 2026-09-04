@@ -1,4 +1,3 @@
-```javascript
 "use strict";
 
 /*
@@ -49,13 +48,22 @@ function getStudentIdFromUrl() {
     );
 }
 
+/*
+|--------------------------------------------------------------------------
+| LOAD STUDENT
+|--------------------------------------------------------------------------
+*/
+
 async function loadStudentProfile(studentId) {
     showProfileLoading();
 
     try {
-        const data = await request(
-            `${STUDENT_API}/${encodeURIComponent(studentId)}`
-        );
+        const endpoint =
+            STUDENT_API +
+            "/" +
+            encodeURIComponent(studentId);
+
+        const data = await request(endpoint);
 
         const student = extractStudent(data);
 
@@ -64,6 +72,21 @@ async function loadStudentProfile(studentId) {
                 "Student record was not found."
             );
         }
+
+        console.log(
+            "Student profile data:",
+            student
+        );
+
+        /*
+         * Important diagnostic information.
+         * This lets us see exactly what the backend
+         * returned for the student's photograph.
+         */
+        console.log(
+            "Student database photo field:",
+            student.student_photo_url
+        );
 
         renderStudentProfile(student);
 
@@ -84,6 +107,12 @@ async function loadStudentProfile(studentId) {
         );
     }
 }
+
+/*
+|--------------------------------------------------------------------------
+| API REQUEST
+|--------------------------------------------------------------------------
+*/
 
 async function request(endpoint, options = {}) {
     if (typeof window.apiRequest === "function") {
@@ -115,10 +144,6 @@ async function request(endpoint, options = {}) {
         sessionStorage.getItem(
             "school_management_token"
         ) ||
-        localStorage.getItem("token") ||
-        sessionStorage.getItem("token") ||
-        localStorage.getItem("accessToken") ||
-        sessionStorage.getItem("accessToken") ||
         "";
 
     const headers = {
@@ -128,7 +153,7 @@ async function request(endpoint, options = {}) {
 
     if (token) {
         headers.Authorization =
-            `Bearer ${token}`;
+            "Bearer " + token;
     }
 
     if (
@@ -148,7 +173,8 @@ async function request(endpoint, options = {}) {
             url,
             {
                 ...options,
-                headers
+                headers,
+                credentials: "include"
             }
         );
     } catch (error) {
@@ -187,12 +213,13 @@ async function request(endpoint, options = {}) {
         }
 
         if (
-            !window.location.pathname.endsWith(
-                "/login.html"
-            )
+            !window.location.pathname
+                .toLowerCase()
+                .endsWith("/login.html")
         ) {
-            window.location.href =
-                "/pages/login.html";
+            window.location.replace(
+                "/pages/login.html"
+            );
         }
 
         throw new Error(
@@ -211,26 +238,54 @@ async function request(endpoint, options = {}) {
             "content-type"
         ) || "";
 
-    const data =
+    let data;
+
+    if (
         contentType.includes(
             "application/json"
         )
-            ? await response.json()
-            : await response.text();
+    ) {
+        try {
+            data = await response.json();
+        } catch (error) {
+            throw new Error(
+                "The server returned invalid JSON."
+            );
+        }
+    } else {
+        data = await response.text();
+    }
 
     if (!response.ok) {
-        throw new Error(
+        let message =
+            "Unable to load student profile.";
+
+        if (
+            data &&
             typeof data === "object"
-                ? data?.message ||
-                  data?.error ||
-                  "Unable to load student profile."
-                : data ||
-                  "Unable to load student profile."
-        );
+        ) {
+            message =
+                data.message ||
+                data.error ||
+                message;
+        } else if (
+            typeof data === "string" &&
+            data.trim()
+        ) {
+            message = data;
+        }
+
+        throw new Error(message);
     }
 
     return data;
 }
+
+/*
+|--------------------------------------------------------------------------
+| RESPONSE HANDLING
+|--------------------------------------------------------------------------
+*/
 
 function extractStudent(response) {
     if (!response) {
@@ -262,6 +317,12 @@ function extractStudent(response) {
     return null;
 }
 
+/*
+|--------------------------------------------------------------------------
+| RENDER COMPLETE PROFILE
+|--------------------------------------------------------------------------
+*/
+
 function renderStudentProfile(student) {
     renderSummary(student);
 
@@ -279,6 +340,12 @@ function renderStudentProfile(student) {
 
     renderRecordInformation(student);
 }
+
+/*
+|--------------------------------------------------------------------------
+| PROFILE SUMMARY
+|--------------------------------------------------------------------------
+*/
 
 function renderSummary(student) {
     const name =
@@ -318,13 +385,24 @@ function renderSummary(student) {
             status;
 
         statusElement.className =
-            `status ${getStatusClass(status)}`;
+            "status " +
+            getStatusClass(status);
     }
 
+    /*
+     * Student photograph is rendered directly
+     * beside the student's name on the profile.
+     */
     renderStudentPhoto(student);
 
     renderStudentInitials(name);
 }
+
+/*
+|--------------------------------------------------------------------------
+| PERSONAL INFORMATION
+|--------------------------------------------------------------------------
+*/
 
 function renderPersonalInformation(student) {
     setText(
@@ -480,6 +558,12 @@ function renderPersonalInformation(student) {
     );
 }
 
+/*
+|--------------------------------------------------------------------------
+| ACADEMIC INFORMATION
+|--------------------------------------------------------------------------
+*/
+
 function renderAcademicInformation(student) {
     setText(
         "academicAdmissionNumber",
@@ -607,6 +691,12 @@ function renderAcademicInformation(student) {
     );
 }
 
+/*
+|--------------------------------------------------------------------------
+| GUARDIANS
+|--------------------------------------------------------------------------
+*/
+
 function getGuardians(student) {
     return (
         student.guardians ||
@@ -632,17 +722,14 @@ function renderGuardians(guardians) {
         !Array.isArray(guardians) ||
         guardians.length === 0
     ) {
-        container.innerHTML = `
-            <div class="empty-state">
-                No guardian information available.
-            </div>
-        `;
+        container.innerHTML =
+            '<div class="empty-state">No guardian information available.</div>';
 
         return;
     }
 
     guardians.forEach(
-        (guardian) => {
+        function (guardian) {
             const card =
                 document.createElement(
                     "div"
@@ -674,49 +761,50 @@ function renderGuardians(guardians) {
                 guardian.is_primary === true ||
                 guardian.isPrimary === true;
 
-            card.innerHTML = `
-                <strong>
-                    ${escapeHtml(name)}
-                </strong>
+            let primaryHtml = "";
 
-                <span>
-                    Relationship:
-                    ${escapeHtml(
-                        valueOrDash(
-                            relationship
-                        )
-                    )}
-                </span>
+            if (isPrimary) {
+                primaryHtml =
+                    '<span class="guardian-primary">Primary Guardian</span>';
+            }
 
-                <span>
-                    Phone:
-                    ${escapeHtml(
-                        valueOrDash(phone)
-                    )}
-                </span>
+            card.innerHTML =
+                "<strong>" +
+                escapeHtml(name) +
+                "</strong>" +
 
-                <span>
-                    Email:
-                    ${escapeHtml(
-                        valueOrDash(email)
-                    )}
-                </span>
+                "<span>Relationship: " +
+                escapeHtml(
+                    valueOrDash(
+                        relationship
+                    )
+                ) +
+                "</span>" +
 
-                ${
-                    isPrimary
-                        ? `
-                            <span class="guardian-primary">
-                                Primary Guardian
-                            </span>
-                        `
-                        : ""
-                }
-            `;
+                "<span>Phone: " +
+                escapeHtml(
+                    valueOrDash(phone)
+                ) +
+                "</span>" +
+
+                "<span>Email: " +
+                escapeHtml(
+                    valueOrDash(email)
+                ) +
+                "</span>" +
+
+                primaryHtml;
 
             container.appendChild(card);
         }
     );
 }
+
+/*
+|--------------------------------------------------------------------------
+| DOCUMENTS
+|--------------------------------------------------------------------------
+*/
 
 function getDocuments(student) {
     return (
@@ -742,17 +830,14 @@ function renderDocuments(documents) {
         !Array.isArray(documents) ||
         documents.length === 0
     ) {
-        container.innerHTML = `
-            <div class="empty-state">
-                No documents available.
-            </div>
-        `;
+        container.innerHTML =
+            '<div class="empty-state">No documents available.</div>';
 
         return;
     }
 
     documents.forEach(
-        (documentItem) => {
+        function (documentItem) {
             const card =
                 document.createElement(
                     "div"
@@ -788,15 +873,14 @@ function renderDocuments(documents) {
             info.className =
                 "document-info";
 
-            info.innerHTML = `
-                <strong>
-                    ${escapeHtml(name)}
-                </strong>
+            info.innerHTML =
+                "<strong>" +
+                escapeHtml(name) +
+                "</strong>" +
 
-                <span>
-                    ${escapeHtml(type)}
-                </span>
-            `;
+                "<span>" +
+                escapeHtml(type) +
+                "</span>";
 
             card.appendChild(info);
 
@@ -806,11 +890,11 @@ function renderDocuments(documents) {
                         "a"
                     );
 
-                link.href = normalizeFileUrl(
-                    url
-                );
+                link.href =
+                    normalizeFileUrl(url);
 
-                link.target = "_blank";
+                link.target =
+                    "_blank";
 
                 link.rel =
                     "noopener noreferrer";
@@ -818,7 +902,8 @@ function renderDocuments(documents) {
                 link.className =
                     "document-link";
 
-                link.textContent = "View";
+                link.textContent =
+                    "View";
 
                 card.appendChild(link);
             }
@@ -828,9 +913,19 @@ function renderDocuments(documents) {
     );
 }
 
+/*
+|--------------------------------------------------------------------------
+| FILE / IMAGE URL HANDLING
+|--------------------------------------------------------------------------
+*/
+
 function normalizeFileUrl(url) {
-    const value =
-        String(url || "");
+    let value =
+        String(url || "").trim();
+
+    if (!value) {
+        return "";
+    }
 
     if (
         value.startsWith("http://") ||
@@ -840,19 +935,274 @@ function normalizeFileUrl(url) {
         return value;
     }
 
+    /*
+     * Convert Windows backslashes to
+     * browser-compatible forward slashes.
+     */
+    value = value.replace(/\\/g, "/");
+
+    /*
+     * Remove ./ from the beginning.
+     */
+    if (value.startsWith("./")) {
+        value =
+            value.substring(2);
+    }
+
+    /*
+     * Already an absolute website path.
+     */
     if (value.startsWith("/")) {
         return value;
     }
 
+    /*
+     * Bare filename:
+     *
+     * student-123.png
+     */
+    if (
+        !value.includes("/") &&
+        !value.includes(":")
+    ) {
+        return (
+            "/uploads/students/" +
+            value
+        );
+    }
+
+    /*
+     * uploads/students/student.png
+     */
+    if (
+        value.startsWith("uploads/")
+    ) {
+        return "/" + value;
+    }
+
+    /*
+     * Public/uploads/students/student.png
+     */
+    if (
+        value.startsWith("Public/")
+    ) {
+        return (
+            "/" +
+            value.substring(7)
+        );
+    }
+
     return "/" + value;
 }
+
+/*
+|--------------------------------------------------------------------------
+| STUDENT PHOTO
+|--------------------------------------------------------------------------
+*/
+
+function getStudentPhotoValue(student) {
+    if (!student) {
+        return "";
+    }
+
+    /*
+     * IMPORTANT:
+     *
+     * PostgreSQL uses:
+     *
+     * student_photo_url
+     *
+     * This MUST be checked first.
+     */
+    const possiblePhotoFields = [
+        "student_photo_url",
+        "photo_url",
+        "photoUrl",
+        "photo",
+        "profile_photo",
+        "profilePhoto",
+        "profile_picture",
+        "profilePicture",
+        "picture",
+        "picture_url",
+        "pictureUrl",
+        "image",
+        "image_url",
+        "imageUrl",
+        "student_photo",
+        "studentPhoto",
+        "passport_photo",
+        "passportPhoto"
+    ];
+
+    for (
+        let i = 0;
+        i < possiblePhotoFields.length;
+        i++
+    ) {
+        const field =
+            possiblePhotoFields[i];
+
+        const value =
+            student[field];
+
+        if (
+            value !== null &&
+            value !== undefined &&
+            String(value).trim() !== ""
+        ) {
+            return String(value).trim();
+        }
+    }
+
+    return "";
+}
+
+function renderStudentPhoto(student) {
+    const image =
+        document.getElementById(
+            "studentPhoto"
+        );
+
+    const initials =
+        document.getElementById(
+            "studentInitials"
+        );
+
+    if (!image) {
+        console.warn(
+            "Student photo element #studentPhoto was not found on the profile page."
+        );
+
+        return;
+    }
+
+    const photo =
+        getStudentPhotoValue(student);
+
+    console.log(
+        "Student photo value:",
+        photo
+    );
+
+    /*
+     * No photo saved for this student.
+     */
+    if (!photo) {
+        image.hidden = true;
+
+        if (initials) {
+            initials.hidden = false;
+        }
+
+        return;
+    }
+
+    const photoUrl =
+        normalizeFileUrl(photo);
+
+    console.log(
+        "Student photo URL:",
+        photoUrl
+    );
+
+    /*
+     * Prepare the image before assigning
+     * the source.
+     */
+    image.hidden = false;
+
+    if (initials) {
+        initials.hidden = true;
+    }
+
+    image.onload = function () {
+        console.log(
+            "Student photo loaded successfully:",
+            photoUrl
+        );
+
+        image.hidden = false;
+
+        if (initials) {
+            initials.hidden = true;
+        }
+    };
+
+    image.onerror = function () {
+        console.error(
+            "Student photo could not be loaded:",
+            photoUrl
+        );
+
+        image.hidden = true;
+
+        if (initials) {
+            initials.hidden = false;
+        }
+    };
+
+    image.src = photoUrl;
+}
+
+/*
+|--------------------------------------------------------------------------
+| STUDENT INITIALS FALLBACK
+|--------------------------------------------------------------------------
+*/
+
+function renderStudentInitials(name) {
+    const element =
+        document.getElementById(
+            "studentInitials"
+        );
+
+    if (!element) {
+        return;
+    }
+
+    const words =
+        String(
+            name || "Student"
+        )
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean);
+
+    let initials = "ST";
+
+    if (words.length === 1) {
+        initials =
+            words[0]
+                .substring(0, 2)
+                .toUpperCase();
+    } else if (words.length >= 2) {
+        initials =
+            (
+                words[0][0] +
+                words[
+                    words.length - 1
+                ][0]
+            ).toUpperCase();
+    }
+
+    element.textContent =
+        initials;
+}
+
+/*
+|--------------------------------------------------------------------------
+| RECORD INFORMATION
+|--------------------------------------------------------------------------
+*/
 
 function renderRecordInformation(student) {
     const studentId =
         getField(
             student,
             "id",
-            "studentId"
+            "id"
         ) ||
         getField(
             student,
@@ -888,93 +1238,17 @@ function renderRecordInformation(student) {
     );
 }
 
-function renderStudentPhoto(student) {
-    const image =
-        document.getElementById(
-            "studentPhoto"
-        );
-
-    if (!image) {
-        return;
-    }
-
-    const photo =
-        getField(
-            student,
-            "photo_url",
-            "photoUrl"
-        ) ||
-        getField(
-            student,
-            "photo",
-            "photo"
-        ) ||
-        getField(
-            student,
-            "profile_photo",
-            "profilePhoto"
-        ) ||
-        getField(
-            student,
-            "image_url",
-            "imageUrl"
-        );
-
-    if (!photo) {
-        image.hidden = true;
-        return;
-    }
-
-    image.src =
-        normalizeFileUrl(photo);
-
-    image.hidden = false;
-
-    image.onerror = function () {
-        image.hidden = true;
-    };
-}
-
-function renderStudentInitials(name) {
-    const element =
-        document.getElementById(
-            "studentInitials"
-        );
-
-    if (!element) {
-        return;
-    }
-
-    const words =
-        String(
-            name || "Student"
-        )
-            .trim()
-            .split(/\s+/)
-            .filter(Boolean);
-
-    let initials = "ST";
-
-    if (words.length === 1) {
-        initials =
-            words[0]
-                .substring(0, 2)
-                .toUpperCase();
-    } else if (words.length >= 2) {
-        initials =
-            (
-                words[0][0] +
-                words[words.length - 1][0]
-            ).toUpperCase();
-    }
-
-    element.textContent =
-        initials;
-}
+/*
+|--------------------------------------------------------------------------
+| PROFILE BUTTONS
+|--------------------------------------------------------------------------
+*/
 
 function initializeProfileButtons(studentId) {
     const encodedId =
-        encodeURIComponent(studentId);
+        encodeURIComponent(
+            studentId
+        );
 
     const backButton =
         document.getElementById(
@@ -984,7 +1258,7 @@ function initializeProfileButtons(studentId) {
     if (backButton) {
         backButton.addEventListener(
             "click",
-            () => {
+            function () {
                 window.location.href =
                     "/pages/students.html";
             },
@@ -1000,9 +1274,10 @@ function initializeProfileButtons(studentId) {
     if (editButton) {
         editButton.addEventListener(
             "click",
-            () => {
+            function () {
                 window.location.href =
-                    `/pages/student-form.html?id=${encodedId}`;
+                    "/pages/student-form.html?id=" +
+                    encodedId;
             },
             { once: true }
         );
@@ -1016,9 +1291,10 @@ function initializeProfileButtons(studentId) {
     if (attendanceButton) {
         attendanceButton.addEventListener(
             "click",
-            () => {
+            function () {
                 window.location.href =
-                    `/pages/student-attendance.html?id=${encodedId}`;
+                    "/pages/student-attendance.html?id=" +
+                    encodedId;
             },
             { once: true }
         );
@@ -1032,9 +1308,10 @@ function initializeProfileButtons(studentId) {
     if (feesButton) {
         feesButton.addEventListener(
             "click",
-            () => {
+            function () {
                 window.location.href =
-                    `/pages/student-fees.html?id=${encodedId}`;
+                    "/pages/student-fees.html?id=" +
+                    encodedId;
             },
             { once: true }
         );
@@ -1048,9 +1325,10 @@ function initializeProfileButtons(studentId) {
     if (resultsButton) {
         resultsButton.addEventListener(
             "click",
-            () => {
+            function () {
                 window.location.href =
-                    `/pages/student-results.html?id=${encodedId}`;
+                    "/pages/student-results.html?id=" +
+                    encodedId;
             },
             { once: true }
         );
@@ -1064,7 +1342,7 @@ function initializeProfileButtons(studentId) {
     if (retryButton) {
         retryButton.addEventListener(
             "click",
-            () => {
+            function () {
                 loadStudentProfile(
                     studentId
                 );
@@ -1072,6 +1350,12 @@ function initializeProfileButtons(studentId) {
         );
     }
 }
+
+/*
+|--------------------------------------------------------------------------
+| STUDENT NAME
+|--------------------------------------------------------------------------
+*/
 
 function getStudentName(student) {
     if (student.name) {
@@ -1092,13 +1376,11 @@ function getStudentName(student) {
             "first_name",
             "firstName"
         ),
-
         getField(
             student,
             "middle_name",
             "middleName"
         ),
-
         getField(
             student,
             "last_name",
@@ -1108,6 +1390,12 @@ function getStudentName(student) {
         .filter(Boolean)
         .join(" ");
 }
+
+/*
+|--------------------------------------------------------------------------
+| GENERIC FIELD READER
+|--------------------------------------------------------------------------
+*/
 
 function getField(
     object,
@@ -1127,6 +1415,12 @@ function getField(
         object[camelCase]
     );
 }
+
+/*
+|--------------------------------------------------------------------------
+| DISPLAY HELPERS
+|--------------------------------------------------------------------------
+*/
 
 function valueOrDash(value) {
     if (
@@ -1151,6 +1445,12 @@ function setText(id, value) {
     element.textContent =
         valueOrDash(value);
 }
+
+/*
+|--------------------------------------------------------------------------
+| DATE FORMATTING
+|--------------------------------------------------------------------------
+*/
 
 function formatDate(value) {
     if (!value) {
@@ -1206,6 +1506,12 @@ function formatDateTime(value) {
     ).format(date);
 }
 
+/*
+|--------------------------------------------------------------------------
+| AGE
+|--------------------------------------------------------------------------
+*/
+
 function calculateAge(dateOfBirth) {
     if (!dateOfBirth) {
         return "—";
@@ -1238,7 +1544,7 @@ function calculateAge(dateOfBirth) {
         (
             monthDifference === 0 &&
             today.getDate() <
-            birth.getDate()
+                birth.getDate()
         )
     ) {
         age--;
@@ -1248,6 +1554,12 @@ function calculateAge(dateOfBirth) {
         ? age
         : "—";
 }
+
+/*
+|--------------------------------------------------------------------------
+| STATUS
+|--------------------------------------------------------------------------
+*/
 
 function getStatusClass(status) {
     const normalized =
@@ -1274,11 +1586,20 @@ function getStatusClass(status) {
             normalized
         )
     ) {
-        return `status-${normalized}`;
+        return (
+            "status-" +
+            normalized
+        );
     }
 
     return "status-pending";
 }
+
+/*
+|--------------------------------------------------------------------------
+| HTML SECURITY
+|--------------------------------------------------------------------------
+*/
 
 function escapeHtml(value) {
     return String(
@@ -1305,6 +1626,12 @@ function escapeHtml(value) {
             "&#039;"
         );
 }
+
+/*
+|--------------------------------------------------------------------------
+| LOADING / ERROR STATES
+|--------------------------------------------------------------------------
+*/
 
 function showProfileLoading() {
     const loading =
@@ -1429,11 +1756,11 @@ function showMessage(
         message;
 
     element.className =
-        `message ${type}`;
+        "message " + type;
 
     if (type !== "error") {
         setTimeout(
-            () => {
+            function () {
                 element.className =
                     "message";
             },
@@ -1441,6 +1768,12 @@ function showMessage(
         );
     }
 }
+
+/*
+|--------------------------------------------------------------------------
+| GLOBAL FUNCTIONS
+|--------------------------------------------------------------------------
+*/
 
 window.initializeStudentProfile =
     initializeStudentProfile;
