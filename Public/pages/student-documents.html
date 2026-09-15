@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    ```
+    <title>Student Documents | School Management System</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/forms.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    <link rel="stylesheet" href="../css/students.css">
+
+    <style>
+        .documents-page {
+            padding: 24px;
+        }
+
+        .documents-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .documents-header h1 {
+            margin: 0;
+        }
+
+        .student-summary {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        .student-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .summary-item {
+            padding: 12px;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+
+        .summary-label {
+            display: block;
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 4px;
+        }
+
+        .summary-value {
+            display: block;
+            font-weight: 600;
+            color: #212529;
+            word-break: break-word;
+        }
+
+        .documents-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+        }
+
+        .documents-card-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .documents-card-header h2 {
+            font-size: 18px;
+            margin: 0;
+        }
+
+        .documents-table-wrapper {
+            overflow-x: auto;
+        }
+
+        .documents-table {
+            width: 100%;
+            min-width: 900px;
+            margin: 0;
+        }
+
+        .documents-table th {
+            white-space: nowrap;
+            font-size: 13px;
+            background: #f8f9fa;
+        }
+
+        .documents-table td {
+            vertical-align: middle;
+        }
+
+        .document-name {
+            font-weight: 600;
+        }
+
+        .document-description {
+            color: #6c757d;
+            font-size: 13px;
+        }
+
+        .document-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .documents-empty {
+            padding: 48px 20px;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .documents-loading {
+            padding: 48px 20px;
+            text-align: center;
+        }
+
+        .documents-error {
+            margin-bottom: 20px;
+        }
+
+        .upload-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        .upload-card h2 {
+            font-size: 18px;
+            margin-bottom: 18px;
+        }
+
+        .file-name {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .required-mark {
+            color: #dc3545;
+        }
+
+        @media (max-width: 992px) {
+            .student-summary-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 576px) {
+            .documents-page {
+                padding: 16px;
+            }
+
+            .student-summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .documents-header {
+                align-items: flex-start;
+            }
+        }
+    </style>
+    ```
+
+</head>
+
+<body>
+
+    <div class="app-container">
+
+        ```
+        <aside class="sidebar" id="sidebar">
+
+            <div class="sidebar-header">
+                <div class="brand">
+                    <span class="brand-title">School Management</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+
+                <a href="/pages/dashboard.html" class="nav-link">
+                    Dashboard
+                </a>
+
+                <a href="/pages/students.html" class="nav-link active">
+                    Students
+                </a>
+
+                <a href="/pages/staff.html" class="nav-link">
+                    Staff
+                </a>
+
+                <a href="/pages/guardians.html" class="nav-link">
+                    Guardians
+                </a>
+
+                <a href="/pages/classes.html" class="nav-link">
+                    Classes
+                </a>
+
+                <a href="/pages/class-arms.html" class="nav-link">
+                    Class Arms
+                </a>
+
+                <a href="/pages/departments.html" class="nav-link">
+                    Departments
+                </a>
+
+                <a href="/pages/subjects.html" class="nav-link">
+                    Subjects
+                </a>
+
+                <a href="/pages/academic-levels.html" class="nav-link">
+                    Academic Levels
+                </a>
+
+                <a href="/pages/academic-sessions.html" class="nav-link">
+                    Academic Sessions
+                </a>
+
+                <a href="/pages/terms.html" class="nav-link">
+                    Terms
+                </a>
+
+                <a href="/pages/attendance.html" class="nav-link">
+                    Attendance
+                </a>
+
+                <a href="/pages/results.html" class="nav-link">
+                    Results
+                </a>
+
+                <a href="/pages/fees.html" class="nav-link">
+                    Fees
+                </a>
+
+                <a href="/pages/documents.html" class="nav-link">
+                    Documents
+                </a>
+
+                <a href="/pages/reports.html" class="nav-link">
+                    Reports
+                </a>
+
+                <a href="/pages/users.html" class="nav-link">
+                    Users
+                </a>
+
+                <a href="/pages/roles.html" class="nav-link">
+                    Roles
+                </a>
+
+                <a href="/pages/permissions.html" class="nav-link">
+                    Permissions
+                </a>
+
+                <a href="/pages/profile.html" class="nav-link">
+                    Profile
+                </a>
+
+                <a href="/pages/settings.html" class="nav-link">
+                    Settings
+                </a>
+
+            </nav>
+
+        </aside>
+
+        <main class="main-content">
+
+            <header class="topbar">
+
+                <button type="button" class="btn btn-outline-secondary d-lg-none" id="mobileSidebarButton"
+                    aria-label="Open navigation">
+                    ☰
+                </button>
+
+                <div class="topbar-title">
+                    <span>Student Documents</span>
+                </div>
+
+                <div class="topbar-user">
+                    <span id="loggedInUser">User</span>
+                </div>
+
+            </header>
+
+            <section class="documents-page">
+
+                <div class="documents-header">
+
+                    <div>
+                        <h1>Student Documents</h1>
+
+                        <p class="text-muted mb-0">
+                            View and manage documents belonging to this student.
+                        </p>
+                    </div>
+
+                    <div class="d-flex gap-2 flex-wrap">
+
+                        <button type="button" class="btn btn-outline-secondary" id="backToProfileButton">
+                            Back to Profile
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div id="documentsMessage" class="alert d-none" role="alert"></div>
+
+                <div id="documentsLoading" class="documents-loading">
+
+                    <div class="spinner-border" role="status" aria-hidden="true"></div>
+
+                    <p class="mt-3 mb-0">
+                        Loading student documents...
+                    </p>
+
+                </div>
+
+                <div id="documentsContent" class="d-none">
+
+                    <section class="student-summary">
+
+                        <div class="student-summary-grid">
+
+                            <div class="summary-item">
+
+                                <span class="summary-label">
+                                    Student Name
+                                </span>
+
+                                <span class="summary-value" id="studentName">
+                                    —
+                                </span>
+
+                            </div>
+
+                            <div class="summary-item">
+
+                                <span class="summary-label">
+                                    Student Number
+                                </span>
+
+                                <span class="summary-value" id="studentNumber">
+                                    —
+                                </span>
+
+                            </div>
+
+                            <div class="summary-item">
+
+                                <span class="summary-label">
+                                    Current Class
+                                </span>
+
+                                <span class="summary-value" id="studentClass">
+                                    —
+                                </span>
+
+                            </div>
+
+                            <div class="summary-item">
+
+                                <span class="summary-label">
+                                    Academic Session
+                                </span>
+
+                                <span class="summary-value" id="studentSession">
+                                    —
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+                    <section class="upload-card">
+
+                        <h2>Upload Student Document</h2>
+
+                        <form id="documentUploadForm" enctype="multipart/form-data" novalidate>
+
+                            <div class="row g-3">
+
+                                <div class="col-md-6">
+
+                                    <label for="documentType" class="form-label">
+                                        Document Type
+                                        <span class="required-mark">*</span>
+                                    </label>
+
+                                    <select id="documentType" name="documentType" class="form-select" required>
+
+                                        <option value="">
+                                            Select document type
+                                        </option>
+
+                                        <option value="Birth Certificate">
+                                            Birth Certificate
+                                        </option>
+
+                                        <option value="Passport Photograph">
+                                            Passport Photograph
+                                        </option>
+
+                                        <option value="Previous School Record">
+                                            Previous School Record
+                                        </option>
+
+                                        <option value="Admission Document">
+                                            Admission Document
+                                        </option>
+
+                                        <option value="Academic Certificate">
+                                            Academic Certificate
+                                        </option>
+
+                                        <option value="Medical Record">
+                                            Medical Record
+                                        </option>
+
+                                        <option value="Other">
+                                            Other
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+                                <div class="col-md-6">
+
+                                    <label for="documentFile" class="form-label">
+                                        Select File
+                                        <span class="required-mark">*</span>
+                                    </label>
+
+                                    <input type="file" id="documentFile" name="document" class="form-control" required>
+
+                                    <div id="selectedFileName" class="file-name"></div>
+
+                                </div>
+
+                                <div class="col-12">
+
+                                    <label for="documentDescription" class="form-label">
+                                        Description
+                                    </label>
+
+                                    <textarea id="documentDescription" name="description" class="form-control" rows="3"
+                                        placeholder="Enter a description for this document"></textarea>
+
+                                </div>
+
+                                <div class="col-12">
+
+                                    <div class="d-flex gap-2 flex-wrap">
+
+                                        <button type="submit" class="btn btn-primary" id="uploadDocumentButton">
+                                            Upload Document
+                                        </button>
+
+                                        <button type="reset" class="btn btn-outline-secondary" id="resetDocumentButton">
+                                            Reset
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </form>
+
+                    </section>
+
+                    <section class="documents-card">
+
+                        <div class="documents-card-header">
+
+                            <div>
+                                <h2>Student Documents</h2>
+                            </div>
+
+                            <div>
+                                <span class="badge bg-secondary" id="documentsCount">
+                                    0 documents
+                                </span>
+                            </div>
+
+                        </div>
+
+                        <div class="documents-table-wrapper">
+
+                            <table class="table table-hover documents-table">
+
+                                <thead>
+
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Document</th>
+                                        <th>Type</th>
+                                        <th>Description</th>
+                                        <th>Uploaded</th>
+                                        <th>Uploaded By</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+
+                                </thead>
+
+                                <tbody id="documentsTableBody">
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                        <div id="documentsEmpty" class="documents-empty d-none">
+
+                            <h5>No Documents Found</h5>
+
+                            <p class="mb-0">
+                                No documents have been uploaded for this student.
+                            </p>
+
+                        </div>
+
+                    </section>
+
+                </div>
+
+                <div id="documentsError" class="alert alert-danger documents-error d-none" role="alert">
+
+                    <strong>
+                        Unable to load student documents.
+                    </strong>
+
+                    <div id="documentsErrorMessage" class="mt-1"></div>
+
+                    <button type="button" class="btn btn-sm btn-outline-danger mt-3" id="retryDocumentsButton">
+                        Try Again
+                    </button>
+
+                </div>
+
+            </section>
+
+        </main>
+        ```
+
+    </div>
+
+    <script src="../js/api.js"></script>
+
+    <script src="../js/auth.js"></script>
+
+    <script src="../js/student-documents.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>

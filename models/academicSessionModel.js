@@ -1,29 +1,6 @@
+"use strict";
+
 const { query, pool } = require("../config/database");
-
-/*
-|--------------------------------------------------------------------------
-| Academic Session Model
-|--------------------------------------------------------------------------
-| Handles academic sessions for each school.
-|
-| Database fields:
-| id
-| school_id
-| session_name
-| start_date
-| end_date
-| is_current
-| is_active
-| created_at
-| updated_at
-|--------------------------------------------------------------------------
-*/
-
-/*
-|--------------------------------------------------------------------------
-| CREATE ACADEMIC SESSION
-|--------------------------------------------------------------------------
-*/
 
 async function createAcademicSession({
     schoolId,
@@ -37,13 +14,18 @@ async function createAcademicSession({
         throw new Error("School ID is required.");
     }
 
-    if (!sessionName || !sessionName.trim()) {
+    if (
+        typeof sessionName !== "string" ||
+        !sessionName.trim()
+    ) {
         throw new Error("Academic session name is required.");
     }
 
+    const name = sessionName.trim();
+
     const existing = await findAcademicSessionByName(
         schoolId,
-        sessionName
+        name
     );
 
     if (existing) {
@@ -60,11 +42,11 @@ async function createAcademicSession({
         if (isCurrent) {
             await client.query(
                 `
-                    UPDATE academic_sessions
-                    SET
-                        is_current = FALSE,
-                        updated_at = CURRENT_TIMESTAMP
-                    WHERE school_id = $1
+                UPDATE academic_sessions
+                SET
+                    is_current = FALSE,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE school_id = $1
                 `,
                 [schoolId]
             );
@@ -72,24 +54,24 @@ async function createAcademicSession({
 
         const result = await client.query(
             `
-                INSERT INTO academic_sessions (
-                    school_id,
-                    session_name,
-                    start_date,
-                    end_date,
-                    is_current,
-                    is_active
-                )
-                VALUES ($1, $2, $3, $4, $5, $6)
-                RETURNING *
+            INSERT INTO academic_sessions (
+                school_id,
+                session_name,
+                start_date,
+                end_date,
+                is_current,
+                is_active
+            )
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING *
             `,
             [
                 schoolId,
-                sessionName.trim(),
+                name,
                 startDate,
                 endDate,
-                isCurrent,
-                isActive
+                Boolean(isCurrent),
+                Boolean(isActive)
             ]
         );
 
@@ -104,12 +86,6 @@ async function createAcademicSession({
     }
 }
 
-/*
-|--------------------------------------------------------------------------
-| FIND SESSION BY ID
-|--------------------------------------------------------------------------
-*/
-
 async function findAcademicSessionById(
     sessionId,
     schoolId = null
@@ -122,7 +98,10 @@ async function findAcademicSessionById(
 
     const values = [sessionId];
 
-    if (schoolId) {
+    if (
+        schoolId !== null &&
+        schoolId !== undefined
+    ) {
         values.push(schoolId);
 
         sql += `
@@ -139,43 +118,48 @@ async function findAcademicSessionById(
     return result.rows[0] || null;
 }
 
-/*
-|--------------------------------------------------------------------------
-| FIND SESSION BY NAME
-|--------------------------------------------------------------------------
-*/
-
 async function findAcademicSessionByName(
     schoolId,
     sessionName
 ) {
-    const sql = `
+    if (
+        !schoolId ||
+        typeof sessionName !== "string" ||
+        !sessionName.trim()
+    ) {
+        return null;
+    }
+
+    const result = await query(
+        `
         SELECT *
         FROM academic_sessions
         WHERE school_id = $1
           AND LOWER(session_name) = LOWER($2)
         LIMIT 1
-    `;
-
-    const result = await query(sql, [
-        schoolId,
-        sessionName.trim()
-    ]);
+        `,
+        [
+            schoolId,
+            sessionName.trim()
+        ]
+    );
 
     return result.rows[0] || null;
 }
-
-/*
-|--------------------------------------------------------------------------
-| CHECK WHETHER SESSION EXISTS
-|--------------------------------------------------------------------------
-*/
 
 async function sessionExists(
     schoolId,
     sessionName,
     excludeSessionId = null
 ) {
+    if (
+        !schoolId ||
+        typeof sessionName !== "string" ||
+        !sessionName.trim()
+    ) {
+        return false;
+    }
+
     let sql = `
         SELECT EXISTS (
             SELECT 1
@@ -189,7 +173,10 @@ async function sessionExists(
         sessionName.trim()
     ];
 
-    if (excludeSessionId) {
+    if (
+        excludeSessionId !== null &&
+        excludeSessionId !== undefined
+    ) {
         values.push(excludeSessionId);
 
         sql += `
@@ -201,16 +188,15 @@ async function sessionExists(
         ) AS exists
     `;
 
-    const result = await query(sql, values);
+    const result = await query(
+        sql,
+        values
+    );
 
-    return result.rows[0].exists;
+    return Boolean(
+        result.rows[0]?.exists
+    );
 }
-
-/*
-|--------------------------------------------------------------------------
-| FIND ALL SESSIONS FOR A SCHOOL
-|--------------------------------------------------------------------------
-*/
 
 async function findAcademicSessionsBySchool(
     schoolId,
@@ -226,8 +212,11 @@ async function findAcademicSessionsBySchool(
 
     const values = [schoolId];
 
-    if (isActive !== null && isActive !== undefined) {
-        values.push(isActive);
+    if (
+        isActive !== null &&
+        isActive !== undefined
+    ) {
+        values.push(Boolean(isActive));
 
         sql += `
             AND is_active = $${values.length}
@@ -237,44 +226,44 @@ async function findAcademicSessionsBySchool(
     sql += `
         ORDER BY
             start_date DESC NULLS LAST,
-            session_name DESC
+            session_name DESC,
+            id DESC
     `;
 
-    const result = await query(sql, values);
+    const result = await query(
+        sql,
+        values
+    );
 
     return result.rows;
 }
 
-/*
-|--------------------------------------------------------------------------
-| FIND CURRENT SESSION
-|--------------------------------------------------------------------------
-*/
-
-async function findCurrentSession(schoolId) {
-    const sql = `
+async function findCurrentSession(
+    schoolId
+) {
+    const result = await query(
+        `
         SELECT *
         FROM academic_sessions
         WHERE school_id = $1
           AND is_current = TRUE
           AND is_active = TRUE
-        ORDER BY start_date DESC NULLS LAST
+        ORDER BY
+            start_date DESC NULLS LAST,
+            id DESC
         LIMIT 1
-    `;
-
-    const result = await query(sql, [schoolId]);
+        `,
+        [schoolId]
+    );
 
     return result.rows[0] || null;
 }
 
-/*
-|--------------------------------------------------------------------------
-| FIND UPCOMING SESSIONS
-|--------------------------------------------------------------------------
-*/
-
-async function findUpcomingSessions(schoolId) {
-    const sql = `
+async function findUpcomingSessions(
+    schoolId
+) {
+    const result = await query(
+        `
         SELECT *
         FROM academic_sessions
         WHERE school_id = $1
@@ -282,41 +271,34 @@ async function findUpcomingSessions(schoolId) {
           AND start_date > CURRENT_DATE
         ORDER BY
             start_date ASC NULLS LAST,
-            session_name ASC
-    `;
-
-    const result = await query(sql, [schoolId]);
+            session_name ASC,
+            id ASC
+        `,
+        [schoolId]
+    );
 
     return result.rows;
 }
 
-/*
-|--------------------------------------------------------------------------
-| FIND COMPLETED SESSIONS
-|--------------------------------------------------------------------------
-*/
-
-async function findCompletedSessions(schoolId) {
-    const sql = `
+async function findCompletedSessions(
+    schoolId
+) {
+    const result = await query(
+        `
         SELECT *
         FROM academic_sessions
         WHERE school_id = $1
           AND end_date < CURRENT_DATE
         ORDER BY
             end_date DESC NULLS LAST,
-            session_name DESC
-    `;
-
-    const result = await query(sql, [schoolId]);
+            session_name DESC,
+            id DESC
+        `,
+        [schoolId]
+    );
 
     return result.rows;
 }
-
-/*
-|--------------------------------------------------------------------------
-| UPDATE ACADEMIC SESSION
-|--------------------------------------------------------------------------
-*/
 
 async function updateAcademicSession(
     sessionId,
@@ -329,9 +311,26 @@ async function updateAcademicSession(
         isActive = true
     }
 ) {
-    if (!sessionName || !sessionName.trim()) {
+    if (
+        typeof sessionName !== "string" ||
+        !sessionName.trim()
+    ) {
         throw new Error(
             "Academic session name is required."
+        );
+    }
+
+    const name = sessionName.trim();
+
+    const duplicate = await sessionExists(
+        schoolId,
+        name,
+        sessionId
+    );
+
+    if (duplicate) {
+        throw new Error(
+            "An academic session with this name already exists."
         );
     }
 
@@ -343,12 +342,12 @@ async function updateAcademicSession(
         if (isCurrent) {
             await client.query(
                 `
-                    UPDATE academic_sessions
-                    SET
-                        is_current = FALSE,
-                        updated_at = CURRENT_TIMESTAMP
-                    WHERE school_id = $1
-                      AND id <> $2
+                UPDATE academic_sessions
+                SET
+                    is_current = FALSE,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE school_id = $1
+                  AND id <> $2
                 `,
                 [
                     schoolId,
@@ -359,24 +358,24 @@ async function updateAcademicSession(
 
         const result = await client.query(
             `
-                UPDATE academic_sessions
-                SET
-                    session_name = $1,
-                    start_date = $2,
-                    end_date = $3,
-                    is_current = $4,
-                    is_active = $5,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE id = $6
-                  AND school_id = $7
-                RETURNING *
+            UPDATE academic_sessions
+            SET
+                session_name = $1,
+                start_date = $2,
+                end_date = $3,
+                is_current = $4,
+                is_active = $5,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = $6
+              AND school_id = $7
+            RETURNING *
             `,
             [
-                sessionName.trim(),
+                name,
                 startDate,
                 endDate,
-                isCurrent,
-                isActive,
+                Boolean(isCurrent),
+                Boolean(isActive),
                 sessionId,
                 schoolId
             ]
@@ -393,24 +392,36 @@ async function updateAcademicSession(
     }
 }
 
-/*
-|--------------------------------------------------------------------------
-| RENAME SESSION
-|--------------------------------------------------------------------------
-*/
-
 async function renameAcademicSession(
     sessionId,
     schoolId,
     newName
 ) {
-    if (!newName || !newName.trim()) {
+    if (
+        typeof newName !== "string" ||
+        !newName.trim()
+    ) {
         throw new Error(
             "New session name is required."
         );
     }
 
-    const sql = `
+    const name = newName.trim();
+
+    const duplicate = await sessionExists(
+        schoolId,
+        name,
+        sessionId
+    );
+
+    if (duplicate) {
+        throw new Error(
+            "An academic session with this name already exists."
+        );
+    }
+
+    const result = await query(
+        `
         UPDATE academic_sessions
         SET
             session_name = $1,
@@ -418,22 +429,16 @@ async function renameAcademicSession(
         WHERE id = $2
           AND school_id = $3
         RETURNING *
-    `;
-
-    const result = await query(sql, [
-        newName.trim(),
-        sessionId,
-        schoolId
-    ]);
+        `,
+        [
+            name,
+            sessionId,
+            schoolId
+        ]
+    );
 
     return result.rows[0] || null;
 }
-
-/*
-|--------------------------------------------------------------------------
-| ACTIVATE / MAKE CURRENT SESSION
-|--------------------------------------------------------------------------
-*/
 
 async function activateSession(
     sessionId,
@@ -446,12 +451,12 @@ async function activateSession(
 
         const sessionCheck = await client.query(
             `
-                SELECT id
-                FROM academic_sessions
-                WHERE id = $1
-                  AND school_id = $2
-                  AND is_active = TRUE
-                LIMIT 1
+            SELECT id
+            FROM academic_sessions
+            WHERE id = $1
+              AND school_id = $2
+              AND is_active = TRUE
+            LIMIT 1
             `,
             [
                 sessionId,
@@ -459,19 +464,21 @@ async function activateSession(
             ]
         );
 
-        if (sessionCheck.rows.length === 0) {
+        if (
+            sessionCheck.rows.length === 0
+        ) {
             await client.query("ROLLBACK");
             return null;
         }
 
         await client.query(
             `
-                UPDATE academic_sessions
-                SET
-                    is_current = FALSE,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE school_id = $1
-                  AND id <> $2
+            UPDATE academic_sessions
+            SET
+                is_current = FALSE,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE school_id = $1
+              AND id <> $2
             `,
             [
                 schoolId,
@@ -481,14 +488,14 @@ async function activateSession(
 
         const result = await client.query(
             `
-                UPDATE academic_sessions
-                SET
-                    is_current = TRUE,
-                    is_active = TRUE,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE id = $1
-                  AND school_id = $2
-                RETURNING *
+            UPDATE academic_sessions
+            SET
+                is_current = TRUE,
+                is_active = TRUE,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = $1
+              AND school_id = $2
+            RETURNING *
             `,
             [
                 sessionId,
@@ -507,17 +514,12 @@ async function activateSession(
     }
 }
 
-/*
-|--------------------------------------------------------------------------
-| SET SESSION UPCOMING
-|--------------------------------------------------------------------------
-*/
-
 async function setSessionUpcoming(
     sessionId,
     schoolId
 ) {
-    const sql = `
+    const result = await query(
+        `
         UPDATE academic_sessions
         SET
             is_current = FALSE,
@@ -526,27 +528,22 @@ async function setSessionUpcoming(
         WHERE id = $1
           AND school_id = $2
         RETURNING *
-    `;
-
-    const result = await query(sql, [
-        sessionId,
-        schoolId
-    ]);
+        `,
+        [
+            sessionId,
+            schoolId
+        ]
+    );
 
     return result.rows[0] || null;
 }
-
-/*
-|--------------------------------------------------------------------------
-| COMPLETE SESSION
-|--------------------------------------------------------------------------
-*/
 
 async function completeSession(
     sessionId,
     schoolId
 ) {
-    const sql = `
+    const result = await query(
+        `
         UPDATE academic_sessions
         SET
             is_current = FALSE,
@@ -555,21 +552,15 @@ async function completeSession(
         WHERE id = $1
           AND school_id = $2
         RETURNING *
-    `;
-
-    const result = await query(sql, [
-        sessionId,
-        schoolId
-    ]);
+        `,
+        [
+            sessionId,
+            schoolId
+        ]
+    );
 
     return result.rows[0] || null;
 }
-
-/*
-|--------------------------------------------------------------------------
-| UPDATE SESSION DATES
-|--------------------------------------------------------------------------
-*/
 
 async function updateSessionDates(
     sessionId,
@@ -577,7 +568,19 @@ async function updateSessionDates(
     startDate,
     endDate
 ) {
-    const sql = `
+    if (
+        startDate &&
+        endDate &&
+        new Date(startDate) >
+            new Date(endDate)
+    ) {
+        throw new Error(
+            "Session start date cannot be later than the end date."
+        );
+    }
+
+    const result = await query(
+        `
         UPDATE academic_sessions
         SET
             start_date = $1,
@@ -586,57 +589,72 @@ async function updateSessionDates(
         WHERE id = $3
           AND school_id = $4
         RETURNING *
-    `;
-
-    const result = await query(sql, [
-        startDate,
-        endDate,
-        sessionId,
-        schoolId
-    ]);
+        `,
+        [
+            startDate,
+            endDate,
+            sessionId,
+            schoolId
+        ]
+    );
 
     return result.rows[0] || null;
 }
-
-/*
-|--------------------------------------------------------------------------
-| SEARCH ACADEMIC SESSIONS
-|--------------------------------------------------------------------------
-*/
 
 async function searchAcademicSessions(
     searchTerm,
     schoolId
 ) {
-    const sql = `
+    const term = String(
+        searchTerm || ""
+    ).trim();
+
+    const result = await query(
+        `
         SELECT *
         FROM academic_sessions
         WHERE school_id = $1
-          AND session_name ILIKE $2
+          AND (
+              session_name ILIKE $2
+              OR CAST(start_date AS TEXT) ILIKE $2
+              OR CAST(end_date AS TEXT) ILIKE $2
+          )
         ORDER BY
             start_date DESC NULLS LAST,
-            session_name DESC
-    `;
-
-    const result = await query(sql, [
-        schoolId,
-        `%${String(searchTerm || "").trim()}%`
-    ]);
+            session_name DESC,
+            id DESC
+        `,
+        [
+            schoolId,
+            `%${term}%`
+        ]
+    );
 
     return result.rows;
 }
-
-/*
-|--------------------------------------------------------------------------
-| DELETE ACADEMIC SESSION
-|--------------------------------------------------------------------------
-*/
 
 async function deleteAcademicSession(
     sessionId,
     schoolId
 ) {
-    const sql = `
+    const session =
+        await findAcademicSessionById(
+            sessionId,
+            schoolId
+        );
+
+    if (!session) {
+        return null;
+    }
+
+    if (session.is_current) {
+        throw new Error(
+            "The current academic session cannot be deleted. Set another session as current first."
+        );
+    }
+
+    const result = await query(
+        `
         DELETE FROM academic_sessions
         WHERE id = $1
           AND school_id = $2
@@ -648,27 +666,22 @@ async function deleteAcademicSession(
             end_date,
             is_current,
             is_active
-    `;
-
-    const result = await query(sql, [
-        sessionId,
-        schoolId
-    ]);
+        `,
+        [
+            sessionId,
+            schoolId
+        ]
+    );
 
     return result.rows[0] || null;
 }
-
-/*
-|--------------------------------------------------------------------------
-| GET SESSION STATISTICS
-|--------------------------------------------------------------------------
-*/
 
 async function getSessionStatistics(
     sessionId,
     schoolId
 ) {
-    const sql = `
+    const result = await query(
+        `
         SELECT
             (
                 SELECT COUNT(*)
@@ -676,54 +689,51 @@ async function getSessionStatistics(
                 WHERE se.academic_session_id = $1
                   AND se.school_id = $2
             ) AS enrolled_students,
-
             (
                 SELECT COUNT(*)
                 FROM results r
                 WHERE r.academic_session_id = $1
                   AND r.school_id = $2
             ) AS result_records,
-
             (
                 SELECT COUNT(*)
                 FROM attendance a
                 WHERE a.academic_session_id = $1
                   AND a.school_id = $2
             ) AS attendance_records
-
         FROM academic_sessions s
-
         WHERE s.id = $1
           AND s.school_id = $2
-    `;
-
-    const result = await query(sql, [
-        sessionId,
-        schoolId
-    ]);
+        LIMIT 1
+        `,
+        [
+            sessionId,
+            schoolId
+        ]
+    );
 
     if (!result.rows[0]) {
         return null;
     }
 
     return {
-        enrolledStudents: Number(
-            result.rows[0].enrolled_students
-        ),
-        resultRecords: Number(
-            result.rows[0].result_records
-        ),
-        attendanceRecords: Number(
-            result.rows[0].attendance_records
-        )
+        enrolledStudents:
+            Number(
+                result.rows[0]
+                    .enrolled_students
+            ),
+        resultRecords:
+            Number(
+                result.rows[0]
+                    .result_records
+            ),
+        attendanceRecords:
+            Number(
+                result.rows[0]
+                    .attendance_records
+            )
     };
 }
-
-/*
-|--------------------------------------------------------------------------
-| GET SESSION WITH TERMS
-|--------------------------------------------------------------------------
-*/
 
 async function getSessionWithTerms(
     sessionId,
@@ -731,18 +741,18 @@ async function getSessionWithTerms(
 ) {
     const sessionResult = await query(
         `
-            SELECT
-                id AS session_id,
-                school_id,
-                session_name,
-                start_date AS session_start_date,
-                end_date AS session_end_date,
-                is_current,
-                is_active
-            FROM academic_sessions
-            WHERE id = $1
-              AND school_id = $2
-            LIMIT 1
+        SELECT
+            id AS session_id,
+            school_id,
+            session_name,
+            start_date AS session_start_date,
+            end_date AS session_end_date,
+            is_current,
+            is_active
+        FROM academic_sessions
+        WHERE id = $1
+          AND school_id = $2
+        LIMIT 1
         `,
         [
             sessionId,
@@ -751,40 +761,40 @@ async function getSessionWithTerms(
     );
 
     if (!sessionResult.rows[0]) {
-        return [];
+        return null;
     }
 
     const termsResult = await query(
         `
-            SELECT
-                id AS term_id,
-                school_id,
-                term_name,
-                term_order,
-                start_date AS term_start_date,
-                end_date AS term_end_date,
-                is_current,
-                is_active
-            FROM terms
-            WHERE school_id = $1
-            ORDER BY term_order ASC
+        SELECT
+            id AS term_id,
+            school_id,
+            academic_session_id,
+            term_name,
+            term_order,
+            start_date AS term_start_date,
+            end_date AS term_end_date,
+            is_current,
+            is_active
+        FROM terms
+        WHERE school_id = $1
+          AND academic_session_id = $2
+        ORDER BY
+            term_order ASC,
+            start_date ASC NULLS LAST,
+            id ASC
         `,
         [
-            schoolId
+            schoolId,
+            sessionId
         ]
     );
 
-    return termsResult.rows.map(term => ({
+    return {
         ...sessionResult.rows[0],
-        ...term
-    }));
+        terms: termsResult.rows
+    };
 }
-
-/*
-|--------------------------------------------------------------------------
-| EXPORTS
-|--------------------------------------------------------------------------
-*/
 
 module.exports = {
     createAcademicSession,

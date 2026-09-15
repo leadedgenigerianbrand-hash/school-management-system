@@ -1,3 +1,5 @@
+"use strict";
+
 const {
     createFeeStructure,
     findFeeStructureById,
@@ -6,26 +8,24 @@ const {
     deleteFeeStructure,
     assignFeeToStudent,
     findStudentFeeById,
+    deleteStudentFeeRecord,
     findStudentFees,
+    findSchoolFeeRecords,
     recordPayment,
     updateStudentFeeBalance,
     getPaymentHistory,
+    getRecentPayments,
     getStudentFeeSummary,
     getSchoolFeeSummary,
     searchStudentFees
 } = require("../models/feeModel");
 
-
-/*
-|--------------------------------------------------------------------------
-| Helper
-|--------------------------------------------------------------------------
-*/
-
 function getSchoolId(req) {
+    const schoolId =
+        req.user?.schoolId ||
+        req.user?.school_id;
 
-    if (!req.user || !req.user.schoolId) {
-
+    if (!schoolId) {
         const error = new Error(
             "Authenticated school information is required."
         );
@@ -35,16 +35,67 @@ function getSchoolId(req) {
         throw error;
     }
 
-    return req.user.schoolId;
+    return schoolId;
 }
 
+function getUserId(req) {
+    const userId =
+        req.user?.id ||
+        req.user?.userId ||
+        req.user?.user_id;
+
+    if (!userId) {
+        const error = new Error(
+            "Authenticated user information is required."
+        );
+
+        error.statusCode = 401;
+
+        throw error;
+    }
+
+    return userId;
+}
+
+function isValidAmount(value, allowZero = true) {
+    if (
+        value === undefined ||
+        value === null ||
+        value === ""
+    ) {
+        return false;
+    }
+
+    const amount = Number(value);
+
+    if (!Number.isFinite(amount)) {
+        return false;
+    }
+
+    if (allowZero) {
+        return amount >= 0;
+    }
+
+    return amount > 0;
+}
+
+function normalizeOptionalId(value) {
+    if (
+        value === undefined ||
+        value === null ||
+        value === ""
+    ) {
+        return null;
+    }
+
+    return value;
+}
 
 /*
 |--------------------------------------------------------------------------
-| Create Fee Structure
+| CREATE FEE STRUCTURE
 |--------------------------------------------------------------------------
 | POST /api/fees/structures
-|--------------------------------------------------------------------------
 */
 
 async function createFeeStructureController(
@@ -52,11 +103,8 @@ async function createFeeStructureController(
     res,
     next
 ) {
-
     try {
-
-        const schoolId =
-            getSchoolId(req);
+        const schoolId = getSchoolId(req);
 
         const {
             sessionId,
@@ -65,109 +113,76 @@ async function createFeeStructureController(
             feeName,
             amount,
             description,
-            dueDate,
-            status
+            compulsory
         } = req.body;
 
-
         if (!sessionId) {
-
             return res.status(400).json({
                 success: false,
-                message:
-                    "Academic session is required."
+                message: "Academic session is required."
             });
         }
-
 
         if (!termId) {
-
             return res.status(400).json({
                 success: false,
-                message:
-                    "Term is required."
+                message: "Term is required."
             });
         }
-
-
-        if (!feeName) {
-
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Fee name is required."
-            });
-        }
-
 
         if (
-            amount === undefined ||
-            amount === null ||
-            Number(amount) < 0
+            !feeName ||
+            !String(feeName).trim()
         ) {
-
             return res.status(400).json({
                 success: false,
-                message:
-                    "A valid fee amount is required."
+                message: "Fee name is required."
             });
         }
 
+        if (!isValidAmount(amount, true)) {
+            return res.status(400).json({
+                success: false,
+                message: "A valid fee amount is required."
+            });
+        }
 
         const fee =
             await createFeeStructure({
-
                 schoolId,
-
                 sessionId,
-
                 termId,
-
                 classId:
-                    classId || null,
-
-                feeName,
-
-                amount,
-
+                    normalizeOptionalId(classId),
+                feeName:
+                    String(feeName).trim(),
+                amount: Number(amount),
                 description:
-                    description || null,
-
-                dueDate:
-                    dueDate || null,
-
-                status:
-                    status || "active"
-
+                    description
+                        ? String(description).trim()
+                        : null,
+                compulsory:
+                    compulsory === undefined
+                        ? true
+                        : Boolean(compulsory)
             });
 
-
         return res.status(201).json({
-
             success: true,
-
             message:
                 "Fee structure created successfully.",
-
             data: fee
-
         });
-
     } catch (error) {
-
         next(error);
-
     }
-
 }
-
 
 /*
 |--------------------------------------------------------------------------
-| Get Fee Structures
+| GET FEE STRUCTURES
 |--------------------------------------------------------------------------
 | GET /api/fees/structures
-|--------------------------------------------------------------------------
 */
 
 async function getFeeStructures(
@@ -175,68 +190,45 @@ async function getFeeStructures(
     res,
     next
 ) {
-
     try {
-
-        const schoolId =
-            getSchoolId(req);
+        const schoolId = getSchoolId(req);
 
         const {
             sessionId,
             termId,
-            classId,
-            status
+            classId
         } = req.query;
-
 
         const fees =
             await findFeeStructures(
-
                 schoolId,
-
                 {
                     sessionId:
-                        sessionId || null,
+                        normalizeOptionalId(sessionId),
 
                     termId:
-                        termId || null,
+                        normalizeOptionalId(termId),
 
                     classId:
-                        classId || null,
-
-                    status:
-                        status || null
+                        normalizeOptionalId(classId)
                 }
-
             );
 
-
         return res.status(200).json({
-
             success: true,
-
-            count:
-                fees.length,
-
+            count: fees.length,
             data: fees
-
         });
-
     } catch (error) {
-
         next(error);
-
     }
-
 }
-
 
 /*
 |--------------------------------------------------------------------------
-| Get Fee Structure By ID
+| GET FEE STRUCTURE BY ID
 |--------------------------------------------------------------------------
 | GET /api/fees/structures/:id
-|--------------------------------------------------------------------------
 */
 
 async function getFeeStructureById(
@@ -244,15 +236,17 @@ async function getFeeStructureById(
     res,
     next
 ) {
-
     try {
+        const schoolId = getSchoolId(req);
+        const feeId = req.params.id;
 
-        const schoolId =
-            getSchoolId(req);
-
-        const feeId =
-            req.params.id;
-
+        if (!feeId) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Fee structure ID is required."
+            });
+        }
 
         const fee =
             await findFeeStructureById(
@@ -260,44 +254,28 @@ async function getFeeStructureById(
                 schoolId
             );
 
-
         if (!fee) {
-
             return res.status(404).json({
-
                 success: false,
-
                 message:
                     "Fee structure not found."
-
             });
-
         }
 
-
         return res.status(200).json({
-
             success: true,
-
             data: fee
-
         });
-
     } catch (error) {
-
         next(error);
-
     }
-
 }
-
 
 /*
 |--------------------------------------------------------------------------
-| Update Fee Structure
+| UPDATE FEE STRUCTURE
 |--------------------------------------------------------------------------
 | PUT /api/fees/structures/:id
-|--------------------------------------------------------------------------
 */
 
 async function updateFeeStructureController(
@@ -305,121 +283,92 @@ async function updateFeeStructureController(
     res,
     next
 ) {
-
     try {
-
-        const schoolId =
-            getSchoolId(req);
-
-        const feeId =
-            req.params.id;
+        const schoolId = getSchoolId(req);
+        const feeId = req.params.id;
 
         const {
             feeName,
             amount,
             description,
-            dueDate,
-            status
+            compulsory
         } = req.body;
 
-
-        if (!feeName) {
-
+        if (!feeId) {
             return res.status(400).json({
-
                 success: false,
-
                 message:
-                    "Fee name is required."
-
+                    "Fee structure ID is required."
             });
-
         }
-
 
         if (
-            amount === undefined ||
-            amount === null ||
-            Number(amount) < 0
+            feeName === undefined ||
+            feeName === null ||
+            !String(feeName).trim()
         ) {
-
             return res.status(400).json({
-
                 success: false,
-
                 message:
-                    "A valid fee amount is required."
-
+                    "Fee name is required."
             });
-
         }
 
+        if (!isValidAmount(amount, true)) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "A valid fee amount is required."
+            });
+        }
 
         const fee =
             await updateFeeStructure(
-
                 feeId,
-
                 schoolId,
-
                 {
-                    feeName,
+                    feeName:
+                        String(feeName).trim(),
 
-                    amount,
+                    amount:
+                        Number(amount),
 
                     description:
-                        description || null,
+                        description
+                            ? String(description).trim()
+                            : null,
 
-                    dueDate:
-                        dueDate || null,
-
-                    status:
-                        status || "active"
+                    compulsory:
+                        compulsory === undefined
+                            ? true
+                            : Boolean(compulsory)
                 }
-
             );
 
-
         if (!fee) {
-
             return res.status(404).json({
-
                 success: false,
-
                 message:
                     "Fee structure not found."
-
             });
-
         }
 
-
         return res.status(200).json({
-
             success: true,
-
             message:
                 "Fee structure updated successfully.",
-
             data: fee
-
         });
-
     } catch (error) {
-
         next(error);
-
     }
-
 }
-
 
 /*
 |--------------------------------------------------------------------------
-| Delete Fee Structure
+| DELETE FEE STRUCTURE
 |--------------------------------------------------------------------------
 | DELETE /api/fees/structures/:id
-|--------------------------------------------------------------------------
 */
 
 async function deleteFeeStructureController(
@@ -427,66 +376,48 @@ async function deleteFeeStructureController(
     res,
     next
 ) {
-
     try {
+        const schoolId = getSchoolId(req);
+        const feeId = req.params.id;
 
-        const schoolId =
-            getSchoolId(req);
-
-        const feeId =
-            req.params.id;
-
+        if (!feeId) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Fee structure ID is required."
+            });
+        }
 
         const fee =
             await deleteFeeStructure(
-
                 feeId,
-
                 schoolId
-
             );
 
-
         if (!fee) {
-
             return res.status(404).json({
-
                 success: false,
-
                 message:
                     "Fee structure not found."
-
             });
-
         }
 
-
         return res.status(200).json({
-
             success: true,
-
             message:
                 "Fee structure deleted successfully.",
-
             data: fee
-
         });
-
     } catch (error) {
-
         next(error);
-
     }
-
 }
-
 
 /*
 |--------------------------------------------------------------------------
-| Assign Fee To Student
+| ASSIGN FEE TO STUDENT
 |--------------------------------------------------------------------------
-| POST /api/fees/student
-|--------------------------------------------------------------------------
+| POST /api/fees/assign
 */
 
 async function assignFee(
@@ -494,98 +425,127 @@ async function assignFee(
     res,
     next
 ) {
-
     try {
-
-        const schoolId =
-            getSchoolId(req);
+        const schoolId = getSchoolId(req);
 
         const {
             studentId,
             feeStructureId,
-            amount,
-            dueDate,
-            status
+            amount
         } = req.body;
 
-
         if (!studentId) {
-
             return res.status(400).json({
-
                 success: false,
-
                 message:
                     "Student ID is required."
-
             });
-
         }
-
 
         if (!feeStructureId) {
-
             return res.status(400).json({
-
                 success: false,
-
                 message:
                     "Fee structure ID is required."
-
             });
-
         }
 
+        if (
+            amount !== undefined &&
+            amount !== null &&
+            amount !== "" &&
+            !isValidAmount(amount, true)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "A valid fee amount is required."
+            });
+        }
 
         const fee =
             await assignFeeToStudent({
-
                 schoolId,
-
                 studentId,
-
                 feeStructureId,
-
                 amount:
-                    amount !== undefined
-                        ? amount
-                        : null,
-
-                dueDate:
-                    dueDate || null,
-
-                status:
-                    status || "unpaid"
-
+                    amount === undefined ||
+                    amount === null ||
+                    amount === ""
+                        ? null
+                        : Number(amount)
             });
 
-
         return res.status(201).json({
-
             success: true,
-
             message:
                 "Fee assigned to student successfully.",
-
             data: fee
-
         });
-
     } catch (error) {
-
         next(error);
-
     }
-
 }
-
 
 /*
 |--------------------------------------------------------------------------
-| Get Student Fees
+| GET ALL SCHOOL FEE RECORDS
+|--------------------------------------------------------------------------
+| GET /api/fees/records
+*/
+
+async function getSchoolFeeRecordsController(
+    req,
+    res,
+    next
+) {
+    try {
+        const schoolId = getSchoolId(req);
+
+        const {
+            search,
+            status,
+            sessionId,
+            termId
+        } = req.query;
+
+        const records =
+            await findSchoolFeeRecords(
+                schoolId,
+                {
+                    search:
+                        search
+                            ? String(search).trim()
+                            : null,
+
+                    paymentStatus:
+                        status
+                            ? String(status).trim()
+                            : null,
+
+                    sessionId:
+                        normalizeOptionalId(sessionId),
+
+                    termId:
+                        normalizeOptionalId(termId)
+                }
+            );
+
+        return res.status(200).json({
+            success: true,
+            count: records.length,
+            data: records
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| GET STUDENT FEES
 |--------------------------------------------------------------------------
 | GET /api/fees/student/:studentId
-|--------------------------------------------------------------------------
 */
 
 async function getStudentFeesController(
@@ -593,15 +553,17 @@ async function getStudentFeesController(
     res,
     next
 ) {
-
     try {
+        const schoolId = getSchoolId(req);
+        const studentId = req.params.studentId;
 
-        const schoolId =
-            getSchoolId(req);
-
-        const studentId =
-            req.params.studentId;
-
+        if (!studentId) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Student ID is required."
+            });
+        }
 
         const {
             sessionId,
@@ -609,52 +571,38 @@ async function getStudentFeesController(
             status
         } = req.query;
 
-
         const fees =
             await findStudentFees({
-
                 schoolId,
-
                 studentId,
 
                 sessionId:
-                    sessionId || null,
+                    normalizeOptionalId(sessionId),
 
                 termId:
-                    termId || null,
+                    normalizeOptionalId(termId),
 
-                status:
-                    status || null
-
+                paymentStatus:
+                    status
+                        ? String(status).trim()
+                        : null
             });
 
-
         return res.status(200).json({
-
             success: true,
-
-            count:
-                fees.length,
-
+            count: fees.length,
             data: fees
-
         });
-
     } catch (error) {
-
         next(error);
-
     }
-
 }
-
 
 /*
 |--------------------------------------------------------------------------
-| Get Student Fee By ID
+| GET STUDENT FEE BY ID
 |--------------------------------------------------------------------------
-| GET /api/fees/student-records/:id
-|--------------------------------------------------------------------------
+| GET /api/fees/:id
 */
 
 async function getStudentFeeByIdController(
@@ -662,63 +610,95 @@ async function getStudentFeeByIdController(
     res,
     next
 ) {
-
     try {
+        const schoolId = getSchoolId(req);
+        const studentFeeId = req.params.id;
 
-        const schoolId =
-            getSchoolId(req);
-
-        const studentFeeId =
-            req.params.id;
-
+        if (!studentFeeId) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Student fee ID is required."
+            });
+        }
 
         const fee =
             await findStudentFeeById(
-
                 studentFeeId,
-
                 schoolId
-
             );
 
-
         if (!fee) {
-
             return res.status(404).json({
-
                 success: false,
-
                 message:
                     "Student fee record not found."
-
             });
-
         }
 
-
         return res.status(200).json({
-
             success: true,
-
             data: fee
-
         });
-
     } catch (error) {
-
         next(error);
-
     }
-
 }
-
 
 /*
 |--------------------------------------------------------------------------
-| Record Payment
+| DELETE STUDENT FEE RECORD
 |--------------------------------------------------------------------------
-| POST /api/fees/payments
+| DELETE /api/fees/student-records/:id
+*/
+
+async function deleteStudentFeeRecordController(
+    req,
+    res,
+    next
+) {
+    try {
+        const schoolId = getSchoolId(req);
+        const studentFeeId = req.params.id;
+
+        if (!studentFeeId) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Student fee ID is required."
+            });
+        }
+
+        const fee =
+            await deleteStudentFeeRecord(
+                studentFeeId,
+                schoolId
+            );
+
+        if (!fee) {
+            return res.status(404).json({
+                success: false,
+                message:
+                    "Student fee record not found."
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message:
+                "Student fee record deleted successfully.",
+            data: fee
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+/*
 |--------------------------------------------------------------------------
+| RECORD PAYMENT
+|--------------------------------------------------------------------------
+| POST /api/fees/payment
 */
 
 async function recordPaymentController(
@@ -726,11 +706,9 @@ async function recordPaymentController(
     res,
     next
 ) {
-
     try {
-
-        const schoolId =
-            getSchoolId(req);
+        const schoolId = getSchoolId(req);
+        const receivedBy = getUserId(req);
 
         const {
             studentFeeId,
@@ -738,112 +716,126 @@ async function recordPaymentController(
             amount,
             paymentMethod,
             reference,
+            transactionReference,
             paymentDate,
             notes
         } = req.body;
 
-
         if (!studentFeeId) {
-
             return res.status(400).json({
-
                 success: false,
-
                 message:
                     "Student fee ID is required."
-
             });
-
         }
-
 
         if (!studentId) {
-
             return res.status(400).json({
-
                 success: false,
-
                 message:
                     "Student ID is required."
-
             });
-
         }
 
-
-        if (
-            amount === undefined ||
-            amount === null ||
-            Number(amount) <= 0
-        ) {
-
+        if (!isValidAmount(amount, false)) {
             return res.status(400).json({
-
                 success: false,
-
                 message:
                     "Payment amount must be greater than zero."
-
             });
-
         }
-
 
         const payment =
             await recordPayment({
-
                 schoolId,
-
                 studentFeeId,
-
                 studentId,
-
-                amount,
+                amount: Number(amount),
 
                 paymentMethod:
-                    paymentMethod || "cash",
+                    paymentMethod
+                        ? String(paymentMethod).trim()
+                        : "cash",
 
                 reference:
-                    reference || null,
+                    transactionReference ||
+                    reference ||
+                    null,
 
                 paymentDate:
                     paymentDate || null,
 
-                receivedBy:
-                    req.user.id,
+                receivedBy,
 
                 notes:
-                    notes || null
-
+                    notes
+                        ? String(notes).trim()
+                        : null
             });
 
-
         return res.status(201).json({
-
             success: true,
-
             message:
                 "Payment recorded successfully.",
-
             data: payment
-
         });
-
     } catch (error) {
-
         next(error);
-
     }
-
 }
-
 
 /*
 |--------------------------------------------------------------------------
-| Refresh Student Fee Balance
+| GET RECENT PAYMENTS
+|--------------------------------------------------------------------------
+| GET /api/fees/payments/recent
+*/
+
+async function getRecentPaymentsController(
+    req,
+    res,
+    next
+) {
+    try {
+        const schoolId = getSchoolId(req);
+
+        let requestedLimit =
+            Number(req.query.limit || 5);
+
+        if (
+            !Number.isFinite(requestedLimit) ||
+            requestedLimit < 1
+        ) {
+            requestedLimit = 5;
+        }
+
+        requestedLimit =
+            Math.min(
+                Math.floor(requestedLimit),
+                100
+            );
+
+        const payments =
+            await getRecentPayments(
+                schoolId,
+                requestedLimit
+            );
+
+        return res.status(200).json({
+            success: true,
+            count: payments.length,
+            data: payments
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| REFRESH STUDENT FEE BALANCE
 |--------------------------------------------------------------------------
 | PATCH /api/fees/student-records/:id/balance
-|--------------------------------------------------------------------------
 */
 
 async function refreshStudentFeeBalance(
@@ -851,66 +843,48 @@ async function refreshStudentFeeBalance(
     res,
     next
 ) {
-
     try {
+        const schoolId = getSchoolId(req);
+        const studentFeeId = req.params.id;
 
-        const schoolId =
-            getSchoolId(req);
-
-        const studentFeeId =
-            req.params.id;
-
+        if (!studentFeeId) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Student fee ID is required."
+            });
+        }
 
         const fee =
             await updateStudentFeeBalance(
-
                 studentFeeId,
-
                 schoolId
-
             );
 
-
         if (!fee) {
-
             return res.status(404).json({
-
                 success: false,
-
                 message:
                     "Student fee record not found."
-
             });
-
         }
 
-
         return res.status(200).json({
-
             success: true,
-
             message:
                 "Student fee balance updated successfully.",
-
             data: fee
-
         });
-
     } catch (error) {
-
         next(error);
-
     }
-
 }
-
 
 /*
 |--------------------------------------------------------------------------
-| Payment History
+| PAYMENT HISTORY
 |--------------------------------------------------------------------------
-| GET /api/fees/payments/:studentId
-|--------------------------------------------------------------------------
+| GET /api/fees/student/:studentId/payments
 */
 
 async function getPaymentHistoryController(
@@ -918,59 +892,48 @@ async function getPaymentHistoryController(
     res,
     next
 ) {
-
     try {
+        const schoolId = getSchoolId(req);
+        const studentId = req.params.studentId;
 
-        const schoolId =
-            getSchoolId(req);
-
-        const studentId =
-            req.params.studentId;
+        if (!studentId) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Student ID is required."
+            });
+        }
 
         const {
             studentFeeId
         } = req.query;
 
-
         const payments =
             await getPaymentHistory({
-
                 schoolId,
-
                 studentId,
 
                 studentFeeId:
-                    studentFeeId || null
-
+                    normalizeOptionalId(
+                        studentFeeId
+                    )
             });
 
-
         return res.status(200).json({
-
             success: true,
-
-            count:
-                payments.length,
-
+            count: payments.length,
             data: payments
-
         });
-
     } catch (error) {
-
         next(error);
-
     }
-
 }
-
 
 /*
 |--------------------------------------------------------------------------
-| Student Fee Summary
+| STUDENT FEE SUMMARY
 |--------------------------------------------------------------------------
-| GET /api/fees/summary/student/:studentId
-|--------------------------------------------------------------------------
+| GET /api/fees/student/:studentId/summary
 */
 
 async function getStudentFeeSummaryController(
@@ -978,60 +941,49 @@ async function getStudentFeeSummaryController(
     res,
     next
 ) {
-
     try {
+        const schoolId = getSchoolId(req);
+        const studentId = req.params.studentId;
 
-        const schoolId =
-            getSchoolId(req);
-
-        const studentId =
-            req.params.studentId;
+        if (!studentId) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Student ID is required."
+            });
+        }
 
         const {
             sessionId,
             termId
         } = req.query;
 
-
         const summary =
             await getStudentFeeSummary({
-
                 schoolId,
-
                 studentId,
 
                 sessionId:
-                    sessionId || null,
+                    normalizeOptionalId(sessionId),
 
                 termId:
-                    termId || null
-
+                    normalizeOptionalId(termId)
             });
 
-
         return res.status(200).json({
-
             success: true,
-
             data: summary
-
         });
-
     } catch (error) {
-
         next(error);
-
     }
-
 }
-
 
 /*
 |--------------------------------------------------------------------------
-| School Fee Summary
+| SCHOOL FEE SUMMARY
 |--------------------------------------------------------------------------
 | GET /api/fees/summary
-|--------------------------------------------------------------------------
 */
 
 async function getSchoolFeeSummaryController(
@@ -1039,57 +991,44 @@ async function getSchoolFeeSummaryController(
     res,
     next
 ) {
-
     try {
-
-        const schoolId =
-            getSchoolId(req);
+        const schoolId = getSchoolId(req);
 
         const {
             sessionId,
             termId
         } = req.query;
 
-
         const summary =
             await getSchoolFeeSummary(
-
                 schoolId,
-
                 {
                     sessionId:
-                        sessionId || null,
+                        normalizeOptionalId(
+                            sessionId
+                        ),
 
                     termId:
-                        termId || null
+                        normalizeOptionalId(
+                            termId
+                        )
                 }
-
             );
 
-
         return res.status(200).json({
-
             success: true,
-
             data: summary
-
         });
-
     } catch (error) {
-
         next(error);
-
     }
-
 }
-
 
 /*
 |--------------------------------------------------------------------------
-| Search Student Fees
+| SEARCH STUDENT FEES
 |--------------------------------------------------------------------------
 | GET /api/fees/search?q=
-|--------------------------------------------------------------------------
 */
 
 async function searchStudentFeesController(
@@ -1097,70 +1036,39 @@ async function searchStudentFeesController(
     res,
     next
 ) {
-
     try {
-
-        const schoolId =
-            getSchoolId(req);
+        const schoolId = getSchoolId(req);
 
         const searchTerm =
             String(
                 req.query.q || ""
             ).trim();
 
-
         if (!searchTerm) {
-
             return res.status(400).json({
-
                 success: false,
-
                 message:
                     "Search term is required."
-
             });
-
         }
-
 
         const results =
             await searchStudentFees(
-
                 searchTerm,
-
                 schoolId
-
             );
 
-
         return res.status(200).json({
-
             success: true,
-
-            count:
-                results.length,
-
+            count: results.length,
             data: results
-
         });
-
     } catch (error) {
-
         next(error);
-
     }
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Export
-|--------------------------------------------------------------------------
-*/
-
 module.exports = {
-
     createFeeStructure:
         createFeeStructureController,
 
@@ -1176,14 +1084,23 @@ module.exports = {
 
     assignFee,
 
+    getSchoolFeeRecords:
+        getSchoolFeeRecordsController,
+
     getStudentFees:
         getStudentFeesController,
 
     getStudentFeeById:
         getStudentFeeByIdController,
 
+    deleteStudentFeeRecord:
+        deleteStudentFeeRecordController,
+
     recordPayment:
         recordPaymentController,
+
+    getRecentPayments:
+        getRecentPaymentsController,
 
     refreshStudentFeeBalance,
 
@@ -1198,5 +1115,4 @@ module.exports = {
 
     searchStudentFees:
         searchStudentFeesController
-
 };

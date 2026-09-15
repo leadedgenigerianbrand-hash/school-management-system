@@ -1,13 +1,18 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
+
+    ```
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Documents | School Management System</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <link rel="stylesheet" href="../css/style.css">
@@ -18,8 +23,9 @@
         }
 
         .page-container {
+            width: 100%;
             max-width: 1500px;
-            margin: auto;
+            margin: 0 auto;
             padding: 30px;
         }
 
@@ -44,6 +50,12 @@
             color: #6b7280;
         }
 
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -52,11 +64,11 @@
         }
 
         .stat-card {
-            background: #fff;
+            background: #ffffff;
             border: 1px solid #e7eaf0;
             border-radius: 14px;
             padding: 22px;
-            box-shadow: 0 4px 15px rgba(15, 23, 42, .04);
+            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
         }
 
         .stat-icon {
@@ -87,10 +99,10 @@
 
         .toolbar,
         .table-container {
-            background: #fff;
+            background: #ffffff;
             border: 1px solid #e7eaf0;
             border-radius: 14px;
-            box-shadow: 0 4px 15px rgba(15, 23, 42, .04);
+            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
         }
 
         .toolbar {
@@ -105,7 +117,7 @@
 
         .search-box {
             flex: 1;
-            min-width: 260px;
+            min-width: 280px;
             position: relative;
         }
 
@@ -128,7 +140,7 @@
         }
 
         .filter-box select {
-            min-width: 160px;
+            min-width: 180px;
         }
 
         .form-control,
@@ -141,7 +153,7 @@
         .form-control:focus,
         .form-select:focus {
             border-color: #2563eb;
-            box-shadow: 0 0 0 .2rem rgba(37, 99, 235, .1);
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.1);
         }
 
         .table-container {
@@ -153,7 +165,7 @@
         }
 
         table {
-            min-width: 1100px;
+            min-width: 1050px;
             margin: 0;
         }
 
@@ -163,7 +175,7 @@
             font-size: 12px;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: .04em;
+            letter-spacing: 0.04em;
             padding: 16px;
             white-space: nowrap;
             border-bottom: 1px solid #e5e7eb;
@@ -184,15 +196,15 @@
             background: #fafbfc;
         }
 
-        .document-name {
-            font-weight: 700;
-            color: #172033;
-        }
-
         .document-info {
             display: flex;
             flex-direction: column;
-            gap: 3px;
+            gap: 4px;
+        }
+
+        .document-name {
+            font-weight: 700;
+            color: #172033;
         }
 
         .document-info small {
@@ -221,30 +233,12 @@
             white-space: nowrap;
         }
 
-        .status {
+        .file-type {
             display: inline-flex;
-            padding: 5px 11px;
-            border-radius: 50px;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: capitalize;
-        }
-
-        .status-active,
-        .status-approved {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .status-pending {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .status-rejected,
-        .status-inactive {
-            background: #fee2e2;
-            color: #991b1b;
+            align-items: center;
+            gap: 6px;
+            color: #4b5563;
+            font-size: 13px;
         }
 
         .actions {
@@ -253,7 +247,8 @@
             flex-wrap: wrap;
         }
 
-        .actions button {
+        .actions button,
+        .actions a {
             border-radius: 8px;
             padding: 7px 10px;
             font-size: 12px;
@@ -281,7 +276,7 @@
         .modal-content {
             border: 0;
             border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(15, 23, 42, .2);
+            box-shadow: 0 20px 60px rgba(15, 23, 42, 0.2);
         }
 
         .modal-header {
@@ -309,10 +304,6 @@
             color: #374151;
         }
 
-        .file-input {
-            padding: 8px 10px;
-        }
-
         .help-text {
             display: block;
             margin-top: 6px;
@@ -320,13 +311,29 @@
             color: #6b7280;
         }
 
-        @media (max-width: 1000px) {
+        .document-url-preview {
+            display: none;
+            margin-top: 10px;
+        }
+
+        .document-url-preview a {
+            word-break: break-all;
+        }
+
+        .page-message {
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 1100px) {
+
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
+
         }
 
-        @media (max-width: 650px) {
+        @media (max-width: 700px) {
+
             .page-container {
                 padding: 18px 14px;
             }
@@ -356,12 +363,24 @@
             .filter-box select {
                 width: 100%;
             }
+
+            .header-actions {
+                width: 100%;
+            }
+
+            .header-actions button {
+                width: 100%;
+            }
+
         }
     </style>
+    ```
+
 </head>
 
 <body>
 
+    ```
     <div class="page-container">
 
         <div class="page-header">
@@ -369,82 +388,114 @@
             <div class="page-title">
 
                 <div class="mb-2">
+
                     <span class="badge text-bg-primary rounded-pill px-3 py-2">
+
                         <i class="bi bi-folder2-open me-1"></i>
+
                         Records Management
+
                     </span>
+
                 </div>
 
-                <h1>Documents</h1>
+                <h1>Student Documents</h1>
 
-                <p>Manage student, staff and school documents.</p>
+                <p>
+                    Manage and access student documents and records.
+                </p>
 
             </div>
 
             <div class="header-actions">
 
                 <button type="button" class="btn btn-primary px-4 py-2" id="addDocumentBtn">
-                    <i class="bi bi-cloud-arrow-up me-2"></i>
-                    Upload Document
+
+                    <i class="bi bi-file-earmark-plus me-2"></i>
+
+                    Add Document
+
                 </button>
 
             </div>
 
         </div>
 
-        <div id="alertMessage" class="alert d-none" role="alert"></div>
+
+        <div id="alertMessage" class="alert d-none page-message" role="alert"></div>
+
 
         <div class="stats-grid">
 
             <div class="stat-card">
 
                 <div class="stat-icon">
+
                     <i class="bi bi-files"></i>
+
                 </div>
 
                 <h3>Total Documents</h3>
 
-                <div class="value" id="totalDocuments">0</div>
+                <div class="value" id="totalDocuments">
+                    0
+                </div>
 
             </div>
+
 
             <div class="stat-card">
 
                 <div class="stat-icon">
+
+                    <i class="bi bi-file-earmark-text"></i>
+
+                </div>
+
+                <h3>PDF Documents</h3>
+
+                <div class="value" id="pdfDocuments">
+                    0
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon">
+
+                    <i class="bi bi-image"></i>
+
+                </div>
+
+                <h3>Image Documents</h3>
+
+                <div class="value" id="imageDocuments">
+                    0
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon">
+
                     <i class="bi bi-person-vcard"></i>
+
                 </div>
 
-                <h3>Student Documents</h3>
+                <h3>Student Records</h3>
 
-                <div class="value" id="studentDocuments">0</div>
-
-            </div>
-
-            <div class="stat-card">
-
-                <div class="stat-icon">
-                    <i class="bi bi-person-badge"></i>
+                <div class="value" id="studentDocuments">
+                    0
                 </div>
-
-                <h3>Staff Documents</h3>
-
-                <div class="value" id="staffDocuments">0</div>
-
-            </div>
-
-            <div class="stat-card">
-
-                <div class="stat-icon">
-                    <i class="bi bi-hourglass-split"></i>
-                </div>
-
-                <h3>Pending Documents</h3>
-
-                <div class="value" id="pendingDocuments">0</div>
 
             </div>
 
         </div>
+
 
         <div class="toolbar">
 
@@ -452,39 +503,35 @@
 
                 <i class="bi bi-search"></i>
 
-                <input type="search" class="form-control" id="searchInput" placeholder="Search documents..."
+                <input type="search" class="form-control" id="searchInput" placeholder="Search documents or students..."
                     autocomplete="off">
 
             </div>
+
 
             <div class="filter-box">
 
                 <select class="form-select" id="documentTypeFilter">
 
-                    <option value="">All Types</option>
-                    <option value="student">Student</option>
-                    <option value="staff">Staff</option>
-                    <option value="school">School</option>
-                    <option value="academic">Academic</option>
-                    <option value="financial">Financial</option>
-                    <option value="other">Other</option>
+                    <option value="">
+                        All Types
+                    </option>
 
                 </select>
 
-                <select class="form-select" id="statusFilter">
 
-                    <option value="">All Statuses</option>
-                    <option value="active">Active</option>
-                    <option value="pending">Pending</option>
-                    <option value="approved">Approved</option>
-                    <option value="rejected">Rejected</option>
-                    <option value="inactive">Inactive</option>
+                <button type="button" class="btn btn-light border" id="refreshDocumentsBtn">
 
-                </select>
+                    <i class="bi bi-arrow-clockwise me-1"></i>
+
+                    Refresh
+
+                </button>
 
             </div>
 
         </div>
+
 
         <div class="table-container">
 
@@ -492,24 +539,45 @@
 
                 <div class="spinner-border text-primary mb-3" role="status"></div>
 
-                <div>Loading documents...</div>
+                <div>
+                    Loading documents...
+                </div>
 
             </div>
 
-            <div class="table-responsive">
 
-                <table id="documentsTable" class="table align-middle" style="display: none;">
+            <div class="table-responsive" id="documentsTableWrapper" style="display: none;">
+
+                <table id="documentsTable" class="table align-middle">
 
                     <thead>
 
                         <tr>
-                            <th>Document</th>
-                            <th>Type</th>
-                            <th>Owner</th>
-                            <th>File</th>
-                            <th>Uploaded</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+
+                            <th>
+                                Document
+                            </th>
+
+                            <th>
+                                Type
+                            </th>
+
+                            <th>
+                                Student
+                            </th>
+
+                            <th>
+                                File
+                            </th>
+
+                            <th>
+                                Uploaded
+                            </th>
+
+                            <th>
+                                Actions
+                            </th>
+
                         </tr>
 
                     </thead>
@@ -520,19 +588,25 @@
 
             </div>
 
+
             <div id="emptyState" class="empty-state" style="display: none;">
 
                 <i class="bi bi-folder-x"></i>
 
-                <h3>No Documents Found</h3>
+                <h3>
+                    No Documents Found
+                </h3>
 
-                <p class="mb-0">Upload a document to get started.</p>
+                <p class="mb-0">
+                    Add a student document to get started.
+                </p>
 
             </div>
 
         </div>
 
     </div>
+
 
     <div class="modal fade" id="documentModal" tabindex="-1" aria-hidden="true">
 
@@ -543,22 +617,93 @@
                 <div class="modal-header">
 
                     <h2 class="modal-title fs-5" id="modalTitle">
-                        <i class="bi bi-cloud-arrow-up me-2 text-primary"></i>
-                        Upload Document
+
+                        <i class="bi bi-file-earmark-plus me-2 text-primary"></i>
+
+                        Add Student Document
+
                     </h2>
 
-                    <button type="button" class="btn-close" id="closeModalBtn" aria-label="Close">
-                    </button>
+                    <button type="button" class="btn-close" id="closeModalBtn" aria-label="Close"></button>
 
                 </div>
 
-                <form id="documentForm" enctype="multipart/form-data">
+
+                <form id="documentForm">
 
                     <div class="modal-body">
+
+                        <div id="formMessage" class="alert d-none" role="alert"></div>
+
 
                         <div class="row g-3">
 
                             <div class="col-md-6">
+
+                                <label for="studentId" class="form-label">
+                                    Student ID *
+                                </label>
+
+                                <input type="text" class="form-control" id="studentId" name="studentId"
+                                    placeholder="Enter student ID" required>
+
+                                <span class="help-text">
+                                    Enter the student's database ID.
+                                </span>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <label for="documentType" class="form-label">
+                                    Document Type *
+                                </label>
+
+                                <select class="form-select" id="documentType" name="documentType" required>
+
+                                    <option value="">
+                                        Select Type
+                                    </option>
+
+                                    <option value="Birth Certificate">
+                                        Birth Certificate
+                                    </option>
+
+                                    <option value="Passport Photograph">
+                                        Passport Photograph
+                                    </option>
+
+                                    <option value="School Certificate">
+                                        School Certificate
+                                    </option>
+
+                                    <option value="Transfer Certificate">
+                                        Transfer Certificate
+                                    </option>
+
+                                    <option value="Medical Record">
+                                        Medical Record
+                                    </option>
+
+                                    <option value="Identification">
+                                        Identification
+                                    </option>
+
+                                    <option value="Academic Record">
+                                        Academic Record
+                                    </option>
+
+                                    <option value="Other">
+                                        Other
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="col-12">
 
                                 <label for="documentName" class="form-label">
                                     Document Name *
@@ -569,102 +714,68 @@
 
                             </div>
 
-                            <div class="col-md-6">
-
-                                <label for="documentType" class="form-label">
-                                    Document Type *
-                                </label>
-
-                                <select class="form-select" id="documentType" name="documentType" required>
-
-                                    <option value="">Select Type</option>
-                                    <option value="student">Student</option>
-                                    <option value="staff">Staff</option>
-                                    <option value="school">School</option>
-                                    <option value="academic">Academic</option>
-                                    <option value="financial">Financial</option>
-                                    <option value="other">Other</option>
-
-                                </select>
-
-                            </div>
-
-                            <div class="col-md-6">
-
-                                <label for="ownerType" class="form-label">
-                                    Owner Type *
-                                </label>
-
-                                <select class="form-select" id="ownerType" name="ownerType" required>
-
-                                    <option value="">Select Owner Type</option>
-                                    <option value="student">Student</option>
-                                    <option value="staff">Staff</option>
-                                    <option value="school">School</option>
-                                    <option value="other">Other</option>
-
-                                </select>
-
-                            </div>
-
-                            <div class="col-md-6">
-
-                                <label for="ownerId" class="form-label">
-                                    Owner ID
-                                </label>
-
-                                <input type="text" class="form-control" id="ownerId" name="ownerId"
-                                    placeholder="Student or staff ID">
-
-                            </div>
 
                             <div class="col-12">
 
-                                <label for="documentFile" class="form-label">
-                                    Select File *
+                                <label for="fileUrl" class="form-label">
+                                    Document File URL *
                                 </label>
 
-                                <input type="file" id="documentFile" name="document" class="form-control file-input"
-                                    required>
+                                <input type="url" class="form-control" id="fileUrl" name="fileUrl"
+                                    placeholder="https://example.com/document.pdf" required>
 
                                 <span class="help-text">
-                                    PDF, Word documents and common image formats are supported.
+                                    Enter the URL where the document file is stored.
+                                    Physical file upload will be connected when the
+                                    backend upload endpoint is implemented.
+                                </span>
+
+                                <div id="documentUrlPreview" class="document-url-preview">
+
+                                    <a href="#" id="documentUrlPreviewLink" target="_blank" rel="noopener noreferrer">
+                                        Open document
+                                    </a>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <label for="fileSize" class="form-label">
+                                    File Size
+                                </label>
+
+                                <input type="number" class="form-control" id="fileSize" name="fileSize" min="0" step="1"
+                                    placeholder="Size in bytes">
+
+                                <span class="help-text">
+                                    Optional. Enter the file size in bytes.
                                 </span>
 
                             </div>
 
+
                             <div class="col-md-6">
 
-                                <label for="documentStatus" class="form-label">
-                                    Status
+                                <label for="mimeType" class="form-label">
+                                    MIME Type
                                 </label>
 
-                                <select class="form-select" id="documentStatus" name="status">
+                                <input type="text" class="form-control" id="mimeType" name="mimeType"
+                                    placeholder="e.g. application/pdf">
 
-                                    <option value="active">Active</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="approved">Approved</option>
-                                    <option value="rejected">Rejected</option>
-                                    <option value="inactive">Inactive</option>
-
-                                </select>
-
-                            </div>
-
-                            <div class="col-12">
-
-                                <label for="description" class="form-label">
-                                    Description
-                                </label>
-
-                                <textarea id="description" name="description" class="form-control" rows="4"
-                                    placeholder="Optional description..."></textarea>
+                                <span class="help-text">
+                                    Optional. Example: application/pdf or image/jpeg.
+                                </span>
 
                             </div>
 
                         </div>
 
                     </div>
+
 
                     <div class="modal-footer">
 
@@ -673,8 +784,11 @@
                         </button>
 
                         <button type="submit" class="btn btn-primary px-4" id="saveDocumentBtn">
-                            <i class="bi bi-cloud-arrow-up me-2"></i>
-                            Upload Document
+
+                            <i class="bi bi-check-circle me-2"></i>
+
+                            Save Document
+
                         </button>
 
                     </div>
@@ -687,10 +801,15 @@
 
     </div>
 
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
     <script src="../js/api.js"></script>
+
     <script src="../js/auth.js"></script>
+
     <script src="../js/documents.js"></script>
+    ```
 
 </body>
 

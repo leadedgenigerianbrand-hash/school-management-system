@@ -1,241 +1,140 @@
+"use strict";
+
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const crypto = require("crypto");
 
-/*
-|--------------------------------------------------------------------------
-| Upload Middleware
-|--------------------------------------------------------------------------
-|
-| Handles:
-|
-| 1. Student photographs
-| 2. Staff photographs
-| 3. Student/staff documents
-|
-| Files are stored on the server and their paths will be saved in
-| PostgreSQL by the appropriate controllers/models.
-|
-|--------------------------------------------------------------------------
-*/
-
-
-/*
-|--------------------------------------------------------------------------
-| Upload Directories
-|--------------------------------------------------------------------------
-*/
+const uploadsRootDirectory = path.resolve(
+    process.cwd(),
+    "uploads"
+);
 
 const studentUploadDirectory = path.join(
-    process.cwd(),
-    "uploads",
+    uploadsRootDirectory,
     "students"
 );
 
 const staffUploadDirectory = path.join(
-    process.cwd(),
-    "uploads",
+    uploadsRootDirectory,
     "staff"
 );
 
 const documentUploadDirectory = path.join(
-    process.cwd(),
-    "uploads",
+    uploadsRootDirectory,
     "documents"
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| Create Directories If They Do Not Exist
-|--------------------------------------------------------------------------
-*/
-
 function ensureUploadDirectories() {
-
     const directories = [
+        uploadsRootDirectory,
         studentUploadDirectory,
         staffUploadDirectory,
         documentUploadDirectory
     ];
 
     for (const directory of directories) {
-
-        if (!fs.existsSync(directory)) {
-
-            fs.mkdirSync(directory, {
-                recursive: true
-            });
-
-        }
-
+        fs.mkdirSync(directory, {
+            recursive: true
+        });
     }
-
 }
 
 ensureUploadDirectories();
 
-
-/*
-|--------------------------------------------------------------------------
-| Allowed File Types
-|--------------------------------------------------------------------------
-*/
-
-const allowedImageMimeTypes = [
+const allowedImageMimeTypes = new Set([
     "image/jpeg",
     "image/png",
     "image/webp"
-];
+]);
 
-
-const allowedDocumentMimeTypes = [
+const allowedDocumentMimeTypes = new Set([
     "application/pdf",
     "image/jpeg",
     "image/png"
-];
-
-
-/*
-|--------------------------------------------------------------------------
-| Maximum File Size
-|--------------------------------------------------------------------------
-|
-| 5 MB per uploaded file.
-|--------------------------------------------------------------------------
-*/
+]);
 
 const maximumFileSize = 5 * 1024 * 1024;
 
-
-/*
-|--------------------------------------------------------------------------
-| Generate Safe File Name
-|--------------------------------------------------------------------------
-*/
-
 function generateFileName(originalName) {
-
     const extension =
-        path.extname(originalName).toLowerCase();
+        path.extname(
+            String(originalName || "")
+        ).toLowerCase();
+
+    const safeExtension =
+        /^[.][a-z0-9]+$/.test(extension)
+            ? extension
+            : "";
 
     const uniqueName =
-        `${Date.now()}-${crypto.randomBytes(8).toString("hex")}`;
+        `${Date.now()}-${crypto.randomBytes(16).toString("hex")}`;
 
-    return `${uniqueName}${extension}`;
-
+    return `${uniqueName}${safeExtension}`;
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Student Photo Storage
-|--------------------------------------------------------------------------
-*/
 
 const studentPhotoStorage =
     multer.diskStorage({
-
         destination: function (req, file, callback) {
-
             callback(
                 null,
                 studentUploadDirectory
             );
-
         },
-
         filename: function (req, file, callback) {
-
             callback(
                 null,
-                generateFileName(file.originalname)
+                generateFileName(
+                    file.originalname
+                )
             );
-
         }
-
     });
-
-
-/*
-|--------------------------------------------------------------------------
-| Staff Photo Storage
-|--------------------------------------------------------------------------
-*/
 
 const staffPhotoStorage =
     multer.diskStorage({
-
         destination: function (req, file, callback) {
-
             callback(
                 null,
                 staffUploadDirectory
             );
-
         },
-
         filename: function (req, file, callback) {
-
             callback(
                 null,
-                generateFileName(file.originalname)
+                generateFileName(
+                    file.originalname
+                )
             );
-
         }
-
     });
-
-
-/*
-|--------------------------------------------------------------------------
-| Document Storage
-|--------------------------------------------------------------------------
-*/
 
 const documentStorage =
     multer.diskStorage({
-
         destination: function (req, file, callback) {
-
             callback(
                 null,
                 documentUploadDirectory
             );
-
         },
-
         filename: function (req, file, callback) {
-
             callback(
                 null,
-                generateFileName(file.originalname)
+                generateFileName(
+                    file.originalname
+                )
             );
-
         }
-
     });
 
-
-/*
-|--------------------------------------------------------------------------
-| Image File Filter
-|--------------------------------------------------------------------------
-*/
-
 function imageFileFilter(req, file, callback) {
-
     if (
-        allowedImageMimeTypes.includes(
+        allowedImageMimeTypes.has(
             file.mimetype
         )
     ) {
-
         return callback(null, true);
-
     }
-
 
     const error = new Error(
         "Only JPG, JPEG, PNG and WEBP image files are allowed."
@@ -244,28 +143,16 @@ function imageFileFilter(req, file, callback) {
     error.code = "INVALID_IMAGE_TYPE";
 
     return callback(error, false);
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Document File Filter
-|--------------------------------------------------------------------------
-*/
-
 function documentFileFilter(req, file, callback) {
-
     if (
-        allowedDocumentMimeTypes.includes(
+        allowedDocumentMimeTypes.has(
             file.mimetype
         )
     ) {
-
         return callback(null, true);
-
     }
-
 
     const error = new Error(
         "Only PDF, JPG, JPEG and PNG documents are allowed."
@@ -274,367 +161,203 @@ function documentFileFilter(req, file, callback) {
     error.code = "INVALID_DOCUMENT_TYPE";
 
     return callback(error, false);
-
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Student Photo Upload
-|--------------------------------------------------------------------------
-|
-| Frontend field name:
-|
-| photo
-|--------------------------------------------------------------------------
-*/
 
 const uploadStudentPhoto =
     multer({
-
         storage: studentPhotoStorage,
-
         limits: {
             fileSize: maximumFileSize,
             files: 1
         },
-
         fileFilter: imageFileFilter
-
     }).single("photo");
-
-
-/*
-|--------------------------------------------------------------------------
-| Staff Photo Upload
-|--------------------------------------------------------------------------
-*/
 
 const uploadStaffPhoto =
     multer({
-
         storage: staffPhotoStorage,
-
         limits: {
             fileSize: maximumFileSize,
             files: 1
         },
-
         fileFilter: imageFileFilter
-
     }).single("photo");
-
-
-/*
-|--------------------------------------------------------------------------
-| Student Document Upload
-|--------------------------------------------------------------------------
-|
-| Frontend field name:
-|
-| document
-|--------------------------------------------------------------------------
-*/
 
 const uploadDocument =
     multer({
-
         storage: documentStorage,
-
         limits: {
             fileSize: maximumFileSize,
             files: 1
         },
-
         fileFilter: documentFileFilter
-
     }).single("document");
-
-
-/*
-|--------------------------------------------------------------------------
-| Multiple Student Documents
-|--------------------------------------------------------------------------
-|
-| Allows up to 10 documents in one request.
-|--------------------------------------------------------------------------
-*/
 
 const uploadMultipleDocuments =
     multer({
-
         storage: documentStorage,
-
         limits: {
             fileSize: maximumFileSize,
             files: 10
         },
-
         fileFilter: documentFileFilter
-
     }).array("documents", 10);
 
-
-/*
-|--------------------------------------------------------------------------
-| Upload Error Middleware
-|--------------------------------------------------------------------------
-|
-| Converts Multer errors into clean API responses.
-|--------------------------------------------------------------------------
-*/
-
 function handleUploadErrors(error, req, res, next) {
-
     if (!error) {
-
         return next();
-
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | Multer Errors
-    |--------------------------------------------------------------------------
-    */
-
-    if (error instanceof multer.MulterError) {
-
-        if (error.code === "LIMIT_FILE_SIZE") {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "File is too large. Maximum allowed size is 5 MB."
-
-            });
-
+    if (
+        error instanceof multer.MulterError
+    ) {
+        if (
+            error.code === "LIMIT_FILE_SIZE"
+        ) {
+            error.statusCode = 400;
+            error.message =
+                "File is too large. Maximum allowed size is 5 MB.";
+            return next(error);
         }
 
-
-        if (error.code === "LIMIT_FILE_COUNT") {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Too many files were uploaded."
-
-            });
-
+        if (
+            error.code === "LIMIT_FILE_COUNT"
+        ) {
+            error.statusCode = 400;
+            error.message =
+                "Too many files were uploaded.";
+            return next(error);
         }
 
-
-        if (error.code === "LIMIT_UNEXPECTED_FILE") {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Unexpected file field."
-
-            });
-
+        if (
+            error.code === "LIMIT_UNEXPECTED_FILE"
+        ) {
+            error.statusCode = 400;
+            error.message =
+                "Unexpected file field.";
+            return next(error);
         }
 
+        if (
+            error.code === "LIMIT_FIELD_COUNT"
+        ) {
+            error.statusCode = 400;
+            error.message =
+                "Too many form fields were submitted.";
+            return next(error);
+        }
 
-        return res.status(400).json({
-
-            success: false,
-
-            message:
-                "File upload failed."
-
-        });
-
+        return next(error);
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Custom File Type Errors
-    |--------------------------------------------------------------------------
-    */
 
     if (
         error.code === "INVALID_IMAGE_TYPE" ||
         error.code === "INVALID_DOCUMENT_TYPE"
     ) {
-
-        return res.status(400).json({
-
-            success: false,
-
-            message: error.message
-
-        });
-
+        error.statusCode = 400;
+        return next(error);
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Unknown Upload Error
-    |--------------------------------------------------------------------------
-    */
 
     return next(error);
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Delete Uploaded File
-|--------------------------------------------------------------------------
-|
-| Used when replacing or deleting student/staff photographs or documents.
-|--------------------------------------------------------------------------
-*/
-
 function deleteUploadedFile(relativeFilePath) {
-
     if (!relativeFilePath) {
-
         return false;
-
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | Convert Database Path To Absolute Path
-    |--------------------------------------------------------------------------
-    */
-
-    const normalizedPath =
-        relativeFilePath
-            .replace(/^[/\\]+/, "")
-            .replace(/\//g, path.sep);
-
+    const normalizedInput =
+        String(relativeFilePath)
+            .replace(/\\/g, "/")
+            .replace(/^\/+/, "");
 
     const absolutePath =
-        path.join(
+        path.resolve(
+            process.cwd(),
+            normalizedInput
+        );
+
+    const uploadsRoot =
+        path.resolve(
+            uploadsRootDirectory
+        );
+
+    const uploadsPrefix =
+        `${uploadsRoot}${path.sep}`;
+
+    if (
+        absolutePath !== uploadsRoot &&
+        !absolutePath.startsWith(
+            uploadsPrefix
+        )
+    ) {
+        return false;
+    }
+
+    if (!fs.existsSync(absolutePath)) {
+        return false;
+    }
+
+    const fileStats =
+        fs.statSync(absolutePath);
+
+    if (!fileStats.isFile()) {
+        return false;
+    }
+
+    fs.unlinkSync(absolutePath);
+
+    return true;
+}
+
+function getPublicFilePath(filePath) {
+    if (!filePath) {
+        return null;
+    }
+
+    const normalizedPath =
+        String(filePath)
+            .replace(/\\/g, "/")
+            .replace(/^\/+/, "");
+
+    if (
+        !normalizedPath.startsWith(
+            "uploads/"
+        )
+    ) {
+        return null;
+    }
+
+    const absolutePath =
+        path.resolve(
             process.cwd(),
             normalizedPath
         );
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | Security Check
-    |--------------------------------------------------------------------------
-    |
-    | Prevent paths from escaping the uploads directory.
-    |--------------------------------------------------------------------------
-    */
-
-    const uploadsRoot =
-        path.resolve(
-            process.cwd(),
-            "uploads"
-        );
-
-    const resolvedPath =
-        path.resolve(
-            absolutePath
-        );
-
+    const uploadsPrefix =
+        `${uploadsRootDirectory}${path.sep}`;
 
     if (
-        !resolvedPath.startsWith(
-            uploadsRoot + path.sep
+        !absolutePath.startsWith(
+            uploadsPrefix
         )
     ) {
-
-        return false;
-
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Delete File
-    |--------------------------------------------------------------------------
-    */
-
-    if (fs.existsSync(resolvedPath)) {
-
-        fs.unlinkSync(resolvedPath);
-
-        return true;
-
-    }
-
-
-    return false;
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Get Public File Path
-|--------------------------------------------------------------------------
-|
-| Converts:
-|
-| uploads/students/photo.jpg
-|
-| into:
-|
-| /uploads/students/photo.jpg
-|--------------------------------------------------------------------------
-*/
-
-function getPublicFilePath(filePath) {
-
-    if (!filePath) {
-
         return null;
-
     }
 
-
-    return "/" +
-        filePath
-            .replace(/\\/g, "/")
-            .replace(/^\/+/, "");
-
+    return `/${normalizedPath}`;
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Export
-|--------------------------------------------------------------------------
-*/
 
 module.exports = {
-
     uploadStudentPhoto,
-
     uploadStaffPhoto,
-
     uploadDocument,
-
     uploadMultipleDocuments,
-
     handleUploadErrors,
-
     deleteUploadedFile,
-
     getPublicFilePath,
-
+    uploadsRootDirectory,
     studentUploadDirectory,
-
     staffUploadDirectory,
-
     documentUploadDirectory
-
 };

@@ -1,3 +1,5 @@
+"use strict";
+
 const express = require("express");
 const multer = require("multer");
 const path = require("path");
@@ -7,20 +9,18 @@ const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-/*
-|--------------------------------------------------------------------------
-| Multer configuration
-|--------------------------------------------------------------------------
-*/
-
 const storage = multer.diskStorage({
-
     destination: function (req, file, cb) {
-        cb(null, path.join(__dirname, "../Public/uploads/students"));
+        cb(
+            null,
+            path.join(
+                __dirname,
+                "../Public/uploads/students"
+            )
+        );
     },
 
     filename: function (req, file, cb) {
-
         const extension =
             path.extname(file.originalname).toLowerCase();
 
@@ -29,11 +29,9 @@ const storage = multer.diskStorage({
 
         cb(null, filename);
     }
-
 });
 
 const upload = multer({
-
     storage,
 
     limits: {
@@ -41,7 +39,6 @@ const upload = multer({
     },
 
     fileFilter: function (req, file, cb) {
-
         const allowedTypes = [
             "image/jpeg",
             "image/jpg",
@@ -50,18 +47,16 @@ const upload = multer({
         ];
 
         if (allowedTypes.includes(file.mimetype)) {
-            cb(null, true);
-        } else {
-            cb(
-                new Error(
-                    "Only JPG, JPEG, PNG and WEBP images are allowed."
-                )
-            );
+            return cb(null, true);
         }
+
+        return cb(
+            new Error(
+                "Only JPG, JPEG, PNG and WEBP images are allowed."
+            )
+        );
     }
-
 });
-
 
 /*
 |--------------------------------------------------------------------------
@@ -75,7 +70,6 @@ router.get(
     studentController.getStudents
 );
 
-
 /*
 |--------------------------------------------------------------------------
 | GET STUDENT STATISTICS
@@ -87,7 +81,6 @@ router.get(
     authMiddleware,
     studentController.getStudentStatistics
 );
-
 
 /*
 |--------------------------------------------------------------------------
@@ -101,7 +94,6 @@ router.get(
     studentController.searchStudents
 );
 
-
 /*
 |--------------------------------------------------------------------------
 | SEARCH STUDENT BY NAME
@@ -113,7 +105,6 @@ router.get(
     authMiddleware,
     studentController.searchStudentByName
 );
-
 
 /*
 |--------------------------------------------------------------------------
@@ -127,20 +118,6 @@ router.get(
     studentController.getStudentByAdmissionNumber
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| GET STUDENT ENROLLMENT
-|--------------------------------------------------------------------------
-*/
-
-router.get(
-    "/:id/enrollment",
-    authMiddleware,
-    studentController.getStudentEnrollment
-);
-
-
 /*
 |--------------------------------------------------------------------------
 | GET FULL STUDENT PROFILE
@@ -153,7 +130,6 @@ router.get(
     studentController.getStudentProfile
 );
 
-
 /*
 |--------------------------------------------------------------------------
 | GET STUDENT BY ID
@@ -165,7 +141,6 @@ router.get(
     authMiddleware,
     studentController.getStudentById
 );
-
 
 /*
 |--------------------------------------------------------------------------
@@ -180,20 +155,6 @@ router.post(
     studentController.createStudent
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| ENROLL STUDENT
-|--------------------------------------------------------------------------
-*/
-
-router.post(
-    "/:id/enrollment",
-    authMiddleware,
-    studentController.enrollStudent
-);
-
-
 /*
 |--------------------------------------------------------------------------
 | UPDATE STUDENT
@@ -207,7 +168,6 @@ router.put(
     studentController.updateStudent
 );
 
-
 /*
 |--------------------------------------------------------------------------
 | DELETE STUDENT
@@ -219,12 +179,5 @@ router.delete(
     authMiddleware,
     studentController.deleteStudent
 );
-
-
-/*
-|--------------------------------------------------------------------------
-| EXPORT ROUTER
-|--------------------------------------------------------------------------
-*/
 
 module.exports = router;

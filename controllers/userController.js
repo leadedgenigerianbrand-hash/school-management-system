@@ -1,82 +1,163 @@
-const bcrypt = require("bcryptjs");
+"use strict";
 
 const userModel = require("../models/userModel");
 
 const {
-    query
-} = require("../config/database");
+    hashPassword,
+    comparePassword
+} = require("../utils/passwordUtils");
 
-
-/*
-|--------------------------------------------------------------------------
-| User Controller
-|--------------------------------------------------------------------------
-|
-| Handles:
-|
-| - Create user
-| - Get all users
-| - Get user by ID
-| - Get current user
-| - Update user profile
-| - Change password
-| - Activate user
-| - Deactivate user
-| - Delete user
-|
-|--------------------------------------------------------------------------
-*/
-
-
-/*
-|--------------------------------------------------------------------------
-| Get School ID
-|--------------------------------------------------------------------------
-*/
-
-function getSchoolId(req) {
-
+function getAuthenticatedUserId(req) {
     return (
-        req.user?.schoolId ||
-        req.user?.school_id ||
-        req.body?.schoolId ||
-        req.query?.schoolId ||
-        null
-    );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Get Current User ID
-|--------------------------------------------------------------------------
-*/
-
-function getUserId(req) {
-
-    return (
-        req.user?.id ||
         req.user?.userId ||
+        req.user?.id ||
         req.user?.user_id ||
         null
     );
-
 }
 
+function getAuthenticatedSchoolId(req) {
+    return (
+        req.user?.schoolId ||
+        req.user?.school_id ||
+        null
+    );
+}
 
-/*
-|--------------------------------------------------------------------------
-| Create User
-|--------------------------------------------------------------------------
-*/
+function getRequestedUserId(req) {
+    return (
+        req.params?.id ||
+        req.params?.userId ||
+        null
+    );
+}
 
-async function createUser(req, res, next) {
+function normalizeText(value) {
+    if (
+        value === undefined ||
+        value === null
+    ) {
+        return "";
+    }
 
+    return String(value).trim();
+}
+
+function normalizeEmail(value) {
+    const email =
+        normalizeText(value);
+
+    return email
+        ? email.toLowerCase()
+        : "";
+}
+
+function buildSafeUser(user) {
+    if (!user) {
+        return null;
+    }
+
+    return {
+        id: user.id,
+        schoolId: user.school_id,
+        roleId: user.role_id,
+        roleName: user.role_name || null,
+        firstName: user.first_name,
+        middleName: user.middle_name || null,
+        lastName: user.last_name,
+        email: user.email,
+        phone: user.phone,
+        username: user.username,
+        profilePhotoUrl:
+            user.profile_photo_url || null,
+        isActive: user.is_active,
+        lastLoginAt:
+            user.last_login_at || null,
+        schoolName:
+            user.school_name || null,
+        schoolCode:
+            user.school_code || null,
+        createdAt:
+            user.created_at || null,
+        updatedAt:
+            user.updated_at || null
+    };
+}
+
+function ensureAuthenticatedUser(req) {
+    const userId =
+        getAuthenticatedUserId(req);
+
+    if (!userId) {
+        const error = new Error(
+            "Authenticated user not found."
+        );
+
+        error.statusCode = 401;
+
+        throw error;
+    }
+
+    return userId;
+}
+
+function ensureAuthenticatedSchool(req) {
+    const schoolId =
+        getAuthenticatedSchoolId(req);
+
+    if (!schoolId) {
+        const error = new Error(
+            "Authenticated school context is required."
+        );
+
+        error.statusCode = 403;
+
+        throw error;
+    }
+
+    return schoolId;
+}
+
+function ensureSameSchool(
+    user,
+    schoolId
+) {
+    if (!user) {
+        const error = new Error(
+            "User not found."
+        );
+
+        error.statusCode = 404;
+
+        throw error;
+    }
+
+    if (
+        !schoolId ||
+        !user.school_id ||
+        String(user.school_id) !==
+            String(schoolId)
+    ) {
+        const error = new Error(
+            "You do not have access to this user."
+        );
+
+        error.statusCode = 403;
+
+        throw error;
+    }
+}
+
+async function createUser(
+    req,
+    res,
+    next
+) {
     try {
-
         const schoolId =
-            getSchoolId(req);
+            ensureAuthenticatedSchool(
+                req
+            );
 
         const {
             roleId,
@@ -86,1246 +167,986 @@ async function createUser(req, res, next) {
             password,
             firstName,
             first_name,
+            middleName,
+            middle_name,
             lastName,
             last_name,
-            phone
-        } = req.body;
-
+            phone,
+            profilePhotoUrl,
+            profile_photo_url,
+            isActive,
+            is_active
+        } = req.body || {};
 
         const finalRoleId =
             roleId || role_id;
 
+        const finalUsername =
+            normalizeText(username);
+
+        const finalEmail =
+            normalizeEmail(email);
+
+        const finalPassword =
+            typeof password === "string"
+                ? password
+                : "";
+
         const finalFirstName =
-            firstName || first_name;
+            normalizeText(
+                firstName || first_name
+            );
+
+        const finalMiddleName =
+            normalizeText(
+                middleName || middle_name
+            );
 
         const finalLastName =
-            lastName || last_name;
+            normalizeText(
+                lastName || last_name
+            );
 
-
-        if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
-        }
-
+        const finalPhone =
+            normalizeText(phone);
 
         if (!finalRoleId) {
+            const error = new Error(
+                "Role ID is required."
+            );
 
-            return res.status(400).json({
+            error.statusCode = 400;
 
-                success: false,
-
-                message:
-                    "Role ID is required."
-
-            });
-
+            return next(error);
         }
 
+        if (!finalUsername) {
+            const error = new Error(
+                "Username is required."
+            );
 
-        if (!username) {
+            error.statusCode = 400;
 
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Username is required."
-
-            });
-
+            return next(error);
         }
 
+        if (!finalEmail) {
+            const error = new Error(
+                "Email is required."
+            );
 
-        if (!email) {
+            error.statusCode = 400;
 
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Email is required."
-
-            });
-
+            return next(error);
         }
 
+        if (!finalPassword) {
+            const error = new Error(
+                "Password is required."
+            );
 
-        if (!password) {
+            error.statusCode = 400;
 
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Password is required."
-
-            });
-
+            return next(error);
         }
-
 
         if (!finalFirstName) {
+            const error = new Error(
+                "First name is required."
+            );
 
-            return res.status(400).json({
+            error.statusCode = 400;
 
-                success: false,
-
-                message:
-                    "First name is required."
-
-            });
-
+            return next(error);
         }
-
 
         if (!finalLastName) {
+            const error = new Error(
+                "Last name is required."
+            );
 
-            return res.status(400).json({
+            error.statusCode = 400;
 
-                success: false,
-
-                message:
-                    "Last name is required."
-
-            });
-
+            return next(error);
         }
 
+        if (finalPassword.length < 8) {
+            const error = new Error(
+                "Password must be at least 8 characters."
+            );
 
-        if (password.length < 6) {
+            error.statusCode = 400;
 
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Password must be at least 6 characters."
-
-            });
-
+            return next(error);
         }
 
-
-        const usernameAlreadyExists =
+        const usernameExists =
             await userModel.usernameExists(
-                username.trim()
+                finalUsername,
+                null,
+                schoolId
             );
 
+        if (usernameExists) {
+            const error = new Error(
+                "Username already exists in this school."
+            );
 
-        if (usernameAlreadyExists) {
+            error.statusCode = 409;
 
-            return res.status(409).json({
-
-                success: false,
-
-                message:
-                    "Username already exists."
-
-            });
-
+            return next(error);
         }
 
-
-        const emailAlreadyExists =
+        const emailExists =
             await userModel.emailExists(
-                email.trim()
+                finalEmail,
+                null,
+                schoolId
             );
 
+        if (emailExists) {
+            const error = new Error(
+                "Email already exists in this school."
+            );
 
-        if (emailAlreadyExists) {
+            error.statusCode = 409;
 
-            return res.status(409).json({
-
-                success: false,
-
-                message:
-                    "Email already exists."
-
-            });
-
+            return next(error);
         }
-
 
         const passwordHash =
-            await bcrypt.hash(
-                password,
-                10
+            await hashPassword(
+                finalPassword
             );
-
 
         const user =
             await userModel.createUser({
-
                 schoolId,
-
-                roleId:
-                    finalRoleId,
-
-                username:
-                    username.trim(),
-
-                email:
-                    email.trim().toLowerCase(),
-
+                roleId: finalRoleId,
+                username: finalUsername,
+                email: finalEmail,
                 passwordHash,
-
                 firstName:
-                    finalFirstName.trim(),
-
+                    finalFirstName,
+                middleName:
+                    finalMiddleName || null,
                 lastName:
-                    finalLastName.trim(),
-
+                    finalLastName,
                 phone:
-                    phone || null
-
+                    finalPhone || null,
+                profilePhotoUrl:
+                    normalizeText(
+                        profilePhotoUrl ||
+                        profile_photo_url
+                    ) || null,
+                isActive:
+                    isActive !== undefined
+                        ? Boolean(isActive)
+                        : is_active !== undefined
+                            ? Boolean(is_active)
+                            : true
             });
 
-
         return res.status(201).json({
-
             success: true,
-
             message:
                 "User created successfully.",
-
-            data: user
-
+            data:
+                buildSafeUser(user)
         });
-
-
     } catch (error) {
-
         console.error(
             "Create user error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Get All Users
-|--------------------------------------------------------------------------
-*/
-
-async function getUsers(req, res, next) {
-
+async function getUsers(
+    req,
+    res,
+    next
+) {
     try {
-
         const schoolId =
-            getSchoolId(req);
-
-
-        if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
-        }
-
+            ensureAuthenticatedSchool(
+                req
+            );
 
         const users =
             await userModel.findUsersBySchool(
                 schoolId
             );
 
-
         return res.status(200).json({
-
             success: true,
-
-            data: users
-
+            data:
+                users.map(
+                    buildSafeUser
+                )
         });
-
-
     } catch (error) {
-
         console.error(
             "Get users error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Get User By ID
-|--------------------------------------------------------------------------
-*/
-
-async function getUserById(req, res, next) {
-
+async function getUserById(
+    req,
+    res,
+    next
+) {
     try {
-
-        const {
-            id
-        } = req.params;
-
-
-        if (!id) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "User ID is required."
-
-            });
-
-        }
-
-
-        const user =
-            await userModel.findUserById(
-                id
+        const userId =
+            getRequestedUserId(
+                req
             );
 
+        if (!userId) {
+            const error = new Error(
+                "User ID is required."
+            );
 
-        if (!user) {
+            error.statusCode = 400;
 
-            return res.status(404).json({
-
-                success: false,
-
-                message:
-                    "User not found."
-
-            });
-
+            return next(error);
         }
-
 
         const schoolId =
-            getSchoolId(req);
-
-
-        if (
-            schoolId &&
-            String(user.school_id) !==
-            String(schoolId)
-        ) {
-
-            return res.status(403).json({
-
-                success: false,
-
-                message:
-                    "You do not have access to this user."
-
-            });
-
-        }
-
-
-        return res.status(200).json({
-
-            success: true,
-
-            data: user
-
-        });
-
-
-    } catch (error) {
-
-        console.error(
-            "Get user by ID error:",
-            error
-        );
-
-        next(error);
-
-    }
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Get Current User
-|--------------------------------------------------------------------------
-*/
-
-async function getCurrentUser(req, res, next) {
-
-    try {
-
-        const userId =
-            getUserId(req);
-
-
-        if (!userId) {
-
-            return res.status(401).json({
-
-                success: false,
-
-                message:
-                    "Authenticated user not found."
-
-            });
-
-        }
-
+            ensureAuthenticatedSchool(
+                req
+            );
 
         const user =
             await userModel.findUserById(
                 userId
             );
 
-
         if (!user) {
+            const error = new Error(
+                "User not found."
+            );
 
-            return res.status(404).json({
+            error.statusCode = 404;
 
-                success: false,
-
-                message:
-                    "User not found."
-
-            });
-
+            return next(error);
         }
 
+        ensureSameSchool(
+            user,
+            schoolId
+        );
 
         return res.status(200).json({
-
             success: true,
-
-            data: user
-
+            data:
+                buildSafeUser(user)
         });
-
-
     } catch (error) {
+        console.error(
+            "Get user by ID error:",
+            error
+        );
 
+        return next(error);
+    }
+}
+
+async function getCurrentUser(
+    req,
+    res,
+    next
+) {
+    try {
+        const userId =
+            ensureAuthenticatedUser(
+                req
+            );
+
+        const schoolId =
+            ensureAuthenticatedSchool(
+                req
+            );
+
+        const user =
+            await userModel.findUserById(
+                userId
+            );
+
+        if (!user) {
+            const error = new Error(
+                "User not found."
+            );
+
+            error.statusCode = 404;
+
+            return next(error);
+        }
+
+        ensureSameSchool(
+            user,
+            schoolId
+        );
+
+        return res.status(200).json({
+            success: true,
+            data:
+                buildSafeUser(user)
+        });
+    } catch (error) {
         console.error(
             "Get current user error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Update User
-|--------------------------------------------------------------------------
-*/
-
-async function updateUser(req, res, next) {
-
+async function updateUser(
+    req,
+    res,
+    next
+) {
     try {
+        const userId =
+            getRequestedUserId(
+                req
+            );
 
-        const {
-            id
-        } = req.params;
+        if (!userId) {
+            const error = new Error(
+                "User ID is required."
+            );
 
+            error.statusCode = 400;
 
-        if (!id) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "User ID is required."
-
-            });
-
+            return next(error);
         }
 
+        const schoolId =
+            ensureAuthenticatedSchool(
+                req
+            );
 
         const existingUser =
             await userModel.findUserById(
-                id
+                userId
             );
 
-
         if (!existingUser) {
+            const error = new Error(
+                "User not found."
+            );
 
-            return res.status(404).json({
+            error.statusCode = 404;
 
-                success: false,
-
-                message:
-                    "User not found."
-
-            });
-
+            return next(error);
         }
 
-
-        const schoolId =
-            getSchoolId(req);
-
-
-        if (
-            schoolId &&
-            String(existingUser.school_id) !==
-            String(schoolId)
-        ) {
-
-            return res.status(403).json({
-
-                success: false,
-
-                message:
-                    "You do not have access to this user."
-
-            });
-
-        }
-
+        ensureSameSchool(
+            existingUser,
+            schoolId
+        );
 
         const {
             firstName,
             first_name,
+            middleName,
+            middle_name,
             lastName,
             last_name,
             email,
-            phone
-        } = req.body;
-
+            phone,
+            profilePhotoUrl,
+            profile_photo_url
+        } = req.body || {};
 
         const finalFirstName =
-            firstName || first_name;
-
-        const finalLastName =
-            lastName || last_name;
-
-
-        if (!finalFirstName) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "First name is required."
-
-            });
-
-        }
-
-
-        if (!finalLastName) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Last name is required."
-
-            });
-
-        }
-
-
-        if (!email) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Email is required."
-
-            });
-
-        }
-
-
-        const emailAlreadyExists =
-            await userModel.emailExists(
-                email.trim(),
-                id
+            normalizeText(
+                firstName || first_name
             );
 
+        const finalMiddleName =
+            normalizeText(
+                middleName || middle_name
+            );
 
-        if (emailAlreadyExists) {
+        const finalLastName =
+            normalizeText(
+                lastName || last_name
+            );
 
-            return res.status(409).json({
+        const finalEmail =
+            normalizeEmail(email);
 
-                success: false,
+        const finalPhone =
+            normalizeText(phone);
 
-                message:
-                    "Email already belongs to another user."
+        if (!finalFirstName) {
+            const error = new Error(
+                "First name is required."
+            );
 
-            });
+            error.statusCode = 400;
 
+            return next(error);
         }
 
+        if (!finalLastName) {
+            const error = new Error(
+                "Last name is required."
+            );
+
+            error.statusCode = 400;
+
+            return next(error);
+        }
+
+        if (!finalEmail) {
+            const error = new Error(
+                "Email is required."
+            );
+
+            error.statusCode = 400;
+
+            return next(error);
+        }
+
+        const emailExists =
+            await userModel.emailExists(
+                finalEmail,
+                userId,
+                schoolId
+            );
+
+        if (emailExists) {
+            const error = new Error(
+                "Email already belongs to another user in this school."
+            );
+
+            error.statusCode = 409;
+
+            return next(error);
+        }
 
         const updatedUser =
             await userModel.updateUserProfile(
-
-                id,
-
+                userId,
                 {
-
                     firstName:
-                        finalFirstName.trim(),
-
+                        finalFirstName,
+                    middleName:
+                        finalMiddleName || null,
                     lastName:
-                        finalLastName.trim(),
-
+                        finalLastName,
                     email:
-                        email.trim().toLowerCase(),
-
+                        finalEmail,
                     phone:
-                        phone || null
-
+                        finalPhone || null,
+                    profilePhotoUrl:
+                        normalizeText(
+                            profilePhotoUrl ||
+                            profile_photo_url
+                        ) || null
                 }
-
             );
 
-
         return res.status(200).json({
-
             success: true,
-
             message:
                 "User updated successfully.",
-
-            data: updatedUser
-
+            data:
+                buildSafeUser(
+                    updatedUser
+                )
         });
-
-
     } catch (error) {
-
         console.error(
             "Update user error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Change Password
-|--------------------------------------------------------------------------
-*/
-
-async function changePassword(req, res, next) {
-
+async function changePassword(
+    req,
+    res,
+    next
+) {
     try {
+        const requestedUserId =
+            getRequestedUserId(
+                req
+            );
 
-        const {
-            id
-        } = req.params;
+        if (!requestedUserId) {
+            const error = new Error(
+                "User ID is required."
+            );
 
+            error.statusCode = 400;
 
-        if (!id) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "User ID is required."
-
-            });
-
+            return next(error);
         }
 
+        const authenticatedUserId =
+            ensureAuthenticatedUser(
+                req
+            );
+
+        const schoolId =
+            ensureAuthenticatedSchool(
+                req
+            );
 
         const existingUser =
             await userModel.findUserById(
-                id
+                requestedUserId
             );
 
-
         if (!existingUser) {
+            const error = new Error(
+                "User not found."
+            );
 
-            return res.status(404).json({
+            error.statusCode = 404;
 
-                success: false,
-
-                message:
-                    "User not found."
-
-            });
-
+            return next(error);
         }
 
-
-        const schoolId =
-            getSchoolId(req);
-
+        ensureSameSchool(
+            existingUser,
+            schoolId
+        );
 
         if (
-            schoolId &&
-            String(existingUser.school_id) !==
-            String(schoolId)
+            String(
+                requestedUserId
+            ) !==
+            String(
+                authenticatedUserId
+            )
         ) {
+            const error = new Error(
+                "You can only change your own password."
+            );
 
-            return res.status(403).json({
+            error.statusCode = 403;
 
-                success: false,
-
-                message:
-                    "You do not have access to this user."
-
-            });
-
+            return next(error);
         }
-
 
         const {
             currentPassword,
             current_password,
             newPassword,
             new_password
-        } = req.body;
-
+        } = req.body || {};
 
         const oldPassword =
-            currentPassword ||
-            current_password;
+            typeof currentPassword ===
+                "string"
+                ? currentPassword
+                : typeof current_password ===
+                    "string"
+                    ? current_password
+                    : "";
 
         const passwordToSet =
-            newPassword ||
-            new_password;
-
+            typeof newPassword ===
+                "string"
+                ? newPassword
+                : typeof new_password ===
+                    "string"
+                    ? new_password
+                    : "";
 
         if (!oldPassword) {
+            const error = new Error(
+                "Current password is required."
+            );
 
-            return res.status(400).json({
+            error.statusCode = 400;
 
-                success: false,
-
-                message:
-                    "Current password is required."
-
-            });
-
+            return next(error);
         }
-
 
         if (!passwordToSet) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "New password is required."
-
-            });
-
-        }
-
-
-        if (passwordToSet.length < 6) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "New password must be at least 6 characters."
-
-            });
-
-        }
-
-
-        /*
-        |------------------------------------------------------------------
-        | Get password hash
-        |------------------------------------------------------------------
-        */
-
-        const passwordResult =
-            await query(
-                `
-                    SELECT
-                        id,
-                        password_hash
-
-                    FROM users
-
-                    WHERE id = $1
-
-                    LIMIT 1
-                `,
-                [id]
+            const error = new Error(
+                "New password is required."
             );
 
+            error.statusCode = 400;
 
-        if (
-            !passwordResult.rows.length
-        ) {
-
-            return res.status(404).json({
-
-                success: false,
-
-                message:
-                    "User not found."
-
-            });
-
+            return next(error);
         }
 
+        if (passwordToSet.length < 8) {
+            const error = new Error(
+                "New password must be at least 8 characters."
+            );
 
-        const passwordHash =
-            passwordResult.rows[0]
-                .password_hash;
+            error.statusCode = 400;
 
+            return next(error);
+        }
 
         const passwordMatches =
-            await bcrypt.compare(
+            await comparePassword(
                 oldPassword,
-                passwordHash
+                existingUser.password_hash
             );
-
 
         if (!passwordMatches) {
-
-            return res.status(401).json({
-
-                success: false,
-
-                message:
-                    "Current password is incorrect."
-
-            });
-
-        }
-
-
-        const newPasswordHash =
-            await bcrypt.hash(
-                passwordToSet,
-                10
+            const error = new Error(
+                "Current password is incorrect."
             );
 
+            error.statusCode = 401;
+
+            return next(error);
+        }
+
+        const newPasswordHash =
+            await hashPassword(
+                passwordToSet
+            );
 
         const updated =
             await userModel.updatePassword(
-
-                id,
-
+                requestedUserId,
                 newPasswordHash
-
             );
 
-
         return res.status(200).json({
-
             success: true,
-
             message:
                 "Password changed successfully.",
-
             data: updated
-
         });
-
-
     } catch (error) {
-
         console.error(
             "Change password error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Activate User
-|--------------------------------------------------------------------------
-*/
-
-async function activateUser(req, res, next) {
-
+async function activateUser(
+    req,
+    res,
+    next
+) {
     try {
+        const userId =
+            getRequestedUserId(
+                req
+            );
 
-        const {
-            id
-        } = req.params;
+        if (!userId) {
+            const error = new Error(
+                "User ID is required."
+            );
 
+            error.statusCode = 400;
+
+            return next(error);
+        }
+
+        const schoolId =
+            ensureAuthenticatedSchool(
+                req
+            );
 
         const user =
             await userModel.findUserById(
-                id
+                userId
             );
 
-
         if (!user) {
+            const error = new Error(
+                "User not found."
+            );
 
-            return res.status(404).json({
+            error.statusCode = 404;
 
-                success: false,
-
-                message:
-                    "User not found."
-
-            });
-
+            return next(error);
         }
 
-
-        const schoolId =
-            getSchoolId(req);
-
-
-        if (
-            schoolId &&
-            String(user.school_id) !==
-            String(schoolId)
-        ) {
-
-            return res.status(403).json({
-
-                success: false,
-
-                message:
-                    "You do not have access to this user."
-
-            });
-
-        }
-
+        ensureSameSchool(
+            user,
+            schoolId
+        );
 
         const updated =
             await userModel.activateUser(
-                id
+                userId
             );
 
-
         return res.status(200).json({
-
             success: true,
-
             message:
                 "User activated successfully.",
-
             data: updated
-
         });
-
-
     } catch (error) {
-
         console.error(
             "Activate user error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Deactivate User
-|--------------------------------------------------------------------------
-*/
-
-async function deactivateUser(req, res, next) {
-
+async function deactivateUser(
+    req,
+    res,
+    next
+) {
     try {
+        const userId =
+            getRequestedUserId(
+                req
+            );
 
-        const {
-            id
-        } = req.params;
+        if (!userId) {
+            const error = new Error(
+                "User ID is required."
+            );
 
+            error.statusCode = 400;
+
+            return next(error);
+        }
+
+        const authenticatedUserId =
+            ensureAuthenticatedUser(
+                req
+            );
+
+        const schoolId =
+            ensureAuthenticatedSchool(
+                req
+            );
+
+        if (
+            String(userId) ===
+            String(authenticatedUserId)
+        ) {
+            const error = new Error(
+                "You cannot deactivate your own account."
+            );
+
+            error.statusCode = 400;
+
+            return next(error);
+        }
 
         const user =
             await userModel.findUserById(
-                id
+                userId
             );
 
-
         if (!user) {
+            const error = new Error(
+                "User not found."
+            );
 
-            return res.status(404).json({
+            error.statusCode = 404;
 
-                success: false,
-
-                message:
-                    "User not found."
-
-            });
-
+            return next(error);
         }
 
-
-        const schoolId =
-            getSchoolId(req);
-
-
-        if (
-            schoolId &&
-            String(user.school_id) !==
-            String(schoolId)
-        ) {
-
-            return res.status(403).json({
-
-                success: false,
-
-                message:
-                    "You do not have access to this user."
-
-            });
-
-        }
-
+        ensureSameSchool(
+            user,
+            schoolId
+        );
 
         const updated =
             await userModel.deactivateUser(
-                id
+                userId
             );
 
-
         return res.status(200).json({
-
             success: true,
-
             message:
                 "User deactivated successfully.",
-
             data: updated
-
         });
-
-
     } catch (error) {
-
         console.error(
             "Deactivate user error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Delete User
-|--------------------------------------------------------------------------
-*/
-
-async function deleteUser(req, res, next) {
-
+async function deleteUser(
+    req,
+    res,
+    next
+) {
     try {
+        const userId =
+            getRequestedUserId(
+                req
+            );
 
-        const {
-            id
-        } = req.params;
+        if (!userId) {
+            const error = new Error(
+                "User ID is required."
+            );
 
+            error.statusCode = 400;
+
+            return next(error);
+        }
+
+        const authenticatedUserId =
+            ensureAuthenticatedUser(
+                req
+            );
+
+        const schoolId =
+            ensureAuthenticatedSchool(
+                req
+            );
+
+        if (
+            String(userId) ===
+            String(authenticatedUserId)
+        ) {
+            const error = new Error(
+                "You cannot delete your own account."
+            );
+
+            error.statusCode = 400;
+
+            return next(error);
+        }
 
         const user =
             await userModel.findUserById(
-                id
+                userId
             );
 
-
         if (!user) {
+            const error = new Error(
+                "User not found."
+            );
 
-            return res.status(404).json({
+            error.statusCode = 404;
 
-                success: false,
-
-                message:
-                    "User not found."
-
-            });
-
+            return next(error);
         }
 
-
-        const schoolId =
-            getSchoolId(req);
-
-
-        if (
-            schoolId &&
-            String(user.school_id) !==
-            String(schoolId)
-        ) {
-
-            return res.status(403).json({
-
-                success: false,
-
-                message:
-                    "You do not have access to this user."
-
-            });
-
-        }
-
+        ensureSameSchool(
+            user,
+            schoolId
+        );
 
         const deleted =
             await userModel.deleteUser(
-                id
+                userId
             );
 
-
         return res.status(200).json({
-
             success: true,
-
             message:
                 "User deleted successfully.",
-
-            data: deleted
-
+            data:
+                buildSafeUser(
+                    deleted
+                )
         });
-
-
     } catch (error) {
-
         console.error(
             "Delete user error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Update Last Login
-|--------------------------------------------------------------------------
-*/
-
-async function updateLastLogin(req, res, next) {
-
+async function updateLastLogin(
+    req,
+    res,
+    next
+) {
     try {
-
         const userId =
-            getUserId(req);
+            ensureAuthenticatedUser(
+                req
+            );
 
+        const schoolId =
+            ensureAuthenticatedSchool(
+                req
+            );
 
-        if (!userId) {
+        const user =
+            await userModel.findUserById(
+                userId
+            );
 
-            return res.status(401).json({
+        if (!user) {
+            const error = new Error(
+                "User not found."
+            );
 
-                success: false,
+            error.statusCode = 404;
 
-                message:
-                    "Authenticated user not found."
-
-            });
-
+            return next(error);
         }
 
+        ensureSameSchool(
+            user,
+            schoolId
+        );
 
         const updated =
             await userModel.updateLastLogin(
                 userId
             );
 
-
         return res.status(200).json({
-
             success: true,
-
             data: updated
-
         });
-
-
     } catch (error) {
-
         console.error(
             "Update last login error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Export
-|--------------------------------------------------------------------------
-*/
-
 module.exports = {
-
     createUser,
-
     getUsers,
-
     getUserById,
-
     getCurrentUser,
-
     updateUser,
-
     changePassword,
-
     activateUser,
-
     deactivateUser,
-
     deleteUser,
-
     updateLastLogin
-
 };

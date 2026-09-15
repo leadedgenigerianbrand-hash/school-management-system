@@ -1,716 +1,414 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
-
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <meta name="description" content="Secure login portal for the School Management System.">
-
     <meta name="theme-color" content="#1e3a8a">
-
     <title>Login | School Management System</title>
 
-
-    <!-- Bootstrap 5 -->
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-
-    <!-- Bootstrap Icons -->
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-
 
     <style>
         :root {
-
             --sms-primary: #1e3a8a;
             --sms-primary-light: #2563eb;
             --sms-bg: #f4f7fb;
             --sms-text: #172033;
             --sms-muted: #6b7280;
             --sms-border: #dbe1ea;
-
+            --sms-success: #198754;
+            --sms-danger: #dc3545;
         }
-
 
         * {
-
             box-sizing: border-box;
-
         }
 
+        html {
+            min-height: 100%;
+        }
 
         body {
-
             min-height: 100vh;
-
             margin: 0;
-
-            background:
-                linear-gradient(135deg,
-                    #eef4ff 0%,
-                    #f8fafc 50%,
-                    #eef2ff 100%);
-
-            font-family:
-                Inter,
-                system-ui,
-                -apple-system,
-                BlinkMacSystemFont,
-                "Segoe UI",
-                sans-serif;
-
+            background: linear-gradient(135deg, #eef4ff 0%, #f8fafc 50%, #eef2ff 100%);
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color: var(--sms-text);
         }
-
-
-        /* =========================================================
-       LOGIN PAGE
-    ========================================================== */
 
         .login-page {
-
             min-height: 100vh;
-
             display: flex;
-
             align-items: center;
-
             justify-content: center;
-
             padding: 30px 15px;
-
         }
-
 
         .login-container {
-
             width: 100%;
-
             max-width: 1080px;
-
         }
-
-
-        /* =========================================================
-       LOGIN CARD
-    ========================================================== */
 
         .login-card {
-
             overflow: hidden;
-
             border: 0;
-
             border-radius: 24px;
-
             background: #ffffff;
-
-            box-shadow:
-                0 25px 70px rgba(15, 23, 42, 0.14);
-
+            box-shadow: 0 25px 70px rgba(15, 23, 42, 0.14);
         }
-
-
-        /* =========================================================
-       BRANDING PANEL
-    ========================================================== */
 
         .branding-panel {
-
             min-height: 640px;
-
             padding: 55px;
-
             color: #ffffff;
-
-            background:
-                linear-gradient(145deg,
-                    #172554 0%,
-                    #1e3a8a 52%,
-                    #2563eb 100%);
-
+            background: linear-gradient(145deg, #172554 0%, #1e3a8a 52%, #2563eb 100%);
             display: flex;
-
             flex-direction: column;
-
             justify-content: center;
-
             position: relative;
-
             overflow: hidden;
-
         }
-
 
         .branding-panel::before {
-
             content: "";
-
             position: absolute;
-
             width: 260px;
-
             height: 260px;
-
             border-radius: 50%;
-
-            background:
-                rgba(255, 255, 255, 0.06);
-
+            background: rgba(255, 255, 255, 0.06);
             top: -90px;
-
             right: -90px;
-
         }
-
 
         .branding-panel::after {
-
             content: "";
-
             position: absolute;
-
             width: 190px;
-
             height: 190px;
-
             border-radius: 50%;
-
-            background:
-                rgba(255, 255, 255, 0.05);
-
+            background: rgba(255, 255, 255, 0.05);
             bottom: -70px;
-
             left: -70px;
-
         }
-
 
         .branding-content {
-
             position: relative;
-
             z-index: 1;
-
         }
-
 
         .brand-logo {
-
             width: 82px;
-
             height: 82px;
-
             border-radius: 22px;
-
-            background:
-                rgba(255, 255, 255, 0.14);
-
-            border:
-                1px solid rgba(255, 255, 255, 0.25);
-
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.25);
             display: flex;
-
             align-items: center;
-
             justify-content: center;
-
             font-size: 25px;
-
             font-weight: 800;
-
             letter-spacing: 1px;
-
             margin-bottom: 30px;
-
         }
-
 
         .branding-panel h1 {
-
             font-size: 38px;
-
             line-height: 1.15;
-
             font-weight: 800;
-
             margin-bottom: 18px;
-
         }
-
 
         .branding-panel p {
-
-            color:
-                rgba(255, 255, 255, 0.82);
-
+            color: rgba(255, 255, 255, 0.82);
             font-size: 16px;
-
             line-height: 1.7;
-
             max-width: 440px;
-
+            margin-bottom: 0;
         }
-
-
-        /* =========================================================
-       FEATURES
-    ========================================================== */
 
         .feature-list {
-
             margin-top: 32px;
-
         }
-
 
         .feature-item {
-
             display: flex;
-
             align-items: center;
-
             gap: 12px;
-
             margin-bottom: 16px;
-
-            color:
-                rgba(255, 255, 255, 0.92);
-
+            color: rgba(255, 255, 255, 0.92);
         }
 
+        .feature-item:last-child {
+            margin-bottom: 0;
+        }
 
         .feature-icon {
-
             width: 36px;
-
             height: 36px;
-
             flex-shrink: 0;
-
             border-radius: 10px;
-
-            background:
-                rgba(255, 255, 255, 0.12);
-
+            background: rgba(255, 255, 255, 0.12);
             display: flex;
-
             align-items: center;
-
             justify-content: center;
-
         }
-
-
-        /* =========================================================
-       LOGIN PANEL
-    ========================================================== */
 
         .login-panel {
-
             padding: 60px 52px;
-
         }
-
 
         .login-heading {
-
             margin-bottom: 35px;
-
         }
-
 
         .login-heading h2 {
-
             color: var(--sms-text);
-
             font-weight: 800;
-
             font-size: 30px;
-
             margin-bottom: 8px;
-
         }
-
 
         .login-heading p {
-
             color: var(--sms-muted);
-
             margin: 0;
-
         }
-
-
-        /* =========================================================
-       FORM
-    ========================================================== */
 
         .form-label {
-
             color: #374151;
-
             font-weight: 600;
-
             margin-bottom: 8px;
-
         }
-
 
         .input-group-text {
-
             min-width: 48px;
-
             justify-content: center;
-
             background: #f8fafc;
-
             border-color: var(--sms-border);
-
             color: #64748b;
-
         }
-
 
         .form-control {
-
             border-color: var(--sms-border);
-
             padding: 13px 14px;
-
             min-height: 50px;
-
         }
-
 
         .form-control:focus {
-
-            border-color:
-                var(--sms-primary-light);
-
-            box-shadow:
-                0 0 0 0.2rem rgba(37, 99, 235, 0.12);
-
+            border-color: var(--sms-primary-light);
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.12);
         }
-
 
         .input-group:focus-within .input-group-text {
-
-            border-color:
-                var(--sms-primary-light);
-
-            color:
-                var(--sms-primary-light);
-
+            border-color: var(--sms-primary-light);
+            color: var(--sms-primary-light);
         }
-
-
-        /* =========================================================
-       PASSWORD TOGGLE
-    ========================================================== */
 
         .password-toggle {
-
+            min-width: 50px;
             border-color: var(--sms-border);
-
             background: #f8fafc;
-
             color: #64748b;
-
         }
 
-
-        .password-toggle:hover {
-
-            color:
-                var(--sms-primary-light);
-
+        .password-toggle:hover,
+        .password-toggle:focus {
+            color: var(--sms-primary-light);
             background: #f1f5f9;
-
+            border-color: var(--sms-primary-light);
         }
-
-
-        /* =========================================================
-       REMEMBER ME
-    ========================================================== */
 
         .form-check-label {
-
             color: #64748b;
-
             font-size: 14px;
-
         }
-
 
         .form-check-input:checked {
-
-            background-color:
-                var(--sms-primary-light);
-
-            border-color:
-                var(--sms-primary-light);
-
+            background-color: var(--sms-primary-light);
+            border-color: var(--sms-primary-light);
         }
-
-
-        /* =========================================================
-       LOGIN BUTTON
-    ========================================================== */
 
         .login-button {
-
             min-height: 52px;
-
             border: 0;
-
             border-radius: 10px;
-
-            background:
-                var(--sms-primary-light);
-
+            background: var(--sms-primary-light);
             font-weight: 700;
-
             font-size: 16px;
-
             transition: 0.2s ease;
-
         }
 
-
-        .login-button:hover {
-
-            background:
-                var(--sms-primary);
-
-            transform:
-                translateY(-1px);
-
+        .login-button:hover:not(:disabled) {
+            background: var(--sms-primary);
+            transform: translateY(-1px);
         }
 
+        .login-button:focus {
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.2);
+        }
 
         .login-button:disabled {
-
             opacity: 0.75;
-
             transform: none;
-
         }
 
-
-        /* =========================================================
-       MESSAGE
-    ========================================================== */
-
-        .alert {
-
+        .login-message {
             border-radius: 10px;
-
             font-size: 14px;
-
+            margin-bottom: 20px;
         }
 
+        .login-message[data-type="error"] {
+            color: #842029;
+            background: #f8d7da;
+            border-color: #f5c2c7;
+        }
 
-        /* =========================================================
-       FOOTER
-    ========================================================== */
+        .login-message[data-type="success"] {
+            color: #0f5132;
+            background: #d1e7dd;
+            border-color: #badbcc;
+        }
+
+        .login-message[data-type="info"] {
+            color: #055160;
+            background: #cff4fc;
+            border-color: #b6effb;
+        }
 
         .login-footer {
-
             text-align: center;
-
             color: #94a3b8;
-
             font-size: 13px;
-
             margin-top: 30px;
-
             line-height: 1.6;
-
         }
 
+        .forgot-link {
+            color: var(--sms-primary-light);
+            font-size: 14px;
+            font-weight: 600;
+        }
 
-        /* =========================================================
-       MOBILE
-    ========================================================== */
+        .forgot-link:hover,
+        .forgot-link:focus {
+            color: var(--sms-primary);
+        }
 
         @media (max-width: 767.98px) {
-
             .login-page {
-
                 padding: 15px;
-
             }
-
 
             .branding-panel {
-
                 display: none;
-
             }
-
 
             .login-panel {
-
                 padding: 40px 25px;
-
             }
-
 
             .login-heading h2 {
-
                 font-size: 26px;
-
             }
-
 
             .login-card {
-
                 border-radius: 18px;
+            }
+        }
 
+        @media (max-width: 420px) {
+            .login-panel {
+                padding: 32px 20px;
             }
 
+            .login-heading {
+                margin-bottom: 28px;
+            }
+
+            .login-heading h2 {
+                font-size: 24px;
+            }
+
+            .d-flex.justify-content-between {
+                gap: 15px;
+                align-items: flex-start !important;
+            }
+
+            .forgot-link {
+                text-align: right;
+            }
         }
     </style>
-
-
 </head>
 
 <body>
-
-
     <main class="login-page">
-
         <div class="login-container">
-
             <div class="card login-card">
-
                 <div class="row g-0">
-
-
-                    <!-- =================================================
-                     BRANDING
-                ================================================== -->
-
                     <div class="col-md-6">
-
                         <div class="branding-panel">
-
                             <div class="branding-content">
-
-
-                                <div class="brand-logo">
-
+                                <div class="brand-logo" aria-label="School Management System">
                                     SMS
-
                                 </div>
 
-
                                 <h1>
-
                                     School Management System
-
                                 </h1>
 
-
                                 <p>
-
-                                    A modern platform for managing
-                                    students, staff, academics,
-                                    attendance, results, fees
+                                    A modern platform for managing students, staff, academics, attendance, results, fees
                                     and school administration.
-
                                 </p>
 
-
                                 <div class="feature-list">
-
-
                                     <div class="feature-item">
-
                                         <div class="feature-icon">
-
-                                            <i class="bi bi-people-fill"></i>
-
+                                            <i class="bi bi-people-fill" aria-hidden="true"></i>
                                         </div>
-
                                         <span>
                                             Manage students and staff
                                         </span>
-
                                     </div>
 
-
                                     <div class="feature-item">
-
                                         <div class="feature-icon">
-
-                                            <i class="bi bi-journal-check"></i>
-
+                                            <i class="bi bi-journal-check" aria-hidden="true"></i>
                                         </div>
-
                                         <span>
                                             Track attendance and results
                                         </span>
-
                                     </div>
 
-
                                     <div class="feature-item">
-
                                         <div class="feature-icon">
-
-                                            <i class="bi bi-cash-stack"></i>
-
+                                            <i class="bi bi-cash-stack" aria-hidden="true"></i>
                                         </div>
-
                                         <span>
                                             Manage fees and payments
                                         </span>
-
                                     </div>
 
-
                                     <div class="feature-item">
-
                                         <div class="feature-icon">
-
-                                            <i class="bi bi-shield-check"></i>
-
+                                            <i class="bi bi-shield-check" aria-hidden="true"></i>
                                         </div>
-
                                         <span>
                                             Secure role-based access
                                         </span>
-
                                     </div>
-
                                 </div>
-
                             </div>
-
                         </div>
-
                     </div>
 
-
-                    <!-- =================================================
-                     LOGIN
-                ================================================== -->
-
                     <div class="col-md-6">
-
                         <div class="login-panel">
-
-
                             <div class="login-heading">
-
                                 <h2>
                                     Welcome back
                                 </h2>
@@ -718,142 +416,76 @@
                                 <p>
                                     Sign in to continue to your dashboard.
                                 </p>
-
                             </div>
 
-
-                            <!-- LOGIN MESSAGE -->
-
-                            <div id="loginMessage" class="alert d-none" role="alert" aria-live="polite">
+                            <div id="loginMessage" class="alert login-message d-none" role="alert" aria-live="polite">
                             </div>
-
-
-                            <!-- LOGIN FORM -->
 
                             <form id="loginForm" novalidate>
-
-
-                                <!-- USERNAME / EMAIL -->
-
                                 <div class="mb-4">
-
                                     <label for="identifier" class="form-label">
-
                                         Username or Email
-
                                     </label>
 
-
                                     <div class="input-group">
-
                                         <span class="input-group-text">
-
-                                            <i class="bi bi-person"></i>
-
+                                            <i class="bi bi-person" aria-hidden="true"></i>
                                         </span>
-
 
                                         <input type="text" id="identifier" name="identifier" class="form-control"
-                                            placeholder="Enter username or email" autocomplete="username" required>
-
+                                            placeholder="Enter username or email" autocomplete="username" required
+                                            maxlength="150">
                                     </div>
-
                                 </div>
-
-
-                                <!-- PASSWORD -->
 
                                 <div class="mb-3">
-
                                     <label for="password" class="form-label">
-
                                         Password
-
                                     </label>
 
-
                                     <div class="input-group">
-
                                         <span class="input-group-text">
-
-                                            <i class="bi bi-lock"></i>
-
+                                            <i class="bi bi-lock" aria-hidden="true"></i>
                                         </span>
 
-
                                         <input type="password" id="password" name="password" class="form-control"
-                                            placeholder="Enter your password" autocomplete="current-password" required>
-
+                                            placeholder="Enter your password" autocomplete="current-password" required
+                                            maxlength="200">
 
                                         <button type="button" class="btn password-toggle" id="togglePassword"
-                                            aria-label="Show password">
-
-                                            <i class="bi bi-eye" id="passwordIcon">
-                                            </i>
-
+                                            aria-label="Show password" aria-controls="password" aria-pressed="false">
+                                            <i class="bi bi-eye" id="passwordIcon" aria-hidden="true"></i>
                                         </button>
-
                                     </div>
-
                                 </div>
 
-
-                                <!-- OPTIONS -->
-
-                                <div class="d-flex
-                                        justify-content-between
-                                        align-items-center
-                                        mb-4">
-
-
+                                <div class="d-flex justify-content-between align-items-center mb-4">
                                     <div class="form-check">
-
                                         <input class="form-check-input" type="checkbox" id="rememberMe"
                                             name="rememberMe">
 
                                         <label class="form-check-label" for="rememberMe">
-
                                             Remember me
-
                                         </label>
-
                                     </div>
-
 
                                     <button type="button" class="btn btn-link p-0 forgot-link text-decoration-none"
                                         id="forgotPassword">
-
                                         Forgot password?
-
                                     </button>
-
                                 </div>
 
-
-                                <!-- LOGIN BUTTON -->
-
                                 <button type="submit" class="btn btn-primary w-100 login-button" id="loginButton">
-
                                     <span id="loginButtonText">
                                         Sign In
                                     </span>
 
-
-                                    <span id="loginSpinner" class="spinner-border
-                                           spinner-border-sm
-                                           ms-2
-                                           d-none" role="status" aria-hidden="true">
-                                    </span>
-
+                                    <span id="loginSpinner" class="spinner-border spinner-border-sm ms-2 d-none"
+                                        role="status" aria-hidden="true"></span>
                                 </button>
-
                             </form>
 
-
-                            <!-- FOOTER -->
-
                             <div class="login-footer">
-
                                 <strong>
                                     School Management System
                                 </strong>
@@ -861,133 +493,61 @@
                                 <br>
 
                                 Secure school administration platform
-
                             </div>
-
-
                         </div>
-
                     </div>
-
                 </div>
-
             </div>
-
         </div>
-
     </main>
 
-
-    <!-- Bootstrap JavaScript -->
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
-    </script>
-
-
-    <!-- Central API -->
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../js/api.js"></script>
-
-
-    <!-- Authentication -->
-
     <script src="../js/auth.js"></script>
 
-
-    <!-- Password Visibility -->
-
     <script>
-
         "use strict";
 
+        document.addEventListener("DOMContentLoaded", function () {
+            const togglePassword = document.getElementById("togglePassword");
+            const password = document.getElementById("password");
+            const passwordIcon = document.getElementById("passwordIcon");
+            const forgotPassword = document.getElementById("forgotPassword");
+            const loginMessage = document.getElementById("loginMessage");
 
-        const togglePassword =
-            document.getElementById("togglePassword");
+            if (togglePassword && password && passwordIcon) {
+                togglePassword.addEventListener("click", function () {
+                    const isVisible = password.type === "text";
 
+                    password.type = isVisible ? "password" : "text";
 
-        const password =
-            document.getElementById("password");
-
-
-        const passwordIcon =
-            document.getElementById("passwordIcon");
-
-
-        if (
-            togglePassword &&
-            password &&
-            passwordIcon
-        ) {
-
-            togglePassword.addEventListener(
-                "click",
-                function () {
-
-                    const showing =
-                        password.type === "text";
-
-
-                    password.type =
-                        showing ? "password" : "text";
-
-
-                    passwordIcon.className =
-                        showing
-                            ? "bi bi-eye"
-                            : "bi bi-eye-slash";
-
+                    passwordIcon.className = isVisible
+                        ? "bi bi-eye"
+                        : "bi bi-eye-slash";
 
                     togglePassword.setAttribute(
                         "aria-label",
-                        showing
-                            ? "Show password"
-                            : "Hide password"
+                        isVisible ? "Show password" : "Hide password"
                     );
 
-                }
-            );
+                    togglePassword.setAttribute(
+                        "aria-pressed",
+                        isVisible ? "false" : "true"
+                    );
+                });
+            }
 
-        }
-
-
-        /* =========================================================
-           FORGOT PASSWORD
-        ========================================================== */
-
-        const forgotPassword =
-            document.getElementById("forgotPassword");
-
-
-        if (forgotPassword) {
-
-            forgotPassword.addEventListener(
-                "click",
-                function () {
-
-                    const message =
-                        document.getElementById("loginMessage");
-
-
-                    if (!message) {
-                        return;
-                    }
-
-
-                    message.className =
-                        "alert alert-info";
-
-
-                    message.textContent =
+            if (forgotPassword && loginMessage) {
+                forgotPassword.addEventListener("click", function () {
+                    loginMessage.className = "alert login-message";
+                    loginMessage.dataset.type = "info";
+                    loginMessage.textContent =
                         "Please contact your school administrator to reset your password.";
-
-                }
-            );
-
-        }
-
+                    loginMessage.style.display = "block";
+                });
+            }
+        });
     </script>
-
-
 </body>
 
 </html>

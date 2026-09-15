@@ -1,11 +1,12 @@
-```html
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    ```
     <title>Subjects | School Management System</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -143,7 +144,7 @@
         }
 
         .description {
-            max-width: 240px;
+            max-width: 300px;
             display: block;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -185,10 +186,13 @@
             }
         }
     </style>
+    ```
+
 </head>
 
 <body>
 
+    ```
     <div class="app-wrapper">
 
         <aside class="sidebar" id="sidebar">
@@ -329,18 +333,23 @@
 
                     <div>
                         <h6 class="mb-0 fw-bold">Subjects</h6>
-                        <small class="text-muted">Manage subjects taught in the school</small>
+                        <small class="text-muted">
+                            Manage subjects taught in the school
+                        </small>
                     </div>
 
                 </div>
 
                 <div class="d-flex align-items-center gap-3">
-                    <span class="text-muted small d-none d-sm-inline" id="userName"></span>
+
+                    <span class="text-muted small d-none d-sm-inline" id="userName">
+                    </span>
 
                     <button type="button" class="btn btn-outline-danger btn-sm" id="logoutButton">
                         <i class="bi bi-box-arrow-right me-1"></i>
                         Logout
                     </button>
+
                 </div>
 
             </header>
@@ -351,8 +360,9 @@
 
                     <div>
                         <h2 class="fw-bold mb-1">Subjects</h2>
+
                         <p class="text-muted mb-0">
-                            Manage subjects, subject types and academic departments.
+                            Manage subjects offered by the school and their academic status.
                         </p>
                     </div>
 
@@ -363,64 +373,113 @@
 
                 </div>
 
-                <div id="pageMessage" class="alert d-none" role="alert"></div>
+                <div id="pageMessage" class="alert d-none" role="alert">
+                </div>
 
                 <div class="row g-3 mb-4">
 
                     <div class="col-12 col-sm-6 col-xl-3">
+
                         <div class="card stat-card h-100">
+
                             <div class="card-body d-flex align-items-center gap-3">
+
                                 <div class="stat-icon bg-primary-subtle text-primary">
                                     <i class="bi bi-book-fill"></i>
                                 </div>
+
                                 <div>
-                                    <small class="text-muted d-block">Total Subjects</small>
-                                    <h3 class="fw-bold mb-0" id="totalSubjects">0</h3>
+                                    <small class="text-muted d-block">
+                                        Total Subjects
+                                    </small>
+
+                                    <h3 class="fw-bold mb-0" id="totalSubjects">
+                                        0
+                                    </h3>
                                 </div>
+
                             </div>
+
                         </div>
+
                     </div>
 
                     <div class="col-12 col-sm-6 col-xl-3">
+
                         <div class="card stat-card h-100">
+
                             <div class="card-body d-flex align-items-center gap-3">
+
                                 <div class="stat-icon bg-success-subtle text-success">
                                     <i class="bi bi-check-circle-fill"></i>
                                 </div>
+
                                 <div>
-                                    <small class="text-muted d-block">Active Subjects</small>
-                                    <h3 class="fw-bold mb-0" id="activeSubjects">0</h3>
+                                    <small class="text-muted d-block">
+                                        Active Subjects
+                                    </small>
+
+                                    <h3 class="fw-bold mb-0" id="activeSubjects">
+                                        0
+                                    </h3>
                                 </div>
+
                             </div>
+
                         </div>
+
                     </div>
 
                     <div class="col-12 col-sm-6 col-xl-3">
+
                         <div class="card stat-card h-100">
+
                             <div class="card-body d-flex align-items-center gap-3">
+
                                 <div class="stat-icon bg-info-subtle text-info">
-                                    <i class="bi bi-journal-bookmark-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
                                 </div>
+
                                 <div>
-                                    <small class="text-muted d-block">Core Subjects</small>
-                                    <h3 class="fw-bold mb-0" id="coreSubjects">0</h3>
+                                    <small class="text-muted d-block">
+                                        Compulsory Subjects
+                                    </small>
+
+                                    <h3 class="fw-bold mb-0" id="compulsorySubjects">
+                                        0
+                                    </h3>
                                 </div>
+
                             </div>
+
                         </div>
+
                     </div>
 
                     <div class="col-12 col-sm-6 col-xl-3">
+
                         <div class="card stat-card h-100">
+
                             <div class="card-body d-flex align-items-center gap-3">
+
                                 <div class="stat-icon bg-warning-subtle text-warning">
-                                    <i class="bi bi-lightbulb-fill"></i>
+                                    <i class="bi bi-bookmark-fill"></i>
                                 </div>
+
                                 <div>
-                                    <small class="text-muted d-block">Elective Subjects</small>
-                                    <h3 class="fw-bold mb-0" id="electiveSubjects">0</h3>
+                                    <small class="text-muted d-block">
+                                        Optional Subjects
+                                    </small>
+
+                                    <h3 class="fw-bold mb-0" id="optionalSubjects">
+                                        0
+                                    </h3>
                                 </div>
+
                             </div>
+
                         </div>
+
                     </div>
 
                 </div>
@@ -432,37 +491,69 @@
                         <div class="row g-2 mb-4">
 
                             <div class="col-12 col-lg">
+
                                 <div class="input-group">
+
                                     <span class="input-group-text bg-white">
                                         <i class="bi bi-search"></i>
                                     </span>
+
                                     <input type="search" id="searchInput" class="form-control"
-                                        placeholder="Search subject by name, code or department..." autocomplete="off">
+                                        placeholder="Search subject by name, code or description..." autocomplete="off">
+
                                 </div>
+
                             </div>
 
                             <div class="col-12 col-sm-6 col-lg-auto">
-                                <select id="typeFilter" class="form-select" aria-label="Filter by subject type">
-                                    <option value="">All Types</option>
-                                    <option value="Core">Core</option>
-                                    <option value="Elective">Elective</option>
-                                    <option value="Optional">Optional</option>
+
+                                <select id="compulsoryFilter" class="form-select" aria-label="Filter by subject type">
+
+                                    <option value="">
+                                        All Types
+                                    </option>
+
+                                    <option value="true">
+                                        Compulsory
+                                    </option>
+
+                                    <option value="false">
+                                        Optional
+                                    </option>
+
                                 </select>
+
                             </div>
 
                             <div class="col-12 col-sm-6 col-lg-auto">
-                                <select id="statusFilter" class="form-select" aria-label="Filter by status">
-                                    <option value="">All Statuses</option>
-                                    <option value="Active">Active</option>
-                                    <option value="Inactive">Inactive</option>
+
+                                <select id="statusFilter" class="form-select" aria-label="Filter by subject status">
+
+                                    <option value="">
+                                        All Statuses
+                                    </option>
+
+                                    <option value="true">
+                                        Active
+                                    </option>
+
+                                    <option value="false">
+                                        Inactive
+                                    </option>
+
                                 </select>
+
                             </div>
 
                             <div class="col-12 col-lg-auto">
+
                                 <button type="button" class="btn btn-outline-secondary w-100" id="refreshButton">
+
                                     <i class="bi bi-arrow-clockwise me-1"></i>
                                     Refresh
+
                                 </button>
+
                             </div>
 
                         </div>
@@ -472,25 +563,33 @@
                             <table class="table table-hover align-middle mb-0">
 
                                 <thead>
+
                                     <tr>
                                         <th>#</th>
                                         <th>Subject Code</th>
                                         <th>Subject Name</th>
                                         <th>Type</th>
-                                        <th>Department</th>
                                         <th>Description</th>
                                         <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
+
                                 </thead>
 
                                 <tbody id="subjectsTableBody">
+
                                     <tr>
-                                        <td colspan="8" class="text-center text-muted py-5">
+
+                                        <td colspan="7" class="text-center text-muted py-5">
+
                                             <div class="spinner-border spinner-border-sm me-2"></div>
+
                                             Loading subjects...
+
                                         </td>
+
                                     </tr>
+
                                 </tbody>
 
                             </table>
@@ -501,6 +600,7 @@
                             class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3 pt-4">
 
                             <div class="small text-muted">
+
                                 Showing
                                 <strong id="showingFrom">0</strong>
                                 -
@@ -508,14 +608,17 @@
                                 of
                                 <strong id="totalResults">0</strong>
                                 subjects
+
                             </div>
 
                             <div class="d-flex align-items-center gap-2">
 
                                 <button type="button" class="btn btn-outline-secondary btn-sm" id="previousButton"
                                     disabled>
+
                                     <i class="bi bi-chevron-left"></i>
                                     Previous
+
                                 </button>
 
                                 <span class="small fw-semibold px-2" id="pageNumber">
@@ -523,8 +626,10 @@
                                 </span>
 
                                 <button type="button" class="btn btn-outline-secondary btn-sm" id="nextButton" disabled>
+
                                     Next
                                     <i class="bi bi-chevron-right"></i>
+
                                 </button>
 
                             </div>
@@ -541,8 +646,6 @@
 
     </div>
 
-    <!-- DELETE MODAL -->
-
     <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
 
         <div class="modal-dialog modal-dialog-centered">
@@ -552,11 +655,16 @@
                 <div class="modal-header">
 
                     <h5 class="modal-title">
+
                         <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+
                         Delete Subject
+
                     </h5>
 
-                    <button type="button" class="btn-close" id="closeDeleteModal" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" id="closeDeleteModal" data-bs-dismiss="modal"
+                        aria-label="Close">
+                    </button>
 
                 </div>
 
@@ -567,8 +675,13 @@
                     </div>
 
                     <p class="mb-2">
+
                         Are you sure you want to delete
-                        <strong id="deleteSubjectName">this subject</strong>?
+
+                        <strong id="deleteSubjectName">
+                            this subject
+                        </strong>?
+
                     </p>
 
                     <p class="text-danger small mb-0">
@@ -580,12 +693,17 @@
                 <div class="modal-footer">
 
                     <button type="button" class="btn btn-secondary" id="cancelDeleteButton" data-bs-dismiss="modal">
+
                         Cancel
+
                     </button>
 
                     <button type="button" class="btn btn-danger" id="confirmDeleteButton">
+
                         <i class="bi bi-trash3 me-1"></i>
+
                         Delete Subject
+
                     </button>
 
                 </div>
@@ -601,650 +719,7 @@
     <script src="../js/api.js"></script>
     <script src="../js/auth.js"></script>
     <script src="../js/subjects.js"></script>
-
-    <script>
-        let subjects = [];
-        let filteredSubjects = [];
-        let currentPage = 1;
-        const pageSize = 10;
-        let subjectToDelete = null;
-        let deleteModalInstance = null;
-
-        const tableBody = document.getElementById("subjectsTableBody");
-        const searchInput = document.getElementById("searchInput");
-        const typeFilter = document.getElementById("typeFilter");
-        const statusFilter = document.getElementById("statusFilter");
-        const refreshButton = document.getElementById("refreshButton");
-        const addSubjectButton = document.getElementById("addSubjectButton");
-        const previousButton = document.getElementById("previousButton");
-        const nextButton = document.getElementById("nextButton");
-        const pageNumber = document.getElementById("pageNumber");
-        const showingFrom = document.getElementById("showingFrom");
-        const showingTo = document.getElementById("showingTo");
-        const totalResults = document.getElementById("totalResults");
-        const deleteSubjectName = document.getElementById("deleteSubjectName");
-        const confirmDeleteButton = document.getElementById("confirmDeleteButton");
-
-        function showMessage(message, type = "success") {
-            const element = document.getElementById("pageMessage");
-
-            element.textContent = message;
-            element.className = "alert";
-
-            if (type === "error") {
-                element.classList.add("alert-danger");
-            } else {
-                element.classList.add("alert-success");
-            }
-
-            element.classList.remove("d-none");
-
-            setTimeout(() => {
-                element.classList.add("d-none");
-            }, 4000);
-        }
-
-        function getField(subject, snakeCase, camelCase) {
-            return subject[snakeCase] ?? subject[camelCase];
-        }
-
-        function getSubjectId(subject) {
-            return subject.id || subject.subject_id || subject.subjectId;
-        }
-
-        function getSubjectName(subject) {
-            return subject.name ||
-                subject.subject_name ||
-                subject.subjectName ||
-                "";
-        }
-
-        function escapeHtml(value) {
-            return String(value ?? "")
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
-
-        function getTypeBadge(type) {
-            const normalized = String(type || "Core").toLowerCase();
-
-            const classes = {
-                core: "bg-primary-subtle text-primary",
-                elective: "bg-purple-subtle text-purple",
-                optional: "bg-warning-subtle text-warning-emphasis"
-            };
-
-            return `
-            <span class="badge rounded-pill ${classes[normalized] || "bg-secondary-subtle text-secondary"}">
-                ${escapeHtml(type || "Core")}
-            </span>
-        `;
-        }
-
-        function getStatusBadge(status) {
-            const normalized = String(status || "Active").toLowerCase();
-
-            if (normalized === "active") {
-                return `<span class="badge rounded-pill bg-success-subtle text-success">Active</span>`;
-            }
-
-            return `<span class="badge rounded-pill bg-danger-subtle text-danger">Inactive</span>`;
-        }
-
-        function renderSubjects() {
-            const total = filteredSubjects.length;
-
-            const totalPages = Math.max(
-                1,
-                Math.ceil(total / pageSize)
-            );
-
-            if (currentPage > totalPages) {
-                currentPage = totalPages;
-            }
-
-            const start = (currentPage - 1) * pageSize;
-            const end = Math.min(start + pageSize, total);
-
-            const pageSubjects = filteredSubjects.slice(start, end);
-
-            tableBody.innerHTML = "";
-
-            if (pageSubjects.length === 0) {
-                tableBody.innerHTML = `
-                <tr>
-                    <td colspan="8" class="text-center text-muted py-5">
-                        <i class="bi bi-book fs-2 d-block mb-2"></i>
-                        No subjects found.
-                    </td>
-                </tr>
-            `;
-            }
-
-            pageSubjects.forEach((subject, index) => {
-                const id = getSubjectId(subject);
-                const name = getSubjectName(subject);
-
-                const code =
-                    getField(subject, "subject_code", "subjectCode") ||
-                    getField(subject, "code", "code");
-
-                const type =
-                    getField(subject, "type", "subjectType") ||
-                    getField(subject, "subject_type", "subjectType") ||
-                    "Core";
-
-                const department =
-                    getField(subject, "department_name", "departmentName") ||
-                    getField(subject, "department", "department");
-
-                const description =
-                    getField(subject, "description", "description");
-
-                const status =
-                    getField(subject, "status", "status") ||
-                    "Active";
-
-                const row = document.createElement("tr");
-
-                row.innerHTML = `
-                <td>${start + index + 1}</td>
-
-                <td>
-                    <span class="subject-code">
-                        ${escapeHtml(code || "—")}
-                    </span>
-                </td>
-
-                <td>
-                    <span class="subject-name">
-                        ${escapeHtml(name || "—")}
-                    </span>
-                </td>
-
-                <td>
-                    ${getTypeBadge(type)}
-                </td>
-
-                <td>
-                    ${escapeHtml(department || "—")}
-                </td>
-
-                <td>
-                    <span
-                        class="description"
-                        title="${escapeHtml(description || "")}">
-                        ${escapeHtml(description || "—")}
-                    </span>
-                </td>
-
-                <td>
-                    ${getStatusBadge(status)}
-                </td>
-
-                <td>
-                    <div class="d-flex gap-1">
-
-                        <button
-                            type="button"
-                            class="btn btn-sm btn-outline-primary"
-                            data-action="edit"
-                            data-id="${escapeHtml(id)}"
-                            title="Edit subject">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-
-                        <button
-                            type="button"
-                            class="btn btn-sm btn-outline-danger"
-                            data-action="delete"
-                            data-id="${escapeHtml(id)}"
-                            title="Delete subject">
-                            <i class="bi bi-trash3"></i>
-                        </button>
-
-                    </div>
-                </td>
-            `;
-
-                tableBody.appendChild(row);
-            });
-
-            showingFrom.textContent = total === 0 ? 0 : start + 1;
-            showingTo.textContent = end;
-            totalResults.textContent = total;
-
-            pageNumber.textContent =
-                `Page ${currentPage} of ${totalPages}`;
-
-            previousButton.disabled = currentPage <= 1;
-            nextButton.disabled = currentPage >= totalPages;
-        }
-
-        function filterSubjects() {
-            const search = searchInput.value.trim().toLowerCase();
-            const selectedType = typeFilter.value.trim().toLowerCase();
-            const selectedStatus = statusFilter.value.trim().toLowerCase();
-
-            filteredSubjects = subjects.filter(subject => {
-
-                const name = getSubjectName(subject).toLowerCase();
-
-                const code = String(
-                    getField(subject, "subject_code", "subjectCode") ||
-                    getField(subject, "code", "code") ||
-                    ""
-                ).toLowerCase();
-
-                const department = String(
-                    getField(subject, "department_name", "departmentName") ||
-                    getField(subject, "department", "department") ||
-                    ""
-                ).toLowerCase();
-
-                const description = String(
-                    getField(subject, "description", "description") || ""
-                ).toLowerCase();
-
-                const type = String(
-                    getField(subject, "type", "subjectType") ||
-                    getField(subject, "subject_type", "subjectType") ||
-                    "Core"
-                ).toLowerCase();
-
-                const status = String(
-                    getField(subject, "status", "status") ||
-                    "Active"
-                ).toLowerCase();
-
-                const matchesSearch =
-                    !search ||
-                    name.includes(search) ||
-                    code.includes(search) ||
-                    department.includes(search) ||
-                    description.includes(search);
-
-                const matchesType =
-                    !selectedType ||
-                    type === selectedType;
-
-                const matchesStatus =
-                    !selectedStatus ||
-                    status === selectedStatus;
-
-                return matchesSearch &&
-                    matchesType &&
-                    matchesStatus;
-            });
-
-            currentPage = 1;
-            renderSubjects();
-        }
-
-        function updateStatistics() {
-            const total = subjects.length;
-
-            const active = subjects.filter(subject =>
-                String(
-                    getField(subject, "status", "status") || "Active"
-                ).toLowerCase() === "active"
-            ).length;
-
-            const core = subjects.filter(subject =>
-                String(
-                    getField(subject, "type", "subjectType") ||
-                    getField(subject, "subject_type", "subjectType") ||
-                    "Core"
-                ).toLowerCase() === "core"
-            ).length;
-
-            const elective = subjects.filter(subject =>
-                String(
-                    getField(subject, "type", "subjectType") ||
-                    getField(subject, "subject_type", "subjectType") ||
-                    ""
-                ).toLowerCase() === "elective"
-            ).length;
-
-            document.getElementById("totalSubjects").textContent = total;
-            document.getElementById("activeSubjects").textContent = active;
-            document.getElementById("coreSubjects").textContent = core;
-            document.getElementById("electiveSubjects").textContent = elective;
-        }
-
-        async function loadSubjects() {
-            tableBody.innerHTML = `
-            <tr>
-                <td colspan="8" class="text-center text-muted py-5">
-                    <div class="spinner-border spinner-border-sm me-2"></div>
-                    Loading subjects...
-                </td>
-            </tr>
-        `;
-
-            try {
-                const token =
-                    localStorage.getItem("school_management_token") ||
-                    sessionStorage.getItem("school_management_token") ||
-                    localStorage.getItem("token") ||
-                    sessionStorage.getItem("token") ||
-                    localStorage.getItem("accessToken") ||
-                    sessionStorage.getItem("accessToken");
-
-                const headers = {};
-
-                if (token) {
-                    headers.Authorization = `Bearer ${token}`;
-                }
-
-                const response = await fetch("/api/subjects", {
-                    headers
-                });
-
-                if (!response.ok) {
-                    if (response.status === 401 || response.status === 403) {
-                        if (typeof logout === "function") {
-                            logout();
-                            return;
-                        }
-
-                        window.location.href = "/pages/login.html";
-                        return;
-                    }
-
-                    throw new Error("Unable to load subjects.");
-                }
-
-                const data = await response.json();
-
-                if (Array.isArray(data)) {
-                    subjects = data;
-                } else if (Array.isArray(data.subjects)) {
-                    subjects = data.subjects;
-                } else if (Array.isArray(data.data)) {
-                    subjects = data.data;
-                } else {
-                    subjects = [];
-                }
-
-                updateStatistics();
-                filterSubjects();
-
-            } catch (error) {
-                console.error("Load subjects error:", error);
-
-                tableBody.innerHTML = `
-                <tr>
-                    <td colspan="8" class="text-center text-muted py-5">
-                        <i class="bi bi-exclamation-circle fs-2 d-block mb-2"></i>
-                        Unable to load subjects.
-                        <br>
-                        <button
-                            type="button"
-                            class="btn btn-outline-secondary btn-sm mt-3"
-                            onclick="loadSubjects()">
-                            <i class="bi bi-arrow-clockwise me-1"></i>
-                            Try Again
-                        </button>
-                    </td>
-                </tr>
-            `;
-
-                showMessage(
-                    error.message || "Unable to load subjects.",
-                    "error"
-                );
-            }
-        }
-
-        function editSubject(id) {
-            if (!id) {
-                showMessage("Subject ID was not found.", "error");
-                return;
-            }
-
-            window.location.href =
-                "/pages/subject-form.html?id=" +
-                encodeURIComponent(id);
-        }
-
-        function openDeleteModal(id) {
-            const subject = subjects.find(item =>
-                String(getSubjectId(item)) === String(id)
-            );
-
-            if (!subject) {
-                showMessage(
-                    "Subject record was not found.",
-                    "error"
-                );
-                return;
-            }
-
-            subjectToDelete = id;
-
-            deleteSubjectName.textContent =
-                getSubjectName(subject);
-
-            deleteModalInstance.show();
-        }
-
-        function closeDeleteModal() {
-            subjectToDelete = null;
-
-            if (deleteModalInstance) {
-                deleteModalInstance.hide();
-            }
-        }
-
-        async function deleteSubject() {
-            if (!subjectToDelete) {
-                return;
-            }
-
-            try {
-                confirmDeleteButton.disabled = true;
-                confirmDeleteButton.innerHTML =
-                    `<span class="spinner-border spinner-border-sm me-1"></span> Deleting...`;
-
-                const token =
-                    localStorage.getItem("school_management_token") ||
-                    sessionStorage.getItem("school_management_token") ||
-                    localStorage.getItem("token") ||
-                    sessionStorage.getItem("token") ||
-                    localStorage.getItem("accessToken") ||
-                    sessionStorage.getItem("accessToken");
-
-                const headers = {};
-
-                if (token) {
-                    headers.Authorization = `Bearer ${token}`;
-                }
-
-                const response = await fetch(
-                    "/api/subjects/" +
-                    encodeURIComponent(subjectToDelete),
-                    {
-                        method: "DELETE",
-                        headers
-                    }
-                );
-
-                let data = null;
-
-                try {
-                    data = await response.json();
-                } catch {
-                    data = null;
-                }
-
-                if (!response.ok) {
-                    throw new Error(
-                        data?.message ||
-                        "Unable to delete subject."
-                    );
-                }
-
-                closeDeleteModal();
-
-                showMessage(
-                    "Subject deleted successfully.",
-                    "success"
-                );
-
-                await loadSubjects();
-
-            } catch (error) {
-                console.error(
-                    "Delete subject error:",
-                    error
-                );
-
-                showMessage(
-                    error.message ||
-                    "Unable to delete subject.",
-                    "error"
-                );
-
-            } finally {
-                confirmDeleteButton.disabled = false;
-                confirmDeleteButton.innerHTML =
-                    `<i class="bi bi-trash3 me-1"></i> Delete Subject`;
-            }
-        }
-
-        tableBody.addEventListener("click", event => {
-            const button = event.target.closest("[data-action]");
-
-            if (!button) {
-                return;
-            }
-
-            const action = button.dataset.action;
-            const id = button.dataset.id;
-
-            if (action === "edit") {
-                editSubject(id);
-            }
-
-            if (action === "delete") {
-                openDeleteModal(id);
-            }
-        });
-
-        searchInput.addEventListener("input", filterSubjects);
-        typeFilter.addEventListener("change", filterSubjects);
-        statusFilter.addEventListener("change", filterSubjects);
-
-        refreshButton.addEventListener("click", loadSubjects);
-
-        addSubjectButton.addEventListener("click", () => {
-            window.location.href = "/pages/subject-form.html";
-        });
-
-        previousButton.addEventListener("click", () => {
-            if (currentPage > 1) {
-                currentPage--;
-                renderSubjects();
-            }
-        });
-
-        nextButton.addEventListener("click", () => {
-            const totalPages =
-                Math.ceil(filteredSubjects.length / pageSize);
-
-            if (currentPage < totalPages) {
-                currentPage++;
-                renderSubjects();
-            }
-        });
-
-        confirmDeleteButton.addEventListener(
-            "click",
-            deleteSubject
-        );
-
-        document
-            .getElementById("closeDeleteModal")
-            .addEventListener("click", closeDeleteModal);
-
-        document
-            .getElementById("cancelDeleteButton")
-            .addEventListener("click", closeDeleteModal);
-
-        document
-            .getElementById("sidebarToggle")
-            .addEventListener("click", () => {
-                document
-                    .getElementById("sidebar")
-                    .classList.toggle("show");
-
-                document
-                    .getElementById("sidebarOverlay")
-                    .classList.toggle("show");
-            });
-
-        document
-            .getElementById("sidebarOverlay")
-            .addEventListener("click", () => {
-                document
-                    .getElementById("sidebar")
-                    .classList.remove("show");
-
-                document
-                    .getElementById("sidebarOverlay")
-                    .classList.remove("show");
-            });
-
-        document
-            .getElementById("logoutButton")
-            .addEventListener("click", () => {
-                [
-                    "school_management_token",
-                    "school_management_user",
-                    "token",
-                    "accessToken",
-                    "user"
-                ].forEach(key => {
-                    localStorage.removeItem(key);
-                    sessionStorage.removeItem(key);
-                });
-
-                window.location.href = "/pages/login.html";
-            });
-
-        document.addEventListener("DOMContentLoaded", async () => {
-
-            deleteModalInstance =
-                new bootstrap.Modal(
-                    document.getElementById("deleteModal")
-                );
-
-            try {
-                const storedUser =
-                    JSON.parse(
-                        localStorage.getItem("school_management_user") ||
-                        sessionStorage.getItem("school_management_user") ||
-                        "null"
-                    );
-
-                if (storedUser) {
-                    document.getElementById("userName").textContent =
-                        storedUser.name ||
-                        storedUser.full_name ||
-                        storedUser.username ||
-                        "";
-                }
-            } catch {
-                // Ignore invalid stored user data.
-            }
-
-            await loadSubjects();
-        });
-    </script>
+    ```
 
 </body>
 

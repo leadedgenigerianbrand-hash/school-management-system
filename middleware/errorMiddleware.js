@@ -1,29 +1,6 @@
-/*
-|--------------------------------------------------------------------------
-| Global Error Handling Middleware
-|--------------------------------------------------------------------------
-|
-| This middleware provides one consistent error-handling system for the
-| entire School Management System.
-|
-| Instead of exposing database errors, file paths, passwords or internal
-| application details to users, we return safe API responses.
-|
-|--------------------------------------------------------------------------
-*/
-
-
-/*
-|--------------------------------------------------------------------------
-| 404 - Route Not Found
-|--------------------------------------------------------------------------
-|
-| This handles requests to API routes that do not exist.
-|--------------------------------------------------------------------------
-*/
+"use strict";
 
 function notFoundHandler(req, res, next) {
-
     const error = new Error(
         `Route not found: ${req.method} ${req.originalUrl}`
     );
@@ -31,355 +8,224 @@ function notFoundHandler(req, res, next) {
     error.statusCode = 404;
 
     next(error);
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| PostgreSQL Error Handler
-|--------------------------------------------------------------------------
-|
-| PostgreSQL uses specific error codes.
-|
-| We translate common database errors into safe messages.
-|--------------------------------------------------------------------------
-*/
-
 function handleDatabaseError(error) {
-
     switch (error.code) {
-
-        /*
-        |--------------------------------------------------------------------------
-        | Unique Violation
-        |--------------------------------------------------------------------------
-        */
-
         case "23505":
-
             return {
                 statusCode: 409,
                 message: "A record with this information already exists."
             };
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Foreign Key Violation
-        |--------------------------------------------------------------------------
-        */
-
         case "23503":
-
             return {
                 statusCode: 409,
-                message:
-                    "This record cannot be changed because it is connected to another record."
+                message: "This record cannot be changed because it is connected to another record."
             };
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Not Null Violation
-        |--------------------------------------------------------------------------
-        */
 
         case "23502":
-
             return {
                 statusCode: 400,
-                message:
-                    "A required field is missing."
+                message: "A required field is missing."
             };
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Check Constraint Violation
-        |--------------------------------------------------------------------------
-        */
 
         case "23514":
-
             return {
                 statusCode: 400,
-                message:
-                    "The supplied information does not satisfy the required rules."
+                message: "The supplied information does not satisfy the required rules."
             };
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Invalid Text Representation
-        |--------------------------------------------------------------------------
-        */
 
         case "22P02":
-
             return {
                 statusCode: 400,
-                message:
-                    "One or more supplied values have an invalid format."
+                message: "One or more supplied values have an invalid format."
             };
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Undefined Table
-        |--------------------------------------------------------------------------
-        */
 
         case "42P01":
-
             return {
                 statusCode: 500,
-                message:
-                    "A required database table is not available."
+                message: "A required database table is not available."
             };
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Undefined Column
-        |--------------------------------------------------------------------------
-        */
 
         case "42703":
-
             return {
                 statusCode: 500,
-                message:
-                    "A required database field is not available."
+                message: "A required database field is not available."
             };
 
+        case "23504":
+            return {
+                statusCode: 409,
+                message: "The record cannot be changed because of a related database restriction."
+            };
 
-        /*
-        |--------------------------------------------------------------------------
-        | Default Database Error
-        |--------------------------------------------------------------------------
-        */
+        case "23514":
+            return {
+                statusCode: 400,
+                message: "The supplied information does not satisfy the required rules."
+            };
 
         default:
-
             return {
                 statusCode: 500,
-                message:
-                    "A database error occurred."
+                message: "A database error occurred."
             };
-
     }
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| JWT Error Handler
-|--------------------------------------------------------------------------
-*/
-
 function handleAuthenticationError(error) {
-
     if (error.name === "JsonWebTokenError") {
-
         return {
             statusCode: 401,
             message: "Invalid authentication token."
         };
-
     }
 
-
     if (error.name === "TokenExpiredError") {
-
         return {
             statusCode: 401,
             message: "Authentication token has expired."
         };
-
     }
 
+    if (error.name === "NotBeforeError") {
+        return {
+            statusCode: 401,
+            message: "Authentication token is not yet valid."
+        };
+    }
 
     return null;
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Multer / File Upload Error Handler
-|--------------------------------------------------------------------------
-*/
-
 function handleUploadError(error) {
-
     if (!error) {
         return null;
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | File Too Large
-    |--------------------------------------------------------------------------
-    */
-
     if (error.code === "LIMIT_FILE_SIZE") {
-
         return {
             statusCode: 400,
-            message:
-                "The uploaded file is too large."
+            message: "The uploaded file is too large."
         };
-
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Too Many Files
-    |--------------------------------------------------------------------------
-    */
 
     if (error.code === "LIMIT_FILE_COUNT") {
-
         return {
             statusCode: 400,
-            message:
-                "Too many files were uploaded."
+            message: "Too many files were uploaded."
         };
-
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Unexpected File
-    |--------------------------------------------------------------------------
-    */
 
     if (error.code === "LIMIT_UNEXPECTED_FILE") {
-
         return {
             statusCode: 400,
-            message:
-                "An unexpected file was uploaded."
+            message: "An unexpected file was uploaded."
         };
-
     }
 
+    if (error.code === "LIMIT_FIELD_COUNT") {
+        return {
+            statusCode: 400,
+            message: "Too many form fields were submitted."
+        };
+    }
+
+    if (error.code === "LIMIT_FIELD_KEY") {
+        return {
+            statusCode: 400,
+            message: "A submitted field name is too long."
+        };
+    }
+
+    if (error.code === "LIMIT_FIELD_VALUE") {
+        return {
+            statusCode: 400,
+            message: "A submitted field value is too large."
+        };
+    }
+
+    if (error.code === "LIMIT_PART_COUNT") {
+        return {
+            statusCode: 400,
+            message: "The uploaded multipart request contains too many parts."
+        };
+    }
 
     return null;
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Global Error Handler
-|--------------------------------------------------------------------------
-*/
-
-function errorHandler(error, req, res, next) {
-
-    /*
-    |--------------------------------------------------------------------------
-    | If response has already started
-    |--------------------------------------------------------------------------
-    */
-
-    if (res.headersSent) {
-
-        return next(error);
-
+function handleValidationError(error) {
+    if (!error) {
+        return null;
     }
 
+    if (error.name === "ValidationError") {
+        return {
+            statusCode: 400,
+            message: error.message || "The supplied information is invalid."
+        };
+    }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Default Error Values
-    |--------------------------------------------------------------------------
-    */
+    if (error.statusCode === 400 || error.status === 400) {
+        return {
+            statusCode: 400,
+            message: error.message || "The supplied information is invalid."
+        };
+    }
+
+    return null;
+}
+
+function errorHandler(error, req, res, next) {
+    if (res.headersSent) {
+        return next(error);
+    }
 
     let statusCode =
         error.statusCode ||
         error.status ||
         500;
 
-
     let message =
         error.message ||
         "An unexpected server error occurred.";
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | PostgreSQL Errors
-    |--------------------------------------------------------------------------
-    */
-
     if (error.code && /^[0-9A-Z]{5}$/.test(error.code)) {
+        const databaseError = handleDatabaseError(error);
 
-        const databaseError =
-            handleDatabaseError(error);
-
-        statusCode =
-            databaseError.statusCode;
-
-        message =
-            databaseError.message;
-
+        statusCode = databaseError.statusCode;
+        message = databaseError.message;
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | JWT Errors
-    |--------------------------------------------------------------------------
-    */
 
     const authenticationError =
         handleAuthenticationError(error);
 
-
     if (authenticationError) {
-
-        statusCode =
-            authenticationError.statusCode;
-
-        message =
-            authenticationError.message;
-
+        statusCode = authenticationError.statusCode;
+        message = authenticationError.message;
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Upload Errors
-    |--------------------------------------------------------------------------
-    */
 
     const uploadError =
         handleUploadError(error);
 
-
     if (uploadError) {
-
-        statusCode =
-            uploadError.statusCode;
-
-        message =
-            uploadError.message;
-
+        statusCode = uploadError.statusCode;
+        message = uploadError.message;
     }
 
+    const validationError =
+        handleValidationError(error);
 
-    /*
-    |--------------------------------------------------------------------------
-    | Development Logging
-    |--------------------------------------------------------------------------
-    */
+    if (validationError) {
+        statusCode = validationError.statusCode;
+        message = validationError.message;
+    }
+
+    if (statusCode < 400 || statusCode > 599) {
+        statusCode = 500;
+    }
 
     console.error("==============================================");
     console.error("SERVER ERROR");
@@ -389,98 +235,41 @@ function errorHandler(error, req, res, next) {
     console.error("Status:", statusCode);
     console.error("Message:", error.message);
 
-
     if (process.env.NODE_ENV !== "production") {
-
         console.error("Stack:", error.stack);
-
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Production-Safe Response
-    |--------------------------------------------------------------------------
-    */
 
     const response = {
-
         success: false,
-
         message
-
     };
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | Include Error Details Only During Development
-    |--------------------------------------------------------------------------
-    */
-
     if (process.env.NODE_ENV !== "production") {
-
         response.error = {
-            name: error.name,
+            name: error.name || "Error",
             code: error.code || null
         };
-
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Send Response
-    |--------------------------------------------------------------------------
-    */
 
     return res
         .status(statusCode)
         .json(response);
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Async Controller Wrapper
-|--------------------------------------------------------------------------
-|
-| This allows controllers such as:
-|
-| async function createStudent(req, res) {
-|     ...
-| }
-|
-| to automatically forward errors to errorHandler.
-|--------------------------------------------------------------------------
-*/
-
 function asyncHandler(controller) {
-
     return function wrappedController(req, res, next) {
-
         Promise
             .resolve(controller(req, res, next))
             .catch(next);
-
     };
-
 }
 
+errorHandler.notFoundHandler = notFoundHandler;
+errorHandler.errorHandler = errorHandler;
+errorHandler.asyncHandler = asyncHandler;
+errorHandler.handleDatabaseError = handleDatabaseError;
+errorHandler.handleAuthenticationError = handleAuthenticationError;
+errorHandler.handleUploadError = handleUploadError;
+errorHandler.handleValidationError = handleValidationError;
 
-/*
-|--------------------------------------------------------------------------
-| Export
-|--------------------------------------------------------------------------
-*/
-
-module.exports = {
-
-    notFoundHandler,
-
-    errorHandler,
-
-    asyncHandler
-
-};
+module.exports = errorHandler;

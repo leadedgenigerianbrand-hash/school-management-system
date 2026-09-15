@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    ```
+    <title>Announcements | School Management System</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/style.css">
+
+    <style>
+        .announcement-item {
+            transition: box-shadow 0.2s ease;
+        }
+
+        .announcement-item:hover {
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+        }
+
+        .announcement-message {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .announcement-meta {
+            font-size: 0.85rem;
+        }
+
+        .announcement-badge {
+            font-size: 0.75rem;
+        }
+
+        .empty-announcements {
+            min-height: 260px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .announcement-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            background: rgba(13, 110, 253, 0.1);
+            color: #0d6efd;
+        }
+    </style>
+    ```
+
+</head>
+
+<body>
+
+    <div class="d-flex" id="app">
+
+        ```
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h4 class="mb-0">
+                    School Management
+                </h4>
+            </div>
+
+            <nav class="sidebar-nav">
+
+                <a href="/pages/dashboard.html">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Dashboard</span>
+                </a>
+
+                <a href="/pages/students.html">
+                    <i class="bi bi-people"></i>
+                    <span>Students</span>
+                </a>
+
+                <a href="/pages/staff.html">
+                    <i class="bi bi-person-badge"></i>
+                    <span>Staff</span>
+                </a>
+
+                <a href="/pages/guardians.html">
+                    <i class="bi bi-person-hearts"></i>
+                    <span>Guardians</span>
+                </a>
+
+                <a href="/pages/classes.html">
+                    <i class="bi bi-building"></i>
+                    <span>Classes</span>
+                </a>
+
+                <a href="/pages/class-arms.html">
+                    <i class="bi bi-diagram-3"></i>
+                    <span>Class Arms</span>
+                </a>
+
+                <a href="/pages/departments.html">
+                    <i class="bi bi-diagram-2"></i>
+                    <span>Departments</span>
+                </a>
+
+                <a href="/pages/subjects.html">
+                    <i class="bi bi-book"></i>
+                    <span>Subjects</span>
+                </a>
+
+                <a href="/pages/academic-levels.html">
+                    <i class="bi bi-layers"></i>
+                    <span>Academic Levels</span>
+                </a>
+
+                <a href="/pages/academic-sessions.html">
+                    <i class="bi bi-calendar3"></i>
+                    <span>Academic Sessions</span>
+                </a>
+
+                <a href="/pages/terms.html">
+                    <i class="bi bi-calendar-week"></i>
+                    <span>Terms</span>
+                </a>
+
+                <a href="/pages/timetable.html">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Timetable</span>
+                </a>
+
+                <a href="/pages/attendance.html">
+                    <i class="bi bi-calendar-check"></i>
+                    <span>Attendance</span>
+                </a>
+
+                <a href="/pages/results.html">
+                    <i class="bi bi-bar-chart"></i>
+                    <span>Results</span>
+                </a>
+
+                <a href="/pages/student-fees.html">
+                    <i class="bi bi-cash-stack"></i>
+                    <span>Fees &amp; Payments</span>
+                </a>
+
+                <a href="/pages/documents.html">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <span>Documents</span>
+                </a>
+
+                <a href="/pages/reports.html">
+                    <i class="bi bi-file-earmark-bar-graph"></i>
+                    <span>Reports</span>
+                </a>
+
+                <a href="/pages/notifications.html">
+                    <i class="bi bi-bell"></i>
+                    <span>Notifications</span>
+                </a>
+
+                <a href="/pages/announcements.html" class="active">
+                    <i class="bi bi-megaphone"></i>
+                    <span>Announcements</span>
+                </a>
+
+                <a href="/pages/users.html">
+                    <i class="bi bi-person-gear"></i>
+                    <span>Users</span>
+                </a>
+
+                <a href="/pages/roles.html">
+                    <i class="bi bi-shield-lock"></i>
+                    <span>Roles</span>
+                </a>
+
+                <a href="/pages/permissions.html">
+                    <i class="bi bi-key"></i>
+                    <span>Permissions</span>
+                </a>
+
+                <a href="/pages/profile.html">
+                    <i class="bi bi-person-circle"></i>
+                    <span>My Profile</span>
+                </a>
+
+                <a href="/pages/settings.html">
+                    <i class="bi bi-gear"></i>
+                    <span>Settings</span>
+                </a>
+
+            </nav>
+        </aside>
+
+        <main class="main-content flex-grow-1">
+
+            <header class="topbar">
+                <div class="d-flex align-items-center gap-3">
+
+                    <button type="button" class="btn btn-outline-secondary" id="sidebarToggle"
+                        aria-label="Toggle sidebar">
+                        <i class="bi bi-list"></i>
+                    </button>
+
+                    <h5 class="mb-0">
+                        Announcements
+                    </h5>
+
+                </div>
+
+                <div class="d-flex align-items-center gap-3">
+
+                    <span id="userName" class="fw-semibold">
+                        User
+                    </span>
+
+                    <button type="button" class="btn btn-outline-danger btn-sm" id="logoutButton">
+                        <i class="bi bi-box-arrow-right"></i>
+                        Logout
+                    </button>
+
+                </div>
+            </header>
+
+            <div class="container-fluid py-4">
+
+                <div id="announcementMessageContainer"></div>
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+
+                    <div>
+                        <h2 class="mb-1">
+                            School Announcements
+                        </h2>
+
+                        <p class="text-muted mb-0">
+                            Create and manage important school-wide announcements.
+                        </p>
+                    </div>
+
+                    <div class="d-flex gap-2">
+
+                        <button type="button" class="btn btn-outline-secondary" id="refreshAnnouncementsButton">
+                            <i class="bi bi-arrow-clockwise"></i>
+                            Refresh
+                        </button>
+
+                        <button type="button" class="btn btn-primary" id="createAnnouncementButton"
+                            data-bs-toggle="modal" data-bs-target="#announcementModal">
+                            <i class="bi bi-plus-circle"></i>
+                            New Announcement
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div class="row g-3 mb-4">
+
+                    <div class="col-md-6 col-xl-3">
+                        <div class="card h-100 shadow-sm border-0">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-muted mb-1">
+                                            Total Announcements
+                                        </p>
+                                        <h3 class="mb-0" id="totalAnnouncements">
+                                            0
+                                        </h3>
+                                    </div>
+
+                                    <div class="announcement-icon">
+                                        <i class="bi bi-megaphone"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-3">
+                        <div class="card h-100 shadow-sm border-0">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-muted mb-1">
+                                            Published
+                                        </p>
+                                        <h3 class="mb-0" id="publishedAnnouncements">
+                                            0
+                                        </h3>
+                                    </div>
+
+                                    <div class="announcement-icon">
+                                        <i class="bi bi-check-circle"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-3">
+                        <div class="card h-100 shadow-sm border-0">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-muted mb-1">
+                                            Drafts
+                                        </p>
+                                        <h3 class="mb-0" id="draftAnnouncements">
+                                            0
+                                        </h3>
+                                    </div>
+
+                                    <div class="announcement-icon">
+                                        <i class="bi bi-file-earmark-text"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-3">
+                        <div class="card h-100 shadow-sm border-0">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-muted mb-1">
+                                            Priority
+                                        </p>
+                                        <h3 class="mb-0" id="priorityAnnouncements">
+                                            0
+                                        </h3>
+                                    </div>
+
+                                    <div class="announcement-icon">
+                                        <i class="bi bi-exclamation-circle"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="card shadow-sm border-0 mb-4">
+
+                    <div class="card-body">
+
+                        <div class="row g-3 align-items-end">
+
+                            <div class="col-lg-5">
+
+                                <label for="searchInput" class="form-label">
+                                    Search
+                                </label>
+
+                                <div class="input-group">
+
+                                    <span class="input-group-text">
+                                        <i class="bi bi-search"></i>
+                                    </span>
+
+                                    <input type="search" class="form-control" id="searchInput"
+                                        placeholder="Search announcements...">
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-4 col-lg-3">
+
+                                <label for="statusFilter" class="form-label">
+                                    Status
+                                </label>
+
+                                <select class="form-select" id="statusFilter">
+                                    <option value="all">
+                                        All Statuses
+                                    </option>
+
+                                    <option value="published">
+                                        Published
+                                    </option>
+
+                                    <option value="draft">
+                                        Draft
+                                    </option>
+
+                                    <option value="archived">
+                                        Archived
+                                    </option>
+                                </select>
+
+                            </div>
+
+                            <div class="col-md-4 col-lg-2">
+
+                                <label for="priorityFilter" class="form-label">
+                                    Priority
+                                </label>
+
+                                <select class="form-select" id="priorityFilter">
+                                    <option value="all">
+                                        All Priorities
+                                    </option>
+
+                                    <option value="Normal">
+                                        Normal
+                                    </option>
+
+                                    <option value="High">
+                                        High
+                                    </option>
+
+                                    <option value="Low">
+                                        Low
+                                    </option>
+                                </select>
+
+                            </div>
+
+                            <div class="col-md-4 col-lg-2">
+
+                                <button type="button" class="btn btn-outline-secondary w-100"
+                                    id="clearAnnouncementFiltersButton">
+                                    <i class="bi bi-x-circle"></i>
+                                    Clear Filters
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="card shadow-sm border-0">
+
+                    <div class="card-header bg-white py-3">
+
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <div>
+                                <h5 class="mb-1">
+                                    Announcements
+                                </h5>
+
+                                <small class="text-muted" id="announcementCount">
+                                    0 announcements
+                                </small>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="card-body">
+
+                        <div id="announcementList">
+
+                            <div class="empty-announcements">
+
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">
+                                        Loading...
+                                    </span>
+                                </div>
+
+                                <p class="text-muted mt-3 mb-0">
+                                    Loading announcements...
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </main>
+        ```
+
+    </div>
+
+    <div class="modal fade" id="announcementModal" tabindex="-1" aria-labelledby="announcementModalLabel"
+        aria-hidden="true">
+
+        ```
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+
+            <div class="modal-content">
+
+                <div class="modal-header">
+
+                    <h5 class="modal-title" id="announcementModalLabel">
+                        Create Announcement
+                    </h5>
+
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+                </div>
+
+                <form id="announcementForm" novalidate>
+
+                    <div class="modal-body">
+
+                        <input type="hidden" id="announcementId">
+
+                        <div class="mb-3">
+
+                            <label for="announcementTitle" class="form-label">
+                                Title
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            <input type="text" class="form-control" id="announcementTitle" maxlength="200" required
+                                placeholder="Enter announcement title">
+
+                        </div>
+
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+
+                                <label for="announcementPriority" class="form-label">
+                                    Priority
+                                </label>
+
+                                <select class="form-select" id="announcementPriority">
+                                    <option value="Normal">
+                                        Normal
+                                    </option>
+
+                                    <option value="High">
+                                        High
+                                    </option>
+
+                                    <option value="Low">
+                                        Low
+                                    </option>
+                                </select>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <label for="announcementStatus" class="form-label">
+                                    Status
+                                </label>
+
+                                <select class="form-select" id="announcementStatus">
+                                    <option value="Draft">
+                                        Draft
+                                    </option>
+
+                                    <option value="Published">
+                                        Published
+                                    </option>
+
+                                    <option value="Archived">
+                                        Archived
+                                    </option>
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                        <div class="mb-3 mt-3">
+
+                            <label for="announcementMessage" class="form-label">
+                                Announcement
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            <textarea class="form-control" id="announcementMessage" rows="8" required
+                                placeholder="Enter the announcement message"></textarea>
+
+                        </div>
+
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+
+                                <label for="announcementStartDate" class="form-label">
+                                    Publish Date
+                                </label>
+
+                                <input type="datetime-local" class="form-control" id="announcementStartDate">
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <label for="announcementEndDate" class="form-label">
+                                    Expiry Date
+                                </label>
+
+                                <input type="datetime-local" class="form-control" id="announcementEndDate">
+
+                            </div>
+
+                        </div>
+
+                        <div id="announcementValidationMessage" class="alert alert-danger mt-3" hidden></div>
+
+                    </div>
+
+                    <div class="modal-footer">
+
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+
+                        <button type="submit" class="btn btn-primary" id="saveAnnouncementButton">
+                            <i class="bi bi-save"></i>
+                            Save Announcement
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+        ```
+
+    </div>
+
+    <script src="/js/api.js"></script>
+
+    <script src="/js/auth.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="../js/announcements.js"></script>
+
+</body>
+
+</html>

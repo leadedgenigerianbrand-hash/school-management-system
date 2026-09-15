@@ -1,328 +1,237 @@
+"use strict";
+
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const fs = require("fs");
 const dotenv = require("dotenv");
 
 dotenv.config();
 
-const { testDatabaseConnection } = require("./config/database");
+const {
+    testDatabaseConnection
+} = require("./config/database");
 
 const app = express();
 
-const PORT = process.env.PORT || 4000;
+const PORT =
+    Number(process.env.PORT) || 4000;
 
-
-/*
-|--------------------------------------------------------------------------
-| ROUTES
-|--------------------------------------------------------------------------
-*/
-
-const authRoutes = require("./routes/authRoutes");
-const studentRoutes = require("./routes/studentRoutes");
-const staffRoutes = require("./routes/staffRoutes");
-const guardianRoutes = require("./routes/guardianRoutes");
-const subjectRoutes = require("./routes/subjectRoutes");
-const classRoutes = require("./routes/classRoutes");
-const classArmRoutes = require("./routes/classArmRoutes");
-const departmentRoutes = require("./routes/departmentRoutes");
-const academicSessionRoutes = require("./routes/academicSessionRoutes");
-const termRoutes = require("./routes/termRoutes");
-const attendanceRoutes = require("./routes/attendanceRoutes");
-const feeRoutes = require("./routes/feeRoutes");
-const resultRoutes = require("./routes/resultRoutes");
-const documentRoutes = require("./routes/documentRoutes");
-const reportRoutes = require("./routes/reportRoutes");
-const roleRoutes = require("./routes/roleRoutes");
-const permissionRoutes = require("./routes/permissionRoutes");
-const userRoutes = require("./routes/userRoutes");
-const schoolRoutes = require("./routes/schoolRoutes");
-
-
-/*
-|--------------------------------------------------------------------------
-| MIDDLEWARE
-|--------------------------------------------------------------------------
-*/
-
-app.use(cors());
-
-app.use(express.json());
+app.disable("x-powered-by");
 
 app.use(
-    express.urlencoded({
-        extended: true
+    cors()
+);
+
+app.use(
+    express.json({
+        limit: "10mb"
     })
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| STATIC FILES
-|--------------------------------------------------------------------------
-*/
-
 app.use(
-    express.static(
-        path.join(__dirname, "Public")
-    )
+    express.urlencoded({
+        extended: true,
+        limit: "10mb"
+    })
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| UPLOADS
-|--------------------------------------------------------------------------
-*/
-
-app.use(
-    "/uploads",
-    express.static(
-        path.join(__dirname, "uploads")
-    )
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| API ROUTES
-|--------------------------------------------------------------------------
-*/
-
-app.use(
-    "/api/auth",
-    authRoutes
+const publicPath = path.join(
+    __dirname,
+    "Public"
 );
 
 app.use(
-    "/api/students",
-    studentRoutes
+    express.static(publicPath)
 );
 
-app.use(
-    "/api/staff",
-    staffRoutes
+const uploadsPath = path.join(
+    __dirname,
+    "uploads"
 );
 
-app.use(
-    "/api/guardians",
-    guardianRoutes
-);
+if (fs.existsSync(uploadsPath)) {
+    app.use(
+        "/uploads",
+        express.static(uploadsPath)
+    );
+}
 
-app.use(
-    "/api/subjects",
-    subjectRoutes
-);
+const routeMap = {
+    authRoutes: "/api/auth",
+    userRoutes: "/api/users",
+    roleRoutes: "/api/roles",
+    permissionRoutes: "/api/permissions",
+    schoolRoutes: "/api/schools",
+    academicSessionRoutes: "/api/academic-sessions",
+    termRoutes: "/api/terms",
+    academicLevelRoutes: "/api/academic-levels",
+    classRoutes: "/api/classes",
+    classArmRoutes: "/api/class-arms",
+    departmentRoutes: "/api/departments",
+    subjectRoutes: "/api/subjects",
+    studentRoutes: "/api/students",
+    enrollmentRoutes: "/api/enrollments",
+    staffRoutes: "/api/staff",
+    guardianRoutes: "/api/guardians",
+    attendanceRoutes: "/api/attendance",
+    feeRoutes: "/api/fees",
+    paymentRoutes: "/api/payments",
+    resultSettingRoutes: "/api/result-settings",
+    resultRoutes: "/api/results",
+    timetableRoutes: "/api/timetable",
+    notificationRoutes: "/api/notifications",
+    announcementRoutes: "/api/announcements",
+    documentRoutes: "/api/documents",
+    reportRoutes: "/api/reports",
+    auditLogRoutes: "/api/audit-logs"
+};
 
-app.use(
-    "/api/classes",
-    classRoutes
-);
+function loadRoutes() {
+    const routesDirectory =
+        path.join(
+            __dirname,
+            "routes"
+        );
 
-app.use(
-    "/api/class-arms",
-    classArmRoutes
-);
+    for (
+        const [fileName, routePath]
+        of Object.entries(routeMap)
+    ) {
+        const routeFile =
+            path.join(
+                routesDirectory,
+                `${fileName}.js`
+            );
 
-app.use(
-    "/api/departments",
-    departmentRoutes
-);
+        if (
+            !fs.existsSync(routeFile)
+        ) {
+            continue;
+        }
 
-app.use(
-    "/api/academic-sessions",
-    academicSessionRoutes
-);
+        try {
+            const router =
+                require(routeFile);
 
-app.use(
-    "/api/terms",
-    termRoutes
-);
+            if (
+                typeof router !==
+                "function"
+            ) {
+                throw new TypeError(
+                    `${fileName}.js does not export an Express router.`
+                );
+            }
 
-app.use(
-    "/api/attendance",
-    attendanceRoutes
-);
+            app.use(
+                routePath,
+                router
+            );
 
-app.use(
-    "/api/fees",
-    feeRoutes
-);
+            console.log(
+                `Route loaded: ${routePath}`
+            );
+        } catch (error) {
+            console.error(
+                `Failed to load route: ${fileName}.js`
+            );
 
-app.use(
-    "/api/results",
-    resultRoutes
-);
+            throw error;
+        }
+    }
+}
 
-app.use(
-    "/api/documents",
-    documentRoutes
-);
-
-app.use(
-    "/api/reports",
-    reportRoutes
-);
-
-app.use(
-    "/api/roles",
-    roleRoutes
-);
-
-app.use(
-    "/api/permissions",
-    permissionRoutes
-);
-
-app.use(
-    "/api/users",
-    userRoutes
-);
-
-app.use(
-    "/api/schools",
-    schoolRoutes
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| HOME ROUTE
-|--------------------------------------------------------------------------
-*/
+loadRoutes();
 
 app.get(
     "/",
     (req, res) => {
-
-        res.sendFile(
+        return res.sendFile(
             path.join(
-                __dirname,
-                "Public",
+                publicPath,
                 "index.html"
             )
         );
-
     }
 );
-
-
-/*
-|--------------------------------------------------------------------------
-| HEALTH CHECK
-|--------------------------------------------------------------------------
-*/
 
 app.get(
     "/api/health",
     async (req, res) => {
-
         try {
-
             await testDatabaseConnection();
 
-            res.status(200).json({
-
+            return res.status(200).json({
                 success: true,
-
                 message:
                     "School Management System API is running.",
-
                 database:
                     "PostgreSQL connected",
-
                 timestamp:
                     new Date().toISOString()
-
             });
-
         } catch (error) {
-
             console.error(
                 "Database health check failed:",
                 error
             );
 
-            res.status(500).json({
-
+            return res.status(500).json({
                 success: false,
-
                 message:
                     "Server is running, but PostgreSQL connection failed.",
-
                 error:
                     error.message
-
             });
-
         }
-
     }
 );
-
-
-/*
-|--------------------------------------------------------------------------
-| 404 HANDLER
-|--------------------------------------------------------------------------
-*/
 
 app.use(
     (req, res) => {
-
-        res.status(404).json({
-
+        return res.status(404).json({
             success: false,
-
             message:
                 "Route not found."
-
         });
-
     }
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| GLOBAL ERROR HANDLER
-|--------------------------------------------------------------------------
-*/
-
 app.use(
     (error, req, res, next) => {
-
         console.error(
             "Server error:",
             error
         );
 
-        res.status(
-            error.status || 500
-        ).json({
+        if (
+            res.headersSent
+        ) {
+            return next(error);
+        }
 
-            success: false,
+        const errorStatus =
+            Number(error.status);
 
-            message:
-                error.message ||
-                "Internal server error."
+        const statusCode =
+            errorStatus >= 400 &&
+            errorStatus < 600
+                ? errorStatus
+                : 500;
 
-        });
-
+        return res
+            .status(statusCode)
+            .json({
+                success: false,
+                message:
+                    error.message ||
+                    "Internal server error."
+            });
     }
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| START SERVER
-|--------------------------------------------------------------------------
-*/
-
 async function startServer() {
-
     try {
-
         console.log(
             "Connecting to PostgreSQL..."
         );
@@ -332,7 +241,6 @@ async function startServer() {
         app.listen(
             PORT,
             () => {
-
                 console.log(
                     "=============================================="
                 );
@@ -358,90 +266,15 @@ async function startServer() {
                 );
 
                 console.log(
-                    ` Student API: http://localhost:${PORT}/api/students`
-                );
-
-                console.log(
-                    ` Staff API: http://localhost:${PORT}/api/staff`
-                );
-
-                console.log(
-                    ` Guardian API: http://localhost:${PORT}/api/guardians`
-                );
-
-                console.log(
-                    ` Subject API: http://localhost:${PORT}/api/subjects`
-                );
-
-                console.log(
-                    ` Class API: http://localhost:${PORT}/api/classes`
-                );
-
-                console.log(
-                    ` Class Arm API: http://localhost:${PORT}/api/class-arms`
-                );
-
-                console.log(
-                    ` Department API: http://localhost:${PORT}/api/departments`
-                );
-
-                console.log(
-                    ` Academic Session API: http://localhost:${PORT}/api/academic-sessions`
-                );
-
-                console.log(
-                    ` Term API: http://localhost:${PORT}/api/terms`
-                );
-
-                console.log(
-                    ` Attendance API: http://localhost:${PORT}/api/attendance`
-                );
-
-                console.log(
-                    ` Fee API: http://localhost:${PORT}/api/fees`
-                );
-
-                console.log(
-                    ` Result API: http://localhost:${PORT}/api/results`
-                );
-
-                console.log(
-                    ` Document API: http://localhost:${PORT}/api/documents`
-                );
-
-                console.log(
-                    ` Report API: http://localhost:${PORT}/api/reports`
-                );
-
-                console.log(
-                    ` Role API: http://localhost:${PORT}/api/roles`
-                );
-
-                console.log(
-                    ` Permission API: http://localhost:${PORT}/api/permissions`
-                );
-
-                console.log(
-                    ` User API: http://localhost:${PORT}/api/users`
-                );
-
-                console.log(
-                    ` School API: http://localhost:${PORT}/api/schools`
-                );
-
-                console.log(
                     " PostgreSQL: Connected"
                 );
 
                 console.log(
                     "=============================================="
                 );
-
             }
         );
-
     } catch (error) {
-
         console.error(
             "=============================================="
         );
@@ -465,16 +298,9 @@ async function startServer() {
         );
 
         process.exit(1);
-
     }
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| APPLICATION START
-|--------------------------------------------------------------------------
-*/
-
 startServer();
+
+module.exports = app;

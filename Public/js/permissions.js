@@ -1,128 +1,26 @@
 "use strict";
 
 (function () {
-    const API_BASE = "/api";
-    const TOKEN_KEY = "school_management_token";
-
     let permissions = [];
-
-    function getToken() {
-        return (
-            localStorage.getItem(TOKEN_KEY) ||
-            sessionStorage.getItem(TOKEN_KEY) ||
-            localStorage.getItem("token") ||
-            sessionStorage.getItem("token") ||
-            localStorage.getItem("accessToken") ||
-            sessionStorage.getItem("accessToken") ||
-            ""
-        );
-    }
-
-    async function apiRequest(endpoint, options = {}) {
-        let url = endpoint;
-
-        if (!url.startsWith("http://") && !url.startsWith("https://")) {
-            if (!url.startsWith("/")) {
-                url = "/" + url;
-            }
-
-            if (!url.startsWith(API_BASE + "/")) {
-                url = API_BASE + url;
-            }
-        }
-
-        const headers = {
-            ...(options.headers || {})
-        };
-
-        const token = getToken();
-
-        if (token) {
-            headers.Authorization = `Bearer ${token}`;
-        }
-
-        if (
-            options.body &&
-            !(options.body instanceof FormData) &&
-            !headers["Content-Type"] &&
-            !headers["content-type"]
-        ) {
-            headers["Content-Type"] = "application/json";
-        }
-
-        let response;
-
-        try {
-            response = await fetch(url, {
-                ...options,
-                headers
-            });
-        } catch (error) {
-            console.error("Permission API error:", error);
-            throw new Error(
-                "Unable to connect to the server."
-            );
-        }
-
-        if (response.status === 401) {
-            localStorage.removeItem(TOKEN_KEY);
-            localStorage.removeItem("school_management_user");
-            sessionStorage.removeItem(TOKEN_KEY);
-            sessionStorage.removeItem("school_management_user");
-
-            if (!window.location.pathname.endsWith("/login.html")) {
-                window.location.href = "/pages/login.html";
-            }
-
-            throw new Error("Authentication required.");
-        }
-
-        if (response.status === 403) {
-            throw new Error(
-                "You do not have permission to perform this action."
-            );
-        }
-
-        const contentType =
-            response.headers.get("content-type") || "";
-
-        let data;
-
-        if (contentType.includes("application/json")) {
-            data = await response.json();
-        } else {
-            data = await response.text();
-        }
-
-        if (!response.ok) {
-            throw new Error(
-                typeof data === "object"
-                    ? data.message || data.error || "Request failed."
-                    : data || "Request failed."
-            );
-        }
-
-        return data;
-    }
 
     function getElements() {
         return {
-            tableBody:
-                document.getElementById("permissionsTableBody") ||
-                document.getElementById("permissionTableBody") ||
-                document.querySelector("#permissionsTable tbody"),
-
-            searchInput:
-                document.getElementById("searchInput") ||
-                document.getElementById("permissionSearch"),
-
-            moduleFilter:
-                document.getElementById("moduleFilter") ||
-                document.getElementById("permissionModuleFilter"),
-
-            message:
-                document.getElementById("message") ||
-                document.getElementById("messageContainer")
+            tableBody: document.getElementById("permissionsTableBody"),
+            searchInput: document.getElementById("searchInput"),
+            moduleFilter: document.getElementById("moduleFilter"),
+            refreshButton: document.getElementById("refreshPermissionsButton"),
+            count: document.getElementById("permissionCount"),
+            message: document.getElementById("message"),
+            openCreateButton: document.getElementById("openCreatePermissionButton"),
+            modal: document.getElementById("permissionModal"),
+            modalTitle: document.getElementById("modalTitle"),
+            form: document.getElementById("permissionForm"),
+            permissionId: document.getElementById("permissionId"),
+            permissionName: document.getElementById("permissionName"),
+            permissionDescription: document.getElementById("permissionDescription"),
+            closeModalButton: document.getElementById("closePermissionModalButton"),
+            cancelButton: document.getElementById("cancelPermissionButton"),
+            saveButton: document.getElementById("savePermissionButton")
         };
     }
 
@@ -136,10 +34,45 @@
         message.textContent = text;
         message.className = `message ${type}`;
 
-        setTimeout(() => {
+        window.setTimeout(() => {
             message.textContent = "";
             message.className = "message";
         }, 4000);
+    }
+
+    function getPermissionId(permission) {
+        return permission?.id ?? "";
+    }
+
+    function getPermissionName(permission) {
+        return permission?.permission_name ?? "";
+    }
+
+    function getPermissionDescription(permission) {
+        return permission?.description ?? "";
+    }
+
+    function getPermissionModule(permission) {
+        const permissionName = getPermissionName(permission);
+
+        if (!permissionName) {
+            return "";
+        }
+
+        const separatorIndex = permissionName.indexOf(".");
+
+        if (separatorIndex === -1) {
+            return permissionName;
+        }
+
+        return permissionName.substring(
+            0,
+            separatorIndex
+        );
+    }
+
+    function getPermissionCreatedAt(permission) {
+        return permission?.created_at ?? "";
     }
 
     async function loadPermissions() {
@@ -148,7 +81,7 @@
         showLoading();
 
         try {
-            const result = await apiRequest("/permissions");
+            const result = await apiGet("/permissions");
 
             permissions =
                 Array.isArray(result)
@@ -164,16 +97,25 @@
             populateModuleFilter();
             renderPermissions();
         } catch (error) {
-            console.error("Load permissions error:", error);
+            console.error(
+                "Load permissions error:",
+                error
+            );
 
             permissions = [];
 
             if (tableBody) {
-                showEmpty("Unable to load permissions.");
+                showEmpty(
+                    error.message ||
+                    "Unable to load permissions."
+                );
             }
 
+            updateCount(0);
+
             showMessage(
-                error.message || "Unable to load permissions.",
+                error.message ||
+                "Unable to load permissions.",
                 "error"
             );
         }
@@ -191,96 +133,100 @@
         }
 
         const searchTerm =
-            searchInput?.value.trim().toLowerCase() || "";
+            searchInput?.value
+                .trim()
+                .toLowerCase() || "";
 
         const selectedModule =
-            moduleFilter?.value.trim().toLowerCase() || "";
+            moduleFilter?.value
+                .trim()
+                .toLowerCase() || "";
 
-        const filtered = permissions.filter((permission) => {
-            const name = String(
-                permission.name ||
-                permission.permission_name ||
-                permission.permissionName ||
-                ""
-            ).toLowerCase();
+        const filteredPermissions =
+            permissions.filter((permission) => {
+                const name =
+                    getPermissionName(permission)
+                        .toLowerCase();
 
-            const description = String(
-                permission.description || ""
-            ).toLowerCase();
+                const description =
+                    getPermissionDescription(permission)
+                        .toLowerCase();
 
-            const module = String(
-                permission.module ||
-                permission.module_name ||
-                permission.moduleName ||
-                ""
-            ).toLowerCase();
+                const module =
+                    getPermissionModule(permission)
+                        .toLowerCase();
 
-            const matchesSearch =
-                !searchTerm ||
-                name.includes(searchTerm) ||
-                description.includes(searchTerm) ||
-                module.includes(searchTerm);
+                const matchesSearch =
+                    !searchTerm ||
+                    name.includes(searchTerm) ||
+                    description.includes(searchTerm) ||
+                    module.includes(searchTerm);
 
-            const matchesModule =
-                !selectedModule ||
-                module === selectedModule;
+                const matchesModule =
+                    !selectedModule ||
+                    module === selectedModule;
 
-            return matchesSearch && matchesModule;
-        });
+                return (
+                    matchesSearch &&
+                    matchesModule
+                );
+            });
 
-        if (!filtered.length) {
-            showEmpty("No permissions found.");
+        updateCount(
+            filteredPermissions.length
+        );
+
+        if (!filteredPermissions.length) {
+            showEmpty(
+                "No permissions found."
+            );
             return;
         }
 
-        tableBody.innerHTML = filtered
-            .map(createPermissionRow)
-            .join("");
+        tableBody.innerHTML =
+            filteredPermissions
+                .map(createPermissionRow)
+                .join("");
     }
 
     function createPermissionRow(permission) {
         const id =
-            permission.id ??
-            permission.permission_id ??
-            "";
+            getPermissionId(permission);
 
         const name =
-            permission.name ||
-            permission.permission_name ||
-            permission.permissionName ||
-            "-";
-
-        const description =
-            permission.description ||
+            getPermissionName(permission) ||
             "-";
 
         const module =
-            permission.module ||
-            permission.module_name ||
-            permission.moduleName ||
+            getPermissionModule(permission) ||
+            "-";
+
+        const description =
+            getPermissionDescription(permission) ||
             "-";
 
         const createdAt =
-            permission.created_at ||
-            permission.createdAt ||
-            "";
+            getPermissionCreatedAt(permission);
 
         return `
             <tr>
-                <td>${escapeHtml(name)}</td>
-
-                <td>${escapeHtml(description)}</td>
-
+                <td>${escapeHtml(id)}</td>
+                <td>
+                    <strong>
+                        ${escapeHtml(name)}
+                    </strong>
+                </td>
                 <td>
                     <span class="module-badge">
                         ${escapeHtml(module)}
                     </span>
                 </td>
-
+                <td>
+                    ${escapeHtml(description)}
+                </td>
                 <td>
                     ${formatDate(createdAt)}
                 </td>
-
                 <td>
                     <div class="action-buttons">
                         <button
@@ -313,31 +259,34 @@
             return;
         }
 
-        const currentValue = moduleFilter.value;
+        const currentValue =
+            moduleFilter.value;
 
         const modules = [
             ...new Set(
                 permissions
-                    .map(
-                        (permission) =>
-                            permission.module ||
-                            permission.module_name ||
-                            permission.moduleName ||
-                            ""
+                    .map(getPermissionModule)
+                    .map((module) =>
+                        String(module).trim()
                     )
-                    .map((module) => String(module).trim())
                     .filter(Boolean)
             )
-        ].sort((a, b) => a.localeCompare(b));
+        ].sort((a, b) =>
+            a.localeCompare(b)
+        );
 
         moduleFilter.innerHTML = `
-            <option value="">All Modules</option>
+            <option value="">
+                All Modules
+            </option>
             ${modules
                 .map(
                     (module) => `
-                        <option value="${escapeAttribute(
-                            module.toLowerCase()
-                        )}">
+                        <option
+                            value="${escapeAttribute(
+                                module.toLowerCase()
+                            )}"
+                        >
                             ${escapeHtml(module)}
                         </option>
                     `
@@ -345,120 +294,334 @@
                 .join("")}
         `;
 
-        moduleFilter.value = currentValue;
+        const matchingOption =
+            Array.from(
+                moduleFilter.options
+            ).find(
+                (option) =>
+                    option.value ===
+                    currentValue
+            );
+
+        moduleFilter.value =
+            matchingOption
+                ? currentValue
+                : "";
     }
 
-    function addPermission() {
-        const page = document.querySelector(
-            "[data-permission-form]"
-        );
+    function updateCount(count) {
+        const { count: countElement } =
+            getElements();
 
-        if (page) {
-            page.scrollIntoView({
-                behavior: "smooth"
-            });
+        if (!countElement) {
             return;
         }
 
-        showMessage(
-            "Permission creation form is not available on this page.",
-            "error"
-        );
+        countElement.textContent =
+            String(count);
     }
 
-    function editPermission(id) {
-        const permission = permissions.find(
-            (item) =>
-                String(
-                    item.id ??
-                    item.permission_id
-                ) === String(id)
-        );
+    function openCreateModal() {
+        const {
+            modal,
+            modalTitle,
+            form,
+            permissionId,
+            permissionName,
+            permissionDescription,
+            saveButton
+        } = getElements();
 
-        if (!permission) {
-            return;
-        }
-
-        const form = document.querySelector(
-            "#permissionForm"
-        );
-
-        if (!form) {
+        if (!modal || !form) {
             showMessage(
-                "Permission editing form is not available on this page.",
+                "Permission form is not available.",
                 "error"
             );
             return;
         }
 
-        form.dataset.editingId = id;
+        form.reset();
 
-        setFormValue(
-            form,
-            "#name",
-            permission.name ||
-            permission.permission_name ||
-            permission.permissionName
-        );
+        if (permissionId) {
+            permissionId.value = "";
+        }
 
-        setFormValue(
-            form,
-            "#description",
-            permission.description
-        );
+        if (permissionName) {
+            permissionName.value = "";
+        }
 
-        setFormValue(
-            form,
-            "#module",
-            permission.module ||
-            permission.module_name ||
-            permission.moduleName
-        );
+        if (permissionDescription) {
+            permissionDescription.value = "";
+        }
 
-        const submitButton =
-            form.querySelector(
-                "button[type='submit']"
+        if (modalTitle) {
+            modalTitle.textContent =
+                "Create Permission";
+        }
+
+        if (saveButton) {
+            saveButton.textContent =
+                "Save Permission";
+        }
+
+        showModal(modal);
+    }
+
+    function openEditModal(id) {
+        const permission =
+            permissions.find(
+                (item) =>
+                    String(
+                        getPermissionId(item)
+                    ) === String(id)
             );
 
-        if (submitButton) {
-            submitButton.textContent =
+        if (!permission) {
+            showMessage(
+                "Permission not found.",
+                "error"
+            );
+            return;
+        }
+
+        const {
+            modal,
+            modalTitle,
+            permissionId,
+            permissionName,
+            permissionDescription,
+            saveButton
+        } = getElements();
+
+        if (!modal) {
+            showMessage(
+                "Permission form is not available.",
+                "error"
+            );
+            return;
+        }
+
+        if (permissionId) {
+            permissionId.value =
+                getPermissionId(permission);
+        }
+
+        if (permissionName) {
+            permissionName.value =
+                getPermissionName(permission);
+        }
+
+        if (permissionDescription) {
+            permissionDescription.value =
+                getPermissionDescription(
+                    permission
+                );
+        }
+
+        if (modalTitle) {
+            modalTitle.textContent =
+                "Edit Permission";
+        }
+
+        if (saveButton) {
+            saveButton.textContent =
                 "Update Permission";
         }
 
-        form.scrollIntoView({
-            behavior: "smooth"
-        });
+        showModal(modal);
+    }
+
+    function showModal(modal) {
+        if (
+            typeof bootstrap !== "undefined" &&
+            bootstrap.Modal
+        ) {
+            const instance =
+                bootstrap.Modal.getOrCreateInstance(
+                    modal
+                );
+
+            instance.show();
+            return;
+        }
+
+        modal.style.display = "block";
+        modal.classList.add("show");
+        modal.setAttribute(
+            "aria-hidden",
+            "false"
+        );
+    }
+
+    function hideModal() {
+        const { modal } = getElements();
+
+        if (!modal) {
+            return;
+        }
+
+        if (
+            typeof bootstrap !== "undefined" &&
+            bootstrap.Modal
+        ) {
+            const instance =
+                bootstrap.Modal.getInstance(
+                    modal
+                );
+
+            if (instance) {
+                instance.hide();
+                return;
+            }
+        }
+
+        modal.style.display = "none";
+        modal.classList.remove("show");
+        modal.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+    }
+
+    async function savePermission(event) {
+        event.preventDefault();
+
+        const {
+            form,
+            permissionId,
+            permissionName,
+            permissionDescription,
+            saveButton
+        } = getElements();
+
+        if (!form) {
+            return;
+        }
+
+        const name =
+            permissionName?.value
+                .trim() || "";
+
+        const description =
+            permissionDescription?.value
+                .trim() || "";
+
+        if (!name) {
+            showMessage(
+                "Permission name is required.",
+                "error"
+            );
+
+            permissionName?.focus();
+
+            return;
+        }
+
+        if (!/^[a-z0-9_]+\.[a-z0-9_]+$/i.test(name)) {
+            showMessage(
+                "Permission name must use the format module.action.",
+                "error"
+            );
+
+            permissionName?.focus();
+
+            return;
+        }
+
+        const id =
+            permissionId?.value
+                .trim() || "";
+
+        const payload = {
+            permission_name: name,
+            description:
+                description || null
+        };
+
+        const originalButtonText =
+            saveButton?.textContent ||
+            "Save Permission";
+
+        if (saveButton) {
+            saveButton.disabled = true;
+            saveButton.textContent =
+                id
+                    ? "Updating..."
+                    : "Saving...";
+        }
+
+        try {
+            if (id) {
+                await apiPut(
+                    `/permissions/${encodeURIComponent(id)}`,
+                    payload
+                );
+
+                showMessage(
+                    "Permission updated successfully.",
+                    "success"
+                );
+            } else {
+                await apiPost(
+                    "/permissions",
+                    payload
+                );
+
+                showMessage(
+                    "Permission created successfully.",
+                    "success"
+                );
+            }
+
+            hideModal();
+
+            await loadPermissions();
+        } catch (error) {
+            console.error(
+                "Save permission error:",
+                error
+            );
+
+            showMessage(
+                error.message ||
+                "Unable to save permission.",
+                "error"
+            );
+        } finally {
+            if (saveButton) {
+                saveButton.disabled = false;
+                saveButton.textContent =
+                    originalButtonText;
+            }
+        }
     }
 
     async function deletePermission(id) {
-        const permission = permissions.find(
-            (item) =>
-                String(
-                    item.id ??
-                    item.permission_id
-                ) === String(id)
-        );
+        const permission =
+            permissions.find(
+                (item) =>
+                    String(
+                        getPermissionId(item)
+                    ) === String(id)
+            );
 
         const name =
-            permission?.name ||
-            permission?.permission_name ||
-            permission?.permissionName ||
-            "this permission";
+            permission
+                ? getPermissionName(permission)
+                : "this permission";
 
-        if (
-            !window.confirm(
+        const confirmed =
+            window.confirm(
                 `Are you sure you want to delete "${name}"?`
-            )
-        ) {
+            );
+
+        if (!confirmed) {
             return;
         }
 
         try {
-            await apiRequest(
-                `/permissions/${encodeURIComponent(id)}`,
-                {
-                    method: "DELETE"
-                }
+            await apiDelete(
+                `/permissions/${encodeURIComponent(id)}`
             );
 
             showMessage(
@@ -481,16 +644,9 @@
         }
     }
 
-    function setFormValue(form, selector, value) {
-        const element = form.querySelector(selector);
-
-        if (element) {
-            element.value = value ?? "";
-        }
-    }
-
     function showLoading() {
-        const { tableBody } = getElements();
+        const { tableBody } =
+            getElements();
 
         if (!tableBody) {
             return;
@@ -499,7 +655,7 @@
         tableBody.innerHTML = `
             <tr>
                 <td
-                    colspan="5"
+                    colspan="6"
                     style="text-align:center;padding:30px;"
                 >
                     Loading permissions...
@@ -509,7 +665,8 @@
     }
 
     function showEmpty(text) {
-        const { tableBody } = getElements();
+        const { tableBody } =
+            getElements();
 
         if (!tableBody) {
             return;
@@ -518,7 +675,7 @@
         tableBody.innerHTML = `
             <tr>
                 <td
-                    colspan="5"
+                    colspan="6"
                     style="text-align:center;padding:30px;"
                 >
                     ${escapeHtml(text)}
@@ -532,26 +689,51 @@
             return "-";
         }
 
-        const date = new Date(value);
+        const date =
+            new Date(value);
 
-        if (Number.isNaN(date.getTime())) {
+        if (
+            Number.isNaN(
+                date.getTime()
+            )
+        ) {
             return "-";
         }
 
-        return date.toLocaleDateString("en-NG", {
-            year: "numeric",
-            month: "short",
-            day: "numeric"
-        });
+        return escapeHtml(
+            date.toLocaleDateString(
+                "en-NG",
+                {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric"
+                }
+            )
+        );
     }
 
     function escapeHtml(value) {
         return String(value ?? "")
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
+            .replace(
+                /&/g,
+                "&amp;"
+            )
+            .replace(
+                /</g,
+                "&lt;"
+            )
+            .replace(
+                />/g,
+                "&gt;"
+            )
+            .replace(
+                /"/g,
+                "&quot;"
+            )
+            .replace(
+                /'/g,
+                "&#039;"
+            );
     }
 
     function escapeAttribute(value) {
@@ -561,7 +743,12 @@
     function setupEvents() {
         const {
             searchInput,
-            moduleFilter
+            moduleFilter,
+            refreshButton,
+            openCreateButton,
+            form,
+            closeModalButton,
+            cancelButton
         } = getElements();
 
         if (searchInput) {
@@ -575,6 +762,41 @@
             moduleFilter.addEventListener(
                 "change",
                 renderPermissions
+            );
+        }
+
+        if (refreshButton) {
+            refreshButton.addEventListener(
+                "click",
+                loadPermissions
+            );
+        }
+
+        if (openCreateButton) {
+            openCreateButton.addEventListener(
+                "click",
+                openCreateModal
+            );
+        }
+
+        if (form) {
+            form.addEventListener(
+                "submit",
+                savePermission
+            );
+        }
+
+        if (closeModalButton) {
+            closeModalButton.addEventListener(
+                "click",
+                hideModal
+            );
+        }
+
+        if (cancelButton) {
+            cancelButton.addEventListener(
+                "click",
+                hideModal
             );
         }
 
@@ -604,7 +826,8 @@
                     action ===
                     "edit-permission"
                 ) {
-                    editPermission(id);
+                    openEditModal(id);
+                    return;
                 }
 
                 if (
@@ -617,16 +840,23 @@
         );
     }
 
-    window.loadPermissions = loadPermissions;
-    window.addPermission = addPermission;
-    window.editPermission = editPermission;
-    window.deletePermission = deletePermission;
+    window.loadPermissions =
+        loadPermissions;
+
+    window.addPermission =
+        openCreateModal;
+
+    window.editPermission =
+        openEditModal;
+
+    window.deletePermission =
+        deletePermission;
 
     window.PermissionsPage = {
         initialize: loadPermissions,
         loadPermissions,
-        addPermission,
-        editPermission,
+        addPermission: openCreateModal,
+        editPermission: openEditModal,
         deletePermission
     };
 
@@ -635,7 +865,10 @@
         loadPermissions();
     }
 
-    if (document.readyState === "loading") {
+    if (
+        document.readyState ===
+        "loading"
+    ) {
         document.addEventListener(
             "DOMContentLoaded",
             initialize,

@@ -1,3 +1,5 @@
+"use strict";
+
 const express = require("express");
 
 const {
@@ -12,153 +14,178 @@ const {
     types
 } = require("../controllers/documentController");
 
-const authMiddleware = require("../middleware/authMiddleware");
+const authMiddleware =
+    require("../middleware/authMiddleware");
 
-const router = express.Router();
+const router =
+    express.Router();
 
 /*
 |--------------------------------------------------------------------------
 | DOCUMENT ROUTES
 |--------------------------------------------------------------------------
-| Base URL: /api/documents
+|
+| Base URL:
+| /api/documents
+|
+| All document routes require authentication.
+|
 |--------------------------------------------------------------------------
 */
 
+router.use(authMiddleware);
 
 /*
 |--------------------------------------------------------------------------
-| GET DOCUMENT COUNT
+| DOCUMENT COUNT
 |--------------------------------------------------------------------------
+|
 | GET /api/documents/count
+|
+| Returns the number of documents belonging to the
+| authenticated user's school.
+|
 |--------------------------------------------------------------------------
 */
 
 router.get(
     "/count",
-    authMiddleware,
     count
 );
 
-
 /*
 |--------------------------------------------------------------------------
-| GET DOCUMENT TYPES
+| DOCUMENT TYPES
 |--------------------------------------------------------------------------
+|
 | GET /api/documents/types
+|
+| Returns distinct document types used by the
+| authenticated user's school.
+|
 |--------------------------------------------------------------------------
 */
 
 router.get(
     "/types",
-    authMiddleware,
     types
 );
-
 
 /*
 |--------------------------------------------------------------------------
 | SEARCH DOCUMENTS
 |--------------------------------------------------------------------------
+|
 | GET /api/documents/search?q=
+|
+| Searches documents using document information
+| and student information.
+|
 |--------------------------------------------------------------------------
 */
 
 router.get(
     "/search",
-    authMiddleware,
     search
 );
 
-
 /*
 |--------------------------------------------------------------------------
-| GET STUDENT DOCUMENTS
+| STUDENT DOCUMENTS
 |--------------------------------------------------------------------------
+|
 | GET /api/documents/student/:studentId
+|
+| Returns documents belonging to one student.
+|
 |--------------------------------------------------------------------------
 */
 
 router.get(
     "/student/:studentId",
-    authMiddleware,
     getStudentDocuments
 );
 
-
 /*
 |--------------------------------------------------------------------------
-| GET ALL DOCUMENTS
+| ALL SCHOOL DOCUMENTS
 |--------------------------------------------------------------------------
+|
 | GET /api/documents
+|
+| Optional query parameters:
+|
+| documentType
+| limit
+| offset
+|
 |--------------------------------------------------------------------------
 */
 
 router.get(
     "/",
-    authMiddleware,
     getAll
 );
 
-
 /*
 |--------------------------------------------------------------------------
-| GET DOCUMENT BY ID
+| DOCUMENT BY ID
 |--------------------------------------------------------------------------
+|
 | GET /api/documents/:id
+|
 |--------------------------------------------------------------------------
 */
 
 router.get(
     "/:id",
-    authMiddleware,
     getById
 );
-
 
 /*
 |--------------------------------------------------------------------------
 | CREATE DOCUMENT
 |--------------------------------------------------------------------------
+|
 | POST /api/documents
+|
 |--------------------------------------------------------------------------
 */
 
 router.post(
     "/",
-    authMiddleware,
     create
 );
-
 
 /*
 |--------------------------------------------------------------------------
 | UPDATE DOCUMENT
 |--------------------------------------------------------------------------
+|
 | PUT /api/documents/:id
+|
 |--------------------------------------------------------------------------
 */
 
 router.put(
     "/:id",
-    authMiddleware,
     update
 );
-
 
 /*
 |--------------------------------------------------------------------------
 | DELETE DOCUMENT
 |--------------------------------------------------------------------------
+|
 | DELETE /api/documents/:id
+|
 |--------------------------------------------------------------------------
 */
 
 router.delete(
     "/:id",
-    authMiddleware,
     remove
 );
-
 
 /*
 |--------------------------------------------------------------------------

@@ -52,6 +52,7 @@
 }
 
 html {
+    min-height: 100%;
     scroll-behavior: smooth;
 }
 
@@ -76,8 +77,13 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
-img {
+img,
+svg {
     max-width: 100%;
+}
+
+img {
+    height: auto;
 }
 
 button,
@@ -85,6 +91,23 @@ input,
 select,
 textarea {
     font-family: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+    font-size: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+button:disabled,
+.btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
 }
 
 /* =========================================================
@@ -135,6 +158,14 @@ h4 {
     font-size: 16px;
 }
 
+h5 {
+    font-size: 15px;
+}
+
+h6 {
+    font-size: 14px;
+}
+
 p {
     color: var(--sms-muted);
 }
@@ -156,12 +187,6 @@ button,
 
 button {
     cursor: pointer;
-}
-
-button:disabled,
-.btn:disabled {
-    cursor: not-allowed;
-    opacity: 0.65;
 }
 
 /* =========================================================
@@ -193,6 +218,11 @@ button:disabled,
     box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.18);
 }
 
+.btn-primary:active,
+.btn-sms-primary:active {
+    transform: translateY(0);
+}
+
 /* =========================================================
    SECONDARY BUTTON
 ========================================================= */
@@ -209,6 +239,13 @@ button:disabled,
     color: #ffffff;
 }
 
+.btn-secondary:focus {
+    background-color: #475569;
+    border-color: #475569;
+    color: #ffffff;
+    box-shadow: 0 0 0 0.2rem rgba(100, 116, 139, 0.18);
+}
+
 /* =========================================================
    OUTLINE BUTTON
 ========================================================= */
@@ -222,6 +259,10 @@ button:disabled,
     background-color: var(--sms-primary-light);
     border-color: var(--sms-primary-light);
     color: #ffffff;
+}
+
+.btn-outline-primary:focus {
+    box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.14);
 }
 
 /* =========================================================
@@ -245,11 +286,13 @@ button:disabled,
     font-size: 14px;
     transition:
         border-color var(--sms-transition),
-        box-shadow var(--sms-transition);
+        box-shadow var(--sms-transition),
+        background-color var(--sms-transition);
 }
 
 .form-control::placeholder {
     color: #9aa6b5;
+    opacity: 1;
 }
 
 .form-control:hover,
@@ -264,6 +307,13 @@ button:disabled,
     color: var(--sms-text);
     box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.12);
     outline: none;
+}
+
+.form-control:disabled,
+.form-control[readonly],
+.form-select:disabled {
+    background-color: #f1f5f9;
+    opacity: 1;
 }
 
 textarea.form-control {
@@ -367,6 +417,10 @@ textarea.form-control {
     background-color: var(--sms-primary-soft);
 }
 
+.table-responsive {
+    border-radius: var(--sms-radius);
+}
+
 /* =========================================================
    BADGES
 ========================================================= */
@@ -428,6 +482,10 @@ textarea.form-control {
 
 .alert-danger {
     color: #991b1b;
+}
+
+.alert-info {
+    color: #155e75;
 }
 
 /* =========================================================
@@ -528,6 +586,7 @@ textarea.form-control {
 .page-item.active .page-link {
     background-color: var(--sms-primary-light);
     border-color: var(--sms-primary-light);
+    color: #ffffff;
 }
 
 /* =========================================================
@@ -671,6 +730,7 @@ textarea.form-control {
 
 .search-box {
     position: relative;
+    width: 100%;
     max-width: 420px;
 }
 
@@ -750,6 +810,10 @@ textarea.form-control {
     color: var(--sms-danger) !important;
 }
 
+.text-info {
+    color: var(--sms-info) !important;
+}
+
 .text-muted {
     color: var(--sms-muted) !important;
 }
@@ -780,6 +844,18 @@ textarea.form-control {
 
 .border-sms {
     border-color: var(--sms-border) !important;
+}
+
+/* =========================================================
+   VISIBILITY HELPERS
+========================================================= */
+
+.sms-hidden {
+    display: none !important;
+}
+
+.sms-visible {
+    display: block !important;
 }
 
 /* =========================================================
@@ -871,6 +947,11 @@ textarea:focus-visible {
     .stat-card {
         padding: 17px;
     }
+
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
 }
 
 @media (max-width: 575.98px) {
@@ -888,6 +969,10 @@ textarea:focus-visible {
 
     .modal-header {
         padding: 15px 18px;
+    }
+
+    .modal-footer {
+        padding: 12px 18px;
     }
 }
 
@@ -916,6 +1001,7 @@ textarea:focus-visible {
 @media print {
     body {
         background: #ffffff !important;
+        color: #000000 !important;
     }
 
     .no-print,
@@ -938,5 +1024,20 @@ textarea:focus-visible {
     .stat-card {
         border: 1px solid #ddd;
         box-shadow: none;
+    }
+
+    a {
+        color: #000000;
+        text-decoration: none;
+    }
+
+    .table thead th {
+        background: #ffffff !important;
+        color: #000000 !important;
+        border-bottom: 1px solid #000000;
+    }
+
+    .table tbody td {
+        color: #000000 !important;
     }
 }

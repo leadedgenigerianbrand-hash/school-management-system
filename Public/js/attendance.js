@@ -1,678 +1,1519 @@
+"use strict";
+
+| /*                                                                         |
+| -------------------------------------------------------------------------- |
+| SCHOOL MANAGEMENT SYSTEM                                                   |
+| ATTENDANCE JAVASCRIPT                                                      |
+| -------------------------------------------------------------------------- |
+|                                                                            |
+| Handles:                                                                   |
+|                                                                            |
+| - Academic session selection                                               |
+| - Term selection                                                           |
+| - Attendance date                                                          |
+| - Class selection                                                          |
+| - Student loading                                                          |
+| - Existing attendance loading                                              |
+| - Attendance status selection                                              |
+| - Attendance remarks                                                       |
+| - Mark all present                                                         |
+| - Reset attendance                                                         |
+| - Bulk attendance submission                                               |
+| - Attendance summary                                                       |
+|                                                                            |
+| -------------------------------------------------------------------------- |
+| */                                                                         |
+
+(function () {
+
+```
 /*
 |--------------------------------------------------------------------------
-| ATTENDANCE.JS
-|--------------------------------------------------------------------------
-| Handles the attendance page.
+| STATE
 |--------------------------------------------------------------------------
 */
 
-(function () {
-    "use strict";
+let students = [];
 
-    let currentPage = 1;
-    const pageSize = 50;
+let attendanceRecords = [];
 
-    let attendanceRecords = [];
-    let students = [];
-    let classes = [];
+let classes = [];
 
-    /*
-    |--------------------------------------------------------------------------
-    | DOM HELPERS
-    |--------------------------------------------------------------------------
-    */
+let sessions = [];
 
-    function getElement(...selectors) {
-        for (const selector of selectors) {
-            const element = document.querySelector(selector);
+let terms = [];
 
-            if (element) {
-                return element;
-            }
+
+/*
+|--------------------------------------------------------------------------
+| DOM HELPERS
+|--------------------------------------------------------------------------
+*/
+
+function getElement(...selectors) {
+
+    for (const selector of selectors) {
+
+        const element =
+            document.querySelector(selector);
+
+        if (element) {
+            return element;
         }
 
-        return null;
     }
 
-    function getValue(...selectors) {
-        const element = getElement(...selectors);
+    return null;
+}
 
-        return element
-            ? String(element.value || "").trim()
-            : "";
+
+function getValue(...selectors) {
+
+    const element =
+        getElement(...selectors);
+
+    if (!element) {
+        return "";
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | API
-    |--------------------------------------------------------------------------
-    */
+    return String(
+        element.value || ""
+    ).trim();
 
-    async function request(url, options = {}) {
-        if (typeof window.apiRequest !== "function") {
-            throw new Error(
-                "API helper is unavailable. Please reload the page."
-            );
-        }
+}
 
-        return window.apiRequest(url, options);
-    }
 
-    /*
-    |--------------------------------------------------------------------------
-    | INITIALIZE
-    |--------------------------------------------------------------------------
-    */
+/*
+|--------------------------------------------------------------------------
+| API REQUEST
+|--------------------------------------------------------------------------
+*/
 
-    async function initialize() {
-        setDefaultDate();
-        setupEvents();
+async function request(
+    url,
+    options = {}
+) {
 
-        await loadClasses();
-        await loadStudents();
-        await loadAttendance();
-    }
+    if (
+        typeof window.apiRequest !==
+        "function"
+    ) {
 
-    /*
-    |--------------------------------------------------------------------------
-    | DEFAULT DATE
-    |--------------------------------------------------------------------------
-    */
-
-    function setDefaultDate() {
-        const dateInput = getElement(
-            "#attendanceDate",
-            "#attendance-date",
-            "[name='attendance_date']",
-            "[name='date']"
+        throw new Error(
+            "API helper is unavailable. Please reload the page."
         );
 
-        if (dateInput && !dateInput.value) {
-            const now = new Date();
+    }
 
-            const year = now.getFullYear();
+    return window.apiRequest(
+        url,
+        options
+    );
 
-            const month = String(
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| INITIALIZE
+|--------------------------------------------------------------------------
+*/
+
+async function initialize() {
+
+    setDefaultDate();
+
+    setupEvents();
+
+    await Promise.allSettled([
+        loadSessions(),
+        loadTerms(),
+        loadClasses()
+    ]);
+
+    await loadStudents();
+
+    await loadAttendance();
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| DEFAULT DATE
+|--------------------------------------------------------------------------
+*/
+
+function setDefaultDate() {
+
+    const dateInput =
+        getElement(
+            "#attendanceDate",
+            "#attendance-date",
+            "[name='attendance_date']"
+        );
+
+    if (
+        dateInput &&
+        !dateInput.value
+    ) {
+
+        const now =
+            new Date();
+
+        const year =
+            now.getFullYear();
+
+        const month =
+            String(
                 now.getMonth() + 1
-            ).padStart(2, "0");
+            ).padStart(
+                2,
+                "0"
+            );
 
-            const day = String(
+        const day =
+            String(
                 now.getDate()
-            ).padStart(2, "0");
+            ).padStart(
+                2,
+                "0"
+            );
 
-            dateInput.value =
-                `${year}-${month}-${day}`;
-        }
+        dateInput.value =
+            `${year}-${month}-${day}`;
+
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | EVENTS
-    |--------------------------------------------------------------------------
-    */
+}
 
-    function setupEvents() {
-        const dateInput = getElement(
-            "#attendanceDate",
-            "#attendance-date",
-            "[name='attendance_date']",
-            "[name='date']"
+
+/*
+|--------------------------------------------------------------------------
+| EVENTS
+|--------------------------------------------------------------------------
+*/
+
+function setupEvents() {
+
+    const sessionSelect =
+        getElement(
+            "#sessionId",
+            "#session-id",
+            "[name='session_id']"
         );
 
-        if (dateInput) {
-            dateInput.addEventListener(
-                "change",
-                function () {
-                    currentPage = 1;
-                    loadAttendance();
-                }
-            );
-        }
+    if (sessionSelect) {
 
-        const classSelect = getElement(
+        sessionSelect.addEventListener(
+            "change",
+            async function () {
+
+                await loadStudents();
+
+                await loadAttendance();
+
+            }
+        );
+
+    }
+
+
+    const termSelect =
+        getElement(
+            "#termId",
+            "#term-id",
+            "[name='term_id']"
+        );
+
+    if (termSelect) {
+
+        termSelect.addEventListener(
+            "change",
+            async function () {
+
+                await loadStudents();
+
+                await loadAttendance();
+
+            }
+        );
+
+    }
+
+
+    const dateInput =
+        getElement(
+            "#attendanceDate",
+            "#attendance-date",
+            "[name='attendance_date']"
+        );
+
+    if (dateInput) {
+
+        dateInput.addEventListener(
+            "change",
+            async function () {
+
+                await loadAttendance();
+
+            }
+        );
+
+    }
+
+
+    const classSelect =
+        getElement(
             "#classId",
             "#class-id",
             "[name='class_id']"
         );
 
-        if (classSelect) {
-            classSelect.addEventListener(
-                "change",
-                async function () {
-                    currentPage = 1;
+    if (classSelect) {
 
-                    await loadStudents();
-                    await loadAttendance();
-                }
-            );
-        }
+        classSelect.addEventListener(
+            "change",
+            async function () {
 
-        const searchInput = getElement(
+                await loadStudents();
+
+                await loadAttendance();
+
+            }
+        );
+
+    }
+
+
+    const searchInput =
+        getElement(
             "#attendanceSearch",
             "#attendance-search",
             "[name='search']"
         );
 
-        if (searchInput) {
-            const debounce =
-                typeof window.App?.debounce === "function"
-                    ? window.App.debounce
-                    : function (callback) {
-                        return callback;
-                    };
+    if (searchInput) {
 
-            searchInput.addEventListener(
-                "input",
-                debounce(
-                    function () {
-                        currentPage = 1;
-                        renderAttendance();
-                    },
-                    300
-                )
-            );
-        }
+        let timer = null;
 
-        const form = getElement(
+        searchInput.addEventListener(
+            "input",
+            function () {
+
+                clearTimeout(timer);
+
+                timer =
+                    setTimeout(
+                        function () {
+
+                            renderAttendance();
+
+                        },
+                        250
+                    );
+
+            }
+        );
+
+    }
+
+
+    const form =
+        getElement(
             "#attendanceForm",
             "form[data-attendance-form]"
         );
 
-        if (form) {
-            form.addEventListener(
-                "submit",
-                handleSubmit
-            );
-        }
+    if (form) {
 
-        document.addEventListener(
-            "change",
-            function (event) {
-                const statusSelect =
-                    event.target.closest(
-                        ".attendance-status"
-                    );
+        form.addEventListener(
+            "submit",
+            handleSubmit
+        );
 
-                if (!statusSelect) {
-                    return;
-                }
+    }
 
-                updateStatusLabel(
-                    statusSelect
+
+    document.addEventListener(
+        "change",
+        function (event) {
+
+            const select =
+                event.target.closest(
+                    ".attendance-status"
                 );
+
+            if (!select) {
+                return;
             }
-        );
 
-        document.addEventListener(
-            "click",
-            function (event) {
-                const saveButton =
-                    event.target.closest(
-                        "[data-save-attendance]"
-                    );
-
-                if (saveButton) {
-                    event.preventDefault();
-                    saveAttendance();
-                    return;
-                }
-
-                const markAllButton =
-                    event.target.closest(
-                        "[data-mark-all-present]"
-                    );
-
-                if (markAllButton) {
-                    event.preventDefault();
-                    markAllPresent();
-                    return;
-                }
-
-                const resetButton =
-                    event.target.closest(
-                        "[data-reset-attendance]"
-                    );
-
-                if (resetButton) {
-                    event.preventDefault();
-                    resetAttendance();
-                }
-            }
-        );
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | LOAD CLASSES
-    |--------------------------------------------------------------------------
-    */
-
-    async function loadClasses() {
-        try {
-            const data =
-                await request("/classes");
-
-            classes =
-                Array.isArray(data)
-                    ? data
-                    : (
-                        data?.data ||
-                        data?.classes ||
-                        []
-                    );
-
-            renderClassOptions();
-
-        } catch (error) {
-            console.error(
-                "Unable to load classes:",
-                error
+            updateStatusLabel(
+                select
             );
+
+            updateSummary();
+
         }
+    );
+
+
+    document.addEventListener(
+        "click",
+        function (event) {
+
+            const markAllButton =
+                event.target.closest(
+                    "[data-mark-all-present]"
+                );
+
+            if (markAllButton) {
+
+                event.preventDefault();
+
+                markAllPresent();
+
+                return;
+
+            }
+
+
+            const resetButton =
+                event.target.closest(
+                    "[data-reset-attendance]"
+                );
+
+            if (resetButton) {
+
+                event.preventDefault();
+
+                resetAttendance();
+
+                return;
+
+            }
+
+
+            const saveButton =
+                event.target.closest(
+                    "[data-save-attendance]"
+                );
+
+            if (saveButton) {
+
+                event.preventDefault();
+
+                saveAttendance();
+
+            }
+
+        }
+    );
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| LOAD ACADEMIC SESSIONS
+|--------------------------------------------------------------------------
+*/
+
+async function loadSessions() {
+
+    const select =
+        getElement(
+            "#sessionId",
+            "#session-id",
+            "[name='session_id']"
+        );
+
+    if (!select) {
+        return;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | RENDER CLASS OPTIONS
-    |--------------------------------------------------------------------------
-    */
+    try {
 
-    function renderClassOptions() {
-        const select = getElement(
+        const data =
+            await request(
+                "/academic-sessions"
+            );
+
+        sessions =
+            normalizeCollection(
+                data,
+                [
+                    "data",
+                    "sessions",
+                    "academicSessions"
+                ]
+            );
+
+        renderSessionOptions();
+
+    } catch (error) {
+
+        console.error(
+            "Unable to load academic sessions:",
+            error
+        );
+
+    }
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| RENDER SESSION OPTIONS
+|--------------------------------------------------------------------------
+*/
+
+function renderSessionOptions() {
+
+    const select =
+        getElement(
+            "#sessionId",
+            "#session-id",
+            "[name='session_id']"
+        );
+
+    if (!select) {
+        return;
+    }
+
+    const previousValue =
+        select.value;
+
+    select.innerHTML =
+        `
+        <option value="">
+            Select Academic Session
+        </option>
+        `;
+
+    sessions.forEach(
+        function (session) {
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+            option.value =
+                session.id;
+
+            option.textContent =
+                session.session_name ||
+                session.sessionName ||
+                session.name ||
+                `Session ${session.id}`;
+
+            if (
+                session.is_current === true ||
+                session.isCurrent === true
+            ) {
+
+                option.dataset.current =
+                    "true";
+
+            }
+
+            select.appendChild(
+                option
+            );
+
+        }
+    );
+
+    if (previousValue) {
+
+        select.value =
+            previousValue;
+
+    }
+
+    if (!select.value) {
+
+        const currentOption =
+            select.querySelector(
+                'option[data-current="true"]'
+            );
+
+        if (currentOption) {
+
+            select.value =
+                currentOption.value;
+
+        }
+
+    }
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| LOAD TERMS
+|--------------------------------------------------------------------------
+*/
+
+async function loadTerms() {
+
+    const select =
+        getElement(
+            "#termId",
+            "#term-id",
+            "[name='term_id']"
+        );
+
+    if (!select) {
+        return;
+    }
+
+    try {
+
+        const data =
+            await request(
+                "/terms"
+            );
+
+        terms =
+            normalizeCollection(
+                data,
+                [
+                    "data",
+                    "terms"
+                ]
+            );
+
+        renderTermOptions();
+
+    } catch (error) {
+
+        console.error(
+            "Unable to load terms:",
+            error
+        );
+
+    }
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| RENDER TERM OPTIONS
+|--------------------------------------------------------------------------
+*/
+
+function renderTermOptions() {
+
+    const select =
+        getElement(
+            "#termId",
+            "#term-id",
+            "[name='term_id']"
+        );
+
+    if (!select) {
+        return;
+    }
+
+    const previousValue =
+        select.value;
+
+    select.innerHTML =
+        `
+        <option value="">
+            Select Term
+        </option>
+        `;
+
+    terms
+        .sort(
+            function (a, b) {
+
+                return Number(
+                    a.term_order ??
+                    a.termOrder ??
+                    0
+                ) -
+                Number(
+                    b.term_order ??
+                    b.termOrder ??
+                    0
+                );
+
+            }
+        )
+        .forEach(
+            function (term) {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+                option.value =
+                    term.id;
+
+                option.textContent =
+                    term.term_name ||
+                    term.termName ||
+                    term.name ||
+                    `Term ${term.id}`;
+
+                if (
+                    term.is_current === true ||
+                    term.isCurrent === true
+                ) {
+
+                    option.dataset.current =
+                        "true";
+
+                }
+
+                select.appendChild(
+                    option
+                );
+
+            }
+        );
+
+    if (previousValue) {
+
+        select.value =
+            previousValue;
+
+    }
+
+    if (!select.value) {
+
+        const currentOption =
+            select.querySelector(
+                'option[data-current="true"]'
+            );
+
+        if (currentOption) {
+
+            select.value =
+                currentOption.value;
+
+        }
+
+    }
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| LOAD CLASSES
+|--------------------------------------------------------------------------
+*/
+
+async function loadClasses() {
+
+    const select =
+        getElement(
             "#classId",
             "#class-id",
             "[name='class_id']"
         );
 
-        if (!select) {
-            return;
-        }
+    if (!select) {
+        return;
+    }
 
-        const currentValue =
-            select.value;
+    try {
 
-        select.innerHTML =
-            `<option value="">All Classes</option>`;
+        const data =
+            await request(
+                "/classes"
+            );
 
-        classes.forEach(function (item) {
+        classes =
+            normalizeCollection(
+                data,
+                [
+                    "data",
+                    "classes"
+                ]
+            );
+
+        renderClassOptions();
+
+    } catch (error) {
+
+        console.error(
+            "Unable to load classes:",
+            error
+        );
+
+    }
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| RENDER CLASS OPTIONS
+|--------------------------------------------------------------------------
+*/
+
+function renderClassOptions() {
+
+    const select =
+        getElement(
+            "#classId",
+            "#class-id",
+            "[name='class_id']"
+        );
+
+    if (!select) {
+        return;
+    }
+
+    const previousValue =
+        select.value;
+
+    select.innerHTML =
+        `
+        <option value="">
+            All Classes
+        </option>
+        `;
+
+    classes.forEach(
+        function (item) {
+
             const option =
-                document.createElement("option");
+                document.createElement(
+                    "option"
+                );
 
             option.value =
                 item.id;
 
             option.textContent =
-                item.name ||
                 item.class_name ||
                 item.className ||
+                item.name ||
                 item.title ||
                 `Class ${item.id}`;
 
-            select.appendChild(option);
-        });
+            select.appendChild(
+                option
+            );
 
-        if (currentValue) {
-            select.value = currentValue;
         }
+    );
+
+    if (previousValue) {
+
+        select.value =
+            previousValue;
+
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | LOAD STUDENTS
-    |--------------------------------------------------------------------------
-    */
+}
 
-    async function loadStudents() {
-        try {
-            const classId = getValue(
+
+/*
+|--------------------------------------------------------------------------
+| LOAD STUDENTS
+|--------------------------------------------------------------------------
+*/
+
+async function loadStudents() {
+
+    try {
+
+        const sessionId =
+            getValue(
+                "#sessionId",
+                "#session-id",
+                "[name='session_id']"
+            );
+
+        const termId =
+            getValue(
+                "#termId",
+                "#term-id",
+                "[name='term_id']"
+            );
+
+        const classId =
+            getValue(
                 "#classId",
                 "#class-id",
                 "[name='class_id']"
             );
 
-            let url = "/students";
+        const params =
+            new URLSearchParams();
 
-            if (classId) {
-                url +=
-                    `?class_id=${encodeURIComponent(classId)}`;
-            }
+        if (classId) {
 
-            const data =
-                await request(url);
-
-            students =
-                Array.isArray(data)
-                    ? data
-                    : (
-                        data?.data ||
-                        data?.students ||
-                        []
-                    );
-
-        } catch (error) {
-            console.error(
-                "Unable to load students:",
-                error
+            params.set(
+                "class_id",
+                classId
             );
 
-            students = [];
         }
-    }
 
-    /*
-    |--------------------------------------------------------------------------
-    | LOAD ATTENDANCE
-    |--------------------------------------------------------------------------
-    */
+        if (sessionId) {
 
-    async function loadAttendance() {
-        showLoading();
-
-        try {
-            const date = getValue(
-                "#attendanceDate",
-                "#attendance-date",
-                "[name='attendance_date']",
-                "[name='date']"
+            params.set(
+                "session_id",
+                sessionId
             );
 
-            const classId = getValue(
-                "#classId",
-                "#class-id",
-                "[name='class_id']"
-            );
-
-            const params =
-                new URLSearchParams();
-
-            if (date) {
-                params.set("date", date);
-            }
-
-            if (classId) {
-                params.set(
-                    "class_id",
-                    classId
-                );
-            }
-
-            const query =
-                params.toString();
-
-            const url =
-                query
-                    ? `/attendance?${query}`
-                    : "/attendance";
-
-            const data =
-                await request(url);
-
-            attendanceRecords =
-                Array.isArray(data)
-                    ? data
-                    : (
-                        data?.data ||
-                        data?.attendance ||
-                        data?.records ||
-                        []
-                    );
-
-            renderAttendance();
-
-        } catch (error) {
-            console.error(
-                "Unable to load attendance:",
-                error
-            );
-
-            attendanceRecords = [];
-
-            showError(
-                error.message ||
-                "Unable to load attendance."
-            );
         }
-    }
 
-    /*
-    |--------------------------------------------------------------------------
-    | RENDER ATTENDANCE
-    |--------------------------------------------------------------------------
-    */
+        if (termId) {
 
-    function renderAttendance() {
-        const container = getElement(
-            "#attendanceTableBody",
-            "#attendance-table-body",
-            "tbody[data-attendance-body]",
-            ".attendance-table tbody"
+            params.set(
+                "term_id",
+                termId
+            );
+
+        }
+
+        const query =
+            params.toString();
+
+        const url =
+            query
+                ? `/students?${query}`
+                : "/students";
+
+        const data =
+            await request(
+                url
+            );
+
+        students =
+            normalizeCollection(
+                data,
+                [
+                    "data",
+                    "students"
+                ]
+            );
+
+    } catch (error) {
+
+        console.error(
+            "Unable to load students:",
+            error
         );
 
-        if (!container) {
-            return;
+        students = [];
+
+        showError(
+            error.message ||
+            "Unable to load students."
+        );
+
+    }
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| LOAD ATTENDANCE
+|--------------------------------------------------------------------------
+*/
+
+async function loadAttendance() {
+
+    showLoading();
+
+    const sessionId =
+        getValue(
+            "#sessionId",
+            "#session-id",
+            "[name='session_id']"
+        );
+
+    const termId =
+        getValue(
+            "#termId",
+            "#term-id",
+            "[name='term_id']"
+        );
+
+    const date =
+        getValue(
+            "#attendanceDate",
+            "#attendance-date",
+            "[name='attendance_date']"
+        );
+
+    const classId =
+        getValue(
+            "#classId",
+            "#class-id",
+            "[name='class_id']"
+        );
+
+    if (
+        !sessionId ||
+        !termId ||
+        !date
+    ) {
+
+        attendanceRecords = [];
+
+        renderAttendance();
+
+        return;
+
+    }
+
+    try {
+
+        const params =
+            new URLSearchParams();
+
+        params.set(
+            "date",
+            date
+        );
+
+        params.set(
+            "session_id",
+            sessionId
+        );
+
+        params.set(
+            "term_id",
+            termId
+        );
+
+        if (classId) {
+
+            params.set(
+                "class_id",
+                classId
+            );
+
         }
 
-        const searchInput = getElement(
+        const data =
+            await request(
+                `/attendance?${params.toString()}`
+            );
+
+        attendanceRecords =
+            normalizeCollection(
+                data,
+                [
+                    "data",
+                    "attendance",
+                    "records"
+                ]
+            );
+
+        renderAttendance();
+
+    } catch (error) {
+
+        console.error(
+            "Unable to load attendance:",
+            error
+        );
+
+        attendanceRecords = [];
+
+        showError(
+            error.message ||
+            "Unable to load attendance."
+        );
+
+    }
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| RENDER ATTENDANCE
+|--------------------------------------------------------------------------
+*/
+
+function renderAttendance() {
+
+    const container =
+        getElement(
+            "#attendanceTableBody",
+            "#attendance-table-body",
+            "tbody[data-attendance-body]"
+        );
+
+    if (!container) {
+        return;
+    }
+
+    const searchInput =
+        getElement(
             "#attendanceSearch",
             "#attendance-search",
             "[name='search']"
         );
 
-        const search =
-            searchInput
-                ? String(searchInput.value || "")
-                    .trim()
-                    .toLowerCase()
-                : "";
+    const search =
+        searchInput
+            ? String(
+                searchInput.value || ""
+            )
+                .trim()
+                .toLowerCase()
+            : "";
 
-        let records =
-            [...attendanceRecords];
+    const recordsByStudent =
+        new Map();
 
-        if (search) {
-            records =
-                records.filter(function (record) {
+    attendanceRecords.forEach(
+        function (record) {
+
+            const studentId =
+                getStudentId(
+                    record
+                );
+
+            if (studentId) {
+
+                recordsByStudent.set(
+                    String(studentId),
+                    record
+                );
+
+            }
+
+        }
+    );
+
+    let records =
+        students.map(
+            function (student) {
+
+                const studentId =
+                    getStudentId(
+                        student
+                    );
+
+                const existing =
+                    recordsByStudent.get(
+                        String(studentId)
+                    );
+
+                return mergeStudentAttendance(
+                    student,
+                    existing
+                );
+
+            }
+        );
+
+    if (!students.length) {
+
+        records =
+            attendanceRecords.map(
+                function (record) {
+
+                    return mergeStudentAttendance(
+                        record,
+                        record
+                    );
+
+                }
+            );
+
+    }
+
+    if (search) {
+
+        records =
+            records.filter(
+                function (record) {
+
                     const name =
-                        getStudentName(record)
+                        getStudentName(
+                            record
+                        )
                             .toLowerCase();
 
                     const admission =
-                        String(
-                            record.admission_number ||
-                            record.admissionNumber ||
-                            ""
-                        ).toLowerCase();
+                        getAdmissionNumber(
+                            record
+                        )
+                            .toLowerCase();
 
                     return (
                         name.includes(search) ||
                         admission.includes(search)
                     );
-                });
-        }
 
-        if (!records.length) {
-            container.innerHTML = `
-                <tr>
-                    <td colspan="8">
-                        <div class="students-empty">
-                            <div class="students-empty-icon">
-                                ✓
-                            </div>
-                            <h3>No attendance records</h3>
-                            <p>
-                                There are no attendance records
-                                for the selected date.
-                            </p>
-                        </div>
-                    </td>
-                </tr>
-            `;
+                }
+            );
 
-            return;
-        }
+    }
 
-        const start =
-            (currentPage - 1) * pageSize;
-
-        const end =
-            start + pageSize;
-
-        const pageRecords =
-            records.slice(start, end);
+    if (!records.length) {
 
         container.innerHTML =
-            pageRecords
-                .map(renderAttendanceRow)
-                .join("");
-    }
+            `
+            <tr>
+                <td colspan="5">
 
-    /*
-    |--------------------------------------------------------------------------
-    | RENDER ATTENDANCE ROW
-    |--------------------------------------------------------------------------
-    */
+                    <div class="empty-state">
 
-    function renderAttendanceRow(record) {
-        const studentName =
-            getStudentName(record);
+                        <i class="bi bi-calendar-x"></i>
 
-        const admissionNumber =
-            record.admission_number ||
-            record.admissionNumber ||
-            "";
+                        <h5>
+                            No students found
+                        </h5>
 
-        const status =
-            String(
-                record.status ||
-                "present"
-            ).toLowerCase();
+                        <p class="mb-0">
+                            Select an academic session,
+                            term and class, or adjust
+                            your search.
+                        </p>
 
-        const remarks =
-            record.remarks ||
-            record.remark ||
-            "";
-
-        const studentId =
-            record.student_id ||
-            record.studentId ||
-            "";
-
-        const initials =
-            typeof window.App?.getInitials === "function"
-                ? window.App.getInitials(studentName)
-                : getInitials(studentName);
-
-        const escapeHtml =
-            typeof window.App?.escapeHtml === "function"
-                ? window.App.escapeHtml
-                : escapeAttribute;
-
-        return `
-            <tr data-student-id="${escapeAttribute(studentId)}">
-
-                <td>
-                    <div class="student-name">
-                        <div class="student-avatar">
-                            ${escapeHtml(initials)}
-                        </div>
-
-                        <div class="student-name-text">
-                            <strong>
-                                ${escapeHtml(studentName)}
-                            </strong>
-                        </div>
                     </div>
-                </td>
 
-                <td>
-                    <span class="admission-number">
-                        ${escapeHtml(admissionNumber)}
-                    </span>
                 </td>
-
-                <td>
-                    ${getClassName(record)}
-                </td>
-
-                <td>
-                    <select
-                        class="attendance-status"
-                        data-student-id="${escapeAttribute(studentId)}"
-                    >
-                        ${statusOption("present", status)}
-                        ${statusOption("absent", status)}
-                        ${statusOption("late", status)}
-                        ${statusOption("excused", status)}
-                    </select>
-                </td>
-
-                <td>
-                    <input
-                        type="text"
-                        class="attendance-remarks"
-                        data-student-id="${escapeAttribute(studentId)}"
-                        value="${escapeAttribute(remarks)}"
-                        placeholder="Remarks"
-                    >
-                </td>
-
-                <td>
-                    <span class="student-status ${escapeAttribute(status)}">
-                        ${escapeHtml(capitalize(status))}
-                    </span>
-                </td>
-
             </tr>
-        `;
+            `;
+
+        updateSummary();
+
+        return;
+
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | STATUS OPTION
-    |--------------------------------------------------------------------------
-    */
+    container.innerHTML =
+        records
+            .map(
+                renderAttendanceRow
+            )
+            .join("");
 
-    function statusOption(value, selected) {
-        return `
-            <option
-                value="${escapeAttribute(value)}"
-                ${value === selected ? "selected" : ""}
-            >
-                ${capitalize(value)}
-            </option>
-        `;
-    }
+    updateSummary();
 
-    /*
-    |--------------------------------------------------------------------------
-    | SAVE ATTENDANCE
-    |--------------------------------------------------------------------------
-    */
+}
 
-    async function saveAttendance() {
-        const date = getValue(
-            "#attendanceDate",
-            "#attendance-date",
-            "[name='attendance_date']",
-            "[name='date']"
+
+/*
+|--------------------------------------------------------------------------
+| MERGE STUDENT WITH EXISTING ATTENDANCE
+|--------------------------------------------------------------------------
+*/
+
+function mergeStudentAttendance(
+    student,
+    attendance
+) {
+
+    const source =
+        attendance ||
+        {};
+
+    return {
+        ...student,
+        ...source,
+
+        student_id:
+            getStudentId(
+                student
+            ),
+
+        status:
+            source.status ||
+            "Present",
+
+        remarks:
+            source.remarks ||
+            source.remark ||
+            ""
+
+    };
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| RENDER ATTENDANCE ROW
+|--------------------------------------------------------------------------
+*/
+
+function renderAttendanceRow(
+    record
+) {
+
+    const studentName =
+        getStudentName(
+            record
         );
 
-        if (!date) {
-            notify(
-                "Please select an attendance date.",
-                "error"
+    const admissionNumber =
+        getAdmissionNumber(
+            record
+        );
+
+    const className =
+        getClassName(
+            record
+        );
+
+    const studentId =
+        getStudentId(
+            record
+        );
+
+    const status =
+        normalizeStatus(
+            record.status
+        );
+
+    const remarks =
+        record.remarks ||
+        record.remark ||
+        "";
+
+    const initials =
+        typeof window.App?.getInitials ===
+        "function"
+            ? window.App.getInitials(
+                studentName
+            )
+            : getInitials(
+                studentName
             );
 
-            return;
-        }
+    return `
+        <tr
+            data-student-id="${escapeAttribute(studentId)}"
+        >
 
-        const rows =
-            document.querySelectorAll(
-                "tr[data-student-id]"
-            );
+            <td>
 
-        const records = [];
+                <div class="d-flex align-items-center gap-2">
 
-        rows.forEach(function (row) {
+                    <div
+                        class="student-avatar"
+                        aria-hidden="true"
+                    >
+                        ${escapeHtml(initials)}
+                    </div>
+
+                    <div class="student-name">
+
+                        ${escapeHtml(
+                            studentName
+                        )}
+
+                    </div>
+
+                </div>
+
+            </td>
+
+
+            <td>
+
+                <span class="admission-number">
+
+                    ${escapeHtml(
+                        admissionNumber || "-"
+                    )}
+
+                </span>
+
+            </td>
+
+
+            <td>
+
+                ${escapeHtml(
+                    className || "-"
+                )}
+
+            </td>
+
+
+            <td>
+
+                <select
+                    class="form-select status-select attendance-status"
+                    data-student-id="${escapeAttribute(studentId)}"
+                >
+
+                    ${statusOption(
+                        "Present",
+                        status
+                    )}
+
+                    ${statusOption(
+                        "Absent",
+                        status
+                    )}
+
+                    ${statusOption(
+                        "Late",
+                        status
+                    )}
+
+                    ${statusOption(
+                        "Excused",
+                        status
+                    )}
+
+                </select>
+
+            </td>
+
+
+            <td>
+
+                <input
+                    type="text"
+                    class="form-control remarks-input attendance-remarks"
+                    data-student-id="${escapeAttribute(studentId)}"
+                    value="${escapeAttribute(remarks)}"
+                    placeholder="Remarks"
+                >
+
+            </td>
+
+        </tr>
+    `;
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| STATUS OPTION
+|--------------------------------------------------------------------------
+*/
+
+function statusOption(
+    value,
+    selected
+) {
+
+    return `
+        <option
+            value="${escapeAttribute(value)}"
+            ${
+                value === selected
+                    ? "selected"
+                    : ""
+            }
+        >
+            ${escapeHtml(value)}
+        </option>
+    `;
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| SAVE ATTENDANCE
+|--------------------------------------------------------------------------
+*/
+
+async function saveAttendance() {
+
+    const sessionId =
+        getValue(
+            "#sessionId",
+            "#session-id",
+            "[name='session_id']"
+        );
+
+    const termId =
+        getValue(
+            "#termId",
+            "#term-id",
+            "[name='term_id']"
+        );
+
+    const attendanceDate =
+        getValue(
+            "#attendanceDate",
+            "#attendance-date",
+            "[name='attendance_date']"
+        );
+
+    const classId =
+        getValue(
+            "#classId",
+            "#class-id",
+            "[name='class_id']"
+        );
+
+    if (!sessionId) {
+
+        notify(
+            "Please select an academic session.",
+            "error"
+        );
+
+        return;
+
+    }
+
+    if (!termId) {
+
+        notify(
+            "Please select a term.",
+            "error"
+        );
+
+        return;
+
+    }
+
+    if (!attendanceDate) {
+
+        notify(
+            "Please select an attendance date.",
+            "error"
+        );
+
+        return;
+
+    }
+
+    if (!classId) {
+
+        notify(
+            "Please select a class before saving attendance.",
+            "error"
+        );
+
+        return;
+
+    }
+
+    const rows =
+        document.querySelectorAll(
+            "tr[data-student-id]"
+        );
+
+    const records = [];
+
+    rows.forEach(
+        function (row) {
+
             const studentId =
                 row.getAttribute(
                     "data-student-id"
@@ -693,469 +1534,905 @@
                 );
 
             records.push({
-                student_id:
-                    Number(studentId),
 
-                attendance_date:
-                    date,
+                studentId:
+                    studentId,
 
                 status:
-                    statusElement
-                        ? statusElement.value
-                        : "present",
+                    normalizeStatus(
+                        statusElement
+                            ? statusElement.value
+                            : "Present"
+                    ),
 
                 remarks:
                     remarksElement
-                        ? remarksElement.value.trim()
+                        ? String(
+                            remarksElement.value ||
+                            ""
+                        ).trim()
                         : ""
+
             });
-        });
 
-        if (!records.length) {
-            notify(
-                "There are no attendance records to save.",
-                "error"
-            );
-
-            return;
         }
+    );
 
-        const saveButton =
-            getElement(
-                "[data-save-attendance]"
-            );
-
-        if (saveButton) {
-            saveButton.disabled = true;
-        }
-
-        try {
-            /*
-            |------------------------------------------------------------------
-            | Save each attendance record through the confirmed API layer.
-            |------------------------------------------------------------------
-            */
-
-            for (const record of records) {
-                await request(
-                    "/attendance",
-                    {
-                        method: "POST",
-                        body: JSON.stringify(record)
-                    }
-                );
-            }
-
-            notify(
-                "Attendance saved successfully.",
-                "success"
-            );
-
-            await loadAttendance();
-
-        } catch (error) {
-            console.error(
-                "Attendance save failed:",
-                error
-            );
-
-            notify(
-                error.message ||
-                "Unable to save attendance.",
-                "error"
-            );
-
-        } finally {
-            if (saveButton) {
-                saveButton.disabled = false;
-            }
-        }
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | FORM SUBMIT
-    |--------------------------------------------------------------------------
-    */
-
-    async function handleSubmit(event) {
-        event.preventDefault();
-        await saveAttendance();
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | MARK ALL PRESENT
-    |--------------------------------------------------------------------------
-    */
-
-    function markAllPresent() {
-        document
-            .querySelectorAll(
-                ".attendance-status"
-            )
-            .forEach(function (select) {
-                select.value = "present";
-                updateStatusLabel(select);
-            });
+    if (!records.length) {
 
         notify(
-            "All students marked as present.",
+            "There are no students to save.",
+            "error"
+        );
+
+        return;
+
+    }
+
+    const saveButton =
+        getElement(
+            "[data-save-attendance]"
+        );
+
+    if (saveButton) {
+
+        saveButton.disabled =
+            true;
+
+        saveButton.innerHTML =
+            `
+            <span
+                class="spinner-border spinner-border-sm me-1"
+                aria-hidden="true"
+            ></span>
+            Saving...
+            `;
+
+    }
+
+    try {
+
+        await request(
+            "/attendance/bulk",
+            {
+                method: "POST",
+
+                body:
+                    JSON.stringify({
+
+                        classId:
+                            classId,
+
+                        sessionId:
+                            sessionId,
+
+                        termId:
+                            termId,
+
+                        attendanceDate:
+                            attendanceDate,
+
+                        records:
+                            records
+
+                    })
+            }
+        );
+
+        notify(
+            "Attendance saved successfully.",
             "success"
         );
-    }
 
-    /*
-    |--------------------------------------------------------------------------
-    | RESET ATTENDANCE
-    |--------------------------------------------------------------------------
-    */
+        await loadAttendance();
 
-    function resetAttendance() {
-        document
-            .querySelectorAll(
-                ".attendance-status"
-            )
-            .forEach(function (select) {
-                select.value = "present";
-                updateStatusLabel(select);
-            });
+    } catch (error) {
 
-        document
-            .querySelectorAll(
-                ".attendance-remarks"
-            )
-            .forEach(function (input) {
-                input.value = "";
-            });
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | UPDATE STATUS LABEL
-    |--------------------------------------------------------------------------
-    */
-
-    function updateStatusLabel(select) {
-        const row =
-            select.closest("tr");
-
-        if (!row) {
-            return;
-        }
-
-        const label =
-            row.querySelector(
-                ".student-status"
-            );
-
-        if (!label) {
-            return;
-        }
-
-        const status =
-            select.value;
-
-        label.className =
-            `student-status ${escapeAttribute(status)}`;
-
-        label.textContent =
-            capitalize(status);
-    }
-
-    function updateStatusLabels() {
-        document
-            .querySelectorAll(
-                ".attendance-status"
-            )
-            .forEach(updateStatusLabel);
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | STUDENT NAME
-    |--------------------------------------------------------------------------
-    */
-
-    function getStudentName(record) {
-        if (record.student_name) {
-            return record.student_name;
-        }
-
-        if (record.studentName) {
-            return record.studentName;
-        }
-
-        const first =
-            record.first_name ||
-            record.firstName ||
-            "";
-
-        const middle =
-            record.middle_name ||
-            record.middleName ||
-            "";
-
-        const last =
-            record.last_name ||
-            record.lastName ||
-            "";
-
-        return [
-            first,
-            middle,
-            last
-        ]
-            .filter(Boolean)
-            .join(" ") ||
-            "Unknown Student";
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | CLASS NAME
-    |--------------------------------------------------------------------------
-    */
-
-    function getClassName(record) {
-        const value =
-            record.class_name ||
-            record.className ||
-            record.class_arm_name ||
-            record.classArmName ||
-            "";
-
-        return escapeAttribute(
-            value || "-"
-        );
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | LOADING
-    |--------------------------------------------------------------------------
-    */
-
-    function showLoading() {
-        const container = getElement(
-            "#attendanceTableBody",
-            "#attendance-table-body",
-            "tbody[data-attendance-body]",
-            ".attendance-table tbody"
+        console.error(
+            "Attendance save failed:",
+            error
         );
 
-        if (!container) {
-            return;
-        }
-
-        container.innerHTML = `
-            <tr>
-                <td colspan="8">
-                    <div class="students-loading">
-                        <div class="students-loading-spinner"></div>
-                        <p>Loading attendance...</p>
-                    </div>
-                </td>
-            </tr>
-        `;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | ERROR
-    |--------------------------------------------------------------------------
-    */
-
-    function showError(message) {
-        const container = getElement(
-            "#attendanceTableBody",
-            "#attendance-table-body",
-            "tbody[data-attendance-body]",
-            ".attendance-table tbody"
+        notify(
+            error.message ||
+            "Unable to save attendance.",
+            "error"
         );
 
-        if (!container) {
-            return;
+    } finally {
+
+        if (saveButton) {
+
+            saveButton.disabled =
+                false;
+
+            saveButton.innerHTML =
+                `
+                <i class="bi bi-cloud-arrow-up me-1"></i>
+                Save Attendance
+                `;
+
         }
 
-        const escapeHtml =
-            typeof window.App?.escapeHtml === "function"
-                ? window.App.escapeHtml
-                : escapeAttribute;
-
-        container.innerHTML = `
-            <tr>
-                <td colspan="8">
-                    <div class="students-empty">
-                        <h3>Unable to load attendance</h3>
-                        <p>
-                            ${escapeHtml(message)}
-                        </p>
-                    </div>
-                </td>
-            </tr>
-        `;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | NOTIFICATION
-    |--------------------------------------------------------------------------
-    */
+}
 
-    function notify(
-        message,
-        type = "success"
+
+/*
+|--------------------------------------------------------------------------
+| FORM SUBMIT
+|--------------------------------------------------------------------------
+*/
+
+async function handleSubmit(
+    event
+) {
+
+    event.preventDefault();
+
+    await saveAttendance();
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| MARK ALL PRESENT
+|--------------------------------------------------------------------------
+*/
+
+function markAllPresent() {
+
+    document
+        .querySelectorAll(
+            ".attendance-status"
+        )
+        .forEach(
+            function (select) {
+
+                select.value =
+                    "Present";
+
+                updateStatusLabel(
+                    select
+                );
+
+            }
+        );
+
+    updateSummary();
+
+    notify(
+        "All students marked as present.",
+        "success"
+    );
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| RESET ATTENDANCE
+|--------------------------------------------------------------------------
+*/
+
+function resetAttendance() {
+
+    document
+        .querySelectorAll(
+            ".attendance-status"
+        )
+        .forEach(
+            function (select) {
+
+                select.value =
+                    "Present";
+
+                updateStatusLabel(
+                    select
+                );
+
+            }
+        );
+
+
+    document
+        .querySelectorAll(
+            ".attendance-remarks"
+        )
+        .forEach(
+            function (input) {
+
+                input.value =
+                    "";
+
+            }
+        );
+
+    updateSummary();
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| UPDATE STATUS LABEL
+|--------------------------------------------------------------------------
+*/
+
+function updateStatusLabel(
+    select
+) {
+
+    const row =
+        select.closest(
+            "tr"
+        );
+
+    if (!row) {
+        return;
+    }
+
+    const status =
+        normalizeStatus(
+            select.value
+        );
+
+    select.value =
+        status;
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| SUMMARY
+|--------------------------------------------------------------------------
+*/
+
+function updateSummary() {
+
+    const rows =
+        document.querySelectorAll(
+            "tr[data-student-id]"
+        );
+
+    let present =
+        0;
+
+    let absent =
+        0;
+
+    let late =
+        0;
+
+    let excused =
+        0;
+
+    rows.forEach(
+        function (row) {
+
+            const select =
+                row.querySelector(
+                    ".attendance-status"
+                );
+
+            const status =
+                select
+                    ? normalizeStatus(
+                        select.value
+                    )
+                    : "Present";
+
+            if (status === "Present") {
+                present++;
+            }
+
+            if (status === "Absent") {
+                absent++;
+            }
+
+            if (status === "Late") {
+                late++;
+            }
+
+            if (status === "Excused") {
+                excused++;
+            }
+
+        }
+    );
+
+
+    setText(
+        "#totalStudents",
+        rows.length
+    );
+
+    setText(
+        "#presentCount",
+        present
+    );
+
+    setText(
+        "#absentCount",
+        absent
+    );
+
+    setText(
+        "#lateCount",
+        late
+    );
+
+    setText(
+        "#excusedCount",
+        excused
+    );
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| STUDENT ID
+|--------------------------------------------------------------------------
+*/
+
+function getStudentId(
+    record
+) {
+
+    return (
+        record.student_id ||
+        record.studentId ||
+        record.id ||
+        ""
+    );
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| STUDENT NAME
+|--------------------------------------------------------------------------
+*/
+
+function getStudentName(
+    record
+) {
+
+    if (
+        record.student_name
     ) {
-        if (
-            typeof window.showNotification ===
-            "function"
-        ) {
-            window.showNotification(
-                message,
-                type
-            );
 
-            return;
-        }
+        return record.student_name;
 
-        let container =
-            document.querySelector(
-                "#notification-container"
-            );
-
-        if (!container) {
-            container =
-                document.createElement("div");
-
-            container.id =
-                "notification-container";
-
-            container.style.position =
-                "fixed";
-
-            container.style.top =
-                "20px";
-
-            container.style.right =
-                "20px";
-
-            container.style.zIndex =
-                "9999";
-
-            document.body.appendChild(
-                container
-            );
-        }
-
-        const notification =
-            document.createElement("div");
-
-        notification.className =
-            `alert alert-${type}`;
-
-        notification.textContent =
-            message;
-
-        notification.style.marginBottom =
-            "10px";
-
-        container.appendChild(
-            notification
-        );
-
-        setTimeout(
-            function () {
-                notification.remove();
-            },
-            4000
-        );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | HELPERS
-    |--------------------------------------------------------------------------
-    */
+    if (
+        record.studentName
+    ) {
 
-    function capitalize(value) {
-        if (!value) {
-            return "";
-        }
+        return record.studentName;
 
-        const text =
-            String(value);
-
-        return (
-            text.charAt(0).toUpperCase() +
-            text.slice(1).toLowerCase()
-        );
     }
 
-    function escapeAttribute(value) {
-        if (
-            value === null ||
-            value === undefined
-        ) {
-            return "";
-        }
+    const first =
+        record.first_name ||
+        record.firstName ||
+        "";
 
-        return String(value)
-            .replace(/&/g, "&amp;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;");
-    }
+    const middle =
+        record.middle_name ||
+        record.middleName ||
+        "";
 
-    function getInitials(name) {
-        if (!name) {
-            return "";
-        }
+    const last =
+        record.last_name ||
+        record.lastName ||
+        "";
 
-        return String(name)
+    return [
+        first,
+        middle,
+        last
+    ]
+        .filter(Boolean)
+        .join(" ") ||
+        "Unknown Student";
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| ADMISSION NUMBER
+|--------------------------------------------------------------------------
+*/
+
+function getAdmissionNumber(
+    record
+) {
+
+    return String(
+        record.admission_number ||
+        record.admissionNumber ||
+        record.student_number ||
+        record.studentNumber ||
+        ""
+    );
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| CLASS NAME
+|--------------------------------------------------------------------------
+*/
+
+function getClassName(
+    record
+) {
+
+    return (
+        record.class_name ||
+        record.className ||
+        record.class_arm_name ||
+        record.classArmName ||
+        ""
+    );
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| NORMALIZE STATUS
+|--------------------------------------------------------------------------
+*/
+
+function normalizeStatus(
+    value
+) {
+
+    const normalized =
+        String(
+            value ||
+            "Present"
+        )
             .trim()
-            .split(/\s+/)
-            .slice(0, 2)
-            .map(function (word) {
+            .toLowerCase();
+
+    if (
+        normalized ===
+        "absent"
+    ) {
+
+        return "Absent";
+
+    }
+
+    if (
+        normalized ===
+        "late"
+    ) {
+
+        return "Late";
+
+    }
+
+    if (
+        normalized ===
+        "excused"
+    ) {
+
+        return "Excused";
+
+    }
+
+    return "Present";
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| NORMALIZE COLLECTION
+|--------------------------------------------------------------------------
+*/
+
+function normalizeCollection(
+    data,
+    keys = []
+) {
+
+    if (
+        Array.isArray(data)
+    ) {
+
+        return data;
+
+    }
+
+    for (
+        const key of keys
+    ) {
+
+        if (
+            Array.isArray(
+                data?.[key]
+            )
+        ) {
+
+            return data[key];
+
+        }
+
+    }
+
+    return [];
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| LOADING STATE
+|--------------------------------------------------------------------------
+*/
+
+function showLoading() {
+
+    const container =
+        getElement(
+            "#attendanceTableBody",
+            "#attendance-table-body",
+            "tbody[data-attendance-body]"
+        );
+
+    if (!container) {
+        return;
+    }
+
+    container.innerHTML =
+        `
+        <tr>
+
+            <td colspan="5">
+
+                <div class="loading-state">
+
+                    <div
+                        class="spinner-border text-primary mb-3"
+                        role="status"
+                        aria-hidden="true"
+                    ></div>
+
+                    <p class="mb-0">
+                        Loading attendance...
+                    </p>
+
+                </div>
+
+            </td>
+
+        </tr>
+        `;
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| ERROR STATE
+|--------------------------------------------------------------------------
+*/
+
+function showError(
+    message
+) {
+
+    const container =
+        getElement(
+            "#attendanceTableBody",
+            "#attendance-table-body",
+            "tbody[data-attendance-body]"
+        );
+
+    if (!container) {
+        return;
+    }
+
+    container.innerHTML =
+        `
+        <tr>
+
+            <td colspan="5">
+
+                <div class="empty-state">
+
+                    <i class="bi bi-exclamation-triangle"></i>
+
+                    <h5>
+                        Unable to load attendance
+                    </h5>
+
+                    <p class="mb-0">
+                        ${escapeHtml(
+                            message ||
+                            "An unexpected error occurred."
+                        )}
+                    </p>
+
+                </div>
+
+            </td>
+
+        </tr>
+        `;
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| NOTIFICATION
+|--------------------------------------------------------------------------
+*/
+
+function notify(
+    message,
+    type = "success"
+) {
+
+    if (
+        typeof window.showNotification ===
+        "function"
+    ) {
+
+        window.showNotification(
+            message,
+            type
+        );
+
+        return;
+
+    }
+
+    let container =
+        document.querySelector(
+            "#notification-container"
+        );
+
+    if (!container) {
+
+        container =
+            document.createElement(
+                "div"
+            );
+
+        container.id =
+            "notification-container";
+
+        document.body.appendChild(
+            container
+        );
+
+    }
+
+    const alert =
+        document.createElement(
+            "div"
+        );
+
+    const bootstrapType =
+        type === "error"
+            ? "danger"
+            : type;
+
+    alert.className =
+        `alert alert-${bootstrapType} shadow-sm`;
+
+    alert.textContent =
+        message;
+
+    container.appendChild(
+        alert
+    );
+
+    setTimeout(
+        function () {
+
+            alert.remove();
+
+        },
+        4000
+    );
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| SET TEXT
+|--------------------------------------------------------------------------
+*/
+
+function setText(
+    selector,
+    value
+) {
+
+    const element =
+        document.querySelector(
+            selector
+        );
+
+    if (element) {
+
+        element.textContent =
+            String(
+                value
+            );
+
+    }
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| ESCAPE HTML
+|--------------------------------------------------------------------------
+*/
+
+function escapeHtml(
+    value
+) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return "";
+
+    }
+
+    return String(value)
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| ESCAPE ATTRIBUTE
+|--------------------------------------------------------------------------
+*/
+
+function escapeAttribute(
+    value
+) {
+
+    return escapeHtml(
+        value
+    );
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| INITIALS
+|--------------------------------------------------------------------------
+*/
+
+function getInitials(
+    name
+) {
+
+    if (!name) {
+        return "";
+    }
+
+    return String(
+        name
+    )
+        .trim()
+        .split(
+            /\s+/
+        )
+        .slice(
+            0,
+            2
+        )
+        .map(
+            function (word) {
+
                 return word
                     .charAt(0)
                     .toUpperCase();
-            })
-            .join("");
-    }
 
-    /*
-    |--------------------------------------------------------------------------
-    | EXPORT
-    |--------------------------------------------------------------------------
-    */
+            }
+        )
+        .join("");
 
-    window.AttendancePage = {
-        initialize,
-        loadAttendance,
-        loadStudents,
-        saveAttendance,
-        markAllPresent,
-        resetAttendance
-    };
+}
 
-    /*
-    |--------------------------------------------------------------------------
-    | START
-    |--------------------------------------------------------------------------
-    */
 
-    if (
-        document.readyState ===
-        "loading"
-    ) {
-        document.addEventListener(
-            "DOMContentLoaded",
-            initialize
-        );
-    } else {
-        initialize();
-    }
+/*
+|--------------------------------------------------------------------------
+| PUBLIC API
+|--------------------------------------------------------------------------
+*/
+
+window.AttendancePage = {
+
+    initialize,
+
+    loadSessions,
+
+    loadTerms,
+
+    loadClasses,
+
+    loadStudents,
+
+    loadAttendance,
+
+    saveAttendance,
+
+    markAllPresent,
+
+    resetAttendance
+
+};
+
+
+/*
+|--------------------------------------------------------------------------
+| START
+|--------------------------------------------------------------------------
+*/
+
+if (
+    document.readyState ===
+    "loading"
+) {
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        initialize
+    );
+
+} else {
+
+    initialize();
+
+}
+```
 
 })();

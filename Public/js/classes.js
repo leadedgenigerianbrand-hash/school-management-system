@@ -1,408 +1,352 @@
 "use strict";
 
-/*
-|--------------------------------------------------------------------------
-| SCHOOL MANAGEMENT SYSTEM
-| CLASSES.JS
-|--------------------------------------------------------------------------
-| Handles classes and class arms.
-|--------------------------------------------------------------------------
-*/
-
 (function () {
+
     const API_BASE = "/api";
 
     let classes = [];
     let classArms = [];
+    let academicLevels = [];
+
     let editingClassId = null;
-    let editingArmId = null;
+    let editingClassArmId = null;
 
-    /*
-    |--------------------------------------------------------------------------
-    | API
-    |--------------------------------------------------------------------------
-    */
-
-    async function request(endpoint, options = {}) {
-        const token =
-            localStorage.getItem("school_management_token") ||
-            sessionStorage.getItem("school_management_token") ||
-            localStorage.getItem("token") ||
-            sessionStorage.getItem("token") ||
-            localStorage.getItem("accessToken") ||
-            sessionStorage.getItem("accessToken") ||
-            "";
-
-        let url = endpoint;
-
-        if (!url.startsWith("http://") && !url.startsWith("https://")) {
-            if (!url.startsWith("/")) {
-                url = `/${url}`;
-            }
-
-            if (!url.startsWith(`${API_BASE}/`)) {
-                url = `${API_BASE}${url}`;
-            }
-        }
-
-        const headers = {
-            Accept: "application/json",
-            ...(options.headers || {})
-        };
-
-        if (
-            options.body &&
-            !(options.body instanceof FormData) &&
-            !headers["Content-Type"] &&
-            !headers["content-type"]
-        ) {
-            headers["Content-Type"] = "application/json";
-        }
-
-        if (token) {
-            headers.Authorization = `Bearer ${token}`;
-        }
-
-        let response;
-
-        try {
-            response = await fetch(url, {
-                ...options,
-                headers
-            });
-        } catch (error) {
-            console.error("API request failed:", error);
-            throw new Error(
-                "Unable to connect to the server. Please check your connection."
-            );
-        }
-
-        if (response.status === 401) {
-            localStorage.removeItem("school_management_token");
-            localStorage.removeItem("school_management_user");
-            sessionStorage.removeItem("school_management_token");
-            sessionStorage.removeItem("school_management_user");
-
-            if (!window.location.pathname.endsWith("/login.html")) {
-                window.location.replace("/pages/login.html");
-            }
-
-            throw new Error("Authentication required.");
-        }
-
-        if (response.status === 403) {
-            throw new Error(
-                "You do not have permission to perform this action."
-            );
-        }
-
-        const contentType =
-            response.headers.get("content-type") || "";
-
-        let data;
-
-        if (contentType.includes("application/json")) {
-            data = await response.json();
-        } else {
-            data = await response.text();
-        }
-
-        if (!response.ok) {
-            let message = "Request failed.";
-
-            if (data && typeof data === "object") {
-                message =
-                    data.message ||
-                    data.error ||
-                    message;
-            } else if (typeof data === "string" && data.trim()) {
-                message = data;
-            }
-
-            throw new Error(message);
-        }
-
-        return data;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | INITIALIZE
-    |--------------------------------------------------------------------------
-    */
+    document.addEventListener("DOMContentLoaded", initialize);
 
     async function initialize() {
+
         setupEvents();
 
+        await loadAcademicLevels();
         await loadClasses();
         await loadClassArms();
+
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | EVENTS
-    |--------------------------------------------------------------------------
-    */
-
     function setupEvents() {
+
         const classForm =
-            document.querySelector("#classForm") ||
-            document.querySelector("form[data-class-form]");
+            document.getElementById("classForm");
 
-        if (classForm && !classForm.dataset.initialized) {
-            classForm.dataset.initialized = "true";
+        const classArmForm =
+            document.getElementById("classArmForm");
 
+        const classSearch =
+            document.getElementById("classSearch");
+
+        if (classForm) {
             classForm.addEventListener(
                 "submit",
                 handleClassSubmit
             );
         }
 
-        const armForm =
-            document.querySelector("#classArmForm") ||
-            document.querySelector("form[data-class-arm-form]");
-
-        if (armForm && !armForm.dataset.initialized) {
-            armForm.dataset.initialized = "true";
-
-            armForm.addEventListener(
+        if (classArmForm) {
+            classArmForm.addEventListener(
                 "submit",
-                handleArmSubmit
+                handleClassArmSubmit
             );
         }
 
-        const search =
-            document.querySelector("#classSearch") ||
-            document.querySelector("[name='class_search']");
-
-        if (search && !search.dataset.initialized) {
-            search.dataset.initialized = "true";
-
-            const handler =
-                window.App &&
-                typeof window.App.debounce === "function"
-                    ? window.App.debounce(renderClasses, 300)
-                    : renderClasses;
-
-            search.addEventListener("input", handler);
-        }
-
-        if (!document.body.dataset.classesActionsInitialized) {
-            document.body.dataset.classesActionsInitialized = "true";
-
-            document.addEventListener(
-                "click",
-                handleActionClick
+        if (classSearch) {
+            classSearch.addEventListener(
+                "input",
+                function () {
+                    renderClasses(
+                        classSearch.value.trim()
+                    );
+                }
             );
         }
+
+        document.addEventListener(
+            "click",
+            handleActionClick
+        );
+
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | LOAD CLASSES
-    |--------------------------------------------------------------------------
-    */
+    async function loadAcademicLevels() {
 
-    async function loadClasses() {
-        const container =
-            document.querySelector("#classesTableBody") ||
-            document.querySelector("#classTableBody") ||
-            document.querySelector("tbody[data-classes-body]");
+        const select =
+            document.getElementById("academicLevelId");
 
-        if (container) {
-            showLoading(
-                "#classesTableBody",
-                "Loading classes..."
-            );
+        if (!select) {
+            return;
         }
 
         try {
-            const data = await request("/classes");
 
-            classes =
-                Array.isArray(data)
-                    ? data
-                    : Array.isArray(data?.data)
-                        ? data.data
-                        : Array.isArray(data?.classes)
-                            ? data.classes
-                            : [];
+            const response =
+                await request(
+                    `${API_BASE}/academic-levels`
+                );
 
-            renderClasses();
-            populateClassSelects();
+            academicLevels =
+                extractArray(response);
+
+            populateAcademicLevelSelect();
+
         } catch (error) {
+
             console.error(
-                "Failed to load classes:",
+                "Error loading academic levels:",
                 error
             );
 
-            showError(
-                "#classesTableBody",
+            select.innerHTML =
+                `<option value="">Unable to load levels</option>`;
+
+            showNotification(
+                error.message ||
+                "Unable to load academic levels.",
+                "danger"
+            );
+
+        }
+
+    }
+
+    function populateAcademicLevelSelect(
+        selectedId = ""
+    ) {
+
+        const select =
+            document.getElementById("academicLevelId");
+
+        if (!select) {
+            return;
+        }
+
+        select.innerHTML =
+            `<option value="">Select academic level</option>`;
+
+        academicLevels.forEach(function (level) {
+
+            const id =
+                getId(level);
+
+            const name =
+                level.level_name ||
+                level.levelName ||
+                level.name ||
+                "Academic Level";
+
+            if (!id) {
+                return;
+            }
+
+            const option =
+                document.createElement("option");
+
+            option.value = id;
+            option.textContent = name;
+
+            if (
+                selectedId &&
+                String(id) === String(selectedId)
+            ) {
+                option.selected = true;
+            }
+
+            select.appendChild(option);
+
+        });
+
+    }
+
+    async function loadClasses() {
+
+        try {
+
+            const response =
+                await request(
+                    `${API_BASE}/classes`
+                );
+
+            classes =
+                extractArray(response);
+
+            renderClasses();
+            populateClassSelect();
+
+        } catch (error) {
+
+            console.error(
+                "Error loading classes:",
+                error
+            );
+
+            renderClassesError(
                 error.message ||
                 "Unable to load classes."
             );
+
         }
+
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | LOAD CLASS ARMS
-    |--------------------------------------------------------------------------
-    */
-
     async function loadClassArms() {
-        const container =
-            document.querySelector("#classArmsTableBody");
-
-        if (container) {
-            showLoading(
-                "#classArmsTableBody",
-                "Loading class arms..."
-            );
-        }
 
         try {
-            const data = await request("/class-arms");
+
+            const response =
+                await request(
+                    `${API_BASE}/class-arms`
+                );
 
             classArms =
-                Array.isArray(data)
-                    ? data
-                    : Array.isArray(data?.data)
-                        ? data.data
-                        : Array.isArray(data?.classArms)
-                            ? data.classArms
-                            : Array.isArray(data?.class_arms)
-                                ? data.class_arms
-                                : [];
+                extractArray(response);
 
             renderClassArms();
+
         } catch (error) {
+
             console.error(
-                "Failed to load class arms:",
+                "Error loading class arms:",
                 error
             );
 
-            if (container) {
-                showError(
-                    "#classArmsTableBody",
-                    error.message ||
-                    "Unable to load class arms."
-                );
-            }
+            renderClassArmsError(
+                error.message ||
+                "Unable to load class arms."
+            );
+
         }
+
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | RENDER CLASSES
-    |--------------------------------------------------------------------------
-    */
+    function renderClasses(
+        searchTerm = ""
+    ) {
 
-    function renderClasses() {
-        const container =
-            document.querySelector("#classesTableBody") ||
-            document.querySelector("#classTableBody") ||
-            document.querySelector("tbody[data-classes-body]");
+        const tbody =
+            document.getElementById(
+                "classesTableBody"
+            );
 
-        if (!container) {
+        if (!tbody) {
             return;
         }
 
         const search =
-            getValue(
-                "#classSearch",
-                "[name='class_search']"
-            )
-                .trim()
-                .toLowerCase();
+            String(searchTerm || "")
+                .toLowerCase()
+                .trim();
 
-        const filtered = search
-            ? classes.filter(item => {
-                const name =
-                    getClassName(item).toLowerCase();
+        const filtered =
+            classes.filter(function (item) {
 
-                const code = String(
-                    item.code ||
+                if (!search) {
+                    return true;
+                }
+
+                const levelName =
+                    getAcademicLevelName(item);
+
+                const className =
+                    getClassName(item);
+
+                const classCode =
                     item.class_code ||
-                    ""
-                ).toLowerCase();
+                    item.classCode ||
+                    item.code ||
+                    "";
+
+                const description =
+                    item.description ||
+                    "";
 
                 return (
-                    name.includes(search) ||
-                    code.includes(search)
+                    String(levelName)
+                        .toLowerCase()
+                        .includes(search) ||
+
+                    String(className)
+                        .toLowerCase()
+                        .includes(search) ||
+
+                    String(classCode)
+                        .toLowerCase()
+                        .includes(search) ||
+
+                    String(description)
+                        .toLowerCase()
+                        .includes(search)
                 );
-            })
-            : classes;
+
+            });
 
         if (!filtered.length) {
-            container.innerHTML = `
+
+            tbody.innerHTML = `
                 <tr>
-                    <td colspan="8">
-                        <div class="students-empty">
-                            <h3>No classes found</h3>
-                            <p>No class records are available.</p>
-                        </div>
+                    <td
+                        colspan="7"
+                        class="loading-cell"
+                    >
+                        No classes found.
                     </td>
                 </tr>
             `;
 
             return;
+
         }
 
-        container.innerHTML =
+        tbody.innerHTML =
             filtered
                 .map(renderClassRow)
                 .join("");
+
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | CLASS ROW
-    |--------------------------------------------------------------------------
-    */
-
     function renderClassRow(item) {
-        const id =
-            item.id ||
-            item.class_id;
 
-        const name =
+        const id =
+            getId(item);
+
+        const levelName =
+            getAcademicLevelName(item);
+
+        const className =
             getClassName(item);
 
-        const code =
-            item.code ||
+        const classCode =
             item.class_code ||
+            item.classCode ||
+            item.code ||
             "-";
 
         const description =
             item.description ||
             "-";
 
-        const arms =
-            classArms.filter(arm =>
-                String(
-                    arm.class_id ||
-                    arm.classId ||
-                    ""
-                ) === String(id)
-            ).length;
+        const isActive =
+            getIsActive(item);
 
-        const status =
-            String(
-                item.status ||
-                "active"
-            ).toLowerCase();
+        const armCount =
+            getClassArmCount(id);
 
         return `
             <tr>
+
                 <td>
-                    <strong>
-                        ${escapeHtml(name)}
-                    </strong>
+                    <span class="level-badge">
+                        ${escapeHtml(levelName || "-")}
+                    </span>
                 </td>
 
                 <td>
-                    ${escapeHtml(code)}
+                    <div class="class-name">
+                        ${escapeHtml(className)}
+                    </div>
+                </td>
+
+                <td>
+                    <span class="class-code">
+                        ${escapeHtml(classCode)}
+                    </span>
                 </td>
 
                 <td>
@@ -410,924 +354,1418 @@
                 </td>
 
                 <td>
-                    ${arms}
+                    ${armCount}
                 </td>
 
                 <td>
-                    <span class="student-status ${escapeHtml(status)}">
-                        ${escapeHtml(formatStatus(status))}
+                    <span
+                        class="status-badge ${
+                            isActive
+                                ? "bg-success-subtle text-success"
+                                : "bg-secondary-subtle text-secondary"
+                        }"
+                    >
+                        ${
+                            isActive
+                                ? "Active"
+                                : "Inactive"
+                        }
                     </span>
                 </td>
 
                 <td>
-                    <div class="student-actions">
+
+                    <div class="btn-group btn-group-sm">
+
                         <button
                             type="button"
-                            class="student-action-btn"
+                            class="btn btn-outline-primary"
                             data-action="edit-class"
                             data-id="${escapeAttribute(id)}"
-                            title="Edit"
+                            title="Edit class"
                         >
-                            ✎
+                            <i class="bi bi-pencil"></i>
                         </button>
 
                         <button
                             type="button"
-                            class="student-action-btn delete"
+                            class="btn btn-outline-danger"
                             data-action="delete-class"
                             data-id="${escapeAttribute(id)}"
-                            title="Delete"
+                            title="Delete class"
                         >
-                            ×
+                            <i class="bi bi-trash"></i>
                         </button>
+
                     </div>
+
                 </td>
+
             </tr>
         `;
+
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | RENDER CLASS ARMS
-    |--------------------------------------------------------------------------
-    */
-
     function renderClassArms() {
-        const container =
-            document.querySelector("#classArmsTableBody");
 
-        if (!container) {
+        const tbody =
+            document.getElementById(
+                "classArmsTableBody"
+            );
+
+        if (!tbody) {
             return;
         }
 
         if (!classArms.length) {
-            container.innerHTML = `
+
+            tbody.innerHTML = `
                 <tr>
-                    <td colspan="6">
-                        <div class="students-empty">
-                            <h3>No class arms found</h3>
-                            <p>No class arm records are available.</p>
-                        </div>
+                    <td
+                        colspan="6"
+                        class="loading-cell"
+                    >
+                        No class arms found.
                     </td>
                 </tr>
             `;
 
             return;
+
         }
 
-        container.innerHTML =
+        tbody.innerHTML =
             classArms
                 .map(renderClassArmRow)
                 .join("");
+
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | CLASS ARM ROW
-    |--------------------------------------------------------------------------
-    */
-
     function renderClassArmRow(item) {
+
         const id =
-            item.id ||
-            item.class_arm_id;
-
-        const classId =
-            item.class_id ||
-            item.classId;
-
-        const name =
-            item.name ||
-            item.arm_name ||
-            item.class_arm_name ||
-            "-";
+            getId(item);
 
         const className =
-            item.class_name ||
-            item.className ||
-            findClassName(classId);
+            getClassNameFromArm(item);
 
-        const status =
-            String(
-                item.status ||
-                "active"
-            ).toLowerCase();
+        const armName =
+            item.arm_name ||
+            item.armName ||
+            item.name ||
+            "-";
+
+        const armCode =
+            item.arm_code ||
+            item.armCode ||
+            "";
+
+        const description =
+            item.description ||
+            "-";
+
+        const isActive =
+            getIsActive(item);
 
         return `
             <tr>
+
                 <td>
                     ${escapeHtml(className)}
                 </td>
 
                 <td>
-                    <strong>
-                        ${escapeHtml(name)}
-                    </strong>
+
+                    <div class="fw-semibold">
+                        ${escapeHtml(armName)}
+                    </div>
+
+                    ${
+                        armCode
+                            ? `
+                                <small class="text-secondary">
+                                    ${escapeHtml(armCode)}
+                                </small>
+                              `
+                            : ""
+                    }
+
                 </td>
 
                 <td>
-                    ${escapeHtml(
-                        item.capacity ?? "-"
-                    )}
+                    ${escapeHtml(description)}
                 </td>
 
                 <td>
-                    ${escapeHtml(
-                        item.room ||
-                        item.room_number ||
-                        "-"
-                    )}
-                </td>
 
-                <td>
-                    <span class="student-status ${escapeHtml(status)}">
-                        ${escapeHtml(formatStatus(status))}
+                    <span
+                        class="status-badge ${
+                            isActive
+                                ? "bg-success-subtle text-success"
+                                : "bg-secondary-subtle text-secondary"
+                        }"
+                    >
+                        ${
+                            isActive
+                                ? "Active"
+                                : "Inactive"
+                        }
                     </span>
+
                 </td>
 
                 <td>
-                    <div class="student-actions">
+
+                    <div class="btn-group btn-group-sm">
+
                         <button
                             type="button"
-                            class="student-action-btn"
+                            class="btn btn-outline-primary"
                             data-action="edit-class-arm"
                             data-id="${escapeAttribute(id)}"
-                            title="Edit"
+                            title="Edit class arm"
                         >
-                            ✎
+                            <i class="bi bi-pencil"></i>
                         </button>
 
                         <button
                             type="button"
-                            class="student-action-btn delete"
+                            class="btn btn-outline-danger"
                             data-action="delete-class-arm"
                             data-id="${escapeAttribute(id)}"
-                            title="Delete"
+                            title="Delete class arm"
                         >
-                            ×
+                            <i class="bi bi-trash"></i>
                         </button>
+
                     </div>
+
                 </td>
+
             </tr>
         `;
+
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | POPULATE CLASS SELECTS
-    |--------------------------------------------------------------------------
-    */
+    function populateClassSelect(
+        selectedId = ""
+    ) {
 
-    function populateClassSelects() {
-        const selects =
-            document.querySelectorAll(
-                "#classId, #class-id, [name='class_id']"
-            );
+        const select =
+            document.getElementById("classId");
 
-        selects.forEach(select => {
-            const current = select.value;
+        if (!select) {
+            return;
+        }
 
-            select.innerHTML = `
-                <option value="">
-                    Select class
-                </option>
-            `;
+        select.innerHTML =
+            `<option value="">Select class</option>`;
 
-            classes.forEach(item => {
-                const option =
-                    document.createElement("option");
+        classes.forEach(function (item) {
 
-                option.value =
-                    item.id ||
-                    item.class_id;
+            const id =
+                getId(item);
 
-                option.textContent =
-                    getClassName(item);
-
-                select.appendChild(option);
-            });
-
-            if (current) {
-                select.value = current;
+            if (!id) {
+                return;
             }
-        });
-    }
 
-    /*
-    |--------------------------------------------------------------------------
-    | CREATE / UPDATE CLASS
-    |--------------------------------------------------------------------------
-    */
+            const className =
+                getClassName(item);
+
+            const levelName =
+                getAcademicLevelName(item);
+
+            const option =
+                document.createElement("option");
+
+            option.value = id;
+
+            option.textContent =
+                levelName
+                    ? `${levelName} — ${className}`
+                    : className;
+
+            if (
+                selectedId &&
+                String(id) === String(selectedId)
+            ) {
+                option.selected = true;
+            }
+
+            select.appendChild(option);
+
+        });
+
+    }
 
     async function handleClassSubmit(event) {
+
         event.preventDefault();
 
-        const form = event.currentTarget;
-        const data = formToObject(form);
+        const levelId =
+            document.getElementById(
+                "academicLevelId"
+            )?.value.trim();
+
+        const className =
+            document.getElementById(
+                "className"
+            )?.value.trim();
+
+        const classCode =
+            document.getElementById(
+                "classCode"
+            )?.value.trim();
+
+        const description =
+            document.getElementById(
+                "classDescription"
+            )?.value.trim();
+
+        const status =
+            document.getElementById(
+                "classStatus"
+            )?.value || "active";
+
+        if (!levelId) {
+
+            showNotification(
+                "Please select an academic level.",
+                "warning"
+            );
+
+            return;
+
+        }
+
+        if (!className) {
+
+            showNotification(
+                "Please enter the class name.",
+                "warning"
+            );
+
+            return;
+
+        }
+
+        if (!classCode) {
+
+            showNotification(
+                "Please enter the class code.",
+                "warning"
+            );
+
+            return;
+
+        }
+
+        const payload = {
+            className,
+            classCode,
+            levelId,
+            description,
+            status
+        };
 
         try {
-            if (editingClassId) {
-                await request(
-                    `/classes/${encodeURIComponent(editingClassId)}`,
-                    {
-                        method: "PUT",
-                        body: JSON.stringify(data)
-                    }
-                );
 
-                notify(
-                    "Class updated successfully.",
-                    "success"
-                );
-            } else {
-                await request(
-                    "/classes",
-                    {
-                        method: "POST",
-                        body: JSON.stringify(data)
-                    }
-                );
+            const endpoint =
+                editingClassId
+                    ? `${API_BASE}/classes/${encodeURIComponent(editingClassId)}`
+                    : `${API_BASE}/classes`;
 
-                notify(
-                    "Class created successfully.",
-                    "success"
-                );
-            }
+            const method =
+                editingClassId
+                    ? "PUT"
+                    : "POST";
+
+            await request(
+                endpoint,
+                {
+                    method,
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+                    body:
+                        JSON.stringify(payload)
+                }
+            );
+
+            showNotification(
+                editingClassId
+                    ? "Class updated successfully."
+                    : "Class created successfully.",
+                "success"
+            );
 
             resetClassForm();
+
             await loadClasses();
             await loadClassArms();
+
         } catch (error) {
+
             console.error(
-                "Class save failed:",
+                "Class save error:",
                 error
             );
 
-            notify(
+            showNotification(
                 error.message ||
                 "Unable to save class.",
-                "error"
+                "danger"
             );
+
         }
+
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | CREATE / UPDATE CLASS ARM
-    |--------------------------------------------------------------------------
-    */
+    async function handleClassArmSubmit(event) {
 
-    async function handleArmSubmit(event) {
         event.preventDefault();
 
-        const form = event.currentTarget;
-        const data = formToObject(form);
+        const classId =
+            document.getElementById(
+                "classId"
+            )?.value.trim();
+
+        const armName =
+            document.getElementById(
+                "classArmName"
+            )?.value.trim();
+
+        const armCode =
+            document.getElementById(
+                "classArmCode"
+            )?.value.trim();
+
+        const description =
+            document.getElementById(
+                "classArmDescription"
+            )?.value.trim();
+
+        const status =
+            document.getElementById(
+                "classArmStatus"
+            )?.value || "active";
+
+        if (!classId) {
+
+            showNotification(
+                "Please select a class.",
+                "warning"
+            );
+
+            return;
+
+        }
+
+        if (!armName) {
+
+            showNotification(
+                "Please enter the arm name.",
+                "warning"
+            );
+
+            return;
+
+        }
+
+        const payload = {
+            classId,
+            armName,
+            armCode,
+            description,
+            isActive:
+                status === "active"
+        };
 
         try {
-            if (editingArmId) {
-                await request(
-                    `/class-arms/${encodeURIComponent(editingArmId)}`,
-                    {
-                        method: "PUT",
-                        body: JSON.stringify(data)
-                    }
-                );
 
-                notify(
-                    "Class arm updated successfully.",
-                    "success"
-                );
-            } else {
-                await request(
-                    "/class-arms",
-                    {
-                        method: "POST",
-                        body: JSON.stringify(data)
-                    }
-                );
+            const endpoint =
+                editingClassArmId
+                    ? `${API_BASE}/class-arms/${encodeURIComponent(editingClassArmId)}`
+                    : `${API_BASE}/class-arms`;
 
-                notify(
-                    "Class arm created successfully.",
-                    "success"
-                );
-            }
+            const method =
+                editingClassArmId
+                    ? "PUT"
+                    : "POST";
+
+            await request(
+                endpoint,
+                {
+                    method,
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+                    body:
+                        JSON.stringify(payload)
+                }
+            );
+
+            showNotification(
+                editingClassArmId
+                    ? "Class arm updated successfully."
+                    : "Class arm created successfully.",
+                "success"
+            );
 
             resetArmForm();
+
             await loadClassArms();
+            await loadClasses();
+
         } catch (error) {
+
             console.error(
-                "Class arm save failed:",
+                "Class arm save error:",
                 error
             );
 
-            notify(
+            showNotification(
                 error.message ||
                 "Unable to save class arm.",
-                "error"
+                "danger"
             );
+
         }
+
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | ACTION CLICK
-    |--------------------------------------------------------------------------
-    */
+    function editClass(id) {
 
-    async function handleActionClick(event) {
+        const item =
+            classes.find(function (classItem) {
+
+                return String(getId(classItem)) ===
+                    String(id);
+
+            });
+
+        if (!item) {
+
+            showNotification(
+                "Class could not be found.",
+                "danger"
+            );
+
+            return;
+
+        }
+
+        editingClassId =
+            getId(item);
+
+        const levelId =
+            item.academic_level_id ||
+            item.academicLevelId ||
+            item.level_id ||
+            item.levelId ||
+            "";
+
+        populateAcademicLevelSelect(
+            levelId
+        );
+
+        setValue(
+            "className",
+            getClassName(item)
+        );
+
+        setValue(
+            "classCode",
+            item.class_code ||
+            item.classCode ||
+            item.code ||
+            ""
+        );
+
+        setValue(
+            "classDescription",
+            item.description ||
+            ""
+        );
+
+        setValue(
+            "classStatus",
+            getIsActive(item)
+                ? "active"
+                : "inactive"
+        );
+
+        const submitButton =
+            document.querySelector(
+                "#classForm button[type='submit']"
+            );
+
+        if (submitButton) {
+
+            submitButton.innerHTML = `
+                <i class="bi bi-check2-circle me-2"></i>
+                Update Class
+            `;
+
+        }
+
+        document
+            .getElementById("classForm")
+            ?.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+
+    }
+
+    function editClassArm(id) {
+
+        const item =
+            classArms.find(function (arm) {
+
+                return String(getId(arm)) ===
+                    String(id);
+
+            });
+
+        if (!item) {
+
+            showNotification(
+                "Class arm could not be found.",
+                "danger"
+            );
+
+            return;
+
+        }
+
+        editingClassArmId =
+            getId(item);
+
+        setValue(
+            "classId",
+            item.class_id ||
+            item.classId ||
+            ""
+        );
+
+        setValue(
+            "classArmName",
+            item.arm_name ||
+            item.armName ||
+            item.name ||
+            ""
+        );
+
+        setValue(
+            "classArmCode",
+            item.arm_code ||
+            item.armCode ||
+            ""
+        );
+
+        setValue(
+            "classArmDescription",
+            item.description ||
+            ""
+        );
+
+        setValue(
+            "classArmStatus",
+            getIsActive(item)
+                ? "active"
+                : "inactive"
+        );
+
+        const submitButton =
+            document.querySelector(
+                "#classArmForm button[type='submit']"
+            );
+
+        if (submitButton) {
+
+            submitButton.innerHTML = `
+                <i class="bi bi-check2-circle me-2"></i>
+                Update Class Arm
+            `;
+
+        }
+
+        document
+            .getElementById("classArmForm")
+            ?.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+
+    }
+
+    async function deleteClass(id) {
+
+        const item =
+            classes.find(function (classItem) {
+
+                return String(getId(classItem)) ===
+                    String(id);
+
+            });
+
+        const className =
+            item
+                ? getClassName(item)
+                : "this class";
+
+        const confirmed =
+            window.confirm(
+                `Are you sure you want to delete ${className}?`
+            );
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+
+            await request(
+                `${API_BASE}/classes/${encodeURIComponent(id)}`,
+                {
+                    method: "DELETE"
+                }
+            );
+
+            showNotification(
+                "Class deleted successfully.",
+                "success"
+            );
+
+            if (
+                editingClassId &&
+                String(editingClassId) === String(id)
+            ) {
+
+                resetClassForm();
+
+            }
+
+            await loadClasses();
+            await loadClassArms();
+
+        } catch (error) {
+
+            console.error(
+                "Class delete error:",
+                error
+            );
+
+            showNotification(
+                error.message ||
+                "Unable to delete class.",
+                "danger"
+            );
+
+        }
+
+    }
+
+    async function deleteClassArm(id) {
+
+        const confirmed =
+            window.confirm(
+                "Are you sure you want to delete this class arm?"
+            );
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+
+            await request(
+                `${API_BASE}/class-arms/${encodeURIComponent(id)}`,
+                {
+                    method: "DELETE"
+                }
+            );
+
+            showNotification(
+                "Class arm deleted successfully.",
+                "success"
+            );
+
+            if (
+                editingClassArmId &&
+                String(editingClassArmId) === String(id)
+            ) {
+
+                resetArmForm();
+
+            }
+
+            await loadClassArms();
+            await loadClasses();
+
+        } catch (error) {
+
+            console.error(
+                "Class arm delete error:",
+                error
+            );
+
+            showNotification(
+                error.message ||
+                "Unable to delete class arm.",
+                "danger"
+            );
+
+        }
+
+    }
+
+    function handleActionClick(event) {
+
         const button =
-            event.target.closest("[data-action]");
+            event.target.closest(
+                "[data-action]"
+            );
 
         if (!button) {
             return;
         }
 
         const action =
-            button.getAttribute("data-action");
+            button.dataset.action;
 
         const id =
-            button.getAttribute("data-id");
+            button.dataset.id;
 
         if (!id) {
             return;
         }
 
-        if (action === "edit-class") {
-            editClass(id);
-            return;
+        switch (action) {
+
+            case "edit-class":
+                editClass(id);
+                break;
+
+            case "delete-class":
+                deleteClass(id);
+                break;
+
+            case "edit-class-arm":
+                editClassArm(id);
+                break;
+
+            case "delete-class-arm":
+                deleteClassArm(id);
+                break;
+
+            default:
+                break;
+
         }
 
-        if (action === "delete-class") {
-            await deleteClass(id);
-            return;
-        }
-
-        if (action === "edit-class-arm") {
-            editClassArm(id);
-            return;
-        }
-
-        if (action === "delete-class-arm") {
-            await deleteClassArm(id);
-        }
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | EDIT CLASS
-    |--------------------------------------------------------------------------
-    */
-
-    function editClass(id) {
-        const item =
-            classes.find(record =>
-                String(
-                    record.id ||
-                    record.class_id
-                ) === String(id)
-            );
-
-        if (!item) {
-            return;
-        }
-
-        editingClassId = id;
-
-        setFormValue(
-            "#className",
-            item.name ||
-            item.class_name
-        );
-
-        setFormValue(
-            "#classCode",
-            item.code ||
-            item.class_code
-        );
-
-        setFormValue(
-            "#classDescription",
-            item.description
-        );
-
-        updateFormMode(
-            "#classForm",
-            "Update Class"
-        );
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | EDIT CLASS ARM
-    |--------------------------------------------------------------------------
-    */
-
-    function editClassArm(id) {
-        const item =
-            classArms.find(record =>
-                String(
-                    record.id ||
-                    record.class_arm_id
-                ) === String(id)
-            );
-
-        if (!item) {
-            return;
-        }
-
-        editingArmId = id;
-
-        setFormValue(
-            "#classId",
-            item.class_id ||
-            item.classId
-        );
-
-        setFormValue(
-            "#classArmName",
-            item.name ||
-            item.arm_name ||
-            item.class_arm_name
-        );
-
-        setFormValue(
-            "#capacity",
-            item.capacity
-        );
-
-        setFormValue(
-            "#room",
-            item.room ||
-            item.room_number
-        );
-
-        updateFormMode(
-            "#classArmForm",
-            "Update Class Arm"
-        );
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | DELETE CLASS
-    |--------------------------------------------------------------------------
-    */
-
-    async function deleteClass(id) {
-        if (
-            !window.confirm(
-                "Are you sure you want to delete this class?"
-            )
-        ) {
-            return;
-        }
-
-        try {
-            await request(
-                `/classes/${encodeURIComponent(id)}`,
-                {
-                    method: "DELETE"
-                }
-            );
-
-            notify(
-                "Class deleted successfully.",
-                "success"
-            );
-
-            await loadClasses();
-            await loadClassArms();
-        } catch (error) {
-            console.error(
-                "Class deletion failed:",
-                error
-            );
-
-            notify(
-                error.message ||
-                "Unable to delete class.",
-                "error"
-            );
-        }
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | DELETE CLASS ARM
-    |--------------------------------------------------------------------------
-    */
-
-    async function deleteClassArm(id) {
-        if (
-            !window.confirm(
-                "Are you sure you want to delete this class arm?"
-            )
-        ) {
-            return;
-        }
-
-        try {
-            await request(
-                `/class-arms/${encodeURIComponent(id)}`,
-                {
-                    method: "DELETE"
-                }
-            );
-
-            notify(
-                "Class arm deleted successfully.",
-                "success"
-            );
-
-            await loadClassArms();
-        } catch (error) {
-            console.error(
-                "Class arm deletion failed:",
-                error
-            );
-
-            notify(
-                error.message ||
-                "Unable to delete class arm.",
-                "error"
-            );
-        }
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | RESET CLASS FORM
-    |--------------------------------------------------------------------------
-    */
 
     function resetClassForm() {
+
         editingClassId = null;
 
         const form =
-            document.querySelector("#classForm");
+            document.getElementById(
+                "classForm"
+            );
 
         if (form) {
             form.reset();
         }
 
-        updateFormMode(
-            "#classForm",
-            "Add Class"
-        );
-    }
+        populateAcademicLevelSelect();
 
-    /*
-    |--------------------------------------------------------------------------
-    | RESET CLASS ARM FORM
-    |--------------------------------------------------------------------------
-    */
+        setValue(
+            "classStatus",
+            "active"
+        );
+
+        const submitButton =
+            document.querySelector(
+                "#classForm button[type='submit']"
+            );
+
+        if (submitButton) {
+
+            submitButton.innerHTML = `
+                <i class="bi bi-check2-circle me-2"></i>
+                Save Class
+            `;
+
+        }
+
+    }
 
     function resetArmForm() {
-        editingArmId = null;
+
+        editingClassArmId = null;
 
         const form =
-            document.querySelector("#classArmForm");
+            document.getElementById(
+                "classArmForm"
+            );
 
         if (form) {
             form.reset();
         }
 
-        updateFormMode(
-            "#classArmForm",
-            "Add Class Arm"
+        populateClassSelect();
+
+        setValue(
+            "classArmStatus",
+            "active"
         );
-    }
 
-    /*
-    |--------------------------------------------------------------------------
-    | FIND CLASS NAME
-    |--------------------------------------------------------------------------
-    */
-
-    function findClassName(id) {
-        const item =
-            classes.find(record =>
-                String(
-                    record.id ||
-                    record.class_id
-                ) === String(id)
+        const submitButton =
+            document.querySelector(
+                "#classArmForm button[type='submit']"
             );
 
-        return item
-            ? getClassName(item)
-            : "-";
+        if (submitButton) {
+
+            submitButton.innerHTML = `
+                <i class="bi bi-check2-circle me-2"></i>
+                Save Class Arm
+            `;
+
+        }
+
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | GET CLASS NAME
-    |--------------------------------------------------------------------------
-    */
+    async function request(
+        endpoint,
+        options = {}
+    ) {
 
-    function getClassName(item) {
-        return (
-            item.name ||
-            item.class_name ||
-            item.title ||
-            item.className ||
-            `Class ${item.id || ""}`
-        );
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | FORMAT STATUS
-    |--------------------------------------------------------------------------
-    */
-
-    function formatStatus(status) {
-        const normalized =
-            String(status || "active")
-                .toLowerCase();
-
-        const labels = {
-            active: "Active",
-            inactive: "Inactive",
-            archived: "Archived"
+        const requestOptions = {
+            ...options,
+            headers: {
+                ...(options.headers || {})
+            }
         };
 
-        return (
-            labels[normalized] ||
-            normalized
-                .replace(/_/g, " ")
-                .replace(/\b\w/g, letter =>
-                    letter.toUpperCase()
-                )
-        );
-    }
+        if (!requestOptions.headers.Authorization) {
 
-    /*
-    |--------------------------------------------------------------------------
-    | FORM TO OBJECT
-    |--------------------------------------------------------------------------
-    */
+            let token = null;
 
-    function formToObject(form) {
-        const formData =
-            new FormData(form);
+            try {
 
-        const data = {};
+                if (
+                    window.Auth &&
+                    typeof window.Auth.getToken ===
+                        "function"
+                ) {
 
-        formData.forEach((value, key) => {
-            data[key] = value;
-        });
+                    token =
+                        window.Auth.getToken();
 
-        return data;
-    }
+                }
 
-    /*
-    |--------------------------------------------------------------------------
-    | SET FORM VALUE
-    |--------------------------------------------------------------------------
-    */
+            } catch (error) {
 
-    function setFormValue(selector, value) {
-        const element =
-            document.querySelector(selector);
+                console.warn(
+                    "Unable to read Auth token:",
+                    error
+                );
 
-        if (element) {
-            element.value = value ?? "";
-        }
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | GET VALUE
-    |--------------------------------------------------------------------------
-    */
-
-    function getValue(...selectors) {
-        for (const selector of selectors) {
-            const element =
-                document.querySelector(selector);
-
-            if (element) {
-                return element.value || "";
             }
+
+            if (!token) {
+
+                token =
+                    sessionStorage.getItem(
+                        "school_management_token"
+                    ) ||
+                    localStorage.getItem(
+                        "school_management_token"
+                    );
+
+            }
+
+            if (token) {
+
+                requestOptions.headers.Authorization =
+                    `Bearer ${token}`;
+
+            }
+
         }
 
-        return "";
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | UPDATE FORM MODE
-    |--------------------------------------------------------------------------
-    */
-
-    function updateFormMode(formSelector, text) {
-        const form =
-            document.querySelector(formSelector);
-
-        if (!form) {
-            return;
-        }
-
-        const button =
-            form.querySelector(
-                "button[type='submit']"
+        const response =
+            await fetch(
+                endpoint,
+                requestOptions
             );
 
-        if (button) {
-            button.textContent = text;
-        }
-    }
+        const contentType =
+            response.headers.get(
+                "content-type"
+            ) || "";
 
-    /*
-    |--------------------------------------------------------------------------
-    | LOADING
-    |--------------------------------------------------------------------------
-    */
+        let body;
 
-    function showLoading(selector, message) {
-        const container =
-            document.querySelector(selector);
-
-        if (!container) {
-            return;
-        }
-
-        container.innerHTML = `
-            <tr>
-                <td colspan="8">
-                    <div class="students-loading">
-                        <div class="students-loading-spinner"></div>
-                        <p>
-                            ${escapeHtml(message)}
-                        </p>
-                    </div>
-                </td>
-            </tr>
-        `;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | ERROR
-    |--------------------------------------------------------------------------
-    */
-
-    function showError(selector, message) {
-        const container =
-            document.querySelector(selector);
-
-        if (!container) {
-            return;
-        }
-
-        container.innerHTML = `
-            <tr>
-                <td colspan="8">
-                    <div class="students-empty">
-                        <h3>Unable to load records</h3>
-                        <p>
-                            ${escapeHtml(message)}
-                        </p>
-                    </div>
-                </td>
-            </tr>
-        `;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | NOTIFICATION
-    |--------------------------------------------------------------------------
-    */
-
-    function notify(message, type = "success") {
         if (
-            typeof window.showNotification ===
-            "function"
+            contentType.includes(
+                "application/json"
+            )
         ) {
-            window.showNotification(
-                message,
-                type
-            );
 
-            return;
+            body =
+                await response.json();
+
+        } else {
+
+            const text =
+                await response.text();
+
+            body =
+                text
+                    ? { message: text }
+                    : {};
+
         }
 
-        let container =
-            document.querySelector(
-                "#notification-container"
+        if (
+            response.status === 401 ||
+            response.status === 403
+        ) {
+
+            showNotification(
+                body.message ||
+                "Your session has expired. Please log in again.",
+                "danger"
             );
 
-        if (!container) {
-            container =
-                document.createElement("div");
+            setTimeout(function () {
 
-            container.id =
-                "notification-container";
+                if (
+                    window.Auth &&
+                    typeof window.Auth.logout ===
+                        "function"
+                ) {
 
-            container.style.position =
-                "fixed";
+                    window.Auth.logout();
 
-            container.style.top =
-                "20px";
+                }
 
-            container.style.right =
-                "20px";
+            }, 1200);
 
-            container.style.zIndex =
-                "9999";
-
-            document.body.appendChild(
-                container
+            throw new Error(
+                body.message ||
+                "Authentication failed."
             );
+
         }
 
-        const notification =
-            document.createElement("div");
+        if (!response.ok) {
 
-        notification.className =
-            `alert alert-${type}`;
+            throw new Error(
+                body.message ||
+                body.error ||
+                `Request failed with status ${response.status}.`
+            );
 
-        notification.textContent =
-            message;
+        }
 
-        notification.style.marginBottom =
-            "10px";
+        return body;
 
-        container.appendChild(
-            notification
+    }
+
+    function extractArray(response) {
+
+        if (Array.isArray(response)) {
+            return response;
+        }
+
+        if (
+            response &&
+            Array.isArray(response.data)
+        ) {
+            return response.data;
+        }
+
+        if (
+            response &&
+            response.data &&
+            Array.isArray(response.data.data)
+        ) {
+            return response.data.data;
+        }
+
+        if (
+            response &&
+            Array.isArray(response.classes)
+        ) {
+            return response.classes;
+        }
+
+        if (
+            response &&
+            Array.isArray(response.academicLevels)
+        ) {
+            return response.academicLevels;
+        }
+
+        if (
+            response &&
+            Array.isArray(response.academic_levels)
+        ) {
+            return response.academic_levels;
+        }
+
+        if (
+            response &&
+            Array.isArray(response.classArms)
+        ) {
+            return response.classArms;
+        }
+
+        if (
+            response &&
+            Array.isArray(response.class_arms)
+        ) {
+            return response.class_arms;
+        }
+
+        return [];
+
+    }
+
+    function getId(item) {
+
+        return (
+            item?.id ||
+            item?._id ||
+            item?.class_id ||
+            item?.classId ||
+            ""
         );
 
-        setTimeout(() => {
-            notification.remove();
-        }, 4000);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | ESCAPE HTML
-    |--------------------------------------------------------------------------
-    */
+    function getClassName(item) {
 
-    function escapeHtml(value) {
-        if (
-            value === null ||
-            value === undefined
-        ) {
+        return (
+            item?.class_name ||
+            item?.className ||
+            item?.name ||
+            "-"
+        );
+
+    }
+
+    function getAcademicLevelName(item) {
+
+        return (
+            item?.level_name ||
+            item?.levelName ||
+            item?.academic_level_name ||
+            item?.academicLevelName ||
+            item?.academic_level?.level_name ||
+            item?.academicLevel?.levelName ||
+            findAcademicLevelName(
+                item?.academic_level_id ||
+                item?.academicLevelId ||
+                item?.level_id ||
+                item?.levelId
+            )
+        ) || "-";
+
+    }
+
+    function findAcademicLevelName(id) {
+
+        if (!id) {
             return "";
         }
 
-        if (
-            window.App &&
-            typeof window.App.escapeHtml ===
-            "function"
-        ) {
-            return window.App.escapeHtml(value);
+        const level =
+            academicLevels.find(function (item) {
+
+                return String(getId(item)) ===
+                    String(id);
+
+            });
+
+        if (!level) {
+            return "";
         }
 
-        return String(value)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
+        return (
+            level.level_name ||
+            level.levelName ||
+            level.name ||
+            ""
+        );
+
+    }
+
+    function getClassNameFromArm(item) {
+
+        if (
+            item?.class_name ||
+            item?.className
+        ) {
+
+            return (
+                item.class_name ||
+                item.className
+            );
+
+        }
+
+        const classId =
+            item?.class_id ||
+            item?.classId;
+
+        if (!classId) {
+            return "-";
+        }
+
+        const classItem =
+            classes.find(function (classItem) {
+
+                return String(
+                    getId(classItem)
+                ) ===
+                String(classId);
+
+            });
+
+        return classItem
+            ? getClassName(classItem)
+            : "-";
+
+    }
+
+    function getClassArmCount(classId) {
+
+        if (!classId) {
+            return 0;
+        }
+
+        return classArms.filter(function (arm) {
+
+            const armClassId =
+                arm?.class_id ||
+                arm?.classId;
+
+            return String(armClassId) ===
+                String(classId);
+
+        }).length;
+
+    }
+
+    function getIsActive(item) {
+
+        if (
+            typeof item?.is_active ===
+                "boolean"
+        ) {
+
+            return item.is_active;
+
+        }
+
+        if (
+            typeof item?.isActive ===
+                "boolean"
+        ) {
+
+            return item.isActive;
+
+        }
+
+        const status =
+            String(
+                item?.status || ""
+            ).toLowerCase();
+
+        if (status) {
+
+            return (
+                status === "active" ||
+                status === "enabled" ||
+                status === "enrolled"
+            );
+
+        }
+
+        return true;
+
+    }
+
+    function setValue(
+        id,
+        value
+    ) {
+
+        const element =
+            document.getElementById(id);
+
+        if (element) {
+            element.value =
+                value ?? "";
+        }
+
+    }
+
+    function renderClassesError(
+        message
+    ) {
+
+        const tbody =
+            document.getElementById(
+                "classesTableBody"
+            );
+
+        if (!tbody) {
+            return;
+        }
+
+        tbody.innerHTML = `
+            <tr>
+                <td
+                    colspan="7"
+                    class="loading-cell text-danger"
+                >
+                    ${escapeHtml(message)}
+                </td>
+            </tr>
+        `;
+
+    }
+
+    function renderClassArmsError(
+        message
+    ) {
+
+        const tbody =
+            document.getElementById(
+                "classArmsTableBody"
+            );
+
+        if (!tbody) {
+            return;
+        }
+
+        tbody.innerHTML = `
+            <tr>
+                <td
+                    colspan="6"
+                    class="loading-cell text-danger"
+                >
+                    ${escapeHtml(message)}
+                </td>
+            </tr>
+        `;
+
+    }
+
+    function showNotification(
+        message,
+        type = "info"
+    ) {
+
+        const container =
+            document.getElementById(
+                "notification-container"
+            );
+
+        if (!container) {
+
+            console.log(
+                `[${type}] ${message}`
+            );
+
+            return;
+
+        }
+
+        const alert =
+            document.createElement(
+                "div"
+            );
+
+        alert.className =
+            `alert alert-${type} alert-dismissible fade show shadow-sm`;
+
+        alert.style.position = "fixed";
+        alert.style.top = "20px";
+        alert.style.right = "20px";
+        alert.style.zIndex = "9999";
+        alert.style.minWidth = "280px";
+
+        alert.innerHTML = `
+            ${escapeHtml(message)}
+
+            <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+                aria-label="Close"
+            ></button>
+        `;
+
+        container.appendChild(alert);
+
+        setTimeout(function () {
+
+            if (
+                alert &&
+                alert.parentNode
+            ) {
+
+                alert.remove();
+
+            }
+
+        }, 5000);
+
+    }
+
+    function escapeHtml(value) {
+
+        return String(
+            value ?? ""
+        )
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+
     }
 
     function escapeAttribute(value) {
+
         return escapeHtml(value);
+
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | EXPORT
-    |--------------------------------------------------------------------------
-    */
-
     window.ClassesPage = {
-        initialize,
-        loadClasses,
-        loadClassArms,
+
+        resetClassForm,
+        resetArmForm,
         editClass,
         editClassArm,
         deleteClass,
         deleteClassArm,
-        resetClassForm,
-        resetArmForm
+        loadClasses,
+        loadClassArms,
+        loadAcademicLevels
+
     };
 
-    /*
-    |--------------------------------------------------------------------------
-    | START
-    |--------------------------------------------------------------------------
-    */
-
-    if (document.readyState === "loading") {
-        document.addEventListener(
-            "DOMContentLoaded",
-            initialize,
-            { once: true }
-        );
-    } else {
-        initialize();
-    }
 })();

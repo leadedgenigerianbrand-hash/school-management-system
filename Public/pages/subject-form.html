@@ -1,10 +1,12 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    ```
     <title>Subject Form | School Management System</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -163,6 +165,26 @@
             font-size: .75rem;
         }
 
+        .form-check-card {
+            border: 1px solid #d9dee8;
+            border-radius: 10px;
+            padding: 14px 16px;
+            background: #fafbfc;
+        }
+
+        .form-check-card:hover {
+            background: #f5f7fb;
+        }
+
+        .form-check-card .form-check-input {
+            margin-top: .2rem;
+        }
+
+        .form-check-card .form-check-label {
+            font-weight: 600;
+            font-size: .88rem;
+        }
+
         .form-actions {
             padding-top: 24px;
             margin-top: 28px;
@@ -250,22 +272,27 @@
             }
         }
     </style>
+    ```
+
 </head>
 
 <body>
 
+    ```
     <div class="app-shell">
 
         <aside class="sidebar" id="sidebar">
 
             <div class="sidebar-brand">
                 <div class="d-flex align-items-center gap-2">
+
                     <i class="bi bi-mortarboard-fill fs-4"></i>
 
                     <div>
                         <h5>School Management</h5>
                         <small>Administration Portal</small>
                     </div>
+
                 </div>
             </div>
 
@@ -393,6 +420,7 @@
 
                     <div>
                         <strong class="d-block">Subject Management</strong>
+
                         <small class="text-muted">
                             Create and manage academic subjects
                         </small>
@@ -432,7 +460,7 @@
                                     Add Subject
                                 </span>
 
-                                <span id="modeBadge" class="badge text-bg-primary mode-badge" style="display:none;">
+                                <span id="modeBadge" class="badge text-bg-primary mode-badge" style="display: none;">
                                     Editing
                                 </span>
 
@@ -466,6 +494,7 @@
                             </div>
 
                             <div>
+
                                 <h2 class="h5 fw-bold mb-1">
                                     Subject Information
                                 </h2>
@@ -473,6 +502,7 @@
                                 <p class="text-muted small mb-0">
                                     Enter the details for this academic subject.
                                 </p>
+
                             </div>
 
                         </div>
@@ -525,38 +555,54 @@
 
                                     <div class="col-md-6">
 
-                                        <label for="departmentId" class="form-label">
-                                            Department
+                                        <label for="isCompulsory" class="form-label">
+                                            Subject Type
+                                            <span class="required">*</span>
                                         </label>
 
-                                        <select id="departmentId" name="departmentId" class="form-select">
-                                            <option value="">
-                                                Select Department
-                                            </option>
-                                        </select>
+                                        <div class="form-check-card">
 
-                                        <div class="help-text">
-                                            Select the department responsible for this subject.
+                                            <div class="form-check">
+
+                                                <input type="checkbox" class="form-check-input" id="isCompulsory"
+                                                    name="isCompulsory">
+
+                                                <label class="form-check-label" for="isCompulsory">
+                                                    Compulsory Subject
+                                                </label>
+
+                                            </div>
+
+                                            <div class="help-text">
+                                                Leave unchecked if this subject is optional.
+                                            </div>
+
                                         </div>
 
                                     </div>
 
                                     <div class="col-md-6">
 
-                                        <label for="status" class="form-label">
+                                        <label for="isActive" class="form-label">
                                             Status
                                             <span class="required">*</span>
                                         </label>
 
-                                        <select id="status" name="status" class="form-select" required>
-                                            <option value="active">
+                                        <select id="isActive" name="isActive" class="form-select" required>
+
+                                            <option value="true">
                                                 Active
                                             </option>
 
-                                            <option value="inactive">
+                                            <option value="false">
                                                 Inactive
                                             </option>
+
                                         </select>
+
+                                        <div class="help-text">
+                                            Inactive subjects remain in the system but are not available for normal use.
+                                        </div>
 
                                     </div>
 
@@ -595,8 +641,12 @@
                             </div>
 
                             <div id="loading" class="text-center text-muted small mt-3">
-                                <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+
+                                <div class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true">
+                                </div>
+
                                 Saving subject...
+
                             </div>
 
                         </form>
@@ -616,699 +666,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script>
-
-        "use strict";
-
-        const API_BASE_URL = "/api";
-
-        const subjectForm =
-            document.getElementById("subjectForm");
-
-        const subjectNameInput =
-            document.getElementById("subjectName");
-
-        const subjectCodeInput =
-            document.getElementById("subjectCode");
-
-        const departmentSelect =
-            document.getElementById("departmentId");
-
-        const descriptionInput =
-            document.getElementById("description");
-
-        const statusSelect =
-            document.getElementById("status");
-
-        const submitButton =
-            document.getElementById("submitButton");
-
-        const cancelButton =
-            document.getElementById("cancelButton");
-
-        const messageBox =
-            document.getElementById("message");
-
-        const loadingBox =
-            document.getElementById("loading");
-
-        const pageTitle =
-            document.getElementById("pageTitle");
-
-        const modeBadge =
-            document.getElementById("modeBadge");
-
-        let editingSubjectId = null;
-
-        function getToken() {
-
-            return (
-                localStorage.getItem("school_management_token") ||
-                sessionStorage.getItem("school_management_token") ||
-                localStorage.getItem("token") ||
-                localStorage.getItem("accessToken") ||
-                sessionStorage.getItem("token") ||
-                sessionStorage.getItem("accessToken") ||
-                null
-            );
-
-        }
-
-        function getHeaders() {
-
-            const token = getToken();
-
-            const headers = {
-                "Content-Type": "application/json"
-            };
-
-            if (token) {
-
-                headers.Authorization =
-                    `Bearer ${token}`;
-
-            }
-
-            return headers;
-
-        }
-
-        function showMessage(
-            message,
-            type = "error"
-        ) {
-
-            messageBox.textContent =
-                message;
-
-            messageBox.className =
-                type === "success"
-                    ? "alert alert-success mb-4"
-                    : "alert alert-danger mb-4";
-
-            messageBox.style.display =
-                "block";
-
-            window.scrollTo({
-                top: 0,
-                behavior: "smooth"
-            });
-
-        }
-
-        function clearMessage() {
-
-            messageBox.textContent = "";
-
-            messageBox.className =
-                "alert mb-4";
-
-            messageBox.style.display =
-                "none";
-
-        }
-
-        function setLoading(loading) {
-
-            submitButton.disabled =
-                loading;
-
-            loadingBox.style.display =
-                loading
-                    ? "block"
-                    : "none";
-
-            submitButton.innerHTML =
-                loading
-                    ? `
-                <span
-                    class="spinner-border spinner-border-sm me-1"
-                    role="status"
-                ></span>
-                ${editingSubjectId ? "Updating..." : "Saving..."}
-            `
-                    : `
-                <i class="bi bi-check-circle me-1"></i>
-                ${editingSubjectId ? "Update Subject" : "Save Subject"}
-            `;
-
-        }
-
-        async function apiRequest(
-            url,
-            options = {}
-        ) {
-
-            const response =
-                await fetch(
-                    `${API_BASE_URL}${url}`,
-                    {
-                        ...options,
-                        headers: {
-                            ...getHeaders(),
-                            ...(options.headers || {})
-                        }
-                    }
-                );
-
-            let data = null;
-
-            const contentType =
-                response.headers.get(
-                    "content-type"
-                );
-
-            if (
-                contentType &&
-                contentType.includes(
-                    "application/json"
-                )
-            ) {
-
-                data =
-                    await response.json();
-
-            } else {
-
-                const text =
-                    await response.text();
-
-                data = {
-                    message: text
-                };
-
-            }
-
-            if (!response.ok) {
-
-                const error =
-                    new Error(
-                        data?.message ||
-                        "Request failed."
-                    );
-
-                error.status =
-                    response.status;
-
-                error.data =
-                    data;
-
-                throw error;
-
-            }
-
-            return data;
-
-        }
-
-        async function loadDepartments() {
-
-            try {
-
-                const result =
-                    await apiRequest(
-                        "/departments"
-                    );
-
-                const departments =
-                    result.data ||
-                    result.departments ||
-                    result;
-
-                if (
-                    !Array.isArray(
-                        departments
-                    )
-                ) {
-
-                    return;
-
-                }
-
-                departmentSelect.innerHTML =
-                    `<option value="">Select Department</option>`;
-
-                departments.forEach(
-                    department => {
-
-                        const option =
-                            document.createElement(
-                                "option"
-                            );
-
-                        option.value =
-                            department.id;
-
-                        option.textContent =
-                            department.department_name ||
-                            department.departmentName ||
-                            department.name ||
-                            `Department ${department.id}`;
-
-                        departmentSelect.appendChild(
-                            option
-                        );
-
-                    }
-                );
-
-                if (editingSubjectId) {
-
-                    await loadSubject(
-                        editingSubjectId
-                    );
-
-                }
-
-            } catch (error) {
-
-                console.error(
-                    "Load departments error:",
-                    error
-                );
-
-            }
-
-        }
-
-        async function loadSubject(
-            subjectId
-        ) {
-
-            try {
-
-                setLoading(true);
-
-                const result =
-                    await apiRequest(
-                        `/subjects/${encodeURIComponent(subjectId)}`
-                    );
-
-                const subject =
-                    result.data ||
-                    result.subject ||
-                    result;
-
-                if (!subject) {
-
-                    throw new Error(
-                        "Subject data was not returned."
-                    );
-
-                }
-
-                subjectNameInput.value =
-                    subject.subject_name ||
-                    subject.subjectName ||
-                    "";
-
-                subjectCodeInput.value =
-                    subject.subject_code ||
-                    subject.subjectCode ||
-                    "";
-
-                descriptionInput.value =
-                    subject.description ||
-                    "";
-
-                statusSelect.value =
-                    subject.status ||
-                    "active";
-
-                if (
-                    subject.department_id !== null &&
-                    subject.department_id !== undefined
-                ) {
-
-                    departmentSelect.value =
-                        String(
-                            subject.department_id
-                        );
-
-                }
-
-                pageTitle.textContent =
-                    "Edit Subject";
-
-                modeBadge.style.display =
-                    "inline-block";
-
-            } catch (error) {
-
-                console.error(
-                    "Load subject error:",
-                    error
-                );
-
-                showMessage(
-                    error.message ||
-                    "Unable to load subject."
-                );
-
-            } finally {
-
-                setLoading(false);
-
-            }
-
-        }
-
-        function validateForm() {
-
-            const subjectName =
-                subjectNameInput.value.trim();
-
-            if (!subjectName) {
-
-                showMessage(
-                    "Subject name is required."
-                );
-
-                subjectNameInput.focus();
-
-                return false;
-
-            }
-
-            if (
-                subjectName.length > 150
-            ) {
-
-                showMessage(
-                    "Subject name cannot exceed 150 characters."
-                );
-
-                subjectNameInput.focus();
-
-                return false;
-
-            }
-
-            return true;
-
-        }
-
-        subjectForm.addEventListener(
-            "submit",
-            async function (event) {
-
-                event.preventDefault();
-
-                clearMessage();
-
-                if (!validateForm()) {
-
-                    return;
-
-                }
-
-                const payload = {
-
-                    subjectName:
-                        subjectNameInput.value.trim(),
-
-                    subjectCode:
-                        subjectCodeInput.value.trim() ||
-                        null,
-
-                    description:
-                        descriptionInput.value.trim() ||
-                        null,
-
-                    departmentId:
-                        departmentSelect.value ||
-                        null,
-
-                    status:
-                        statusSelect.value ||
-                        "active"
-
-                };
-
-                try {
-
-                    setLoading(true);
-
-                    let result;
-
-                    if (editingSubjectId) {
-
-                        result =
-                            await apiRequest(
-                                `/subjects/${encodeURIComponent(editingSubjectId)}`,
-                                {
-                                    method: "PUT",
-                                    body:
-                                        JSON.stringify(
-                                            payload
-                                        )
-                                }
-                            );
-
-                    } else {
-
-                        result =
-                            await apiRequest(
-                                "/subjects",
-                                {
-                                    method: "POST",
-                                    body:
-                                        JSON.stringify(
-                                            payload
-                                        )
-                                }
-                            );
-
-                    }
-
-                    showMessage(
-                        result.message ||
-                        (
-                            editingSubjectId
-                                ? "Subject updated successfully."
-                                : "Subject created successfully."
-                        ),
-                        "success"
-                    );
-
-                    setTimeout(
-                        function () {
-
-                            window.location.href =
-                                "subjects.html";
-
-                        },
-                        900
-                    );
-
-                } catch (error) {
-
-                    console.error(
-                        "Save subject error:",
-                        error
-                    );
-
-                    if (
-                        error.status === 401
-                    ) {
-
-                        showMessage(
-                            "Your session has expired. Please log in again."
-                        );
-
-                        return;
-
-                    }
-
-                    if (
-                        error.status === 403
-                    ) {
-
-                        showMessage(
-                            "You do not have permission to manage subjects."
-                        );
-
-                        return;
-
-                    }
-
-                    showMessage(
-                        error.message ||
-                        "Unable to save subject."
-                    );
-
-                } finally {
-
-                    setLoading(false);
-
-                }
-
-            }
-        );
-
-        cancelButton.addEventListener(
-            "click",
-            function () {
-
-                window.location.href =
-                    "subjects.html";
-
-            }
-        );
-
-        function getSubjectIdFromUrl() {
-
-            const params =
-                new URLSearchParams(
-                    window.location.search
-                );
-
-            return (
-                params.get("id") ||
-                params.get("subjectId") ||
-                null
-            );
-
-        }
-
-        const sidebar =
-            document.getElementById("sidebar");
-
-        const sidebarToggle =
-            document.getElementById("sidebarToggle");
-
-        const sidebarOverlay =
-            document.getElementById("sidebarOverlay");
-
-        function closeSidebar() {
-
-            sidebar.classList.remove("show");
-
-            sidebarOverlay.classList.remove("show");
-
-        }
-
-        if (sidebarToggle) {
-
-            sidebarToggle.addEventListener(
-                "click",
-                function () {
-
-                    sidebar.classList.toggle("show");
-
-                    sidebarOverlay.classList.toggle("show");
-
-                }
-            );
-
-        }
-
-        if (sidebarOverlay) {
-
-            sidebarOverlay.addEventListener(
-                "click",
-                closeSidebar
-            );
-
-        }
-
-        document
-            .querySelectorAll(".sidebar a")
-            .forEach(link => {
-
-                link.addEventListener(
-                    "click",
-                    closeSidebar
-                );
-
-            });
-
-        const logoutButton =
-            document.getElementById("logoutButton");
-
-        if (logoutButton) {
-
-            logoutButton.addEventListener(
-                "click",
-                function () {
-
-                    [
-                        "school_management_token",
-                        "school_management_user",
-                        "token",
-                        "accessToken",
-                        "authToken",
-                        "user"
-                    ].forEach(key => {
-
-                        localStorage.removeItem(key);
-                        sessionStorage.removeItem(key);
-
-                    });
-
-                    window.location.href =
-                        "/pages/login.html";
-
-                }
-            );
-
-        }
-
-        async function initialize() {
-
-            editingSubjectId =
-                getSubjectIdFromUrl();
-
-            if (editingSubjectId) {
-
-                pageTitle.textContent =
-                    "Edit Subject";
-
-                modeBadge.style.display =
-                    "inline-block";
-
-                submitButton.innerHTML =
-                    `
-                <i class="bi bi-check-circle me-1"></i>
-                Update Subject
-            `;
-
-            }
-
-            await loadDepartments();
-
-            if (
-                editingSubjectId &&
-                !subjectNameInput.value
-            ) {
-
-                await loadSubject(
-                    editingSubjectId
-                );
-
-            }
-
-        }
-
-        document.addEventListener(
-            "DOMContentLoaded",
-            async function () {
-
-                if (
-                    typeof protectPage ===
-                    "function"
-                ) {
-
-                    await protectPage();
-
-                }
-
-                await initialize();
-
-            }
-        );
-
-    </script>
+    <script src="../js/subject-form.js"></script>
+    ```
 
 </body>
 

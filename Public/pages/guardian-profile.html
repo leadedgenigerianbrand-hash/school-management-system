@@ -1,10 +1,12 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    ```
     <title>Guardian Profile | School Management System</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -113,25 +115,6 @@
             font-style: italic;
         }
 
-        .status-badge {
-            display: inline-block;
-            padding: .4rem .8rem;
-            border-radius: 50rem;
-            font-size: .75rem;
-            font-weight: 700;
-            text-transform: capitalize;
-        }
-
-        .status-active {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .status-inactive {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
         .contact-item {
             padding: .8rem 0;
             border-bottom: 1px solid #f1f5f9;
@@ -144,27 +127,6 @@
         .contact-item a {
             color: #2563eb;
             text-decoration: none;
-        }
-
-        .students-table th {
-            white-space: nowrap;
-            font-size: .75rem;
-            text-transform: uppercase;
-            color: #64748b;
-        }
-
-        .students-table td {
-            vertical-align: middle;
-        }
-
-        .student-link {
-            color: #2563eb;
-            font-weight: 600;
-            text-decoration: none;
-        }
-
-        .student-link:hover {
-            text-decoration: underline;
         }
 
         .danger-zone {
@@ -185,119 +147,183 @@
         }
 
         @media (max-width: 991.98px) {
+
             .sidebar {
                 min-height: auto;
             }
+
         }
     </style>
+    ```
+
 </head>
 
 <body>
 
+    ```
     <div class="container-fluid">
+
         <div class="row">
 
             <!-- SIDEBAR -->
             <aside class="col-lg-2 col-xl-2 sidebar p-3">
 
                 <div class="d-flex align-items-center gap-2 mb-4">
+
                     <div class="bg-primary rounded-3 p-2 text-white">
                         <i class="bi bi-mortarboard-fill"></i>
                     </div>
-                    <span class="brand">School Management</span>
+
+                    <span class="brand">
+                        School Management
+                    </span>
+
                 </div>
+
 
                 <nav>
 
-                    <div class="sidebar-section">Main</div>
+                    <div class="sidebar-section">
+                        Main
+                    </div>
+
 
                     <a class="nav-link px-3 py-2" href="dashboard.html">
-                        <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                        <i class="bi bi-speedometer2 me-2"></i>
+                        Dashboard
                     </a>
+
 
                     <a class="nav-link px-3 py-2" href="students.html">
-                        <i class="bi bi-people me-2"></i> Students
+                        <i class="bi bi-people me-2"></i>
+                        Students
                     </a>
+
 
                     <a class="nav-link px-3 py-2" href="staff.html">
-                        <i class="bi bi-person-badge me-2"></i> Staff
+                        <i class="bi bi-person-badge me-2"></i>
+                        Staff
                     </a>
+
 
                     <a class="nav-link active px-3 py-2" href="guardians.html">
-                        <i class="bi bi-person-hearts me-2"></i> Guardians
+                        <i class="bi bi-person-hearts me-2"></i>
+                        Guardians
                     </a>
 
-                    <div class="sidebar-section">Academic</div>
+
+                    <div class="sidebar-section">
+                        Academic
+                    </div>
+
 
                     <a class="nav-link px-3 py-2" href="classes.html">
-                        <i class="bi bi-building me-2"></i> Classes
+                        <i class="bi bi-building me-2"></i>
+                        Classes
                     </a>
+
 
                     <a class="nav-link px-3 py-2" href="class-arms.html">
-                        <i class="bi bi-diagram-3 me-2"></i> Class Arms
+                        <i class="bi bi-diagram-3 me-2"></i>
+                        Class Arms
                     </a>
+
 
                     <a class="nav-link px-3 py-2" href="departments.html">
-                        <i class="bi bi-diagram-2 me-2"></i> Departments
+                        <i class="bi bi-diagram-2 me-2"></i>
+                        Departments
                     </a>
+
 
                     <a class="nav-link px-3 py-2" href="subjects.html">
-                        <i class="bi bi-book me-2"></i> Subjects
+                        <i class="bi bi-book me-2"></i>
+                        Subjects
                     </a>
+
 
                     <a class="nav-link px-3 py-2" href="academic-sessions.html">
-                        <i class="bi bi-calendar3 me-2"></i> Sessions
+                        <i class="bi bi-calendar3 me-2"></i>
+                        Sessions
                     </a>
+
 
                     <a class="nav-link px-3 py-2" href="terms.html">
-                        <i class="bi bi-calendar-week me-2"></i> Terms
+                        <i class="bi bi-calendar-week me-2"></i>
+                        Terms
                     </a>
+
 
                     <a class="nav-link px-3 py-2" href="attendance.html">
-                        <i class="bi bi-check2-square me-2"></i> Attendance
+                        <i class="bi bi-check2-square me-2"></i>
+                        Attendance
                     </a>
+
 
                     <a class="nav-link px-3 py-2" href="results.html">
-                        <i class="bi bi-bar-chart me-2"></i> Results
+                        <i class="bi bi-bar-chart me-2"></i>
+                        Results
                     </a>
 
-                    <div class="sidebar-section">Finance & Records</div>
+
+                    <div class="sidebar-section">
+                        Finance & Records
+                    </div>
+
 
                     <a class="nav-link px-3 py-2" href="fees.html">
-                        <i class="bi bi-cash-stack me-2"></i> Fees
+                        <i class="bi bi-cash-stack me-2"></i>
+                        Fees
                     </a>
+
 
                     <a class="nav-link px-3 py-2" href="documents.html">
-                        <i class="bi bi-folder2-open me-2"></i> Documents
+                        <i class="bi bi-folder2-open me-2"></i>
+                        Documents
                     </a>
+
 
                     <a class="nav-link px-3 py-2" href="reports.html">
-                        <i class="bi bi-file-earmark-bar-graph me-2"></i> Reports
+                        <i class="bi bi-file-earmark-bar-graph me-2"></i>
+                        Reports
                     </a>
 
-                    <div class="sidebar-section">Administration</div>
+
+                    <div class="sidebar-section">
+                        Administration
+                    </div>
+
 
                     <a class="nav-link px-3 py-2" href="users.html">
-                        <i class="bi bi-person-gear me-2"></i> Users
+                        <i class="bi bi-person-gear me-2"></i>
+                        Users
                     </a>
+
 
                     <a class="nav-link px-3 py-2" href="roles.html">
-                        <i class="bi bi-shield-check me-2"></i> Roles
+                        <i class="bi bi-shield-check me-2"></i>
+                        Roles
                     </a>
+
 
                     <a class="nav-link px-3 py-2" href="permissions.html">
-                        <i class="bi bi-key me-2"></i> Permissions
+                        <i class="bi bi-key me-2"></i>
+                        Permissions
                     </a>
+
 
                     <a class="nav-link px-3 py-2" href="profile.html">
-                        <i class="bi bi-person-circle me-2"></i> Profile
+                        <i class="bi bi-person-circle me-2"></i>
+                        Profile
                     </a>
 
+
                     <a class="nav-link px-3 py-2" href="settings.html">
-                        <i class="bi bi-gear me-2"></i> Settings
+                        <i class="bi bi-gear me-2"></i>
+                        Settings
                     </a>
 
                 </nav>
+
             </aside>
 
 
@@ -308,6 +334,7 @@
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
 
                     <div>
+
                         <div class="text-primary small fw-semibold mb-1">
                             GUARDIANS
                         </div>
@@ -317,20 +344,29 @@
                         </h1>
 
                         <p id="pageSubtitle" class="text-secondary mb-0">
-                            View guardian information and linked students.
+                            View guardian information.
                         </p>
+
                     </div>
+
 
                     <div class="d-flex flex-wrap gap-2">
 
                         <a href="guardians.html" class="btn btn-outline-secondary">
+
                             <i class="bi bi-arrow-left me-2"></i>
+
                             Back to Guardians
+
                         </a>
 
+
                         <a href="#" id="editButton" class="btn btn-primary">
+
                             <i class="bi bi-pencil me-2"></i>
+
                             Edit Guardian
+
                         </a>
 
                     </div>
@@ -344,10 +380,17 @@
 
                 <!-- LOADING -->
                 <div id="loading" class="card profile-card">
+
                     <div class="card-body text-center py-5 text-secondary">
+
                         <div class="spinner-border text-primary mb-3"></div>
-                        <div>Loading guardian profile...</div>
+
+                        <div>
+                            Loading guardian profile...
+                        </div>
+
                     </div>
+
                 </div>
 
 
@@ -357,20 +400,28 @@
                     <div class="card-body text-center py-5">
 
                         <div class="display-5 text-secondary mb-3">
+
                             <i class="bi bi-person-x"></i>
+
                         </div>
+
 
                         <h2 class="h4">
                             Guardian Not Found
                         </h2>
 
+
                         <p class="text-secondary">
                             The guardian could not be found or you do not have permission to view this profile.
                         </p>
 
+
                         <a href="guardians.html" class="btn btn-secondary">
+
                             <i class="bi bi-arrow-left me-2"></i>
+
                             Back to Guardians
+
                         </a>
 
                     </div>
@@ -381,10 +432,12 @@
                 <!-- PROFILE -->
                 <div id="profileContent">
 
-                    <!-- TOP -->
+
+                    <!-- SUMMARY -->
                     <div class="row g-4 mb-4">
 
-                        <!-- SUMMARY -->
+
+                        <!-- GUARDIAN SUMMARY -->
                         <div class="col-xl-4">
 
                             <div class="card profile-card h-100">
@@ -395,27 +448,30 @@
                                         G
                                     </div>
 
+
                                     <h2 id="guardianName" class="h4 mb-2">
                                         Guardian
                                     </h2>
 
-                                    <div id="relationship" class="text-secondary mb-3">
+
+                                    <div id="relationship" class="text-secondary mb-4">
                                         Guardian
                                     </div>
 
-                                    <span id="statusBadge" class="status-badge status-active">
-                                        Active
-                                    </span>
 
-
-                                    <div class="contact-item text-start mt-4">
+                                    <div class="contact-item text-start">
 
                                         <span class="info-label">
                                             Phone
                                         </span>
 
+
                                         <a id="phoneLink" href="#">
-                                            <span id="phoneValue">—</span>
+
+                                            <span id="phoneValue">
+                                                —
+                                            </span>
+
                                         </a>
 
                                     </div>
@@ -427,8 +483,13 @@
                                             Email
                                         </span>
 
+
                                         <a id="emailLink" href="#">
-                                            <span id="emailValue">—</span>
+
+                                            <span id="emailValue">
+                                                —
+                                            </span>
+
                                         </a>
 
                                     </div>
@@ -448,11 +509,16 @@
                                 <div class="card-body p-4">
 
                                     <h2 class="section-title">
+
                                         <i class="bi bi-telephone"></i>
+
                                         Contact Overview
+
                                     </h2>
 
+
                                     <div class="row g-4">
+
 
                                         <div class="col-md-6">
 
@@ -496,10 +562,10 @@
                                         <div class="col-md-6">
 
                                             <span class="info-label">
-                                                Preferred Contact
+                                                Emergency Contact
                                             </span>
 
-                                            <div class="info-value" id="overviewPreferredContact">
+                                            <div class="info-value" id="overviewEmergencyContact">
                                                 —
                                             </div>
 
@@ -522,62 +588,91 @@
                         <div class="card-body p-4">
 
                             <h2 class="section-title">
+
                                 <i class="bi bi-person-vcard"></i>
+
                                 Personal Information
+
                             </h2>
+
 
                             <div class="row g-4">
 
-                                <div class="col-md-6">
 
-                                    <span class="info-label">First Name</span>
+                                <div class="col-md-4">
 
-                                    <div class="info-value" id="firstName">—</div>
+                                    <span class="info-label">
+                                        First Name
+                                    </span>
+
+                                    <div class="info-value" id="firstName">
+                                        —
+                                    </div>
+
+                                </div>
+
+
+                                <div class="col-md-4">
+
+                                    <span class="info-label">
+                                        Middle Name
+                                    </span>
+
+                                    <div class="info-value" id="middleName">
+                                        —
+                                    </div>
+
+                                </div>
+
+
+                                <div class="col-md-4">
+
+                                    <span class="info-label">
+                                        Last Name
+                                    </span>
+
+                                    <div class="info-value" id="lastName">
+                                        —
+                                    </div>
 
                                 </div>
 
 
                                 <div class="col-md-6">
 
-                                    <span class="info-label">Last Name</span>
+                                    <span class="info-label">
+                                        Relationship
+                                    </span>
 
-                                    <div class="info-value" id="lastName">—</div>
-
-                                </div>
-
-
-                                <div class="col-md-6">
-
-                                    <span class="info-label">Other Name</span>
-
-                                    <div class="info-value" id="otherName">—</div>
+                                    <div class="info-value" id="relationshipValue">
+                                        —
+                                    </div>
 
                                 </div>
 
 
                                 <div class="col-md-6">
 
-                                    <span class="info-label">Relationship</span>
+                                    <span class="info-label">
+                                        Occupation
+                                    </span>
 
-                                    <div class="info-value" id="relationshipValue">—</div>
-
-                                </div>
-
-
-                                <div class="col-md-6">
-
-                                    <span class="info-label">Occupation</span>
-
-                                    <div class="info-value" id="occupation">—</div>
+                                    <div class="info-value" id="occupation">
+                                        —
+                                    </div>
 
                                 </div>
 
 
                                 <div class="col-md-6">
 
-                                    <span class="info-label">National ID</span>
+                                    <span class="info-label">
+                                        Employer
+                                    </span>
 
-                                    <div class="info-value" id="nationalId">—</div>
+                                    <div class="info-value" id="employer">
+                                        —
+                                    </div>
 
                                 </div>
 
@@ -594,9 +689,13 @@
                         <div class="card-body p-4">
 
                             <h2 class="section-title">
+
                                 <i class="bi bi-geo-alt"></i>
+
                                 Address
+
                             </h2>
+
 
                             <div class="row g-4">
 
@@ -612,33 +711,6 @@
 
                                 </div>
 
-
-                                <div class="col-md-4">
-
-                                    <span class="info-label">City</span>
-
-                                    <div class="info-value" id="city">—</div>
-
-                                </div>
-
-
-                                <div class="col-md-4">
-
-                                    <span class="info-label">State</span>
-
-                                    <div class="info-value" id="state">—</div>
-
-                                </div>
-
-
-                                <div class="col-md-4">
-
-                                    <span class="info-label">Country</span>
-
-                                    <div class="info-value" id="country">—</div>
-
-                                </div>
-
                             </div>
 
                         </div>
@@ -646,46 +718,34 @@
                     </div>
 
 
-                    <!-- LINKED STUDENTS -->
+                    <!-- EMERGENCY CONTACT -->
                     <div class="card section-card mb-4">
 
                         <div class="card-body p-4">
 
                             <h2 class="section-title">
-                                <i class="bi bi-people"></i>
-                                Linked Students
+
+                                <i class="bi bi-exclamation-circle"></i>
+
+                                Emergency Contact
+
                             </h2>
 
-                            <div id="studentsContainer">
 
-                                <div class="text-center py-4 text-secondary">
-                                    <div class="spinner-border spinner-border-sm text-primary me-2"></div>
-                                    Loading linked students...
+                            <div class="row g-4">
+
+                                <div class="col-12">
+
+                                    <span class="info-label">
+                                        Emergency Contact
+                                    </span>
+
+                                    <div class="info-value" id="emergencyContact">
+                                        —
+                                    </div>
+
                                 </div>
 
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- ADDITIONAL INFORMATION -->
-                    <div class="card section-card mb-4">
-
-                        <div class="card-body p-4">
-
-                            <h2 class="section-title">
-                                <i class="bi bi-card-text"></i>
-                                Additional Information
-                            </h2>
-
-                            <span class="info-label">
-                                Notes
-                            </span>
-
-                            <div class="info-value" id="notes">
-                                —
                             </div>
 
                         </div>
@@ -699,13 +759,18 @@
                         <div class="card-body p-4">
 
                             <h2 class="section-title">
+
                                 <i class="bi bi-database"></i>
+
                                 Record Information
+
                             </h2>
+
 
                             <div class="row g-4">
 
-                                <div class="col-md-6">
+
+                                <div class="col-md-4">
 
                                     <span class="info-label">
                                         Guardian ID
@@ -718,20 +783,7 @@
                                 </div>
 
 
-                                <div class="col-md-6">
-
-                                    <span class="info-label">
-                                        Status
-                                    </span>
-
-                                    <div class="info-value" id="recordStatus">
-                                        —
-                                    </div>
-
-                                </div>
-
-
-                                <div class="col-md-6">
+                                <div class="col-md-4">
 
                                     <span class="info-label">
                                         Created
@@ -744,7 +796,7 @@
                                 </div>
 
 
-                                <div class="col-md-6">
+                                <div class="col-md-4">
 
                                     <span class="info-label">
                                         Last Updated
@@ -769,18 +821,26 @@
                         <div class="card-body p-4">
 
                             <h2 class="section-title">
+
                                 <i class="bi bi-exclamation-triangle"></i>
+
                                 Guardian Record
+
                             </h2>
+
 
                             <p class="text-secondary">
                                 Deleting this guardian will permanently remove the guardian record.
                                 Only continue if you are sure this record should be removed.
                             </p>
 
+
                             <button type="button" id="deleteButton" class="btn btn-danger">
+
                                 <i class="bi bi-trash me-2"></i>
+
                                 Delete Guardian
+
                             </button>
 
                         </div>
@@ -792,15 +852,24 @@
             </main>
 
         </div>
+
     </div>
 
 
     <script>
 
-        const API_BASE = "/api/guardians";
+        "use strict";
+
+
+        const API_BASE =
+            "/api/guardians";
+
 
         const params =
-            new URLSearchParams(window.location.search);
+            new URLSearchParams(
+                window.location.search
+            );
+
 
         const guardianId =
             params.get("id");
@@ -809,11 +878,14 @@
         const loading =
             document.getElementById("loading");
 
+
         const profileContent =
             document.getElementById("profileContent");
 
+
         const notFound =
             document.getElementById("notFound");
+
 
         const message =
             document.getElementById("message");
@@ -846,7 +918,10 @@
                 "Content-Type": "application/json"
             };
 
-            const token = getToken();
+
+            const token =
+                getToken();
+
 
             if (token) {
 
@@ -855,17 +930,24 @@
 
             }
 
+
             return headers;
 
         }
 
 
-        function showMessage(text, type = "success") {
+        function showMessage(
+            text,
+            type = "success"
+        ) {
 
-            message.textContent = text;
+            message.textContent =
+                text;
+
 
             message.className =
                 `alert alert-${type === "error" ? "danger" : type}`;
+
 
             window.scrollTo({
                 top: 0,
@@ -877,7 +959,9 @@
 
         function clearMessage() {
 
-            message.textContent = "";
+            message.textContent =
+                "";
+
 
             message.className =
                 "alert d-none";
@@ -885,44 +969,21 @@
         }
 
 
-        function displayValue(elementId, value) {
+        function getValue(
+            object,
+            ...keys
+        ) {
 
-            const element =
-                document.getElementById(elementId);
+            if (!object) {
 
-            if (!element) {
-                return;
-            }
-
-            if (
-                value === null ||
-                value === undefined ||
-                String(value).trim() === ""
-            ) {
-
-                element.textContent =
-                    "Not provided";
-
-                element.classList.add("empty-value");
-
-                return;
+                return null;
 
             }
 
-            element.textContent =
-                value;
-
-            element.classList.remove("empty-value");
-
-        }
-
-
-        function getValue(object, ...keys) {
 
             for (const key of keys) {
 
                 if (
-                    object &&
                     object[key] !== undefined &&
                     object[key] !== null
                 ) {
@@ -933,7 +994,55 @@
 
             }
 
+
             return null;
+
+        }
+
+
+        function displayValue(
+            elementId,
+            value
+        ) {
+
+            const element =
+                document.getElementById(elementId);
+
+
+            if (!element) {
+
+                return;
+
+            }
+
+
+            if (
+                value === null ||
+                value === undefined ||
+                String(value).trim() === ""
+            ) {
+
+                element.textContent =
+                    "Not provided";
+
+
+                element.classList.add(
+                    "empty-value"
+                );
+
+
+                return;
+
+            }
+
+
+            element.textContent =
+                String(value);
+
+
+            element.classList.remove(
+                "empty-value"
+            );
 
         }
 
@@ -941,15 +1050,26 @@
         function formatDate(value) {
 
             if (!value) {
+
                 return null;
+
             }
+
 
             const date =
                 new Date(value);
 
-            if (Number.isNaN(date.getTime())) {
+
+            if (
+                Number.isNaN(
+                    date.getTime()
+                )
+            ) {
+
                 return value;
+
             }
+
 
             return date.toLocaleString(
                 "en-NG",
@@ -962,64 +1082,65 @@
         }
 
 
-        function createInitials(firstName, lastName) {
+        function createInitials(
+            firstName,
+            lastName
+        ) {
 
             const first =
-                String(firstName || "").trim();
+                String(firstName || "")
+                    .trim();
+
 
             const last =
-                String(lastName || "").trim();
+                String(lastName || "")
+                    .trim();
+
 
             const initials =
                 `${first.charAt(0)}${last.charAt(0)}`
                     .toUpperCase();
 
-            return initials || "G";
+
+            return initials ||
+                "G";
 
         }
 
 
-        function normalizeGuardian(result) {
+        function normalizeGuardian(
+            result
+        ) {
 
-            if (result && result.data) {
+            if (
+                result &&
+                result.data &&
+                !Array.isArray(result.data)
+            ) {
+
                 return result.data;
+
             }
 
-            if (result && result.guardian) {
+
+            if (
+                result &&
+                result.guardian
+            ) {
+
                 return result.guardian;
+
             }
 
-            return result;
+
+            return result || null;
 
         }
 
 
-        function normalizeStudents(result) {
-
-            if (
-                result &&
-                Array.isArray(result.data)
-            ) {
-                return result.data;
-            }
-
-            if (
-                result &&
-                Array.isArray(result.students)
-            ) {
-                return result.students;
-            }
-
-            if (Array.isArray(result)) {
-                return result;
-            }
-
-            return [];
-
-        }
-
-
-        function renderGuardian(guardian) {
+        function renderGuardian(
+            guardian
+        ) {
 
             const firstName =
                 getValue(
@@ -1028,6 +1149,15 @@
                     "firstName"
                 ) || "";
 
+
+            const middleName =
+                getValue(
+                    guardian,
+                    "middle_name",
+                    "middleName"
+                );
+
+
             const lastName =
                 getValue(
                     guardian,
@@ -1035,12 +1165,6 @@
                     "lastName"
                 ) || "";
 
-            const otherName =
-                getValue(
-                    guardian,
-                    "other_name",
-                    "otherName"
-                );
 
             const relationship =
                 getValue(
@@ -1048,10 +1172,11 @@
                     "relationship"
                 );
 
+
             const fullName =
                 [
                     firstName,
-                    otherName,
+                    middleName,
                     lastName
                 ]
                     .filter(Boolean)
@@ -1059,39 +1184,67 @@
                     .trim();
 
 
-            document.getElementById("guardianName").textContent =
-                fullName || "Guardian";
+            document.getElementById(
+                "guardianName"
+            ).textContent =
+                fullName ||
+                "Guardian";
 
 
-            document.getElementById("avatar").textContent =
+            document.getElementById(
+                "avatar"
+            ).textContent =
                 createInitials(
                     firstName,
                     lastName
                 );
 
 
-            document.getElementById("relationship").textContent =
-                relationship || "Guardian";
-
-
-            displayValue("firstName", firstName);
-            displayValue("lastName", lastName);
-            displayValue("otherName", otherName);
-            displayValue("relationshipValue", relationship);
+            document.getElementById(
+                "relationship"
+            ).textContent =
+                relationship ||
+                "Guardian";
 
 
             displayValue(
-                "occupation",
-                getValue(guardian, "occupation")
+                "firstName",
+                firstName
             );
 
 
             displayValue(
-                "nationalId",
+                "middleName",
+                middleName
+            );
+
+
+            displayValue(
+                "lastName",
+                lastName
+            );
+
+
+            displayValue(
+                "relationshipValue",
+                relationship
+            );
+
+
+            displayValue(
+                "occupation",
                 getValue(
                     guardian,
-                    "national_id",
-                    "nationalId"
+                    "occupation"
+                )
+            );
+
+
+            displayValue(
+                "employer",
+                getValue(
+                    guardian,
+                    "employer"
                 )
             );
 
@@ -1099,9 +1252,7 @@
             const phone =
                 getValue(
                     guardian,
-                    "phone",
-                    "phone_number",
-                    "phoneNumber"
+                    "phone"
                 );
 
 
@@ -1109,37 +1260,74 @@
                 getValue(
                     guardian,
                     "alternative_phone",
-                    "alternativePhone",
-                    "alternative_phone_number"
+                    "alternativePhone"
                 );
 
 
             const email =
                 getValue(
                     guardian,
-                    "email",
-                    "email_address",
-                    "emailAddress"
+                    "email"
                 );
 
 
-            const preferredContact =
+            const emergencyContact =
                 getValue(
                     guardian,
-                    "preferred_contact",
-                    "preferredContact"
+                    "emergency_contact",
+                    "emergencyContact"
                 );
 
 
-            displayValue("phoneValue", phone);
-            displayValue("overviewPhone", phone);
-            displayValue("overviewAlternativePhone", alternativePhone);
-            displayValue("overviewEmail", email);
-            displayValue("overviewPreferredContact", preferredContact);
+            displayValue(
+                "phoneValue",
+                phone
+            );
+
+
+            displayValue(
+                "overviewPhone",
+                phone
+            );
+
+
+            displayValue(
+                "overviewAlternativePhone",
+                alternativePhone
+            );
+
+
+            displayValue(
+                "overviewEmail",
+                email
+            );
+
+
+            displayValue(
+                "overviewEmergencyContact",
+                emergencyContact
+            );
+
+
+            displayValue(
+                "address",
+                getValue(
+                    guardian,
+                    "address"
+                )
+            );
+
+
+            displayValue(
+                "emergencyContact",
+                emergencyContact
+            );
 
 
             const phoneLink =
-                document.getElementById("phoneLink");
+                document.getElementById(
+                    "phoneLink"
+                );
 
 
             if (phone) {
@@ -1149,32 +1337,46 @@
 
             } else {
 
-                phoneLink.removeAttribute("href");
+                phoneLink.removeAttribute(
+                    "href"
+                );
 
             }
 
 
             const emailValue =
-                document.getElementById("emailValue");
+                document.getElementById(
+                    "emailValue"
+                );
 
 
-            emailValue.textContent =
-                email || "Not provided";
+            if (email) {
+
+                emailValue.textContent =
+                    email;
 
 
-            if (!email) {
-
-                emailValue.classList.add("empty-value");
+                emailValue.classList.remove(
+                    "empty-value"
+                );
 
             } else {
 
-                emailValue.classList.remove("empty-value");
+                emailValue.textContent =
+                    "Not provided";
+
+
+                emailValue.classList.add(
+                    "empty-value"
+                );
 
             }
 
 
             const emailLink =
-                document.getElementById("emailLink");
+                document.getElementById(
+                    "emailLink"
+                );
 
 
             if (email) {
@@ -1184,65 +1386,11 @@
 
             } else {
 
-                emailLink.removeAttribute("href");
-
-            }
-
-
-            displayValue(
-                "address",
-                getValue(guardian, "address")
-            );
-
-            displayValue(
-                "city",
-                getValue(guardian, "city")
-            );
-
-            displayValue(
-                "state",
-                getValue(guardian, "state")
-            );
-
-            displayValue(
-                "country",
-                getValue(guardian, "country")
-            );
-
-            displayValue(
-                "notes",
-                getValue(guardian, "notes")
-            );
-
-
-            const status =
-                getValue(
-                    guardian,
-                    "status"
-                ) || "active";
-
-
-            const statusBadge =
-                document.getElementById("statusBadge");
-
-
-            statusBadge.textContent =
-                status;
-
-
-            statusBadge.className =
-                "status-badge " +
-                (
-                    String(status).toLowerCase() === "active"
-                        ? "status-active"
-                        : "status-inactive"
+                emailLink.removeAttribute(
+                    "href"
                 );
 
-
-            displayValue(
-                "recordStatus",
-                status
-            );
+            }
 
 
             displayValue(
@@ -1280,223 +1428,10 @@
             );
 
 
-            document.getElementById("editButton").href =
+            document.getElementById(
+                "editButton"
+            ).href =
                 `guardian-form.html?id=${encodeURIComponent(guardianId)}`;
-
-        }
-
-
-        function escapeHtml(value) {
-
-            const div =
-                document.createElement("div");
-
-            div.textContent =
-                value ?? "";
-
-            return div.innerHTML;
-
-        }
-
-
-        function renderStudents(students) {
-
-            const container =
-                document.getElementById("studentsContainer");
-
-
-            if (
-                !students ||
-                students.length === 0
-            ) {
-
-                container.innerHTML = `
-                <div class="alert alert-light border text-center mb-0">
-                    <i class="bi bi-people me-2"></i>
-                    No students are currently linked to this guardian.
-                </div>
-            `;
-
-                return;
-
-            }
-
-
-            const rows =
-                students.map(function (student) {
-
-                    const studentId =
-                        getValue(
-                            student,
-                            "id",
-                            "student_id",
-                            "studentId"
-                        );
-
-
-                    const firstName =
-                        getValue(
-                            student,
-                            "first_name",
-                            "firstName"
-                        ) || "";
-
-
-                    const lastName =
-                        getValue(
-                            student,
-                            "last_name",
-                            "lastName"
-                        ) || "";
-
-
-                    const studentName =
-                        `${firstName} ${lastName}`
-                            .trim() ||
-                        getValue(
-                            student,
-                            "student_name",
-                            "studentName"
-                        ) ||
-                        "Student";
-
-
-                    const admissionNumber =
-                        getValue(
-                            student,
-                            "admission_number",
-                            "admissionNumber",
-                            "student_number",
-                            "studentNumber"
-                        ) || "—";
-
-
-                    const className =
-                        getValue(
-                            student,
-                            "class_name",
-                            "className"
-                        ) || "—";
-
-
-                    const armName =
-                        getValue(
-                            student,
-                            "arm_name",
-                            "armName",
-                            "class_arm"
-                        ) || "—";
-
-
-                    const status =
-                        getValue(
-                            student,
-                            "status"
-                        ) || "—";
-
-
-                    const studentLink =
-                        studentId
-                            ? `
-                            <a
-                                class="student-link"
-                                href="student-profile.html?id=${encodeURIComponent(studentId)}"
-                            >
-                                ${escapeHtml(studentName)}
-                            </a>
-                        `
-                            : escapeHtml(studentName);
-
-
-                    return `
-                    <tr>
-                        <td>${studentLink}</td>
-                        <td>${escapeHtml(admissionNumber)}</td>
-                        <td>${escapeHtml(className)}</td>
-                        <td>${escapeHtml(armName)}</td>
-                        <td>${escapeHtml(status)}</td>
-                    </tr>
-                `;
-
-                }).join("");
-
-
-            container.innerHTML = `
-            <div class="table-responsive">
-                <table class="table table-hover students-table mb-0">
-
-                    <thead class="table-light">
-                        <tr>
-                            <th>Student</th>
-                            <th>Admission Number</th>
-                            <th>Class</th>
-                            <th>Arm</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        ${rows}
-                    </tbody>
-
-                </table>
-            </div>
-        `;
-
-        }
-
-
-        async function loadStudents() {
-
-            const possibleUrls = [
-                `${API_BASE}/${guardianId}/students`,
-                `${API_BASE}/students/${guardianId}`
-            ];
-
-
-            for (const url of possibleUrls) {
-
-                try {
-
-                    const response =
-                        await fetch(
-                            url,
-                            {
-                                method: "GET",
-                                headers: getHeaders()
-                            }
-                        );
-
-
-                    if (!response.ok) {
-                        continue;
-                    }
-
-
-                    const result =
-                        await response.json();
-
-
-                    renderStudents(
-                        normalizeStudents(result)
-                    );
-
-
-                    return;
-
-                } catch (error) {
-
-                    console.error(
-                        "Load guardian students error:",
-                        error
-                    );
-
-                }
-
-            }
-
-
-            renderStudents([]);
 
         }
 
@@ -1508,8 +1443,16 @@
                 loading.style.display =
                     "none";
 
+
                 notFound.style.display =
                     "block";
+
+
+                showMessage(
+                    "No guardian ID was provided.",
+                    "error"
+                );
+
 
                 return;
 
@@ -1550,6 +1493,33 @@
 
                 if (!response.ok) {
 
+                    if (response.status === 401) {
+
+                        throw new Error(
+                            "Your session has expired. Please log in again."
+                        );
+
+                    }
+
+
+                    if (response.status === 403) {
+
+                        throw new Error(
+                            "You do not have permission to view this guardian."
+                        );
+
+                    }
+
+
+                    if (response.status === 404) {
+
+                        throw new Error(
+                            "Guardian profile was not found."
+                        );
+
+                    }
+
+
                     throw new Error(
                         result.message ||
                         "Unable to load guardian profile."
@@ -1559,7 +1529,9 @@
 
 
                 const guardian =
-                    normalizeGuardian(result);
+                    normalizeGuardian(
+                        result
+                    );
 
 
                 if (!guardian) {
@@ -1571,7 +1543,9 @@
                 }
 
 
-                renderGuardian(guardian);
+                renderGuardian(
+                    guardian
+                );
 
 
                 loading.style.display =
@@ -1580,9 +1554,6 @@
 
                 profileContent.style.display =
                     "block";
-
-
-                await loadStudents();
 
 
             } catch (error) {
@@ -1594,6 +1565,10 @@
 
 
                 loading.style.display =
+                    "none";
+
+
+                profileContent.style.display =
                     "none";
 
 
@@ -1612,120 +1587,147 @@
         }
 
 
+        async function deleteGuardian() {
+
+            if (!guardianId) {
+
+                return;
+
+            }
+
+
+            const confirmed =
+                window.confirm(
+                    "Are you sure you want to delete this guardian? This action cannot be undone."
+                );
+
+
+            if (!confirmed) {
+
+                return;
+
+            }
+
+
+            const button =
+                document.getElementById(
+                    "deleteButton"
+                );
+
+
+            button.disabled =
+                true;
+
+
+            button.innerHTML =
+                '<span class="spinner-border spinner-border-sm me-2"></span> Deleting...';
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        `${API_BASE}/${encodeURIComponent(guardianId)}`,
+                        {
+                            method: "DELETE",
+                            headers: getHeaders()
+                        }
+                    );
+
+
+                let result = {};
+
+
+                try {
+
+                    result =
+                        await response.json();
+
+                } catch (jsonError) {
+
+                    result = {};
+
+                }
+
+
+                if (!response.ok) {
+
+                    if (response.status === 401) {
+
+                        throw new Error(
+                            "Your session has expired. Please log in again."
+                        );
+
+                    }
+
+
+                    if (response.status === 403) {
+
+                        throw new Error(
+                            "You do not have permission to delete this guardian."
+                        );
+
+                    }
+
+
+                    throw new Error(
+                        result.message ||
+                        "Unable to delete guardian."
+                    );
+
+                }
+
+
+                showMessage(
+                    result.message ||
+                    "Guardian deleted successfully.",
+                    "success"
+                );
+
+
+                setTimeout(
+                    function () {
+
+                        window.location.href =
+                            "guardians.html";
+
+                    },
+                    1000
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "Delete guardian error:",
+                    error
+                );
+
+
+                showMessage(
+                    error.message ||
+                    "Unable to delete guardian.",
+                    "error"
+                );
+
+
+                button.disabled =
+                    false;
+
+
+                button.innerHTML =
+                    '<i class="bi bi-trash me-2"></i> Delete Guardian';
+
+            }
+
+        }
+
+
         document
             .getElementById("deleteButton")
             .addEventListener(
                 "click",
-                async function () {
-
-                    if (!guardianId) {
-                        return;
-                    }
-
-
-                    const confirmed =
-                        window.confirm(
-                            "Are you sure you want to delete this guardian? This action cannot be undone."
-                        );
-
-
-                    if (!confirmed) {
-                        return;
-                    }
-
-
-                    const button =
-                        document.getElementById("deleteButton");
-
-
-                    button.disabled =
-                        true;
-
-
-                    button.innerHTML =
-                        '<span class="spinner-border spinner-border-sm me-2"></span> Deleting...';
-
-
-                    try {
-
-                        const response =
-                            await fetch(
-                                `${API_BASE}/${encodeURIComponent(guardianId)}`,
-                                {
-                                    method: "DELETE",
-                                    headers: getHeaders()
-                                }
-                            );
-
-
-                        let result = {};
-
-
-                        try {
-
-                            result =
-                                await response.json();
-
-                        } catch (error) {
-
-                            result = {};
-
-                        }
-
-
-                        if (!response.ok) {
-
-                            throw new Error(
-                                result.message ||
-                                "Unable to delete guardian."
-                            );
-
-                        }
-
-
-                        showMessage(
-                            result.message ||
-                            "Guardian deleted successfully.",
-                            "success"
-                        );
-
-
-                        setTimeout(
-                            function () {
-
-                                window.location.href =
-                                    "guardians.html";
-
-                            },
-                            1000
-                        );
-
-
-                    } catch (error) {
-
-                        console.error(
-                            "Delete guardian error:",
-                            error
-                        );
-
-
-                        showMessage(
-                            error.message ||
-                            "Unable to delete guardian.",
-                            "error"
-                        );
-
-
-                        button.disabled =
-                            false;
-
-
-                        button.innerHTML =
-                            '<i class="bi bi-trash me-2"></i> Delete Guardian';
-
-                    }
-
-                }
+                deleteGuardian
             );
 
 
@@ -1733,7 +1735,9 @@
 
     </script>
 
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    ```
 
 </body>
 

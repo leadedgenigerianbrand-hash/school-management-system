@@ -1,21 +1,21 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    ```
     <title>Reports | School Management System</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
     <style>
         :root {
             --sidebar-width: 260px;
             --primary: #2563eb;
-            --primary-dark: #1d4ed8;
             --page-bg: #f5f7fb;
             --border: #e5e7eb;
             --text: #1f2937;
@@ -49,7 +49,7 @@
 
         .sidebar-brand {
             padding: 22px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .sidebar-brand-icon {
@@ -72,7 +72,7 @@
             color: #6b7280;
             font-size: 10px;
             font-weight: 700;
-            letter-spacing: .09em;
+            letter-spacing: 0.09em;
             text-transform: uppercase;
         }
 
@@ -96,7 +96,7 @@
         .sidebar .nav-link:hover,
         .sidebar .nav-link.active {
             color: #fff;
-            background: rgba(37, 99, 235, .9);
+            background: rgba(37, 99, 235, 0.9);
         }
 
         .main-wrapper {
@@ -139,10 +139,12 @@
 
         .card {
             border: 1px solid var(--border);
-            box-shadow: 0 2px 8px rgba(15, 23, 42, .03);
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
         }
 
-        .filter-card {
+        .filter-card,
+        .report-card,
+        .results-card {
             border-radius: 12px;
         }
 
@@ -167,18 +169,17 @@
         .form-control:focus,
         .form-select:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 .2rem rgba(37, 99, 235, .12);
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.12);
         }
 
         .report-card {
             height: 100%;
-            border-radius: 12px;
-            transition: transform .2s ease, box-shadow .2s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .report-card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 12px 28px rgba(15, 23, 42, .08);
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
         }
 
         .report-icon {
@@ -203,11 +204,6 @@
             font-size: 13px;
             line-height: 1.6;
             min-height: 62px;
-        }
-
-        .results-card {
-            border-radius: 12px;
-            overflow: hidden;
         }
 
         .results-header {
@@ -255,7 +251,7 @@
             color: #374151;
             font-size: 11px;
             text-transform: uppercase;
-            letter-spacing: .04em;
+            letter-spacing: 0.04em;
             white-space: nowrap;
         }
 
@@ -283,6 +279,12 @@
             font-size: 25px;
         }
 
+        .loading {
+            text-align: center;
+            padding: 45px;
+            color: var(--muted);
+        }
+
         .report-message {
             background: #f9fafb;
             border: 1px solid var(--border);
@@ -290,39 +292,6 @@
             padding: 18px;
             font-size: 14px;
             line-height: 1.7;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 45px;
-            color: var(--muted);
-        }
-
-        .loading .spinner-border {
-            width: 2rem;
-            height: 2rem;
-        }
-
-        .modal-content {
-            border: 0;
-            border-radius: 14px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, .2);
-        }
-
-        .modal-header {
-            border-bottom-color: var(--border);
-        }
-
-        .modal-footer {
-            border-top-color: var(--border);
-        }
-
-        #alert {
-            display: none;
-        }
-
-        #alert.show {
-            display: block;
         }
 
         .user-avatar {
@@ -337,14 +306,34 @@
             font-weight: 700;
         }
 
+        #alert {
+            display: none;
+        }
+
+        #alert.show {
+            display: block;
+        }
+
         #sidebarOverlay {
             display: none;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 9px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #eff6ff;
+            color: #1d4ed8;
         }
 
         @media (max-width: 991.98px) {
             .sidebar {
                 transform: translateX(-100%);
-                transition: transform .25s ease;
+                transition: transform 0.25s ease;
             }
 
             .sidebar.show {
@@ -363,7 +352,7 @@
                 display: block;
                 position: fixed;
                 inset: 0;
-                background: rgba(0, 0, 0, .45);
+                background: rgba(0, 0, 0, 0.45);
                 z-index: 1030;
             }
 
@@ -427,10 +416,13 @@
             }
         }
     </style>
+    ```
+
 </head>
 
 <body>
 
+    ```
     <div id="sidebarOverlay"></div>
 
     <aside class="sidebar" id="sidebar">
@@ -440,6 +432,7 @@
                 <div class="sidebar-brand-icon">
                     <i class="bi bi-mortarboard-fill"></i>
                 </div>
+
                 <div>
                     <div class="fw-bold">School Management</div>
                     <small>Administration System</small>
@@ -513,7 +506,7 @@
                 Results
             </a>
 
-            <div class="sidebar-section">Finance & Records</div>
+            <div class="sidebar-section">Finance and Records</div>
 
             <a class="nav-link" href="fees.html">
                 <i class="bi bi-cash-stack"></i>
@@ -565,6 +558,7 @@
         <header class="topbar">
 
             <div class="d-flex align-items-center gap-3">
+
                 <button type="button" class="btn btn-light mobile-toggle" id="sidebarToggle">
                     <i class="bi bi-list fs-5"></i>
                 </button>
@@ -572,6 +566,7 @@
                 <div class="d-none d-md-block">
                     <span class="fw-semibold">Reports</span>
                 </div>
+
             </div>
 
             <div class="d-flex align-items-center gap-3">
@@ -582,7 +577,7 @@
 
                 <div class="d-none d-sm-block">
                     <div class="fw-semibold small" id="userName">Administrator</div>
-                    <div class="text-muted" style="font-size:11px;">
+                    <div class="text-muted" style="font-size: 11px;">
                         School Administrator
                     </div>
                 </div>
@@ -607,12 +602,12 @@
 
                 <div class="d-flex gap-2 no-print">
 
-                    <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
+                    <button type="button" class="btn btn-outline-secondary" id="printReportButton">
                         <i class="bi bi-printer me-1"></i>
                         Print
                     </button>
 
-                    <button type="button" class="btn btn-primary" onclick="refreshReports()">
+                    <button type="button" class="btn btn-primary" id="refreshReportsButton">
                         <i class="bi bi-arrow-clockwise me-1"></i>
                         Refresh
                     </button>
@@ -629,7 +624,10 @@
 
                     <div class="d-flex align-items-center gap-2 mb-4">
                         <i class="bi bi-funnel-fill text-primary"></i>
-                        <h2 class="section-heading mb-0">Report Filters</h2>
+
+                        <h2 class="section-heading mb-0">
+                            Report Filters
+                        </h2>
                     </div>
 
                     <div class="row g-3">
@@ -642,20 +640,20 @@
 
                             <select id="reportType" class="form-select">
 
-                                <option value="overview">
-                                    School Overview
+                                <option value="dashboard">
+                                    School Dashboard
                                 </option>
 
                                 <option value="students">
                                     Student Report
                                 </option>
 
-                                <option value="attendance">
-                                    Attendance Report
+                                <option value="academic">
+                                    Academic Report
                                 </option>
 
-                                <option value="results">
-                                    Academic Results
+                                <option value="attendance">
+                                    Attendance Report
                                 </option>
 
                                 <option value="fees">
@@ -666,6 +664,10 @@
                                     Staff Report
                                 </option>
 
+                                <option value="complete">
+                                    Complete School Report
+                                </option>
+
                             </select>
 
                         </div>
@@ -673,28 +675,63 @@
                         <div class="col-12 col-md-4">
 
                             <label class="form-label" for="sessionId">
-                                Academic Session
+                                Academic Session ID
                             </label>
 
-                            <input type="text" id="sessionId" class="form-control" placeholder="Session ID">
+                            <input type="text" id="sessionId" class="form-control" placeholder="Optional session ID">
 
                         </div>
 
                         <div class="col-12 col-md-4">
 
                             <label class="form-label" for="termId">
-                                Term
+                                Term ID
                             </label>
 
-                            <input type="text" id="termId" class="form-control" placeholder="Term ID">
+                            <input type="text" id="termId" class="form-control" placeholder="Optional term ID">
 
                         </div>
 
-                        <div class="col-12">
+                        <div class="col-12 col-md-6">
 
-                            <button type="button" class="btn btn-primary" onclick="generateSelectedReport()">
+                            <label class="form-label" for="classId">
+                                Class ID
+                            </label>
+
+                            <input type="text" id="classId" class="form-control" placeholder="Optional class ID">
+
+                        </div>
+
+                        <div class="col-12 col-md-3">
+
+                            <label class="form-label" for="startDate">
+                                Start Date
+                            </label>
+
+                            <input type="date" id="startDate" class="form-control">
+
+                        </div>
+
+                        <div class="col-12 col-md-3">
+
+                            <label class="form-label" for="endDate">
+                                End Date
+                            </label>
+
+                            <input type="date" id="endDate" class="form-control">
+
+                        </div>
+
+                        <div class="col-12 d-flex flex-wrap gap-2">
+
+                            <button type="button" class="btn btn-primary" id="generateReportButton">
                                 <i class="bi bi-file-earmark-bar-graph me-1"></i>
                                 Generate Report
+                            </button>
+
+                            <button type="button" class="btn btn-outline-secondary" id="clearFiltersButton">
+                                <i class="bi bi-x-circle me-1"></i>
+                                Clear Filters
                             </button>
 
                         </div>
@@ -708,41 +745,50 @@
             <section class="reports-section mb-4">
 
                 <div class="d-flex align-items-center gap-2 mb-3">
+
                     <i class="bi bi-files text-primary"></i>
+
                     <h2 class="section-heading mb-0">
                         Available Reports
                     </h2>
+
                 </div>
 
                 <div class="row g-3">
 
                     <div class="col-12 col-md-6 col-xl-4">
+
                         <div class="card report-card">
+
                             <div class="card-body p-4">
 
                                 <div class="report-icon mb-3">
-                                    <i class="bi bi-bar-chart-fill"></i>
+                                    <i class="bi bi-speedometer2"></i>
                                 </div>
 
-                                <h3>School Overview</h3>
+                                <h3>School Dashboard</h3>
 
                                 <p>
-                                    View a summary of students, staff,
-                                    classes, subjects and other important
-                                    school information.
+                                    View the main school statistics,
+                                    including students, staff, fees,
+                                    attendance and academic information.
                                 </p>
 
-                                <button class="btn btn-primary w-100" onclick="generateReport('overview')">
+                                <button class="btn btn-primary w-100 report-action" data-report-type="dashboard">
                                     <i class="bi bi-play-fill me-1"></i>
                                     Generate
                                 </button>
 
                             </div>
+
                         </div>
+
                     </div>
 
                     <div class="col-12 col-md-6 col-xl-4">
+
                         <div class="card report-card">
+
                             <div class="card-body p-4">
 
                                 <div class="report-icon mb-3">
@@ -752,22 +798,25 @@
                                 <h3>Student Report</h3>
 
                                 <p>
-                                    View student numbers and student
-                                    information for the selected
-                                    academic period.
+                                    Review student statistics and
+                                    student distribution by class.
                                 </p>
 
-                                <button class="btn btn-primary w-100" onclick="generateReport('students')">
+                                <button class="btn btn-primary w-100 report-action" data-report-type="students">
                                     <i class="bi bi-play-fill me-1"></i>
                                     Generate
                                 </button>
 
                             </div>
+
                         </div>
+
                     </div>
 
                     <div class="col-12 col-md-6 col-xl-4">
+
                         <div class="card report-card">
+
                             <div class="card-body p-4">
 
                                 <div class="report-icon mb-3">
@@ -777,47 +826,53 @@
                                 <h3>Attendance Report</h3>
 
                                 <p>
-                                    Review attendance records, attendance
-                                    rates and student attendance
-                                    performance.
+                                    Review attendance totals, attendance
+                                    rates and attendance performance.
                                 </p>
 
-                                <button class="btn btn-primary w-100" onclick="generateReport('attendance')">
+                                <button class="btn btn-primary w-100 report-action" data-report-type="attendance">
                                     <i class="bi bi-play-fill me-1"></i>
                                     Generate
                                 </button>
 
                             </div>
+
                         </div>
+
                     </div>
 
                     <div class="col-12 col-md-6 col-xl-4">
+
                         <div class="card report-card">
+
                             <div class="card-body p-4">
 
                                 <div class="report-icon mb-3">
                                     <i class="bi bi-journal-check"></i>
                                 </div>
 
-                                <h3>Academic Results</h3>
+                                <h3>Academic Report</h3>
 
                                 <p>
-                                    Review academic results, grades,
-                                    averages and student academic
-                                    performance.
+                                    Review academic result statistics
+                                    for the selected session, term or class.
                                 </p>
 
-                                <button class="btn btn-primary w-100" onclick="generateReport('results')">
+                                <button class="btn btn-primary w-100 report-action" data-report-type="academic">
                                     <i class="bi bi-play-fill me-1"></i>
                                     Generate
                                 </button>
 
                             </div>
+
                         </div>
+
                     </div>
 
                     <div class="col-12 col-md-6 col-xl-4">
+
                         <div class="card report-card">
+
                             <div class="card-body p-4">
 
                                 <div class="report-icon mb-3">
@@ -827,21 +882,25 @@
                                 <h3>Fees Report</h3>
 
                                 <p>
-                                    Review fee collections, outstanding
-                                    balances and payment information.
+                                    Review fee structures, amounts due,
+                                    amounts paid and outstanding balances.
                                 </p>
 
-                                <button class="btn btn-primary w-100" onclick="generateReport('fees')">
+                                <button class="btn btn-primary w-100 report-action" data-report-type="fees">
                                     <i class="bi bi-play-fill me-1"></i>
                                     Generate
                                 </button>
 
                             </div>
+
                         </div>
+
                     </div>
 
                     <div class="col-12 col-md-6 col-xl-4">
+
                         <div class="card report-card">
+
                             <div class="card-body p-4">
 
                                 <div class="report-icon mb-3">
@@ -851,17 +910,48 @@
                                 <h3>Staff Report</h3>
 
                                 <p>
-                                    Review staff numbers, departments
-                                    and staff information.
+                                    Review staff numbers and staff
+                                    distribution by department.
                                 </p>
 
-                                <button class="btn btn-primary w-100" onclick="generateReport('staff')">
+                                <button class="btn btn-primary w-100 report-action" data-report-type="staff">
                                     <i class="bi bi-play-fill me-1"></i>
                                     Generate
                                 </button>
 
                             </div>
+
                         </div>
+
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+
+                        <div class="card report-card">
+
+                            <div class="card-body p-4">
+
+                                <div class="report-icon mb-3">
+                                    <i class="bi bi-file-earmark-bar-graph"></i>
+                                </div>
+
+                                <h3>Complete School Report</h3>
+
+                                <p>
+                                    Generate a combined report covering
+                                    school overview, students, staff,
+                                    fees, attendance and results.
+                                </p>
+
+                                <button class="btn btn-primary w-100 report-action" data-report-type="complete">
+                                    <i class="bi bi-play-fill me-1"></i>
+                                    Generate
+                                </button>
+
+                            </div>
+
+                        </div>
+
                     </div>
 
                 </div>
@@ -872,16 +962,35 @@
 
                 <div class="results-header">
 
-                    <div class="d-flex flex-column flex-sm-row justify-content-between gap-2">
+                    <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
 
                         <div>
-                            <h2 id="resultsTitle" class="h5 fw-bold mb-1">
-                                Report Results
-                            </h2>
+
+                            <div class="d-flex align-items-center gap-2">
+
+                                <h2 id="resultsTitle" class="h5 fw-bold mb-1">
+                                    Report Results
+                                </h2>
+
+                                <span id="reportTypeBadge" class="report-badge d-none">
+                                    Report
+                                </span>
+
+                            </div>
 
                             <div id="resultsDate" class="text-muted small">
                                 No report generated
                             </div>
+
+                        </div>
+
+                        <div class="no-print">
+
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="printResultsButton">
+                                <i class="bi bi-printer me-1"></i>
+                                Print Results
+                            </button>
+
                         </div>
 
                     </div>
@@ -901,8 +1010,8 @@
                         </h3>
 
                         <p class="mb-0">
-                            Select a report above to view your school's
-                            information.
+                            Select a report above or choose a report type
+                            and generate it.
                         </p>
 
                     </div>
@@ -915,57 +1024,17 @@
 
     </div>
 
-    <div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
-
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-
-            <div class="modal-content">
-
-                <div class="modal-header">
-
-                    <h2 id="modalTitle" class="modal-title fs-5 fw-bold">
-                        Report
-                    </h2>
-
-                    <button type="button" class="btn-close" onclick="closeModal()" aria-label="Close">
-                    </button>
-
-                </div>
-
-                <div class="modal-body">
-
-                    <div id="modalContent" class="report-message">
-                        Loading report...
-                    </div>
-
-                </div>
-
-                <div class="modal-footer">
-
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()">
-                        Close
-                    </button>
-
-                    <button type="button" class="btn btn-primary" onclick="window.print()">
-                        <i class="bi bi-printer me-1"></i>
-                        Print Report
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
 
     <script>
-        const API_URL = "/api/reports";
+        "use strict";
 
-        let currentReport = null;
-        let reportModalInstance = null;
+        const REPORTS_API = "/api/reports";
+
+        let currentReportType = null;
+        let currentReportData = null;
 
         function getAuthToken() {
             return (
@@ -981,12 +1050,11 @@
             );
         }
 
-        async function apiRequest(url, options = {}) {
+        async function requestReport(url) {
             const token = getAuthToken();
 
             const headers = {
-                "Content-Type": "application/json",
-                ...(options.headers || {})
+                Accept: "application/json"
             };
 
             if (token) {
@@ -994,7 +1062,7 @@
             }
 
             const response = await fetch(url, {
-                ...options,
+                method: "GET",
                 headers
             });
 
@@ -1009,354 +1077,566 @@
             if (!response.ok) {
                 throw new Error(
                     data?.message ||
-                    "Unable to retrieve report."
+                    data?.error ||
+                    `Report request failed with status ${response.status}.`
                 );
             }
 
             return data;
         }
 
-        function generateSelectedReport() {
-            const reportType =
-                document.getElementById("reportType").value;
+        function getFilterValue(id) {
+            const element = document.getElementById(id);
 
-            generateReport(reportType);
+            if (!element) {
+                return "";
+            }
+
+            return String(element.value || "").trim();
+        }
+
+        function buildQueryString() {
+            const params = new URLSearchParams();
+
+            const sessionId = getFilterValue("sessionId");
+            const termId = getFilterValue("termId");
+            const classId = getFilterValue("classId");
+            const startDate = getFilterValue("startDate");
+            const endDate = getFilterValue("endDate");
+
+            if (sessionId) {
+                params.set("sessionId", sessionId);
+            }
+
+            if (termId) {
+                params.set("termId", termId);
+            }
+
+            if (classId) {
+                params.set("classId", classId);
+            }
+
+            if (startDate) {
+                params.set("startDate", startDate);
+            }
+
+            if (endDate) {
+                params.set("endDate", endDate);
+            }
+
+            const query = params.toString();
+
+            return query ? `?${query}` : "";
+        }
+
+        function getReportEndpoint(reportType) {
+            const endpoints = {
+                dashboard: "/dashboard",
+                students: "/students",
+                academic: "/academic",
+                attendance: "/attendance",
+                fees: "/fees",
+                staff: "/staff",
+                complete: "/complete"
+            };
+
+            return endpoints[reportType] || "/dashboard";
+        }
+
+        function getReportTitle(reportType) {
+            const titles = {
+                dashboard: "School Dashboard Report",
+                students: "Student Report",
+                academic: "Academic Report",
+                attendance: "Attendance Report",
+                fees: "Fees Report",
+                staff: "Staff Report",
+                complete: "Complete School Report"
+            };
+
+            return titles[reportType] || "School Report";
+        }
+
+        function getReportIcon(reportType) {
+            const icons = {
+                dashboard: "bi-speedometer2",
+                students: "bi-mortarboard-fill",
+                academic: "bi-journal-check",
+                attendance: "bi-calendar-check-fill",
+                fees: "bi-cash-stack",
+                staff: "bi-person-badge-fill",
+                complete: "bi-file-earmark-bar-graph"
+            };
+
+            return icons[reportType] || "bi-file-earmark-bar-graph";
         }
 
         async function generateReport(reportType) {
-            const sessionId =
-                document.getElementById("sessionId").value.trim();
-
-            const termId =
-                document.getElementById("termId").value.trim();
-
-            showAlert("Generating report...", "success");
+            currentReportType = reportType;
 
             const resultsBody =
                 document.getElementById("resultsBody");
 
+            const title =
+                getReportTitle(reportType);
+
+            const endpoint =
+                getReportEndpoint(reportType);
+
+            const query =
+                buildQueryString();
+
             resultsBody.innerHTML = `
-                <div class="loading">
-                    <div class="spinner-border text-primary mb-3"
-                         role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <div>Generating report...</div>
+            <div class="loading">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
                 </div>
-            `;
+
+                <div class="fw-semibold">
+                    Generating ${escapeHtml(title)}...
+                </div>
+
+                <div class="small text-muted mt-1">
+                    Please wait.
+                </div>
+            </div>
+        `;
+
+            showAlert(
+                `Generating ${title}...`,
+                "info"
+            );
 
             try {
-                const params = new URLSearchParams();
+                const response =
+                    await requestReport(
+                        `${REPORTS_API}${endpoint}${query}`
+                    );
 
-                params.set("type", reportType);
+                currentReportData =
+                    response?.data ??
+                    response?.report ??
+                    response;
 
-                if (sessionId) {
-                    params.set("sessionId", sessionId);
-                }
-
-                if (termId) {
-                    params.set("termId", termId);
-                }
-
-                const response = await apiRequest(
-                    `${API_URL}?${params.toString()}`
+                renderReport(
+                    reportType,
+                    currentReportData
                 );
 
-                currentReport = response;
-
-                renderReport(reportType, response);
-
                 showAlert(
-                    "Report generated successfully.",
+                    `${title} generated successfully.`,
                     "success"
                 );
 
             } catch (error) {
+
                 console.error(
                     "Generate report error:",
                     error
                 );
 
                 resultsBody.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon bg-danger-subtle text-danger">
-                            <i class="bi bi-exclamation-triangle-fill"></i>
-                        </div>
-
-                        <h3 class="h5 fw-bold text-dark">
-                            Unable to generate report
-                        </h3>
-
-                        <p class="mb-0">
-                            ${escapeHtml(error.message)}
-                        </p>
+                <div class="empty-state">
+                    <div class="empty-state-icon bg-danger-subtle text-danger">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
                     </div>
-                `;
 
-                showAlert(error.message, "danger");
+                    <h3 class="h5 fw-bold text-dark">
+                        Unable to generate report
+                    </h3>
+
+                    <p class="mb-0">
+                        ${escapeHtml(error.message)}
+                    </p>
+                </div>
+            `;
+
+                showAlert(
+                    error.message,
+                    "danger"
+                );
             }
         }
 
-        function renderReport(reportType, response) {
-            const title = getReportTitle(reportType);
+        function generateSelectedReport() {
+            const reportType =
+                getFilterValue("reportType");
 
-            document.getElementById("resultsTitle").textContent = title;
+            generateReport(
+                reportType || "dashboard"
+            );
+        }
 
-            document.getElementById("resultsDate").textContent =
-                new Date().toLocaleString("en-NG");
+        function renderReport(reportType, data) {
+            const resultsTitle =
+                document.getElementById("resultsTitle");
 
-            const data =
-                response?.data ??
-                response?.report ??
-                response;
+            const resultsDate =
+                document.getElementById("resultsDate");
+
+            const reportTypeBadge =
+                document.getElementById("reportTypeBadge");
 
             const resultsBody =
                 document.getElementById("resultsBody");
 
-            if (!data) {
-                resultsBody.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">
-                            <i class="bi bi-database-x"></i>
-                        </div>
+            resultsTitle.textContent =
+                getReportTitle(reportType);
 
-                        <h3 class="h5 fw-bold text-dark">
-                            No data available
-                        </h3>
+            resultsDate.textContent =
+                `Generated ${new Date().toLocaleString("en-NG")}`;
 
-                        <p class="mb-0">
-                            No information was returned for this report.
-                        </p>
-                    </div>
-                `;
+            reportTypeBadge.classList.remove("d-none");
+
+            reportTypeBadge.innerHTML = `
+            <i class="bi ${getReportIcon(reportType)}"></i>
+            ${escapeHtml(getReportTitle(reportType))}
+        `;
+
+            if (
+                data === null ||
+                data === undefined
+            ) {
+                renderEmptyState(
+                    resultsBody,
+                    "No data available",
+                    "No information was returned for this report."
+                );
 
                 return;
             }
 
             if (Array.isArray(data)) {
-                renderArrayReport(resultsBody, data);
+                renderArrayReport(
+                    resultsBody,
+                    data
+                );
+
                 return;
             }
 
             if (typeof data === "object") {
-                renderObjectReport(resultsBody, data);
+                renderObjectReport(
+                    resultsBody,
+                    data
+                );
+
                 return;
             }
 
             resultsBody.innerHTML = `
-                <div class="report-message">
-                    ${escapeHtml(String(data))}
-                </div>
-            `;
+            <div class="report-message">
+                ${escapeHtml(String(data))}
+            </div>
+        `;
         }
 
         function renderObjectReport(container, data) {
-            const entries = Object.entries(data);
+            const entries =
+                Object.entries(data);
 
             if (!entries.length) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">
-                            <i class="bi bi-database-x"></i>
-                        </div>
-
-                        <h3 class="h5 fw-bold text-dark">
-                            No data available
-                        </h3>
-
-                        <p class="mb-0">
-                            The report returned no information.
-                        </p>
-                    </div>
-                `;
+                renderEmptyState(
+                    container,
+                    "No data available",
+                    "The report returned no information."
+                );
 
                 return;
             }
 
-            const summaryEntries = entries.filter(
-                ([, value]) => isSimpleValue(value)
-            );
+            const simpleEntries =
+                entries.filter(
+                    ([, value]) =>
+                        isSimpleValue(value)
+                );
 
-            const complexEntries = entries.filter(
-                ([, value]) => !isSimpleValue(value)
-            );
+            const complexEntries =
+                entries.filter(
+                    ([, value]) =>
+                        !isSimpleValue(value)
+                );
 
             let html = "";
 
-            if (summaryEntries.length) {
-                html += `
-                    <div class="row g-3">
-                        ${summaryEntries.map(
-                    ([key, value]) => `
-                                <div class="col-12 col-sm-6 col-xl-3">
-                                    <div class="summary-item">
-                                        <span>
-                                            ${escapeHtml(
-                        formatLabel(key)
-                    )}
-                                        </span>
+            if (simpleEntries.length) {
 
-                                        <strong>
-                                            ${escapeHtml(
-                        formatValue(value)
-                    )}
-                                        </strong>
-                                    </div>
-                                </div>
-                            `
-                ).join("")}
-                    </div>
-                `;
+                html += `
+                <div class="row g-3">
+            `;
+
+                simpleEntries.forEach(
+                    ([key, value]) => {
+
+                        html += `
+                        <div class="col-12 col-sm-6 col-xl-3">
+
+                            <div class="summary-item">
+
+                                <span>
+                                    ${escapeHtml(
+                            formatLabel(key)
+                        )}
+                                </span>
+
+                                <strong>
+                                    ${escapeHtml(
+                            formatValue(value)
+                        )}
+                                </strong>
+
+                            </div>
+
+                        </div>
+                    `;
+                    }
+                );
+
+                html += `
+                </div>
+            `;
             }
 
-            complexEntries.forEach(([key, value]) => {
-                if (Array.isArray(value)) {
-                    html += `
-                        <div class="mt-4">
-                            <h3 class="h6 fw-bold mb-3">
-                                ${escapeHtml(formatLabel(key))}
-                            </h3>
+            complexEntries.forEach(
+                ([key, value]) => {
 
-                            ${renderDynamicTable(value)}
+                    html += `
+                    <div class="mt-4">
+                        <h3 class="h6 fw-bold mb-3">
+                            ${escapeHtml(
+                        formatLabel(key)
+                    )}
+                        </h3>
+                `;
+
+                    if (Array.isArray(value)) {
+                        html +=
+                            renderDynamicTable(value);
+                    } else {
+                        html += `
+                        <div class="report-message">
+                            <pre class="mb-0" style="white-space: pre-wrap;">${escapeHtml(
+                            JSON.stringify(
+                                value,
+                                null,
+                                2
+                            )
+                        )}</pre>
                         </div>
                     `;
-                } else {
-                    html += `
-                        <div class="report-message mt-3">
-                            <strong>
-                                ${escapeHtml(formatLabel(key))}
-                            </strong>
+                    }
 
-                            <pre class="mt-3 mb-0"
-                                 style="white-space:pre-wrap;">${escapeHtml(
-                        JSON.stringify(
-                            value,
-                            null,
-                            2
-                        )
-                    )}</pre>
-                        </div>
-                    `;
+                    html += `
+                    </div>
+                `;
                 }
-            });
+            );
 
-            container.innerHTML = html;
+            container.innerHTML =
+                html;
         }
 
         function renderArrayReport(container, data) {
             if (!data.length) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">
-                            <i class="bi bi-inbox"></i>
-                        </div>
-
-                        <h3 class="h5 fw-bold text-dark">
-                            No records found
-                        </h3>
-
-                        <p class="mb-0">
-                            No records are available for the selected report.
-                        </p>
-                    </div>
-                `;
+                renderEmptyState(
+                    container,
+                    "No records found",
+                    "No records are available for the selected report."
+                );
 
                 return;
             }
 
-            container.innerHTML = renderDynamicTable(data);
+            container.innerHTML =
+                renderDynamicTable(data);
         }
 
         function renderDynamicTable(rows) {
-            if (!Array.isArray(rows) || !rows.length) {
+            if (
+                !Array.isArray(rows) ||
+                !rows.length
+            ) {
                 return `
-                    <div class="empty-state py-4">
-                        No records found.
-                    </div>
-                `;
+                <div class="empty-state py-4">
+                    No records found.
+                </div>
+            `;
             }
 
             const columns = [
                 ...new Set(
-                    rows.flatMap(row =>
-                        typeof row === "object" &&
-                            row !== null
-                            ? Object.keys(row)
-                            : []
+                    rows.flatMap(
+                        row => {
+
+                            if (
+                                typeof row !== "object" ||
+                                row === null
+                            ) {
+                                return [];
+                            }
+
+                            return Object.keys(row);
+                        }
                     )
                 )
             ];
 
             if (!columns.length) {
+
                 return `
-                    <div class="report-message">
-                        ${rows
-                        .map(row =>
-                            escapeHtml(String(row))
+                <div class="report-message">
+                    ${rows
+                        .map(
+                            row =>
+                                escapeHtml(
+                                    String(row)
+                                )
                         )
                         .join("<br>")}
-                    </div>
-                `;
-            }
-
-            return `
-                <div class="table-responsive">
-                    <table class="table table-hover dynamic-table align-middle">
-                        <thead>
-                            <tr>
-                                ${columns.map(
-                column => `
-                                        <th>
-                                            ${escapeHtml(
-                    formatLabel(column)
-                )}
-                                        </th>
-                                    `
-            ).join("")}
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            ${rows.map(
-                row => `
-                                    <tr>
-                                        ${columns.map(
-                    column => `
-                                                <td>
-                                                    ${formatTableValue(
-                        row[column]
-                    )}
-                                                </td>
-                                            `
-                ).join("")}
-                                    </tr>
-                                `
-            ).join("")}
-                        </tbody>
-                    </table>
                 </div>
             `;
+            }
+
+            let html = `
+            <div class="table-responsive">
+
+                <table class="table table-hover dynamic-table align-middle">
+
+                    <thead>
+
+                        <tr>
+        `;
+
+            columns.forEach(
+                column => {
+
+                    html += `
+                    <th>
+                        ${escapeHtml(
+                        formatLabel(column)
+                    )}
+                    </th>
+                `;
+                }
+            );
+
+            html += `
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+        `;
+
+            rows.forEach(
+                row => {
+
+                    html += `
+                    <tr>
+                `;
+
+                    columns.forEach(
+                        column => {
+
+                            html += `
+                            <td>
+                                ${formatTableValue(
+                                row?.[column]
+                            )}
+                            </td>
+                        `;
+                        }
+                    );
+
+                    html += `
+                    </tr>
+                `;
+                }
+            );
+
+            html += `
+                    </tbody>
+
+                </table>
+
+            </div>
+        `;
+
+            return html;
+        }
+
+        function renderEmptyState(
+            container,
+            title,
+            message
+        ) {
+            container.innerHTML = `
+            <div class="empty-state">
+
+                <div class="empty-state-icon">
+                    <i class="bi bi-database-x"></i>
+                </div>
+
+                <h3 class="h5 fw-bold text-dark">
+                    ${escapeHtml(title)}
+                </h3>
+
+                <p class="mb-0">
+                    ${escapeHtml(message)}
+                </p>
+
+            </div>
+        `;
+        }
+
+        function clearFilters() {
+            document.getElementById("reportType").value =
+                "dashboard";
+
+            document.getElementById("sessionId").value =
+                "";
+
+            document.getElementById("termId").value =
+                "";
+
+            document.getElementById("classId").value =
+                "";
+
+            document.getElementById("startDate").value =
+                "";
+
+            document.getElementById("endDate").value =
+                "";
+
+            showAlert(
+                "Report filters cleared.",
+                "success"
+            );
         }
 
         function refreshReports() {
-            if (currentReport) {
-                generateSelectedReport();
-            } else {
-                location.reload();
+            if (currentReportType) {
+                generateReport(
+                    currentReportType
+                );
+
+                return;
             }
+
+            generateSelectedReport();
         }
 
-        function getReportTitle(reportType) {
-            const titles = {
-                overview: "School Overview Report",
-                students: "Student Report",
-                attendance: "Attendance Report",
-                results: "Academic Results Report",
-                fees: "Fees Report",
-                staff: "Staff Report"
-            };
+        function printResults() {
+            if (!currentReportData) {
+                showAlert(
+                    "Generate a report before printing.",
+                    "warning"
+                );
 
-            return titles[reportType] || "School Report";
+                return;
+            }
+
+            window.print();
         }
 
         function formatLabel(value) {
@@ -1416,11 +1696,19 @@
             );
         }
 
-        function showAlert(message, type = "success") {
+        function showAlert(
+            message,
+            type = "success"
+        ) {
             const alert =
                 document.getElementById("alert");
 
-            alert.textContent = message;
+            if (!alert) {
+                return;
+            }
+
+            alert.textContent =
+                message;
 
             alert.className =
                 `alert show alert-${type}`;
@@ -1429,41 +1717,15 @@
                 showAlert.timeout
             );
 
-            showAlert.timeout = window.setTimeout(() => {
-                alert.classList.remove("show");
-            }, 5000);
-        }
-
-        function openModal(title, content) {
-            document.getElementById("modalTitle").textContent =
-                title;
-
-            document.getElementById("modalContent").innerHTML =
-                content;
-
-            const modalElement =
-                document.getElementById("reportModal");
-
-            reportModalInstance =
-                bootstrap.Modal.getOrCreateInstance(
-                    modalElement
+            showAlert.timeout =
+                window.setTimeout(
+                    () => {
+                        alert.classList.remove(
+                            "show"
+                        );
+                    },
+                    5000
                 );
-
-            reportModalInstance.show();
-        }
-
-        function closeModal() {
-            const modalElement =
-                document.getElementById("reportModal");
-
-            const instance =
-                bootstrap.Modal.getInstance(
-                    modalElement
-                );
-
-            if (instance) {
-                instance.hide();
-            }
         }
 
         function escapeHtml(value) {
@@ -1475,8 +1737,7 @@
                 .replace(/'/g, "&#039;");
         }
 
-        document.addEventListener("DOMContentLoaded", () => {
-
+        function initializeSidebar() {
             const sidebar =
                 document.getElementById("sidebar");
 
@@ -1487,15 +1748,35 @@
                 document.getElementById("sidebarOverlay");
 
             function closeSidebar() {
-                sidebar.classList.remove("show");
-                sidebarOverlay.classList.remove("show");
+                if (sidebar) {
+                    sidebar.classList.remove("show");
+                }
+
+                if (sidebarOverlay) {
+                    sidebarOverlay.classList.remove("show");
+                }
             }
 
             if (sidebarToggle) {
-                sidebarToggle.addEventListener("click", () => {
-                    sidebar.classList.toggle("show");
-                    sidebarOverlay.classList.toggle("show");
-                });
+                sidebarToggle.addEventListener(
+                    "click",
+                    () => {
+
+                        if (!sidebar) {
+                            return;
+                        }
+
+                        sidebar.classList.toggle(
+                            "show"
+                        );
+
+                        if (sidebarOverlay) {
+                            sidebarOverlay.classList.toggle(
+                                "show"
+                            );
+                        }
+                    }
+                );
             }
 
             if (sidebarOverlay) {
@@ -1505,76 +1786,195 @@
                 );
             }
 
-            document.querySelectorAll(".sidebar .nav-link")
-                .forEach(link => {
-                    link.addEventListener(
-                        "click",
-                        closeSidebar
-                    );
-                });
-
-            const logoutButton =
-                document.getElementById("logoutButton");
-
-            if (logoutButton) {
-                logoutButton.addEventListener(
-                    "click",
-                    () => {
-                        localStorage.removeItem(
-                            "school_management_token"
+            document
+                .querySelectorAll(
+                    ".sidebar .nav-link"
+                )
+                .forEach(
+                    link => {
+                        link.addEventListener(
+                            "click",
+                            closeSidebar
                         );
-
-                        sessionStorage.removeItem(
-                            "school_management_token"
-                        );
-
-                        localStorage.removeItem(
-                            "school_management_user"
-                        );
-
-                        sessionStorage.removeItem(
-                            "school_management_user"
-                        );
-
-                        localStorage.removeItem("token");
-                        localStorage.removeItem("authToken");
-                        localStorage.removeItem("accessToken");
-
-                        sessionStorage.removeItem("token");
-                        sessionStorage.removeItem("authToken");
-                        sessionStorage.removeItem("accessToken");
-
-                        window.location.href =
-                            "login.html";
                     }
                 );
+        }
+
+        function initializeLogout() {
+            const logoutButton =
+                document.getElementById(
+                    "logoutButton"
+                );
+
+            if (!logoutButton) {
+                return;
+            }
+
+            logoutButton.addEventListener(
+                "click",
+                () => {
+
+                    const keys = [
+                        "school_management_token",
+                        "school_management_user",
+                        "token",
+                        "authToken",
+                        "accessToken"
+                    ];
+
+                    keys.forEach(
+                        key => {
+                            localStorage.removeItem(key);
+                            sessionStorage.removeItem(key);
+                        }
+                    );
+
+                    window.location.href =
+                        "login.html";
+                }
+            );
+        }
+
+        function loadStoredUser() {
+            const userName =
+                document.getElementById(
+                    "userName"
+                );
+
+            if (!userName) {
+                return;
             }
 
             try {
+
                 const storedUser =
                     JSON.parse(
                         localStorage.getItem(
                             "school_management_user"
-                        ) || "{}"
+                        ) ||
+                        sessionStorage.getItem(
+                            "school_management_user"
+                        ) ||
+                        "{}"
                     );
 
                 if (storedUser?.name) {
-                    document.getElementById(
-                        "userName"
-                    ).textContent =
+                    userName.textContent =
                         storedUser.name;
+
                 } else if (storedUser?.username) {
-                    document.getElementById(
-                        "userName"
-                    ).textContent =
+                    userName.textContent =
                         storedUser.username;
                 }
-            } catch {
-                // Ignore malformed stored user data.
-            }
 
-        });
+            } catch (error) {
+                console.warn(
+                    "Unable to read stored user information.",
+                    error
+                );
+            }
+        }
+
+        function initializeReportButtons() {
+            document
+                .querySelectorAll(
+                    ".report-action"
+                )
+                .forEach(
+                    button => {
+
+                        button.addEventListener(
+                            "click",
+                            () => {
+
+                                const reportType =
+                                    button.dataset.reportType;
+
+                                if (!reportType) {
+                                    return;
+                                }
+
+                                document.getElementById(
+                                    "reportType"
+                                ).value =
+                                    reportType;
+
+                                generateReport(
+                                    reportType
+                                );
+                            }
+                        );
+                    }
+                );
+        }
+
+        function initializePage() {
+            initializeSidebar();
+            initializeLogout();
+            loadStoredUser();
+            initializeReportButtons();
+
+            document
+                .getElementById(
+                    "generateReportButton"
+                )
+                ?.addEventListener(
+                    "click",
+                    generateSelectedReport
+                );
+
+            document
+                .getElementById(
+                    "refreshReportsButton"
+                )
+                ?.addEventListener(
+                    "click",
+                    refreshReports
+                );
+
+            document
+                .getElementById(
+                    "clearFiltersButton"
+                )
+                ?.addEventListener(
+                    "click",
+                    clearFilters
+                );
+
+            document
+                .getElementById(
+                    "printReportButton"
+                )
+                ?.addEventListener(
+                    "click",
+                    printResults
+                );
+
+            document
+                .getElementById(
+                    "printResultsButton"
+                )
+                ?.addEventListener(
+                    "click",
+                    printResults
+                );
+        }
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            initializePage
+        );
+
+        window.generateReport =
+            generateReport;
+
+        window.generateSelectedReport =
+            generateSelectedReport;
+
+        window.refreshReports =
+            refreshReports;
     </script>
+    ```
 
 </body>
 

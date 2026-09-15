@@ -2,24 +2,123 @@
 
 const { query } = require("../config/database");
 
-/*
-|--------------------------------------------------------------------------
-| Class Arm Model
-|--------------------------------------------------------------------------
-| Compatible with the current PostgreSQL schema.
-|
-| class_arms:
-| id, school_id, class_id, arm_name, arm_code, description,
-| is_active, created_at, updated_at
-|--------------------------------------------------------------------------
-*/
+function normalizeBoolean(value, defaultValue = true) {
+    if (
+        value === undefined ||
+        value === null ||
+        value === ""
+    ) {
+        return defaultValue;
+    }
 
+    if (typeof value === "boolean") {
+        return value;
+    }
 
-/*
-|--------------------------------------------------------------------------
-| Create Class Arm
-|--------------------------------------------------------------------------
-*/
+    const normalized =
+        String(value)
+            .trim()
+            .toLowerCase();
+
+    if (
+        normalized === "true" ||
+        normalized === "1" ||
+        normalized === "yes" ||
+        normalized === "active" ||
+        normalized === "enabled"
+    ) {
+        return true;
+    }
+
+    if (
+        normalized === "false" ||
+        normalized === "0" ||
+        normalized === "no" ||
+        normalized === "inactive" ||
+        normalized === "disabled"
+    ) {
+        return false;
+    }
+
+    return defaultValue;
+}
+
+function normalizeText(
+    value,
+    defaultValue = null
+) {
+    if (
+        value === undefined ||
+        value === null
+    ) {
+        return defaultValue;
+    }
+
+    const text =
+        String(value).trim();
+
+    return text || defaultValue;
+}
+
+function normalizePositiveInteger(
+    value,
+    defaultValue = 100
+) {
+    const number =
+        Number(value);
+
+    if (
+        !Number.isInteger(number) ||
+        number < 0
+    ) {
+        return defaultValue;
+    }
+
+    return number;
+}
+
+async function verifyClassBelongsToSchool(
+    classId,
+    schoolId
+) {
+    if (!classId) {
+        throw new Error(
+            "Class ID is required."
+        );
+    }
+
+    if (!schoolId) {
+        throw new Error(
+            "School ID is required."
+        );
+    }
+
+    const result =
+        await query(
+            `
+                SELECT
+                    c.id
+                FROM classes c
+                WHERE c.id = $1
+                  AND c.school_id = $2
+                LIMIT 1
+            `,
+            [
+                classId,
+                schoolId
+            ]
+        );
+
+    if (
+        result.rows.length === 0
+    ) {
+        throw new Error(
+            "Class not found."
+        );
+    }
+
+    return true;
+}
 
 async function createClassArm({
     schoolId,
@@ -30,15 +129,36 @@ async function createClassArm({
     isActive = true
 }) {
     if (!schoolId) {
-        throw new Error("School ID is required.");
+        throw new Error(
+            "School ID is required."
+        );
     }
 
-    if (!classId) {
-        throw new Error("Class ID is required.");
+    await verifyClassBelongsToSchool(
+        classId,
+        schoolId
+    );
+
+    const normalizedArmName =
+        normalizeText(armName);
+
+    if (!normalizedArmName) {
+        throw new Error(
+            "Class arm name is required."
+        );
     }
 
-    if (!armName || !armName.trim()) {
-        throw new Error("Class arm name is required.");
+    const exists =
+        await classArmExists(
+            classId,
+            normalizedArmName,
+            schoolId
+        );
+
+    if (exists) {
+        throw new Error(
+            "A class arm with this name already exists in this class."
+        );
     }
 
     const sql = `
@@ -50,176 +170,387 @@ async function createClassArm({
             description,
             is_active
         )
-        VALUES ($1, $2, $3, $4, $5, $6)
+        VALUES (
+            $1,
+            $2,
+            $3,
+            $4,
+            $5,
+            $6
+        )
         RETURNING *
     `;
 
-    const result = await query(sql, [
-        schoolId,
-        classId,
-        armName.trim(),
-        armCode,
-        description,
-        isActive
-    ]);
+    const result =
+        await query(
+            sql,
+            [
+                schoolId,
+                classId,
+                normalizedArmName,
+                normalizeText(armCode),
+                normalizeText(description),
+                normalizeBoolean(
+                    isActive,
+                    true
+                )
+            ]
+        );
 
     return result.rows[0];
 }
 
+async function findClassArmById(
+    armId,
+    schoolId
+) {
+    if (!armId) {
+        throw new Error(
+            "Class arm ID is required."
+        );
+    }
 
-/*
-|--------------------------------------------------------------------------
-| Find Class Arm By ID
-|--------------------------------------------------------------------------
-*/
+    if (!schoolId) {
+        throw new Error(
+            "School ID is required."
+        );
+    }
 
-async function findClassArmById(armId, schoolId = null) {
+    const sql = `
+        SELECT
+            ca.*,
+            c.class_name,
+            c.class_code,
+            c.academic_level_id,
+            al.level_name,
+            al.level_order,
+            al.description AS level_description
+        FROM class_arms ca
+        INNER JOIN classes c
+            ON c.id = ca.class_id
+           AND c.school_id = ca.school_id
+        INNER JOIN academic_levels al
+            ON al.id = c.academic_level_id
+           AND al.school_id = c.school_id
+        WHERE ca.id = $1
+          AND ca.school_id = $2
+        LIMIT 1
+    `;
+
+    const result =
+        await query(
+            sql,
+            [
+                armId,
+                schoolId
+            ]
+        );
+
+    return result.rows[0] || null;
+}
+
+async function findClassArms({
+    schoolId,
+    classId = null,
+    isActive = null,
+    search = null,
+    limit = 100,
+    offset = 0
+}) {
+    if (!schoolId) {
+        throw new Error(
+            "School ID is required."
+        );
+    }
+
+    const safeLimit =
+        Math.min(
+            Math.max(
+                normalizePositiveInteger(
+                    limit,
+                    100
+                ),
+                1
+            ),
+            500
+        );
+
+    const safeOffset =
+        Math.max(
+            normalizePositiveInteger(
+                offset,
+                0
+            ),
+            0
+        );
+
     let sql = `
         SELECT
             ca.*,
             c.class_name,
             c.class_code,
-            al.id AS academic_level_id,
+            c.academic_level_id,
             al.level_name,
-            al.level_code
+            al.level_order,
+            al.description AS level_description,
+            CONCAT_WS(
+                ' - ',
+                al.level_name,
+                c.class_name,
+                ca.arm_name
+            ) AS display_name
         FROM class_arms ca
         INNER JOIN classes c
             ON c.id = ca.class_id
+           AND c.school_id = ca.school_id
         INNER JOIN academic_levels al
             ON al.id = c.academic_level_id
-        WHERE ca.id = $1
+           AND al.school_id = c.school_id
+        WHERE ca.school_id = $1
     `;
 
-    const values = [armId];
+    const values = [
+        schoolId
+    ];
 
-    if (schoolId) {
-        values.push(schoolId);
+    if (classId) {
+        values.push(
+            classId
+        );
 
         sql += `
-            AND ca.school_id = $${values.length}
+            AND ca.class_id = $${values.length}
         `;
     }
 
+    if (
+        isActive !== null &&
+        isActive !== undefined &&
+        isActive !== ""
+    ) {
+        values.push(
+            normalizeBoolean(
+                isActive
+            )
+        );
+
+        sql += `
+            AND ca.is_active = $${values.length}
+        `;
+    }
+
+    const searchTerm =
+        normalizeText(
+            search,
+            ""
+        );
+
+    if (searchTerm) {
+        values.push(
+            `%${searchTerm}%`
+        );
+
+        sql += `
+            AND (
+                ca.arm_name ILIKE $${values.length}
+                OR ca.arm_code ILIKE $${values.length}
+                OR ca.description ILIKE $${values.length}
+                OR c.class_name ILIKE $${values.length}
+                OR c.class_code ILIKE $${values.length}
+                OR al.level_name ILIKE $${values.length}
+            )
+        `;
+    }
+
+    values.push(
+        safeLimit
+    );
+
     sql += `
-        LIMIT 1
+        ORDER BY
+            al.level_order ASC,
+            c.class_order ASC,
+            c.class_name ASC,
+            ca.arm_name ASC
+        LIMIT $${values.length}
     `;
 
-    const result = await query(sql, values);
+    values.push(
+        safeOffset
+    );
 
-    return result.rows[0] || null;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Find All Class Arms For A Class
-|--------------------------------------------------------------------------
-*/
-
-async function findClassArmsByClass(classId, schoolId) {
-    const sql = `
-        SELECT
-            ca.*,
-            c.class_name,
-            c.class_code,
-            al.level_name,
-            al.level_code
-        FROM class_arms ca
-        INNER JOIN classes c
-            ON c.id = ca.class_id
-        INNER JOIN academic_levels al
-            ON al.id = c.academic_level_id
-        WHERE ca.class_id = $1
-          AND ca.school_id = $2
-        ORDER BY ca.arm_name ASC
+    sql += `
+        OFFSET $${values.length}
     `;
 
-    const result = await query(sql, [
-        classId,
-        schoolId
-    ]);
+    const result =
+        await query(
+            sql,
+            values
+        );
 
     return result.rows;
 }
 
+async function findClassArmsByClass(
+    classId,
+    schoolId
+) {
+    if (!classId) {
+        throw new Error(
+            "Class ID is required."
+        );
+    }
 
-/*
-|--------------------------------------------------------------------------
-| Find All Class Arms For A School
-|--------------------------------------------------------------------------
-*/
+    if (!schoolId) {
+        throw new Error(
+            "School ID is required."
+        );
+    }
 
-async function findClassArmsBySchool(schoolId) {
+    await verifyClassBelongsToSchool(
+        classId,
+        schoolId
+    );
+
     const sql = `
         SELECT
             ca.*,
             c.class_name,
             c.class_code,
-            al.id AS academic_level_id,
+            c.academic_level_id,
             al.level_name,
-            al.level_code
+            al.level_order,
+            al.description AS level_description
         FROM class_arms ca
         INNER JOIN classes c
             ON c.id = ca.class_id
+           AND c.school_id = ca.school_id
         INNER JOIN academic_levels al
             ON al.id = c.academic_level_id
+           AND al.school_id = c.school_id
+        WHERE ca.class_id = $1
+          AND ca.school_id = $2
+        ORDER BY
+            ca.arm_name ASC
+    `;
+
+    const result =
+        await query(
+            sql,
+            [
+                classId,
+                schoolId
+            ]
+        );
+
+    return result.rows;
+}
+
+async function findClassArmsBySchool(
+    schoolId
+) {
+    if (!schoolId) {
+        throw new Error(
+            "School ID is required."
+        );
+    }
+
+    const sql = `
+        SELECT
+            ca.*,
+            c.class_name,
+            c.class_code,
+            c.academic_level_id,
+            al.level_name,
+            al.level_order,
+            al.description AS level_description
+        FROM class_arms ca
+        INNER JOIN classes c
+            ON c.id = ca.class_id
+           AND c.school_id = ca.school_id
+        INNER JOIN academic_levels al
+            ON al.id = c.academic_level_id
+           AND al.school_id = c.school_id
         WHERE ca.school_id = $1
         ORDER BY
-            al.level_name ASC,
+            al.level_order ASC,
+            c.class_order ASC,
             c.class_name ASC,
             ca.arm_name ASC
     `;
 
-    const result = await query(sql, [schoolId]);
+    const result =
+        await query(
+            sql,
+            [
+                schoolId
+            ]
+        );
 
     return result.rows;
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Find Class Arm By Name
-|--------------------------------------------------------------------------
-*/
 
 async function findClassArmByName(
     classId,
     armName,
     schoolId
 ) {
+    if (!classId) {
+        throw new Error(
+            "Class ID is required."
+        );
+    }
+
+    if (!schoolId) {
+        throw new Error(
+            "School ID is required."
+        );
+    }
+
+    const normalizedArmName =
+        normalizeText(armName);
+
+    if (!normalizedArmName) {
+        throw new Error(
+            "Class arm name is required."
+        );
+    }
+
     const sql = `
         SELECT
             ca.*,
             c.class_name,
             c.class_code,
+            c.academic_level_id,
             al.level_name,
-            al.level_code
+            al.level_order,
+            al.description AS level_description
         FROM class_arms ca
         INNER JOIN classes c
             ON c.id = ca.class_id
+           AND c.school_id = ca.school_id
         INNER JOIN academic_levels al
             ON al.id = c.academic_level_id
+           AND al.school_id = c.school_id
         WHERE ca.class_id = $1
           AND ca.school_id = $2
           AND LOWER(ca.arm_name) = LOWER($3)
         LIMIT 1
     `;
 
-    const result = await query(sql, [
-        classId,
-        schoolId,
-        armName
-    ]);
+    const result =
+        await query(
+            sql,
+            [
+                classId,
+                schoolId,
+                normalizedArmName
+            ]
+        );
 
     return result.rows[0] || null;
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Check Whether Class Arm Exists
-|--------------------------------------------------------------------------
-*/
 
 async function classArmExists(
     classId,
@@ -227,6 +558,25 @@ async function classArmExists(
     schoolId,
     excludeArmId = null
 ) {
+    if (!classId) {
+        throw new Error(
+            "Class ID is required."
+        );
+    }
+
+    if (!schoolId) {
+        throw new Error(
+            "School ID is required."
+        );
+    }
+
+    const normalizedArmName =
+        normalizeText(armName);
+
+    if (!normalizedArmName) {
+        return false;
+    }
+
     let sql = `
         SELECT EXISTS (
             SELECT 1
@@ -239,11 +589,13 @@ async function classArmExists(
     const values = [
         classId,
         schoolId,
-        armName
+        normalizedArmName
     ];
 
     if (excludeArmId) {
-        values.push(excludeArmId);
+        values.push(
+            excludeArmId
+        );
 
         sql += `
             AND id <> $${values.length}
@@ -254,78 +606,247 @@ async function classArmExists(
         ) AS exists
     `;
 
-    const result = await query(sql, values);
+    const result =
+        await query(
+            sql,
+            values
+        );
 
-    return result.rows[0].exists;
+    return Boolean(
+        result.rows[0].exists
+    );
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Update Class Arm
-|--------------------------------------------------------------------------
-*/
 
 async function updateClassArm(
     armId,
     schoolId,
-    {
-        classId,
-        armName,
-        armCode = null,
-        description = null,
-        isActive = true
-    }
+    data = {}
 ) {
-    if (!classId) {
-        throw new Error("Class ID is required.");
+    if (!armId) {
+        throw new Error(
+            "Class arm ID is required."
+        );
     }
 
-    if (!armName || !armName.trim()) {
-        throw new Error("Class arm name is required.");
+    if (!schoolId) {
+        throw new Error(
+            "School ID is required."
+        );
     }
+
+    if (
+        data.classId !== undefined
+    ) {
+        await verifyClassBelongsToSchool(
+            data.classId,
+            schoolId
+        );
+    }
+
+    if (
+        data.armName !== undefined
+    ) {
+        const normalizedArmName =
+            normalizeText(
+                data.armName
+            );
+
+        if (!normalizedArmName) {
+            throw new Error(
+                "Class arm name cannot be empty."
+            );
+        }
+
+        const currentArm =
+            await findClassArmById(
+                armId,
+                schoolId
+            );
+
+        if (!currentArm) {
+            throw new Error(
+                "Class arm not found."
+            );
+        }
+
+        const targetClassId =
+            data.classId ??
+            currentArm.class_id;
+
+        const exists =
+            await classArmExists(
+                targetClassId,
+                normalizedArmName,
+                schoolId,
+                armId
+            );
+
+        if (exists) {
+            throw new Error(
+                "A class arm with this name already exists in this class."
+            );
+        }
+    }
+
+    const fieldValues = [];
+
+    if (
+        data.classId !== undefined
+    ) {
+        fieldValues.push({
+            field: "class_id",
+            value: data.classId
+        });
+    }
+
+    if (
+        data.armName !== undefined
+    ) {
+        fieldValues.push({
+            field: "arm_name",
+            value: normalizeText(
+                data.armName
+            )
+        });
+    }
+
+    if (
+        data.armCode !== undefined
+    ) {
+        fieldValues.push({
+            field: "arm_code",
+            value: normalizeText(
+                data.armCode
+            )
+        });
+    }
+
+    if (
+        data.description !== undefined
+    ) {
+        fieldValues.push({
+            field: "description",
+            value: normalizeText(
+                data.description
+            )
+        });
+    }
+
+    if (
+        data.isActive !== undefined
+    ) {
+        fieldValues.push({
+            field: "is_active",
+            value: normalizeBoolean(
+                data.isActive
+            )
+        });
+    }
+
+    if (
+        fieldValues.length === 0
+    ) {
+        throw new Error(
+            "No valid fields supplied for update."
+        );
+    }
+
+    const values = [];
+
+    const assignments =
+        fieldValues.map(
+            item => {
+                values.push(
+                    item.value
+                );
+
+                return `${item.field} = $${values.length}`;
+            }
+        );
+
+    values.push(
+        armId
+    );
+
+    const armIdPosition =
+        values.length;
+
+    values.push(
+        schoolId
+    );
+
+    const schoolIdPosition =
+        values.length;
 
     const sql = `
         UPDATE class_arms
         SET
-            class_id = $1,
-            arm_name = $2,
-            arm_code = $3,
-            description = $4,
-            is_active = $5,
+            ${assignments.join(", ")},
             updated_at = NOW()
-        WHERE id = $6
-          AND school_id = $7
+        WHERE id = $${armIdPosition}
+          AND school_id = $${schoolIdPosition}
         RETURNING *
     `;
 
-    const result = await query(sql, [
-        classId,
-        armName.trim(),
-        armCode,
-        description,
-        isActive,
-        armId,
-        schoolId
-    ]);
+    const result =
+        await query(
+            sql,
+            values
+        );
 
     return result.rows[0] || null;
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Rename Class Arm
-|--------------------------------------------------------------------------
-*/
 
 async function renameClassArm(
     armId,
     schoolId,
     newName
 ) {
-    if (!newName || !newName.trim()) {
-        throw new Error("New class arm name is required.");
+    if (!armId) {
+        throw new Error(
+            "Class arm ID is required."
+        );
+    }
+
+    if (!schoolId) {
+        throw new Error(
+            "School ID is required."
+        );
+    }
+
+    const normalizedName =
+        normalizeText(newName);
+
+    if (!normalizedName) {
+        throw new Error(
+            "New class arm name is required."
+        );
+    }
+
+    const currentArm =
+        await findClassArmById(
+            armId,
+            schoolId
+        );
+
+    if (!currentArm) {
+        throw new Error(
+            "Class arm not found."
+        );
+    }
+
+    const exists =
+        await classArmExists(
+            currentArm.class_id,
+            normalizedName,
+            schoolId,
+            armId
+        );
+
+    if (exists) {
+        throw new Error(
+            "A class arm with this name already exists in this class."
+        );
     }
 
     const sql = `
@@ -338,27 +859,36 @@ async function renameClassArm(
         RETURNING *
     `;
 
-    const result = await query(sql, [
-        newName.trim(),
-        armId,
-        schoolId
-    ]);
+    const result =
+        await query(
+            sql,
+            [
+                normalizedName,
+                armId,
+                schoolId
+            ]
+        );
 
     return result.rows[0] || null;
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Activate / Deactivate Class Arm
-|--------------------------------------------------------------------------
-*/
 
 async function setClassArmActive(
     armId,
     schoolId,
     isActive
 ) {
+    if (!armId) {
+        throw new Error(
+            "Class arm ID is required."
+        );
+    }
+
+    if (!schoolId) {
+        throw new Error(
+            "School ID is required."
+        );
+    }
+
     const sql = `
         UPDATE class_arms
         SET
@@ -369,250 +899,188 @@ async function setClassArmActive(
         RETURNING *
     `;
 
-    const result = await query(sql, [
-        isActive,
-        armId,
-        schoolId
-    ]);
+    const result =
+        await query(
+            sql,
+            [
+                normalizeBoolean(
+                    isActive
+                ),
+                armId,
+                schoolId
+            ]
+        );
 
     return result.rows[0] || null;
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Get Class Arm Student Count
-|--------------------------------------------------------------------------
-*/
-
-async function getStudentCount(
-    armId,
-    schoolId
-) {
-    const sql = `
-        SELECT COUNT(*) AS total_students
-        FROM student_enrollments se
-        INNER JOIN students s
-            ON s.id = se.student_id
-        WHERE se.class_arm_id = $1
-          AND se.school_id = $2
-          AND se.admission_status IN (
-              'Enrolled',
-              'Promoted',
-              'Repeated'
-          )
-          AND s.school_id = $2
-          AND LOWER(s.status) = 'active'
-    `;
-
-    const result = await query(sql, [
-        armId,
-        schoolId
-    ]);
-
-    return Number(result.rows[0].total_students);
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Get Class Arm Details
-|--------------------------------------------------------------------------
-*/
 
 async function getClassArmDetails(
     armId,
     schoolId
 ) {
+    if (!armId) {
+        throw new Error(
+            "Class arm ID is required."
+        );
+    }
+
+    if (!schoolId) {
+        throw new Error(
+            "School ID is required."
+        );
+    }
+
     const sql = `
         SELECT
             ca.*,
             c.class_name,
             c.class_code,
-            al.id AS academic_level_id,
+            c.class_order,
+            c.academic_level_id,
             al.level_name,
-            al.level_code,
-
-            (
-                SELECT COUNT(*)
-                FROM student_enrollments se
-                INNER JOIN students s
-                    ON s.id = se.student_id
-                WHERE se.class_arm_id = ca.id
-                  AND se.school_id = ca.school_id
-                  AND se.admission_status IN (
-                      'Enrolled',
-                      'Promoted',
-                      'Repeated'
-                  )
-                  AND s.school_id = ca.school_id
-                  AND LOWER(s.status) = 'active'
-            ) AS total_students
-
+            al.level_order,
+            al.description AS level_description
         FROM class_arms ca
-
         INNER JOIN classes c
             ON c.id = ca.class_id
-
+           AND c.school_id = ca.school_id
         INNER JOIN academic_levels al
             ON al.id = c.academic_level_id
-
+           AND al.school_id = c.school_id
         WHERE ca.id = $1
           AND ca.school_id = $2
-
         LIMIT 1
     `;
 
-    const result = await query(sql, [
-        armId,
-        schoolId
-    ]);
+    const result =
+        await query(
+            sql,
+            [
+                armId,
+                schoolId
+            ]
+        );
 
     return result.rows[0] || null;
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Get Students In Class Arm
-|--------------------------------------------------------------------------
-*/
-
-async function getStudents(
-    armId,
-    schoolId,
-    {
-        limit = 100,
-        offset = 0
-    } = {}
-) {
-    const safeLimit = Math.max(
-        1,
-        Math.min(Number(limit) || 100, 500)
-    );
-
-    const safeOffset = Math.max(
-        0,
-        Number(offset) || 0
-    );
-
-    const sql = `
-        SELECT
-            s.id,
-            s.student_number,
-            s.admission_number,
-            s.first_name,
-            s.middle_name,
-            s.last_name,
-            s.gender,
-            s.date_of_birth,
-            s.email,
-            s.phone,
-            s.student_photo_url,
-            s.status,
-            CONCAT_WS(
-                ' ',
-                s.first_name,
-                s.middle_name,
-                s.last_name
-            ) AS full_name
-        FROM student_enrollments se
-        INNER JOIN students s
-            ON s.id = se.student_id
-        WHERE se.class_arm_id = $1
-          AND se.school_id = $2
-          AND se.admission_status IN (
-              'Enrolled',
-              'Promoted',
-              'Repeated'
-          )
-          AND s.school_id = $2
-          AND LOWER(s.status) = 'active'
-        ORDER BY
-            s.first_name ASC,
-            s.last_name ASC
-        LIMIT $3
-        OFFSET $4
-    `;
-
-    const result = await query(sql, [
-        armId,
-        schoolId,
-        safeLimit,
-        safeOffset
-    ]);
-
-    return result.rows;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Search Class Arms
-|--------------------------------------------------------------------------
-*/
 
 async function searchClassArms(
     searchTerm,
     schoolId
 ) {
-    const term = String(searchTerm || "").trim();
+    if (!schoolId) {
+        throw new Error(
+            "School ID is required."
+        );
+    }
+
+    const term =
+        normalizeText(
+            searchTerm,
+            ""
+        );
+
+    if (!term) {
+        return [];
+    }
 
     const sql = `
         SELECT
             ca.*,
             c.class_name,
             c.class_code,
+            c.academic_level_id,
             al.level_name,
-            al.level_code,
-            CONCAT(
+            al.level_order,
+            al.description AS level_description,
+            CONCAT_WS(
+                ' - ',
                 al.level_name,
-                ' - ',
                 c.class_name,
-                ' - ',
                 ca.arm_name
             ) AS display_name
         FROM class_arms ca
         INNER JOIN classes c
             ON c.id = ca.class_id
+           AND c.school_id = ca.school_id
         INNER JOIN academic_levels al
             ON al.id = c.academic_level_id
+           AND al.school_id = c.school_id
         WHERE ca.school_id = $1
           AND (
               ca.arm_name ILIKE $2
               OR ca.arm_code ILIKE $2
               OR ca.description ILIKE $2
               OR c.class_name ILIKE $2
+              OR c.class_code ILIKE $2
               OR al.level_name ILIKE $2
           )
         ORDER BY
-            al.level_name ASC,
+            al.level_order ASC,
+            c.class_order ASC,
             c.class_name ASC,
             ca.arm_name ASC
+        LIMIT 100
     `;
 
-    const result = await query(sql, [
-        schoolId,
-        `%${term}%`
-    ]);
+    const result =
+        await query(
+            sql,
+            [
+                schoolId,
+                `%${term}%`
+            ]
+        );
 
     return result.rows;
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Move Class Arm To Another Class
-|--------------------------------------------------------------------------
-*/
 
 async function moveClassArm(
     armId,
     schoolId,
     newClassId
 ) {
-    if (!newClassId) {
-        throw new Error("New class ID is required.");
+    if (!armId) {
+        throw new Error(
+            "Class arm ID is required."
+        );
+    }
+
+    if (!schoolId) {
+        throw new Error(
+            "School ID is required."
+        );
+    }
+
+    await verifyClassBelongsToSchool(
+        newClassId,
+        schoolId
+    );
+
+    const currentArm =
+        await findClassArmById(
+            armId,
+            schoolId
+        );
+
+    if (!currentArm) {
+        throw new Error(
+            "Class arm not found."
+        );
+    }
+
+    const exists =
+        await classArmExists(
+            newClassId,
+            currentArm.arm_name,
+            schoolId,
+            armId
+        );
+
+    if (exists) {
+        throw new Error(
+            "A class arm with this name already exists in the destination class."
+        );
     }
 
     const sql = `
@@ -625,26 +1093,35 @@ async function moveClassArm(
         RETURNING *
     `;
 
-    const result = await query(sql, [
-        newClassId,
-        armId,
-        schoolId
-    ]);
+    const result =
+        await query(
+            sql,
+            [
+                newClassId,
+                armId,
+                schoolId
+            ]
+        );
 
     return result.rows[0] || null;
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Delete Class Arm
-|--------------------------------------------------------------------------
-*/
 
 async function deleteClassArm(
     armId,
     schoolId
 ) {
+    if (!armId) {
+        throw new Error(
+            "Class arm ID is required."
+        );
+    }
+
+    if (!schoolId) {
+        throw new Error(
+            "School ID is required."
+        );
+    }
+
     const sql = `
         DELETE FROM class_arms
         WHERE id = $1
@@ -655,24 +1132,22 @@ async function deleteClassArm(
             arm_name
     `;
 
-    const result = await query(sql, [
-        armId,
-        schoolId
-    ]);
+    const result =
+        await query(
+            sql,
+            [
+                armId,
+                schoolId
+            ]
+        );
 
     return result.rows[0] || null;
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Export
-|--------------------------------------------------------------------------
-*/
-
 module.exports = {
     createClassArm,
     findClassArmById,
+    findClassArms,
     findClassArmsByClass,
     findClassArmsBySchool,
     findClassArmByName,
@@ -680,9 +1155,7 @@ module.exports = {
     updateClassArm,
     renameClassArm,
     setClassArmActive,
-    getStudentCount,
     getClassArmDetails,
-    getStudents,
     searchClassArms,
     moveClassArm,
     deleteClassArm

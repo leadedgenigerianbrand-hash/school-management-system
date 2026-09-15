@@ -1,6 +1,56 @@
+"use strict";
+
 const staffModel = require("../models/staffModel");
 
-// CREATE STAFF
+/*
+|--------------------------------------------------------------------------
+| STAFF CONTROLLER
+|--------------------------------------------------------------------------
+|
+| This controller handles HTTP/API operations for staff.
+|
+| Responsibilities:
+| - Validate request data
+| - Resolve the current school
+| - Call the staff model
+| - Return consistent JSON responses
+| - Pass unexpected errors to the global error middleware
+|
+|--------------------------------------------------------------------------
+*/
+
+/*
+|--------------------------------------------------------------------------
+| RESOLVE SCHOOL ID
+|--------------------------------------------------------------------------
+*/
+
+function resolveSchoolId(req, allowQuery = true) {
+    if (allowQuery && req.query?.schoolId) {
+        return req.query.schoolId;
+    }
+
+    if (req.body?.schoolId) {
+        return req.body.schoolId;
+    }
+
+    if (req.user?.schoolId) {
+        return req.user.schoolId;
+    }
+
+    if (req.user?.school_id) {
+        return req.user.school_id;
+    }
+
+    return null;
+}
+
+/*
+|--------------------------------------------------------------------------
+| CREATE STAFF
+|--------------------------------------------------------------------------
+*/
+
 async function createStaff(req, res, next) {
     try {
         const {
@@ -64,10 +114,14 @@ async function createStaff(req, res, next) {
 
         const staff = await staffModel.createStaff({
             schoolId: finalSchoolId,
-            staffNumber: staffNumber || null,
+            staffNumber: staffNumber
+                ? String(staffNumber).trim()
+                : null,
             firstName: String(firstName).trim(),
             lastName: String(lastName).trim(),
-            middleName: middleName ? String(middleName).trim() : null,
+            middleName: middleName
+                ? String(middleName).trim()
+                : null,
             gender: gender || null,
             dateOfBirth: dateOfBirth || null,
             phone: phone || null,
@@ -92,8 +146,12 @@ async function createStaff(req, res, next) {
     }
 }
 
+/*
+|--------------------------------------------------------------------------
+| GET ALL STAFF
+|--------------------------------------------------------------------------
+*/
 
-// GET ALL STAFF
 async function getStaff(req, res, next) {
     try {
         const {
@@ -101,10 +159,7 @@ async function getStaff(req, res, next) {
             status
         } = req.query;
 
-        const schoolId =
-            req.query.schoolId ||
-            req.user?.schoolId ||
-            req.user?.school_id;
+        const schoolId = resolveSchoolId(req, true);
 
         if (!schoolId) {
             return res.status(400).json({
@@ -130,16 +185,24 @@ async function getStaff(req, res, next) {
     }
 }
 
+/*
+|--------------------------------------------------------------------------
+| GET STAFF BY ID
+|--------------------------------------------------------------------------
+*/
 
-// GET STAFF BY ID
 async function getStaffById(req, res, next) {
     try {
         const { id } = req.params;
 
-        const schoolId =
-            req.query.schoolId ||
-            req.user?.schoolId ||
-            req.user?.school_id;
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: "Staff ID is required."
+            });
+        }
+
+        const schoolId = resolveSchoolId(req, true);
 
         const staff = await staffModel.findStaffById(
             id,
@@ -163,16 +226,15 @@ async function getStaffById(req, res, next) {
     }
 }
 
+/*
+|--------------------------------------------------------------------------
+| GET STAFF BY NUMBER
+|--------------------------------------------------------------------------
+*/
 
-// GET STAFF BY NUMBER
 async function getStaffByNumber(req, res, next) {
     try {
         const { staffNumber } = req.params;
-
-        const schoolId =
-            req.query.schoolId ||
-            req.user?.schoolId ||
-            req.user?.school_id;
 
         if (!staffNumber) {
             return res.status(400).json({
@@ -180,6 +242,8 @@ async function getStaffByNumber(req, res, next) {
                 message: "Staff number is required."
             });
         }
+
+        const schoolId = resolveSchoolId(req, true);
 
         const staff = await staffModel.findStaffByNumber(
             staffNumber,
@@ -203,18 +267,19 @@ async function getStaffByNumber(req, res, next) {
     }
 }
 
+/*
+|--------------------------------------------------------------------------
+| SEARCH STAFF
+|--------------------------------------------------------------------------
+*/
 
-// SEARCH STAFF
 async function searchStaff(req, res, next) {
     try {
         const searchTerm = String(
             req.query.q || ""
         ).trim();
 
-        const schoolId =
-            req.query.schoolId ||
-            req.user?.schoolId ||
-            req.user?.school_id;
+        const schoolId = resolveSchoolId(req, true);
 
         if (!schoolId) {
             return res.status(400).json({
@@ -246,16 +311,24 @@ async function searchStaff(req, res, next) {
     }
 }
 
+/*
+|--------------------------------------------------------------------------
+| UPDATE STAFF
+|--------------------------------------------------------------------------
+*/
 
-// UPDATE STAFF
 async function updateStaff(req, res, next) {
     try {
         const { id } = req.params;
 
-        const schoolId =
-            req.body.schoolId ||
-            req.user?.schoolId ||
-            req.user?.school_id;
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: "Staff ID is required."
+            });
+        }
+
+        const schoolId = resolveSchoolId(req, false);
 
         if (!schoolId) {
             return res.status(400).json({
@@ -276,13 +349,18 @@ async function updateStaff(req, res, next) {
             });
         }
 
+        const staffNumber =
+            req.body.staffNumber !== undefined
+                ? String(req.body.staffNumber).trim()
+                : existing.staff_number;
+
         if (
-            req.body.staffNumber &&
-            req.body.staffNumber !== existing.staff_number
+            staffNumber &&
+            staffNumber !== existing.staff_number
         ) {
             const duplicate =
                 await staffModel.staffNumberExists(
-                    req.body.staffNumber,
+                    staffNumber,
                     schoolId
                 );
 
@@ -295,22 +373,99 @@ async function updateStaff(req, res, next) {
         }
 
         const data = {
-            staffNumber: req.body.staffNumber,
-            firstName: req.body.firstName,
-            lastName: req.body.lastName,
-            middleName: req.body.middleName,
-            gender: req.body.gender,
-            dateOfBirth: req.body.dateOfBirth,
-            phone: req.body.phone,
-            email: req.body.email,
-            address: req.body.address,
-            departmentId: req.body.departmentId,
-            position: req.body.position,
-            employmentType: req.body.employmentType,
-            employmentDate: req.body.employmentDate,
-            qualification: req.body.qualification,
-            status: req.body.status
+            staffNumber:
+                req.body.staffNumber !== undefined
+                    ? staffNumber || null
+                    : existing.staff_number,
+
+            firstName:
+                req.body.firstName !== undefined
+                    ? String(req.body.firstName).trim()
+                    : existing.first_name,
+
+            lastName:
+                req.body.lastName !== undefined
+                    ? String(req.body.lastName).trim()
+                    : existing.last_name,
+
+            middleName:
+                req.body.middleName !== undefined
+                    ? (
+                        req.body.middleName
+                            ? String(req.body.middleName).trim()
+                            : null
+                    )
+                    : existing.middle_name,
+
+            gender:
+                req.body.gender !== undefined
+                    ? req.body.gender || null
+                    : existing.gender,
+
+            dateOfBirth:
+                req.body.dateOfBirth !== undefined
+                    ? req.body.dateOfBirth || null
+                    : existing.date_of_birth,
+
+            phone:
+                req.body.phone !== undefined
+                    ? req.body.phone || null
+                    : existing.phone,
+
+            email:
+                req.body.email !== undefined
+                    ? req.body.email || null
+                    : existing.email,
+
+            address:
+                req.body.address !== undefined
+                    ? req.body.address || null
+                    : existing.address,
+
+            departmentId:
+                req.body.departmentId !== undefined
+                    ? req.body.departmentId || null
+                    : existing.department_id,
+
+            position:
+                req.body.position !== undefined
+                    ? req.body.position || null
+                    : existing.position,
+
+            employmentType:
+                req.body.employmentType !== undefined
+                    ? req.body.employmentType || null
+                    : existing.employment_type,
+
+            employmentDate:
+                req.body.employmentDate !== undefined
+                    ? req.body.employmentDate || null
+                    : existing.employment_date,
+
+            qualification:
+                req.body.qualification !== undefined
+                    ? req.body.qualification || null
+                    : existing.qualification,
+
+            status:
+                req.body.status !== undefined
+                    ? req.body.status || null
+                    : existing.status
         };
+
+        if (!data.firstName) {
+            return res.status(400).json({
+                success: false,
+                message: "First name is required."
+            });
+        }
+
+        if (!data.lastName) {
+            return res.status(400).json({
+                success: false,
+                message: "Last name is required."
+            });
+        }
 
         const staff = await staffModel.updateStaff(
             id,
@@ -336,17 +491,24 @@ async function updateStaff(req, res, next) {
     }
 }
 
+/*
+|--------------------------------------------------------------------------
+| DELETE STAFF
+|--------------------------------------------------------------------------
+*/
 
-// DELETE STAFF
 async function deleteStaff(req, res, next) {
     try {
         const { id } = req.params;
 
-        const schoolId =
-            req.query.schoolId ||
-            req.body.schoolId ||
-            req.user?.schoolId ||
-            req.user?.school_id;
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: "Staff ID is required."
+            });
+        }
+
+        const schoolId = resolveSchoolId(req, true);
 
         if (!schoolId) {
             return res.status(400).json({
@@ -378,8 +540,12 @@ async function deleteStaff(req, res, next) {
     }
 }
 
+/*
+|--------------------------------------------------------------------------
+| COUNT STAFF
+|--------------------------------------------------------------------------
+*/
 
-// COUNT STAFF
 async function countStaff(req, res, next) {
     try {
         const {
@@ -387,10 +553,7 @@ async function countStaff(req, res, next) {
             status
         } = req.query;
 
-        const schoolId =
-            req.query.schoolId ||
-            req.user?.schoolId ||
-            req.user?.school_id;
+        const schoolId = resolveSchoolId(req, true);
 
         if (!schoolId) {
             return res.status(400).json({
@@ -407,11 +570,13 @@ async function countStaff(req, res, next) {
             }
         );
 
+        const numericCount = Number(count) || 0;
+
         return res.status(200).json({
             success: true,
-            count: Number(count),
+            count: numericCount,
             data: {
-                count: Number(count)
+                count: numericCount
             }
         });
     } catch (error) {
@@ -420,14 +585,15 @@ async function countStaff(req, res, next) {
     }
 }
 
+/*
+|--------------------------------------------------------------------------
+| STAFF STATISTICS
+|--------------------------------------------------------------------------
+*/
 
-// STAFF STATISTICS
 async function getStaffStatistics(req, res, next) {
     try {
-        const schoolId =
-            req.query.schoolId ||
-            req.user?.schoolId ||
-            req.user?.school_id;
+        const schoolId = resolveSchoolId(req, true);
 
         if (!schoolId) {
             return res.status(400).json({
@@ -451,28 +617,29 @@ async function getStaffStatistics(req, res, next) {
     }
 }
 
+/*
+|--------------------------------------------------------------------------
+| GET STAFF BY DEPARTMENT
+|--------------------------------------------------------------------------
+*/
 
-// GET STAFF BY DEPARTMENT
 async function getStaffByDepartment(req, res, next) {
     try {
         const { departmentId } = req.params;
-
-        const schoolId =
-            req.query.schoolId ||
-            req.user?.schoolId ||
-            req.user?.school_id;
-
-        if (!schoolId) {
-            return res.status(400).json({
-                success: false,
-                message: "School ID is required."
-            });
-        }
 
         if (!departmentId) {
             return res.status(400).json({
                 success: false,
                 message: "Department ID is required."
+            });
+        }
+
+        const schoolId = resolveSchoolId(req, true);
+
+        if (!schoolId) {
+            return res.status(400).json({
+                success: false,
+                message: "School ID is required."
             });
         }
 
@@ -492,32 +659,34 @@ async function getStaffByDepartment(req, res, next) {
             "Get staff by department error:",
             error
         );
+
         next(error);
     }
 }
 
+/*
+|--------------------------------------------------------------------------
+| CHECK STAFF NUMBER
+|--------------------------------------------------------------------------
+*/
 
-// CHECK STAFF NUMBER
 async function checkStaffNumber(req, res, next) {
     try {
         const { staffNumber } = req.params;
-
-        const schoolId =
-            req.query.schoolId ||
-            req.user?.schoolId ||
-            req.user?.school_id;
-
-        if (!schoolId) {
-            return res.status(400).json({
-                success: false,
-                message: "School ID is required."
-            });
-        }
 
         if (!staffNumber) {
             return res.status(400).json({
                 success: false,
                 message: "Staff number is required."
+            });
+        }
+
+        const schoolId = resolveSchoolId(req, true);
+
+        if (!schoolId) {
+            return res.status(400).json({
+                success: false,
+                message: "School ID is required."
             });
         }
 
@@ -536,12 +705,17 @@ async function checkStaffNumber(req, res, next) {
             "Check staff number error:",
             error
         );
+
         next(error);
     }
 }
 
+/*
+|--------------------------------------------------------------------------
+| EXPORT CONTROLLER
+|--------------------------------------------------------------------------
+*/
 
-// EXPORT CONTROLLER
 module.exports = {
     createStaff,
     getStaff,

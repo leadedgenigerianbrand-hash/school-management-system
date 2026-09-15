@@ -2,156 +2,195 @@
 
 const { query } = require("../config/database");
 
-/*
-|--------------------------------------------------------------------------
-| Permission Model
-|--------------------------------------------------------------------------
-| Compatible with the current PostgreSQL schema.
-|
-| permissions:
-| id
-| permission_name
-| description
-| created_at
-|
-| role_permissions:
-| id
-| role_id
-| permission_id
-| created_at
-|--------------------------------------------------------------------------
-*/
+function requireValue(value, message) {
+    if (
+        value === undefined ||
+        value === null ||
+        String(value).trim() === ""
+    ) {
+        const error = new Error(message);
+        error.statusCode = 400;
+        throw error;
+    }
+}
 
+function normalizePermissionName(permissionName) {
+    requireValue(
+        permissionName,
+        "Permission name is required."
+    );
 
-/*
-|--------------------------------------------------------------------------
-| Create Permission
-|--------------------------------------------------------------------------
-*/
+    return String(permissionName)
+        .trim()
+        .toLowerCase();
+}
+
+function normalizeDescription(description) {
+    if (
+        description === undefined ||
+        description === null ||
+        String(description).trim() === ""
+    ) {
+        return null;
+    }
+
+    return String(description).trim();
+}
+
+function normalizeModule(module) {
+    if (
+        module === undefined ||
+        module === null ||
+        String(module).trim() === ""
+    ) {
+        return null;
+    }
+
+    return String(module)
+        .trim()
+        .toLowerCase();
+}
 
 async function createPermission({
     name,
     permissionName,
     description = null
 }) {
-    const finalName = permissionName || name;
+    const finalName =
+        permissionName || name;
 
-    if (!finalName || !String(finalName).trim()) {
-        throw new Error("Permission name is required.");
-    }
+    const normalizedName =
+        normalizePermissionName(
+            finalName
+        );
+
+    const normalizedDescription =
+        normalizeDescription(
+            description
+        );
 
     const sql = `
         INSERT INTO permissions (
             permission_name,
             description
         )
-        VALUES ($1, $2)
-        RETURNING *
+        VALUES (
+            $1,
+            $2
+        )
+        RETURNING
+            id,
+            permission_name,
+            description,
+            created_at
     `;
 
-    const result = await query(sql, [
-        String(finalName).trim(),
-        description
-    ]);
+    const result = await query(
+        sql,
+        [
+            normalizedName,
+            normalizedDescription
+        ]
+    );
 
-    return result.rows[0];
+    return result.rows[0] || null;
 }
 
+async function findPermissionById(
+    permissionId
+) {
+    requireValue(
+        permissionId,
+        "Permission ID is required."
+    );
 
-/*
-|--------------------------------------------------------------------------
-| Find Permission By ID
-|--------------------------------------------------------------------------
-*/
-
-async function findPermissionById(permissionId) {
     const sql = `
-        SELECT *
+        SELECT
+            id,
+            permission_name,
+            description,
+            created_at
         FROM permissions
         WHERE id = $1
         LIMIT 1
     `;
 
-    const result = await query(sql, [
-        permissionId
-    ]);
+    const result = await query(
+        sql,
+        [permissionId]
+    );
 
     return result.rows[0] || null;
 }
 
+async function findPermissionByName(
+    permissionName
+) {
+    const normalizedName =
+        normalizePermissionName(
+            permissionName
+        );
 
-/*
-|--------------------------------------------------------------------------
-| Find Permission By Name
-|--------------------------------------------------------------------------
-*/
-
-async function findPermissionByName(permissionName) {
     const sql = `
-        SELECT *
+        SELECT
+            id,
+            permission_name,
+            description,
+            created_at
         FROM permissions
-        WHERE LOWER(permission_name) = LOWER($1)
+        WHERE LOWER(permission_name) = $1
         LIMIT 1
     `;
 
-    const result = await query(sql, [
-        permissionName
-    ]);
+    const result = await query(
+        sql,
+        [normalizedName]
+    );
 
     return result.rows[0] || null;
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Get All Permissions
-|--------------------------------------------------------------------------
-*/
 
 async function findPermissions({
     module = null
 } = {}) {
+    const normalizedModule =
+        normalizeModule(module);
+
     let sql = `
-        SELECT *
+        SELECT
+            id,
+            permission_name,
+            description,
+            created_at
         FROM permissions
         WHERE 1 = 1
     `;
 
     const values = [];
 
-    /*
-     * There is no module column in the database.
-     * Module filtering is based on permission_name.
-     *
-     * Example:
-     * students.view
-     * students.create
-     * students.update
-     */
-
-    if (module) {
-        values.push(`${String(module).trim()}.%`);
+    if (normalizedModule) {
+        values.push(
+            `${normalizedModule}.%`
+        );
 
         sql += `
-            AND permission_name ILIKE $${values.length}
+            AND LOWER(permission_name)
+                LIKE $${values.length}
         `;
     }
 
     sql += `
-        ORDER BY permission_name ASC
+        ORDER BY
+            permission_name ASC
     `;
 
-    const result = await query(sql, values);
+    const result = await query(
+        sql,
+        values
+    );
 
     return result.rows;
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Update Permission
-|--------------------------------------------------------------------------
-*/
 
 async function updatePermission(
     permissionId,
@@ -161,11 +200,23 @@ async function updatePermission(
         description = null
     }
 ) {
-    const finalName = permissionName || name;
+    requireValue(
+        permissionId,
+        "Permission ID is required."
+    );
 
-    if (!finalName || !String(finalName).trim()) {
-        throw new Error("Permission name is required.");
-    }
+    const finalName =
+        permissionName || name;
+
+    const normalizedName =
+        normalizePermissionName(
+            finalName
+        );
+
+    const normalizedDescription =
+        normalizeDescription(
+            description
+        );
 
     const sql = `
         UPDATE permissions
@@ -173,104 +224,127 @@ async function updatePermission(
             permission_name = $1,
             description = $2
         WHERE id = $3
-        RETURNING *
+        RETURNING
+            id,
+            permission_name,
+            description,
+            created_at
     `;
 
-    const result = await query(sql, [
-        String(finalName).trim(),
-        description,
-        permissionId
-    ]);
+    const result = await query(
+        sql,
+        [
+            normalizedName,
+            normalizedDescription,
+            permissionId
+        ]
+    );
 
     return result.rows[0] || null;
 }
 
+async function deletePermission(
+    permissionId
+) {
+    requireValue(
+        permissionId,
+        "Permission ID is required."
+    );
 
-/*
-|--------------------------------------------------------------------------
-| Delete Permission
-|--------------------------------------------------------------------------
-*/
-
-async function deletePermission(permissionId) {
     const sql = `
         DELETE FROM permissions
         WHERE id = $1
-        RETURNING *
+        RETURNING
+            id,
+            permission_name,
+            description,
+            created_at
     `;
 
-    const result = await query(sql, [
-        permissionId
-    ]);
+    const result = await query(
+        sql,
+        [permissionId]
+    );
 
     return result.rows[0] || null;
 }
 
+async function searchPermissions(
+    searchTerm
+) {
+    const term =
+        String(searchTerm || "")
+            .trim();
 
-/*
-|--------------------------------------------------------------------------
-| Search Permissions
-|--------------------------------------------------------------------------
-*/
+    if (!term) {
+        return findPermissions();
+    }
 
-async function searchPermissions(searchTerm) {
     const sql = `
-        SELECT *
+        SELECT
+            id,
+            permission_name,
+            description,
+            created_at
         FROM permissions
         WHERE
             permission_name ILIKE $1
             OR description ILIKE $1
-        ORDER BY permission_name ASC
+        ORDER BY
+            permission_name ASC
         LIMIT 100
     `;
 
-    const result = await query(sql, [
-        `%${String(searchTerm || "").trim()}%`
-    ]);
+    const result = await query(
+        sql,
+        [`%${term}%`]
+    );
 
     return result.rows;
 }
 
+async function getPermissionsByModule(
+    module
+) {
+    const normalizedModule =
+        normalizeModule(module);
 
-/*
-|--------------------------------------------------------------------------
-| Get Permissions By Module
-|--------------------------------------------------------------------------
-*/
-
-async function getPermissionsByModule(module) {
-    if (!module || !String(module).trim()) {
+    if (!normalizedModule) {
         return [];
     }
 
     const sql = `
-        SELECT *
+        SELECT
+            id,
+            permission_name,
+            description,
+            created_at
         FROM permissions
-        WHERE permission_name ILIKE $1
-        ORDER BY permission_name ASC
+        WHERE LOWER(permission_name)
+            LIKE $1
+        ORDER BY
+            permission_name ASC
     `;
 
-    const result = await query(sql, [
-        `${String(module).trim()}.%`
-    ]);
+    const result = await query(
+        sql,
+        [
+            `${normalizedModule}.%`
+        ]
+    );
 
     return result.rows;
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Get Permission Modules
-|--------------------------------------------------------------------------
-*/
-
 async function getPermissionModules() {
     const sql = `
-        SELECT permission_name
+        SELECT
+            permission_name
         FROM permissions
         WHERE permission_name IS NOT NULL
           AND TRIM(permission_name) <> ''
-        ORDER BY permission_name ASC
+        ORDER BY
+            permission_name ASC
     `;
 
     const result = await query(sql);
@@ -278,75 +352,88 @@ async function getPermissionModules() {
     const modules = new Set();
 
     for (const row of result.rows) {
-        const permissionName = String(
-            row.permission_name
-        );
+        const permissionName =
+            String(
+                row.permission_name
+            ).trim();
 
         const separatorIndex =
             permissionName.indexOf(".");
 
         if (separatorIndex > 0) {
             modules.add(
-                permissionName.substring(
-                    0,
-                    separatorIndex
-                )
+                permissionName
+                    .substring(
+                        0,
+                        separatorIndex
+                    )
+                    .toLowerCase()
             );
         }
     }
 
-    return Array.from(modules).sort();
+    return Array.from(
+        modules
+    ).sort();
 }
 
+async function getPermissionRoles(
+    permissionId
+) {
+    requireValue(
+        permissionId,
+        "Permission ID is required."
+    );
 
-/*
-|--------------------------------------------------------------------------
-| Get Roles With Permission
-|--------------------------------------------------------------------------
-*/
-
-async function getPermissionRoles(permissionId) {
     const sql = `
         SELECT
-            r.*
+            r.id,
+            r.role_name,
+            r.description,
+            r.created_at
         FROM roles r
         INNER JOIN role_permissions rp
             ON rp.role_id = r.id
         WHERE rp.permission_id = $1
-        ORDER BY r.role_name ASC
+        ORDER BY
+            r.role_name ASC
     `;
 
-    const result = await query(sql, [
-        permissionId
-    ]);
+    const result = await query(
+        sql,
+        [permissionId]
+    );
 
     return result.rows;
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Check If Permission Exists
-|--------------------------------------------------------------------------
-*/
 
 async function permissionExists(
     permissionName,
     excludePermissionId = null
 ) {
+    const normalizedName =
+        normalizePermissionName(
+            permissionName
+        );
+
     let sql = `
         SELECT EXISTS (
             SELECT 1
             FROM permissions
-            WHERE LOWER(permission_name) = LOWER($1)
+            WHERE LOWER(permission_name) = $1
     `;
 
     const values = [
-        permissionName
+        normalizedName
     ];
 
-    if (excludePermissionId !== null) {
-        values.push(excludePermissionId);
+    if (
+        excludePermissionId !== null &&
+        excludePermissionId !== undefined
+    ) {
+        values.push(
+            excludePermissionId
+        );
 
         sql += `
             AND id <> $${values.length}
@@ -362,30 +449,35 @@ async function permissionExists(
         values
     );
 
-    return result.rows[0].exists;
+    return Boolean(
+        result.rows[0].exists
+    );
 }
 
+async function countPermissions(
+    module = null
+) {
+    const normalizedModule =
+        normalizeModule(module);
 
-/*
-|--------------------------------------------------------------------------
-| Count Permissions
-|--------------------------------------------------------------------------
-*/
-
-async function countPermissions(module = null) {
     let sql = `
-        SELECT COUNT(*) AS permission_count
+        SELECT
+            COUNT(*)::INTEGER
+                AS permission_count
         FROM permissions
         WHERE 1 = 1
     `;
 
     const values = [];
 
-    if (module) {
-        values.push(`${String(module).trim()}.%`);
+    if (normalizedModule) {
+        values.push(
+            `${normalizedModule}.%`
+        );
 
         sql += `
-            AND permission_name ILIKE $${values.length}
+            AND LOWER(permission_name)
+                LIKE $${values.length}
         `;
     }
 
@@ -399,43 +491,31 @@ async function countPermissions(module = null) {
     );
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Get Permission Summary
-|--------------------------------------------------------------------------
-*/
-
 async function getPermissionSummary() {
     const sql = `
         SELECT
             split_part(
-                p.permission_name,
+                LOWER(p.permission_name),
                 '.',
                 1
             ) AS module,
-
             COUNT(p.id)::INTEGER
                 AS permission_count,
-
             COUNT(
                 DISTINCT rp.role_id
             )::INTEGER
                 AS role_count
-
         FROM permissions p
-
         LEFT JOIN role_permissions rp
             ON rp.permission_id = p.id
-
         GROUP BY
             split_part(
-                p.permission_name,
+                LOWER(p.permission_name),
                 '.',
                 1
             )
-
-        ORDER BY module ASC
+        ORDER BY
+            module ASC
     `;
 
     const result = await query(sql);
@@ -443,12 +523,149 @@ async function getPermissionSummary() {
     return result.rows;
 }
 
+async function getPermissionUsage(
+    permissionId
+) {
+    requireValue(
+        permissionId,
+        "Permission ID is required."
+    );
 
-/*
-|--------------------------------------------------------------------------
-| Export
-|--------------------------------------------------------------------------
-*/
+    const sql = `
+        SELECT
+            p.id,
+            p.permission_name,
+            p.description,
+            COUNT(
+                DISTINCT rp.role_id
+            )::INTEGER AS role_count
+        FROM permissions p
+        LEFT JOIN role_permissions rp
+            ON rp.permission_id = p.id
+        WHERE p.id = $1
+        GROUP BY
+            p.id,
+            p.permission_name,
+            p.description
+        LIMIT 1
+    `;
+
+    const result = await query(
+        sql,
+        [permissionId]
+    );
+
+    return result.rows[0] || null;
+}
+
+async function getRolePermissionIds(
+    roleId
+) {
+    requireValue(
+        roleId,
+        "Role ID is required."
+    );
+
+    const sql = `
+        SELECT
+            permission_id
+        FROM role_permissions
+        WHERE role_id = $1
+        ORDER BY
+            permission_id ASC
+    `;
+
+    const result = await query(
+        sql,
+        [roleId]
+    );
+
+    return result.rows.map(
+        (row) => row.permission_id
+    );
+}
+
+async function assignPermissionToRole(
+    roleId,
+    permissionId
+) {
+    requireValue(
+        roleId,
+        "Role ID is required."
+    );
+
+    requireValue(
+        permissionId,
+        "Permission ID is required."
+    );
+
+    const sql = `
+        INSERT INTO role_permissions (
+            role_id,
+            permission_id
+        )
+        VALUES (
+            $1,
+            $2
+        )
+        ON CONFLICT (
+            role_id,
+            permission_id
+        )
+        DO NOTHING
+        RETURNING
+            id,
+            role_id,
+            permission_id,
+            created_at
+    `;
+
+    const result = await query(
+        sql,
+        [
+            roleId,
+            permissionId
+        ]
+    );
+
+    return result.rows[0] || null;
+}
+
+async function removePermissionFromRole(
+    roleId,
+    permissionId
+) {
+    requireValue(
+        roleId,
+        "Role ID is required."
+    );
+
+    requireValue(
+        permissionId,
+        "Permission ID is required."
+    );
+
+    const sql = `
+        DELETE FROM role_permissions
+        WHERE role_id = $1
+          AND permission_id = $2
+        RETURNING
+            id,
+            role_id,
+            permission_id,
+            created_at
+    `;
+
+    const result = await query(
+        sql,
+        [
+            roleId,
+            permissionId
+        ]
+    );
+
+    return result.rows[0] || null;
+}
 
 module.exports = {
     createPermission,
@@ -463,5 +680,9 @@ module.exports = {
     getPermissionRoles,
     permissionExists,
     countPermissions,
-    getPermissionSummary
+    getPermissionSummary,
+    getPermissionUsage,
+    getRolePermissionIds,
+    assignPermissionToRole,
+    removePermissionFromRole
 };

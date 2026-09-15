@@ -5,16 +5,11 @@
 |--------------------------------------------------------------------------
 */
 
-* {
-    box-sizing: border-box;
-}
-
-body {
-    margin: 0;
-    background: #f4f7fb;
-    color: #172033;
-    font-family: Arial, Helvetica, sans-serif;
-}
+/*
+|--------------------------------------------------------------------------
+| PAGE CONTAINER
+|--------------------------------------------------------------------------
+*/
 
 .page-container {
     width: 100%;
@@ -39,7 +34,7 @@ body {
 
 .page-header h1 {
     margin: 0 0 7px;
-    color: #172033;
+    color: var(--sms-dark, #172033);
     font-size: 28px;
     line-height: 1.2;
     font-weight: 800;
@@ -47,22 +42,26 @@ body {
 
 .page-header p {
     margin: 0;
-    color: #64748b;
+    color: var(--sms-muted, #64748b);
     font-size: 14px;
+    line-height: 1.5;
 }
 
 /*
 |--------------------------------------------------------------------------
-| CARD
+| FORM CARD
 |--------------------------------------------------------------------------
 */
 
 .form-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    width: 100%;
+    min-width: 0;
+    background: var(--sms-surface, #ffffff);
+    border: 1px solid var(--sms-border, #e2e8f0);
     border-radius: 15px;
     padding: 25px;
-    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
+    box-shadow: var(--sms-shadow,
+            0 6px 20px rgba(15, 23, 42, 0.05));
 }
 
 /*
@@ -75,6 +74,7 @@ body {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px;
+    width: 100%;
 }
 
 .form-group {
@@ -94,14 +94,17 @@ body {
 */
 
 .form-group label {
+    display: inline-block;
     margin-bottom: 7px;
     color: #374151;
     font-size: 14px;
     font-weight: 600;
+    line-height: 1.4;
 }
 
 .required {
     color: #dc2626;
+    font-weight: 700;
 }
 
 /*
@@ -114,6 +117,7 @@ body {
 .form-group select,
 .form-group textarea {
     width: 100%;
+    min-width: 0;
     min-height: 44px;
     border: 1px solid #d1d5db;
     border-radius: 8px;
@@ -127,12 +131,13 @@ body {
     transition:
         border-color 0.2s ease,
         box-shadow 0.2s ease,
-        background 0.2s ease;
+        background-color 0.2s ease;
 }
 
 .form-group input::placeholder,
 .form-group textarea::placeholder {
     color: #94a3b8;
+    opacity: 1;
 }
 
 .form-group textarea {
@@ -144,7 +149,8 @@ body {
 .form-group select:focus,
 .form-group textarea:focus {
     border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10);
+    box-shadow:
+        0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .form-group input:disabled,
@@ -153,6 +159,36 @@ body {
     background: #f8fafc;
     color: #64748b;
     cursor: not-allowed;
+    opacity: 1;
+}
+
+.form-group input[readonly],
+.form-group textarea[readonly] {
+    background: #f8fafc;
+}
+
+.form-group select {
+    cursor: pointer;
+}
+
+.form-group select:disabled {
+    cursor: not-allowed;
+}
+
+.form-group input[type="file"] {
+    min-height: 44px;
+    padding: 8px 10px;
+    cursor: pointer;
+}
+
+.form-group input[type="checkbox"],
+.form-group input[type="radio"] {
+    width: auto;
+    min-width: auto;
+    min-height: auto;
+    padding: 0;
+    cursor: pointer;
+    accent-color: #2563eb;
 }
 
 /*
@@ -164,6 +200,56 @@ body {
 .form-help {
     margin-top: 5px;
     color: #64748b;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+/*
+|--------------------------------------------------------------------------
+| FORM VALIDATION
+|--------------------------------------------------------------------------
+*/
+
+.form-group input.is-invalid,
+.form-group select.is-invalid,
+.form-group textarea.is-invalid {
+    border-color: #dc2626;
+}
+
+.form-group input.is-invalid:focus,
+.form-group select.is-invalid:focus,
+.form-group textarea.is-invalid:focus {
+    border-color: #dc2626;
+    box-shadow:
+        0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.form-group input.is-valid,
+.form-group select.is-valid,
+.form-group textarea.is-valid {
+    border-color: #16a34a;
+}
+
+.form-group input.is-valid:focus,
+.form-group select.is-valid:focus,
+.form-group textarea.is-valid:focus {
+    border-color: #16a34a;
+    box-shadow:
+        0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+
+.invalid-feedback,
+.form-error {
+    margin-top: 5px;
+    color: #dc2626;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.valid-feedback,
+.form-success {
+    margin-top: 5px;
+    color: #15803d;
     font-size: 12px;
     line-height: 1.5;
 }
@@ -189,12 +275,12 @@ body {
     color: #172033;
     font-size: 18px;
     line-height: 1.3;
-    font-weight: 750;
+    font-weight: 700;
 }
 
 /*
 |--------------------------------------------------------------------------
-| PHOTO
+| PHOTO UPLOAD
 |--------------------------------------------------------------------------
 */
 
@@ -202,6 +288,7 @@ body {
     display: flex;
     align-items: center;
     gap: 20px;
+    min-width: 0;
 }
 
 .photo-preview {
@@ -215,6 +302,7 @@ body {
 }
 
 .photo-preview img {
+    display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -229,12 +317,13 @@ body {
     padding: 10px;
     color: #9ca3af;
     font-size: 12px;
+    line-height: 1.4;
     text-align: center;
 }
 
 /*
 |--------------------------------------------------------------------------
-| CHECKBOX / RADIO
+| CHECKBOX AND RADIO GROUPS
 |--------------------------------------------------------------------------
 */
 
@@ -253,11 +342,13 @@ body {
     gap: 7px;
     color: #374151;
     font-size: 14px;
+    line-height: 1.4;
 }
 
 .checkbox-item input,
 .radio-item input {
     width: auto;
+    min-width: auto;
     min-height: auto;
     margin: 0;
 }
@@ -269,6 +360,10 @@ body {
 */
 
 .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
     border: 0;
     border-radius: 8px;
     padding: 11px 17px;
@@ -277,25 +372,35 @@ body {
     font-size: 14px;
     font-weight: 600;
     line-height: 1.4;
+    text-align: center;
+    white-space: nowrap;
     transition:
-        background 0.2s ease,
+        background-color 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease,
         transform 0.2s ease,
         box-shadow 0.2s ease,
         opacity 0.2s ease;
 }
 
-.btn:hover:not(:disabled) {
+.btn:hover:not(:disabled):not(.disabled) {
     transform: translateY(-1px);
+}
+
+.btn:active:not(:disabled):not(.disabled) {
+    transform: translateY(0);
 }
 
 .btn-primary {
     background: #2563eb;
     color: #ffffff;
-    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.15);
+    box-shadow:
+        0 4px 10px rgba(37, 99, 235, 0.15);
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled):not(.disabled) {
     background: #1d4ed8;
+    color: #ffffff;
 }
 
 .btn-secondary {
@@ -303,8 +408,9 @@ body {
     color: #ffffff;
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover:not(:disabled):not(.disabled) {
     background: #475569;
+    color: #ffffff;
 }
 
 .btn-danger {
@@ -312,8 +418,9 @@ body {
     color: #ffffff;
 }
 
-.btn-danger:hover {
+.btn-danger:hover:not(:disabled):not(.disabled) {
     background: #b91c1c;
+    color: #ffffff;
 }
 
 .btn-success {
@@ -321,11 +428,13 @@ body {
     color: #ffffff;
 }
 
-.btn-success:hover {
+.btn-success:hover:not(:disabled):not(.disabled) {
     background: #15803d;
+    color: #ffffff;
 }
 
-.btn:disabled {
+.btn:disabled,
+.btn.disabled {
     opacity: 0.6;
     cursor: not-allowed;
     transform: none;
@@ -355,6 +464,7 @@ body {
 
 .message {
     display: none;
+    width: 100%;
     padding: 12px 15px;
     margin-bottom: 20px;
     border-radius: 8px;
@@ -383,6 +493,13 @@ body {
     border: 1px solid #bfdbfe;
 }
 
+.message.warning {
+    display: block;
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+
 /*
 |--------------------------------------------------------------------------
 | ACCESSIBILITY
@@ -393,7 +510,13 @@ body {
 .form-group input:focus-visible,
 .form-group select:focus-visible,
 .form-group textarea:focus-visible {
-    outline: 3px solid rgba(37, 99, 235, 0.20);
+    outline: 3px solid rgba(37, 99, 235, 0.2);
+    outline-offset: 2px;
+}
+
+.checkbox-item input:focus-visible,
+.radio-item input:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, 0.2);
     outline-offset: 2px;
 }
 
@@ -402,6 +525,20 @@ body {
 | RESPONSIVE
 |--------------------------------------------------------------------------
 */
+
+@media (max-width: 900px) {
+    .page-container {
+        padding: 24px 20px 35px;
+    }
+
+    .form-card {
+        padding: 22px;
+    }
+
+    .form-grid {
+        gap: 18px;
+    }
+}
 
 @media (max-width: 700px) {
     .page-container {
@@ -446,6 +583,41 @@ body {
     }
 }
 
+@media (max-width: 480px) {
+    .page-container {
+        padding: 18px 12px 28px;
+    }
+
+    .form-card {
+        padding: 16px;
+    }
+
+    .form-grid {
+        gap: 16px;
+    }
+
+    .form-section {
+        margin-bottom: 24px;
+    }
+
+    .form-section-title {
+        font-size: 17px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        font-size: 14px;
+    }
+
+    .checkbox-group,
+    .radio-group {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
 @media (max-width: 380px) {
     .page-container {
         padding: 15px 10px 25px;
@@ -455,9 +627,56 @@ body {
         padding: 15px;
     }
 
+    .page-header h1 {
+        font-size: 22px;
+    }
+
     .form-group input,
     .form-group select,
     .form-group textarea {
         font-size: 13px;
+    }
+
+    .btn {
+        width: 100%;
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| REDUCED MOTION
+|--------------------------------------------------------------------------
+*/
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| PRINT
+|--------------------------------------------------------------------------
+*/
+
+@media print {
+    .page-container {
+        max-width: none;
+        padding: 0;
+    }
+
+    .form-card {
+        border: 1px solid #cccccc;
+        box-shadow: none;
+    }
+
+    .form-actions {
+        display: none;
     }
 }

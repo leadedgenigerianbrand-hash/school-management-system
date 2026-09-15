@@ -1,672 +1,787 @@
 "use strict";
 
 (function () {
-    let settings = {};
     let school = {};
     let currentUser = {};
 
-    async function request(endpoint, options = {}) {
-        if (typeof window.apiRequest === "function") {
-            return window.apiRequest(endpoint, options);
+    const SCHOOL_LIST_ENDPOINT = "/schools";
+    const AUTH_ME_ENDPOINT = "/auth/me";
+
+    function getStoredUser() {
+        const storedUser =
+            localStorage.getItem("school_management_user") ||
+            sessionStorage.getItem("school_management_user");
+
+        if (!storedUser) {
+            return {};
         }
-
-        let url = endpoint;
-
-        if (
-            !url.startsWith("http://") &&
-            !url.startsWith("https://")
-        ) {
-            if (!url.startsWith("/")) {
-                url = "/" + url;
-            }
-
-            if (!url.startsWith("/api/")) {
-                url = "/api" + url;
-            }
-        }
-
-        const token =
-            localStorage.getItem("school_management_token") ||
-            sessionStorage.getItem("school_management_token") ||
-            localStorage.getItem("token") ||
-            sessionStorage.getItem("token") ||
-            localStorage.getItem("accessToken") ||
-            sessionStorage.getItem("accessToken") ||
-            "";
-
-        const headers = {
-            ...(options.headers || {})
-        };
-
-        if (token) {
-            headers.Authorization = `Bearer ${token}`;
-        }
-
-        if (
-            options.body &&
-            !(options.body instanceof FormData) &&
-            !headers["Content-Type"] &&
-            !headers["content-type"]
-        ) {
-            headers["Content-Type"] = "application/json";
-        }
-
-        let response;
 
         try {
-            response = await fetch(url, {
-                ...options,
-                headers
-            });
+            return JSON.parse(storedUser);
         } catch (error) {
-            console.error("Settings API error:", error);
-            throw new Error(
-                "Unable to connect to the server."
+            console.error(
+                "Unable to read stored user:",
+                error
+            );
+
+            return {};
+        }
+    }
+
+    async function apiRequest(endpoint, options = {}) {
+        if (
+            typeof window.apiRequest ===
+            "function"
+        ) {
+            return window.apiRequest(
+                endpoint,
+                options
             );
         }
 
-        if (response.status === 401) {
-            localStorage.removeItem("school_management_token");
-            localStorage.removeItem("school_management_user");
-            sessionStorage.removeItem("school_management_token");
-            sessionStorage.removeItem("school_management_user");
-
-            if (!window.location.pathname.endsWith("/login.html")) {
-                window.location.href = "/pages/login.html";
-            }
-
-            throw new Error("Authentication required.");
-        }
-
-        if (response.status === 403) {
-            throw new Error(
-                "You do not have permission to perform this action."
-            );
-        }
-
-        const contentType =
-            response.headers.get("content-type") || "";
-
-        const data = contentType.includes("application/json")
-            ? await response.json()
-            : await response.text();
-
-        if (!response.ok) {
-            throw new Error(
-                typeof data === "object"
-                    ? data?.message ||
-                      data?.error ||
-                      "Request failed."
-                    : data || "Request failed."
-            );
-        }
-
-        return data;
+        throw new Error(
+            "The central API service is unavailable."
+        );
     }
 
     async function initialize() {
-        setupEvents();
+        setupSettingsTabs();
+        setupSidebar();
+        setupSchoolForm();
+        setupResetButton();
+        setupLogout();
 
-        await Promise.all([
-            loadSettings(),
-            loadSchool(),
-            loadCurrentUser()
-        ]);
+        currentUser =
+            getStoredUser();
 
-        populateForms();
+        populateUserInformation();
+
+        await loadCurrentUser();
+
+        await loadSchool();
     }
 
-    function setupEvents() {
-        const settingsForm =
-            document.querySelector("#settingsForm") ||
-            document.querySelector("form[data-settings-form]");
-
-        if (settingsForm) {
-            settingsForm.addEventListener(
-                "submit",
-                handleSettingsSubmit
-            );
-        }
-
-        const schoolForm =
-            document.querySelector("#schoolForm") ||
-            document.querySelector("form[data-school-form]");
-
-        if (schoolForm) {
-            schoolForm.addEventListener(
-                "submit",
-                handleSchoolSubmit
-            );
-        }
-
-        const profileForm =
-            document.querySelector("#profileForm") ||
-            document.querySelector("form[data-profile-form]");
-
-        if (profileForm) {
-            profileForm.addEventListener(
-                "submit",
-                handleProfileSubmit
-            );
-        }
-
-        const passwordForm =
-            document.querySelector("#passwordForm") ||
-            document.querySelector("form[data-password-form]");
-
-        if (passwordForm) {
-            passwordForm.addEventListener(
-                "submit",
-                handlePasswordSubmit
-            );
-        }
-
-        document.addEventListener(
-            "click",
-            handleActionClick
-        );
-    }
-
-    async function loadSettings() {
-        try {
-            const data = await request(
-                "/school/settings"
+    function setupSettingsTabs() {
+        const tabs =
+            document.querySelectorAll(
+                ".settings-tab"
             );
 
-            settings =
-                data?.data ||
-                data?.settings ||
-                data ||
-                {};
-        } catch (error) {
-            console.error(
-                "Unable to load settings:",
-                error
-            );
-        }
-    }
-
-    async function loadSchool() {
-        try {
-            const data = await request(
-                "/schools"
+        const sections =
+            document.querySelectorAll(
+                ".settings-section"
             );
 
-            const records =
-                Array.isArray(data)
-                    ? data
-                    : Array.isArray(data?.data)
-                        ? data.data
-                        : Array.isArray(data?.schools)
-                            ? data.schools
-                            : [];
+        tabs.forEach((tab) => {
+            tab.addEventListener(
+                "click",
+                function () {
+                    const sectionId =
+                        tab.dataset.section;
 
-            school =
-                records[0] ||
-                data?.school ||
-                {};
-        } catch (error) {
-            console.error(
-                "Unable to load school:",
-                error
+                    tabs.forEach((item) => {
+                        item.classList.remove(
+                            "active"
+                        );
+                    });
+
+                    sections.forEach((section) => {
+                        section.classList.remove(
+                            "active"
+                        );
+                    });
+
+                    tab.classList.add(
+                        "active"
+                    );
+
+                    const section =
+                        document.getElementById(
+                            sectionId
+                        );
+
+                    if (section) {
+                        section.classList.add(
+                            "active"
+                        );
+                    }
+                }
             );
-        }
-    }
-
-    async function loadCurrentUser() {
-        try {
-            const data = await request(
-                "/auth/me"
-            );
-
-            currentUser =
-                data?.user ||
-                data?.data ||
-                data ||
-                {};
-        } catch (error) {
-            console.error(
-                "Unable to load current user:",
-                error
-            );
-        }
-    }
-
-    function populateForms() {
-        populateSchoolForm();
-        populateSettingsForm();
-        populateProfileForm();
-    }
-
-    function populateSchoolForm() {
-        setFormValue(
-            "#schoolName",
-            school.name ||
-            school.school_name
-        );
-
-        setFormValue(
-            "#schoolCode",
-            school.code ||
-            school.school_code
-        );
-
-        setFormValue(
-            "#schoolEmail",
-            school.email
-        );
-
-        setFormValue(
-            "#schoolPhone",
-            school.phone ||
-            school.phone_number
-        );
-
-        setFormValue(
-            "#schoolAddress",
-            school.address ||
-            school.address_line
-        );
-
-        setFormValue(
-            "#schoolCity",
-            school.city
-        );
-
-        setFormValue(
-            "#schoolState",
-            school.state
-        );
-
-        setFormValue(
-            "#schoolCountry",
-            school.country ||
-            "Nigeria"
-        );
-
-        setFormValue(
-            "#schoolMotto",
-            school.motto
-        );
-
-        setFormValue(
-            "#schoolWebsite",
-            school.website
-        );
-    }
-
-    function populateSettingsForm() {
-        Object.keys(settings).forEach((key) => {
-            const element =
-                document.getElementById(key);
-
-            if (!element) {
-                return;
-            }
-
-            if (element.type === "checkbox") {
-                element.checked =
-                    Boolean(settings[key]);
-            } else {
-                element.value =
-                    settings[key] ?? "";
-            }
         });
-
-        setFormValue(
-            "#academicSession",
-            settings.academic_session ||
-            settings.academicSession
-        );
-
-        setFormValue(
-            "#currentTerm",
-            settings.current_term ||
-            settings.currentTerm
-        );
-
-        setFormValue(
-            "#gradingSystem",
-            settings.grading_system ||
-            settings.gradingSystem
-        );
-
-        setFormValue(
-            "#currency",
-            settings.currency ||
-            "NGN"
-        );
-
-        setFormValue(
-            "#timezone",
-            settings.timezone ||
-            "Africa/Lagos"
-        );
     }
 
-    function populateProfileForm() {
-        setFormValue(
-            "#firstName",
-            currentUser.first_name ||
-            currentUser.firstName
-        );
-
-        setFormValue(
-            "#lastName",
-            currentUser.last_name ||
-            currentUser.lastName
-        );
-
-        setFormValue(
-            "#email",
-            currentUser.email
-        );
-
-        setFormValue(
-            "#phone",
-            currentUser.phone ||
-            currentUser.phone_number
-        );
-
-        setFormValue(
-            "#username",
-            currentUser.username
-        );
-    }
-
-    async function handleSettingsSubmit(event) {
-        event.preventDefault();
-
-        const form = event.currentTarget;
-        const data = formToObject(form);
-
-        try {
-            await request(
-                "/school/settings",
-                {
-                    method: "PUT",
-                    body: JSON.stringify(data)
-                }
+    function setupSidebar() {
+        const sidebar =
+            document.getElementById(
+                "sidebar"
             );
 
-            settings = {
-                ...settings,
-                ...data
-            };
-
-            notify(
-                "Settings saved successfully.",
-                "success"
-            );
-        } catch (error) {
-            console.error(
-                "Settings update failed:",
-                error
+        const sidebarToggle =
+            document.getElementById(
+                "sidebarToggle"
             );
 
-            notify(
-                error.message ||
-                "Unable to save settings.",
-                "error"
+        const sidebarOverlay =
+            document.getElementById(
+                "sidebarOverlay"
             );
-        }
-    }
 
-    async function handleSchoolSubmit(event) {
-        event.preventDefault();
-
-        const form = event.currentTarget;
-        const data = formToObject(form);
-
-        const schoolId =
-            school.id ||
-            school.school_id;
-
-        try {
-            if (schoolId) {
-                await request(
-                    `/schools/${encodeURIComponent(schoolId)}`,
-                    {
-                        method: "PUT",
-                        body: JSON.stringify(data)
-                    }
+        function closeSidebar() {
+            if (sidebar) {
+                sidebar.classList.remove(
+                    "show"
                 );
-            } else {
-                const result = await request(
-                    "/schools",
-                    {
-                        method: "POST",
-                        body: JSON.stringify(data)
-                    }
-                );
-
-                school =
-                    result?.data ||
-                    result?.school ||
-                    result ||
-                    {};
             }
 
-            school = {
-                ...school,
-                ...data
-            };
-
-            notify(
-                "School information saved successfully.",
-                "success"
-            );
-        } catch (error) {
-            console.error(
-                "School update failed:",
-                error
-            );
-
-            notify(
-                error.message ||
-                "Unable to save school information.",
-                "error"
-            );
-        }
-    }
-
-    async function handleProfileSubmit(event) {
-        event.preventDefault();
-
-        const form = event.currentTarget;
-        const data = formToObject(form);
-
-        const userId =
-            currentUser.id ||
-            currentUser.user_id;
-
-        if (!userId) {
-            notify(
-                "Current user could not be identified.",
-                "error"
-            );
-            return;
+            if (sidebarOverlay) {
+                sidebarOverlay.classList.remove(
+                    "show"
+                );
+            }
         }
 
-        try {
-            await request(
-                `/users/${encodeURIComponent(userId)}`,
-                {
-                    method: "PUT",
-                    body: JSON.stringify(data)
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener(
+                "click",
+                function () {
+                    if (sidebar) {
+                        sidebar.classList.toggle(
+                            "show"
+                        );
+                    }
+
+                    if (sidebarOverlay) {
+                        sidebarOverlay.classList.toggle(
+                            "show"
+                        );
+                    }
                 }
             );
+        }
 
-            currentUser = {
-                ...currentUser,
-                ...data
-            };
-
-            notify(
-                "Profile updated successfully.",
-                "success"
-            );
-        } catch (error) {
-            console.error(
-                "Profile update failed:",
-                error
-            );
-
-            notify(
-                error.message ||
-                "Unable to update profile.",
-                "error"
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener(
+                "click",
+                closeSidebar
             );
         }
+
+        document
+            .querySelectorAll(
+                ".sidebar .nav-link"
+            )
+            .forEach((link) => {
+                link.addEventListener(
+                    "click",
+                    closeSidebar
+                );
+            });
     }
 
-    async function handlePasswordSubmit(event) {
-        event.preventDefault();
-
-        const form = event.currentTarget;
-        const data = formToObject(form);
-
-        const currentPassword =
-            data.current_password ||
-            data.currentPassword;
-
-        const newPassword =
-            data.new_password ||
-            data.newPassword;
-
-        const confirmPassword =
-            data.confirm_password ||
-            data.confirmPassword;
-
-        if (!currentPassword) {
-            notify(
-                "Enter your current password.",
-                "error"
-            );
-            return;
-        }
-
-        if (!newPassword) {
-            notify(
-                "Enter a new password.",
-                "error"
-            );
-            return;
-        }
-
-        if (newPassword.length < 6) {
-            notify(
-                "New password must be at least 6 characters.",
-                "error"
-            );
-            return;
-        }
-
-        if (newPassword !== confirmPassword) {
-            notify(
-                "New passwords do not match.",
-                "error"
-            );
-            return;
-        }
-
-        try {
-            await request(
-                "/auth/change-password",
-                {
-                    method: "PUT",
-                    body: JSON.stringify({
-                        current_password:
-                            currentPassword,
-                        new_password:
-                            newPassword
-                    })
-                }
-            );
-
-            form.reset();
-
-            notify(
-                "Password changed successfully.",
-                "success"
-            );
-        } catch (error) {
-            console.error(
-                "Password change failed:",
-                error
-            );
-
-            notify(
-                error.message ||
-                "Unable to change password.",
-                "error"
-            );
-        }
-    }
-
-    async function handleActionClick(event) {
-        const button =
-            event.target.closest(
-                "[data-action]"
-            );
-
-        if (!button) {
-            return;
-        }
-
-        const action =
-            button.getAttribute(
-                "data-action"
-            );
-
-        if (action === "reset-settings") {
-            resetSettings();
-            return;
-        }
-
-        if (action === "logout") {
-            await logout();
-        }
-    }
-
-    function resetSettings() {
+    function setupSchoolForm() {
         const form =
-            document.querySelector(
-                "#settingsForm"
+            document.getElementById(
+                "schoolSettingsForm"
             );
 
         if (!form) {
             return;
         }
 
-        if (
-            !window.confirm(
-                "Reset the settings form?"
-            )
-        ) {
+        form.addEventListener(
+            "submit",
+            handleSchoolSubmit
+        );
+    }
+
+    function setupResetButton() {
+        const button =
+            document.getElementById(
+                "resetSchoolButton"
+            );
+
+        if (!button) {
             return;
         }
 
-        form.reset();
-        populateSettingsForm();
+        button.addEventListener(
+            "click",
+            resetSchoolForm
+        );
+    }
 
-        notify(
-            "Settings restored.",
+    function setupLogout() {
+        const logoutButton =
+            document.getElementById(
+                "logoutButton"
+            );
+
+        if (!logoutButton) {
+            return;
+        }
+
+        logoutButton.addEventListener(
+            "click",
+            handleLogout
+        );
+    }
+
+    async function loadCurrentUser() {
+        try {
+            const response =
+                await apiRequest(
+                    AUTH_ME_ENDPOINT
+                );
+
+            currentUser =
+                response?.user ||
+                response?.data ||
+                response ||
+                currentUser ||
+                {};
+
+            populateUserInformation();
+
+            return currentUser;
+        } catch (error) {
+            console.error(
+                "Unable to load current user:",
+                error
+            );
+
+            return currentUser;
+        }
+    }
+
+    function populateUserInformation() {
+        const userNameElement =
+            document.getElementById(
+                "userName"
+            );
+
+        const userRoleElement =
+            document.getElementById(
+                "userRole"
+            );
+
+        if (userNameElement) {
+            const fullName = [
+                currentUser.first_name ||
+                    currentUser.firstName ||
+                    "",
+                currentUser.middle_name ||
+                    currentUser.middleName ||
+                    "",
+                currentUser.last_name ||
+                    currentUser.lastName ||
+                    ""
+            ]
+                .filter(Boolean)
+                .join(" ")
+                .trim();
+
+            userNameElement.textContent =
+                fullName ||
+                currentUser.username ||
+                currentUser.email ||
+                "Administrator";
+        }
+
+        if (userRoleElement) {
+            userRoleElement.textContent =
+                currentUser.role_name ||
+                currentUser.roleName ||
+                currentUser.role ||
+                "Administrator";
+        }
+    }
+
+    async function loadSchool() {
+        try {
+            const schoolId =
+                getSchoolId();
+
+            if (schoolId) {
+                const response =
+                    await apiRequest(
+                        `/schools/${encodeURIComponent(
+                            schoolId
+                        )}`
+                    );
+
+                school =
+                    response?.data ||
+                    response?.school ||
+                    response ||
+                    {};
+
+                populateSchoolForm();
+
+                return school;
+            }
+
+            const response =
+                await apiRequest(
+                    SCHOOL_LIST_ENDPOINT
+                );
+
+            const schools =
+                Array.isArray(response)
+                    ? response
+                    : Array.isArray(
+                        response?.data
+                    )
+                        ? response.data
+                        : Array.isArray(
+                            response?.schools
+                        )
+                            ? response.schools
+                            : [];
+
+            const userSchoolId =
+                Number(
+                    currentUser.school_id ||
+                    currentUser.schoolId ||
+                    0
+                );
+
+            if (userSchoolId) {
+                school =
+                    schools.find(
+                        (item) =>
+                            Number(item.id) ===
+                            userSchoolId
+                    ) ||
+                    {};
+            }
+
+            if (!school.id) {
+                school =
+                    schools[0] ||
+                    {};
+            }
+
+            populateSchoolForm();
+
+            return school;
+        } catch (error) {
+            console.error(
+                "Unable to load school:",
+                error
+            );
+
+            showMessage(
+                error.message ||
+                    "Unable to load school information.",
+                "danger"
+            );
+
+            return {};
+        }
+    }
+
+    function getSchoolId() {
+        return Number(
+            school.id ||
+            currentUser.school_id ||
+            currentUser.schoolId ||
+            0
+        );
+    }
+
+    function populateSchoolForm() {
+        setValue(
+            "schoolName",
+            school.school_name
+        );
+
+        setValue(
+            "schoolCode",
+            school.school_code
+        );
+
+        setValue(
+            "registrationNumber",
+            school.registration_number
+        );
+
+        setValue(
+            "schoolEmail",
+            school.email
+        );
+
+        setValue(
+            "schoolPhone",
+            school.phone
+        );
+
+        setValue(
+            "schoolWebsite",
+            school.website
+        );
+
+        setValue(
+            "schoolType",
+            school.school_type ||
+                "Secondary School"
+        );
+
+        setValue(
+            "schoolState",
+            school.state
+        );
+
+        setValue(
+            "schoolCity",
+            school.city
+        );
+
+        setValue(
+            "schoolAddress",
+            school.address
+        );
+
+        setValue(
+            "schoolCountry",
+            school.country ||
+                "Nigeria"
+        );
+
+        setValue(
+            "principalName",
+            school.principal_name
+        );
+
+        setValue(
+            "schoolMotto",
+            school.motto
+        );
+
+        setValue(
+            "schoolLogoUrl",
+            school.logo_url
+        );
+    }
+
+    async function handleSchoolSubmit(
+        event
+    ) {
+        event.preventDefault();
+
+        const form =
+            event.currentTarget;
+
+        if (!form.checkValidity()) {
+            form.classList.add(
+                "was-validated"
+            );
+
+            showMessage(
+                "Please complete the required school information.",
+                "danger"
+            );
+
+            return;
+        }
+
+        const data =
+            collectSchoolFormData();
+
+        const schoolId =
+            getSchoolId();
+
+        setSavingState(
+            true
+        );
+
+        try {
+            let response;
+
+            if (schoolId) {
+                response =
+                    await apiRequest(
+                        `/schools/${encodeURIComponent(
+                            schoolId
+                        )}`,
+                        {
+                            method: "PUT",
+                            body:
+                                JSON.stringify(
+                                    data
+                                )
+                        }
+                    );
+            } else {
+                response =
+                    await apiRequest(
+                        SCHOOL_LIST_ENDPOINT,
+                        {
+                            method: "POST",
+                            body:
+                                JSON.stringify(
+                                    data
+                                )
+                        }
+                    );
+            }
+
+            school =
+                response?.data ||
+                response?.school ||
+                response ||
+                school;
+
+            school = {
+                ...school,
+                ...data
+            };
+
+            populateSchoolForm();
+
+            showMessage(
+                "School information saved successfully.",
+                "success"
+            );
+        } catch (error) {
+            console.error(
+                "School information save failed:",
+                error
+            );
+
+            showMessage(
+                error.message ||
+                    "Unable to save school information.",
+                "danger"
+            );
+        } finally {
+            setSavingState(
+                false
+            );
+        }
+    }
+
+    function collectSchoolFormData() {
+        return {
+            schoolCode:
+                getValue(
+                    "schoolCode"
+                ).trim(),
+            schoolName:
+                getValue(
+                    "schoolName"
+                ).trim(),
+            registrationNumber:
+                getValue(
+                    "registrationNumber"
+                ).trim(),
+            email:
+                getValue(
+                    "schoolEmail"
+                ).trim(),
+            phone:
+                getValue(
+                    "schoolPhone"
+                ).trim(),
+            website:
+                getValue(
+                    "schoolWebsite"
+                ).trim(),
+            schoolType:
+                getValue(
+                    "schoolType"
+                ).trim(),
+            state:
+                getValue(
+                    "schoolState"
+                ).trim(),
+            city:
+                getValue(
+                    "schoolCity"
+                ).trim(),
+            address:
+                getValue(
+                    "schoolAddress"
+                ).trim(),
+            country:
+                getValue(
+                    "schoolCountry"
+                ).trim() ||
+                "Nigeria",
+            principalName:
+                getValue(
+                    "principalName"
+                ).trim(),
+            motto:
+                getValue(
+                    "schoolMotto"
+                ).trim(),
+            logoUrl:
+                getValue(
+                    "schoolLogoUrl"
+                ).trim()
+        };
+    }
+
+    function resetSchoolForm() {
+        if (!school) {
+            return;
+        }
+
+        const confirmed =
+            window.confirm(
+                "Reset the school information form to the last saved information?"
+            );
+
+        if (!confirmed) {
+            return;
+        }
+
+        populateSchoolForm();
+
+        const form =
+            document.getElementById(
+                "schoolSettingsForm"
+            );
+
+        if (form) {
+            form.classList.remove(
+                "was-validated"
+            );
+        }
+
+        showMessage(
+            "School information restored.",
             "success"
         );
     }
 
-    async function logout() {
-        try {
-            await request(
-                "/auth/logout",
-                {
-                    method: "POST"
-                }
+    function setSavingState(
+        saving
+    ) {
+        const button =
+            document.getElementById(
+                "saveSchoolButton"
             );
+
+        if (!button) {
+            return;
+        }
+
+        if (saving) {
+            button.disabled =
+                true;
+
+            button.innerHTML =
+                '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Saving...';
+
+            return;
+        }
+
+        button.disabled =
+            false;
+
+        button.innerHTML =
+            '<i class="bi bi-check-lg me-2"></i>Save Changes';
+    }
+
+    function setValue(
+        id,
+        value
+    ) {
+        const element =
+            document.getElementById(
+                id
+            );
+
+        if (!element) {
+            return;
+        }
+
+        element.value =
+            value === null ||
+            value === undefined
+                ? ""
+                : String(value);
+    }
+
+    function getValue(
+        id
+    ) {
+        const element =
+            document.getElementById(
+                id
+            );
+
+        if (!element) {
+            return "";
+        }
+
+        return element.value || "";
+    }
+
+    function showMessage(
+        message,
+        type = "success"
+    ) {
+        const element =
+            document.getElementById(
+                "settingsMessage"
+            );
+
+        if (!element) {
+            return;
+        }
+
+        element.className =
+            `alert alert-${type}`;
+
+        element.textContent =
+            message;
+
+        element.classList.remove(
+            "d-none"
+        );
+
+        window.clearTimeout(
+            showMessage.timeout
+        );
+
+        showMessage.timeout =
+            window.setTimeout(
+                function () {
+                    element.classList.add(
+                        "d-none"
+                    );
+                },
+                5000
+            );
+    }
+
+    async function handleLogout() {
+        const confirmed =
+            window.confirm(
+                "Are you sure you want to sign out?"
+            );
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            if (
+                typeof window.apiRequest ===
+                "function"
+            ) {
+                await window.apiRequest(
+                    "/auth/logout",
+                    {
+                        method: "POST"
+                    }
+                );
+            }
         } catch (error) {
             console.error(
-                "Logout error:",
+                "Logout request failed:",
                 error
             );
         } finally {
@@ -679,139 +794,44 @@
                 localStorage.removeItem(
                     "school_management_token"
                 );
+
                 localStorage.removeItem(
                     "school_management_user"
                 );
+
                 sessionStorage.removeItem(
                     "school_management_token"
                 );
+
                 sessionStorage.removeItem(
                     "school_management_user"
                 );
             }
 
             window.location.href =
-                "/pages/login.html";
+                "login.html";
         }
-    }
-
-    function formToObject(form) {
-        const formData =
-            new FormData(form);
-
-        const data = {};
-
-        formData.forEach((value, key) => {
-            data[key] = value;
-        });
-
-        form.querySelectorAll(
-            'input[type="checkbox"]'
-        ).forEach((checkbox) => {
-            data[checkbox.name] =
-                checkbox.checked;
-        });
-
-        return data;
-    }
-
-    function setFormValue(selector, value) {
-        const element =
-            document.querySelector(selector);
-
-        if (!element) {
-            return;
-        }
-
-        if (element.type === "checkbox") {
-            element.checked =
-                Boolean(value);
-        } else {
-            element.value =
-                value ?? "";
-        }
-    }
-
-    function notify(message, type = "success") {
-        if (
-            typeof window.showNotification ===
-            "function"
-        ) {
-            window.showNotification(
-                message,
-                type
-            );
-            return;
-        }
-
-        let container =
-            document.querySelector(
-                "#notification-container"
-            );
-
-        if (!container) {
-            container =
-                document.createElement("div");
-
-            container.id =
-                "notification-container";
-
-            container.style.position =
-                "fixed";
-
-            container.style.top =
-                "20px";
-
-            container.style.right =
-                "20px";
-
-            container.style.zIndex =
-                "9999";
-
-            document.body.appendChild(
-                container
-            );
-        }
-
-        const notification =
-            document.createElement("div");
-
-        notification.className =
-            `alert alert-${type}`;
-
-        notification.textContent =
-            message;
-
-        notification.style.marginBottom =
-            "10px";
-
-        container.appendChild(
-            notification
-        );
-
-        setTimeout(() => {
-            notification.remove();
-
-            if (!container.children.length) {
-                container.remove();
-            }
-        }, 4000);
     }
 
     window.SettingsPage = {
         initialize,
-        loadSettings,
         loadSchool,
         loadCurrentUser,
-        resetSettings,
-        logout
+        populateSchoolForm,
+        resetSchoolForm,
+        logout: handleLogout
     };
 
-    if (document.readyState === "loading") {
+    if (
+        document.readyState ===
+        "loading"
+    ) {
         document.addEventListener(
             "DOMContentLoaded",
             initialize,
-            { once: true }
+            {
+                once: true
+            }
         );
     } else {
         initialize();

@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Dashboard | School Management System</title>
+
+    ```
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    ```
+
+</head>
+
+<body class="dashboard-page">
+
+    ```
+    <div class="container-fluid">
+        <div class="row min-vh-100">
+
+            <aside class="col-lg-2 col-md-3 bg-dark text-white p-0">
+                <div class="p-3 border-bottom border-secondary">
+                    <h5 class="mb-1">
+                        <i class="bi bi-mortarboard-fill me-2"></i>
+                        School Management
+                    </h5>
+                    <small class="text-secondary">Staff Portal</small>
+                </div>
+
+                <nav class="nav flex-column p-2">
+
+                    <a class="nav-link text-white rounded mb-1 active" href="/pages/staff-dashboard.html">
+                        <i class="bi bi-speedometer2 me-2"></i>
+                        Dashboard
+                    </a>
+
+                    <a class="nav-link text-white rounded mb-1" href="/pages/profile.html">
+                        <i class="bi bi-person-circle me-2"></i>
+                        My Profile
+                    </a>
+
+                    <a class="nav-link text-white rounded mb-1" href="/pages/students.html">
+                        <i class="bi bi-people me-2"></i>
+                        Students
+                    </a>
+
+                    <a class="nav-link text-white rounded mb-1" href="/pages/classes.html">
+                        <i class="bi bi-building me-2"></i>
+                        Classes
+                    </a>
+
+                    <a class="nav-link text-white rounded mb-1" href="/pages/subjects.html">
+                        <i class="bi bi-book me-2"></i>
+                        Subjects
+                    </a>
+
+                    <a class="nav-link text-white rounded mb-1" href="/pages/attendance.html">
+                        <i class="bi bi-calendar-check me-2"></i>
+                        Attendance
+                    </a>
+
+                    <a class="nav-link text-white rounded mb-1" href="/pages/results.html">
+                        <i class="bi bi-bar-chart me-2"></i>
+                        Results
+                    </a>
+
+                    <a class="nav-link text-white rounded mb-1" href="/pages/documents.html">
+                        <i class="bi bi-folder2-open me-2"></i>
+                        Documents
+                    </a>
+
+                    <a class="nav-link text-white rounded mb-1" href="/pages/notifications.html">
+                        <i class="bi bi-bell me-2"></i>
+                        Notifications
+                    </a>
+
+                    <hr class="border-secondary">
+
+                    <button type="button" class="btn btn-outline-light btn-sm text-start" id="logoutButton">
+                        <i class="bi bi-box-arrow-right me-2"></i>
+                        Logout
+                    </button>
+
+                </nav>
+            </aside>
+
+            <main class="col-lg-10 col-md-9 bg-light">
+
+                <div class="d-flex justify-content-between align-items-center py-3 px-3 px-md-4 border-bottom bg-white">
+                    <div>
+                        <h4 class="mb-1">Staff Dashboard</h4>
+                        <small class="text-muted">
+                            Staff workspace and school activities
+                        </small>
+                    </div>
+
+                    <div class="text-end">
+                        <div class="fw-semibold" id="staffName">Staff Member</div>
+                        <small class="text-muted" id="staffRole">Staff</small>
+                    </div>
+                </div>
+
+                <div class="container-fluid py-4 px-3 px-md-4">
+
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-body p-4">
+                            <div class="row align-items-center">
+
+                                <div class="col-md-8">
+                                    <h2 class="fw-bold mb-2">
+                                        Welcome, <span id="welcomeStaffName">Staff Member</span>
+                                    </h2>
+
+                                    <p class="text-muted mb-0">
+                                        Welcome to your staff portal. Use the options below
+                                        to access the school activities available to you.
+                                    </p>
+                                </div>
+
+                                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                                    <i class="bi bi-person-workspace display-4 text-primary"></i>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4 mb-4">
+
+                        <div class="col-xl-3 col-md-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <div class="text-muted small">Staff Role</div>
+                                            <div class="fw-bold fs-5" id="staffRoleCard">
+                                                Staff
+                                            </div>
+                                        </div>
+                                        <i class="bi bi-person-badge fs-2 text-primary"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <div class="text-muted small">Students</div>
+                                            <div class="fw-bold fs-5">Manage</div>
+                                        </div>
+                                        <i class="bi bi-people fs-2 text-success"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <div class="text-muted small">Attendance</div>
+                                            <div class="fw-bold fs-5">Record</div>
+                                        </div>
+                                        <i class="bi bi-calendar-check fs-2 text-warning"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <div class="text-muted small">Results</div>
+                                            <div class="fw-bold fs-5">Academic</div>
+                                        </div>
+                                        <i class="bi bi-bar-chart-line fs-2 text-danger"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="row g-4">
+
+                        <div class="col-lg-8">
+
+                            <div class="card border-0 shadow-sm mb-4">
+                                <div class="card-header bg-white border-0 pt-4 px-4">
+                                    <h5 class="mb-1">Staff Activities</h5>
+                                    <p class="text-muted small mb-0">
+                                        Access your main school activities.
+                                    </p>
+                                </div>
+
+                                <div class="card-body p-4">
+
+                                    <div class="row g-3">
+
+                                        <div class="col-md-6">
+                                            <a href="/pages/students.html" class="text-decoration-none">
+                                                <div class="border rounded p-3 h-100">
+                                                    <i class="bi bi-people fs-3 text-primary"></i>
+                                                    <h6 class="mt-3 mb-1 text-dark">
+                                                        Students
+                                                    </h6>
+                                                    <small class="text-muted">
+                                                        View and work with student records.
+                                                    </small>
+                                                </div>
+                                            </a>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <a href="/pages/classes.html" class="text-decoration-none">
+                                                <div class="border rounded p-3 h-100">
+                                                    <i class="bi bi-building fs-3 text-success"></i>
+                                                    <h6 class="mt-3 mb-1 text-dark">
+                                                        Classes
+                                                    </h6>
+                                                    <small class="text-muted">
+                                                        View available classes and class structures.
+                                                    </small>
+                                                </div>
+                                            </a>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <a href="/pages/attendance.html" class="text-decoration-none">
+                                                <div class="border rounded p-3 h-100">
+                                                    <i class="bi bi-calendar-check fs-3 text-warning"></i>
+                                                    <h6 class="mt-3 mb-1 text-dark">
+                                                        Attendance
+                                                    </h6>
+                                                    <small class="text-muted">
+                                                        Record and review student attendance.
+                                                    </small>
+                                                </div>
+                                            </a>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <a href="/pages/result-entry.html" class="text-decoration-none">
+                                                <div class="border rounded p-3 h-100">
+                                                    <i class="bi bi-pencil-square fs-3 text-danger"></i>
+                                                    <h6 class="mt-3 mb-1 text-dark">
+                                                        Result Entry
+                                                    </h6>
+                                                    <small class="text-muted">
+                                                        Enter and manage academic results.
+                                                    </small>
+                                                </div>
+                                            </a>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <a href="/pages/results.html" class="text-decoration-none">
+                                                <div class="border rounded p-3 h-100">
+                                                    <i class="bi bi-bar-chart fs-3 text-info"></i>
+                                                    <h6 class="mt-3 mb-1 text-dark">
+                                                        Results
+                                                    </h6>
+                                                    <small class="text-muted">
+                                                        Review student academic results.
+                                                    </small>
+                                                </div>
+                                            </a>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <a href="/pages/notifications.html" class="text-decoration-none">
+                                                <div class="border rounded p-3 h-100">
+                                                    <i class="bi bi-bell fs-3 text-secondary"></i>
+                                                    <h6 class="mt-3 mb-1 text-dark">
+                                                        Notifications
+                                                    </h6>
+                                                    <small class="text-muted">
+                                                        View important school notifications.
+                                                    </small>
+                                                </div>
+                                            </a>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-4">
+
+                            <div class="card border-0 shadow-sm mb-4">
+                                <div class="card-header bg-white border-0 pt-4 px-4">
+                                    <h5 class="mb-1">Staff Information</h5>
+                                </div>
+
+                                <div class="card-body p-4">
+
+                                    <div class="mb-3">
+                                        <small class="text-muted d-block">Name</small>
+                                        <span class="fw-semibold" id="informationStaffName">
+                                            Staff Member
+                                        </span>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <small class="text-muted d-block">Email</small>
+                                        <span class="fw-semibold" id="staffEmail">
+                                            Not available
+                                        </span>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <small class="text-muted d-block">Role</small>
+                                        <span class="fw-semibold" id="informationStaffRole">
+                                            Staff
+                                        </span>
+                                    </div>
+
+                                    <a href="/pages/profile.html" class="btn btn-primary w-100">
+                                        <i class="bi bi-person-circle me-2"></i>
+                                        View My Profile
+                                    </a>
+
+                                </div>
+                            </div>
+
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body p-4">
+                                    <h5 class="mb-3">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        Important Information
+                                    </h5>
+
+                                    <p class="text-muted small mb-0">
+                                        Access to school-management functions is based on
+                                        your assigned account role and permissions.
+                                    </p>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </main>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        "use strict";
+
+        (function () {
+            const TOKEN_KEY = "school_management_token";
+            const USER_KEY = "school_management_user";
+
+            function getStoredUser() {
+                try {
+                    const storedUser = localStorage.getItem(USER_KEY);
+
+                    if (!storedUser) {
+                        return null;
+                    }
+
+                    return JSON.parse(storedUser);
+                } catch (error) {
+                    return null;
+                }
+            }
+
+            function getDisplayName(user) {
+                if (!user) {
+                    return "Staff Member";
+                }
+
+                const fullName = [
+                    user.firstName,
+                    user.middleName,
+                    user.lastName
+                ]
+                    .filter(Boolean)
+                    .join(" ")
+                    .trim();
+
+                return (
+                    fullName ||
+                    user.name ||
+                    user.fullName ||
+                    user.username ||
+                    "Staff Member"
+                );
+            }
+
+            function getEmail(user) {
+                if (!user) {
+                    return "Not available";
+                }
+
+                return user.email || "Not available";
+            }
+
+            function getRole(user) {
+                if (!user) {
+                    return "Staff";
+                }
+
+                return (
+                    user.roleName ||
+                    user.role ||
+                    user.userRole ||
+                    "Staff"
+                );
+            }
+
+            function setText(elementId, value) {
+                const element = document.getElementById(elementId);
+
+                if (element) {
+                    element.textContent = value;
+                }
+            }
+
+            function checkAuthentication() {
+                const token = localStorage.getItem(TOKEN_KEY);
+
+                if (!token) {
+                    window.location.href = "/pages/login.html";
+                    return false;
+                }
+
+                return true;
+            }
+
+            function loadStaffInformation() {
+                const user = getStoredUser();
+
+                const name = getDisplayName(user);
+                const email = getEmail(user);
+                const role = getRole(user);
+
+                setText("staffName", name);
+                setText("welcomeStaffName", name);
+                setText("informationStaffName", name);
+                setText("staffEmail", email);
+                setText("staffRole", role);
+                setText("staffRoleCard", role);
+                setText("informationStaffRole", role);
+            }
+
+            function logoutStaff() {
+                localStorage.removeItem(TOKEN_KEY);
+                localStorage.removeItem(USER_KEY);
+                window.location.href = "/pages/login.html";
+            }
+
+            function setupLogout() {
+                const logoutButton = document.getElementById("logoutButton");
+
+                if (logoutButton) {
+                    logoutButton.addEventListener("click", logoutStaff);
+                }
+            }
+
+            function initializeStaffDashboard() {
+                if (!checkAuthentication()) {
+                    return;
+                }
+
+                loadStaffInformation();
+                setupLogout();
+            }
+
+            document.addEventListener(
+                "DOMContentLoaded",
+                initializeStaffDashboard
+            );
+        })();
+    </script>
+    ```
+
+</body>
+
+</html>

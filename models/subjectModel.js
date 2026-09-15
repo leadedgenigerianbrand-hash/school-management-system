@@ -3,17 +3,25 @@
 const { query } = require("../config/database");
 
 /*
-|--------------------------------------------------------------------------
-| Subject Model
-|--------------------------------------------------------------------------
-| Compatible with the current PostgreSQL schema.
-|--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+ Subject Model
+--------------------------------------------------------------------------
+
+ PostgreSQL tables:
+
+ subjects
+ class_subjects
+
+ A subject belongs to a school.
+ A subject can be assigned to one or more classes.
+
+--------------------------------------------------------------------------
 */
 
 /*
-|--------------------------------------------------------------------------
-| Create Subject
-|--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+ Create Subject
+--------------------------------------------------------------------------
 */
 
 async function createSubject({
@@ -25,11 +33,19 @@ async function createSubject({
     isActive = true
 }) {
     if (!schoolId) {
-        throw new Error("School ID is required.");
+        throw new Error(
+            "School ID is required."
+        );
     }
 
-    if (!subjectName || !subjectName.trim()) {
-        throw new Error("Subject name is required.");
+    if (
+        !subjectName ||
+        typeof subjectName !== "string" ||
+        !subjectName.trim()
+    ) {
+        throw new Error(
+            "Subject name is required."
+        );
     }
 
     const sql = `
@@ -45,36 +61,48 @@ async function createSubject({
         RETURNING *
     `;
 
-    const result = await query(sql, [
-        schoolId,
-        subjectName.trim(),
-        subjectCode,
-        description,
-        isCompulsory,
-        isActive
-    ]);
+    const result = await query(
+        sql,
+        [
+            schoolId,
+            subjectName.trim(),
+            typeof subjectCode === "string"
+                ? subjectCode.trim() || null
+                : subjectCode || null,
+            typeof description === "string"
+                ? description.trim() || null
+                : description || null,
+            Boolean(isCompulsory),
+            isActive !== false
+        ]
+    );
 
     return result.rows[0];
 }
 
-
 /*
-|--------------------------------------------------------------------------
-| Find Subject By ID
-|--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+ Find Subject By ID
+--------------------------------------------------------------------------
 */
 
 async function findSubjectById(
     subjectId,
     schoolId = null
 ) {
+    if (!subjectId) {
+        return null;
+    }
+
     let sql = `
         SELECT *
         FROM subjects
         WHERE id = $1
     `;
 
-    const values = [subjectId];
+    const values = [
+        subjectId
+    ];
 
     if (schoolId) {
         values.push(schoolId);
@@ -88,22 +116,28 @@ async function findSubjectById(
         LIMIT 1
     `;
 
-    const result = await query(sql, values);
+    const result = await query(
+        sql,
+        values
+    );
 
     return result.rows[0] || null;
 }
 
-
 /*
-|--------------------------------------------------------------------------
-| Find Subject By Code
-|--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+ Find Subject By Code
+--------------------------------------------------------------------------
 */
 
 async function findSubjectByCode(
     subjectCode,
     schoolId
 ) {
+    if (!subjectCode || !schoolId) {
+        return null;
+    }
+
     const sql = `
         SELECT *
         FROM subjects
@@ -112,19 +146,21 @@ async function findSubjectByCode(
         LIMIT 1
     `;
 
-    const result = await query(sql, [
-        subjectCode,
-        schoolId
-    ]);
+    const result = await query(
+        sql,
+        [
+            subjectCode,
+            schoolId
+        ]
+    );
 
     return result.rows[0] || null;
 }
 
-
 /*
-|--------------------------------------------------------------------------
-| Find Subjects
-|--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+ Find Subjects
+--------------------------------------------------------------------------
 */
 
 async function findSubjects({
@@ -133,7 +169,9 @@ async function findSubjects({
     isCompulsory = null
 } = {}) {
     if (!schoolId) {
-        throw new Error("School ID is required.");
+        throw new Error(
+            "School ID is required."
+        );
     }
 
     let sql = `
@@ -142,18 +180,30 @@ async function findSubjects({
         WHERE school_id = $1
     `;
 
-    const values = [schoolId];
+    const values = [
+        schoolId
+    ];
 
-    if (isActive !== null) {
-        values.push(isActive);
+    if (
+        isActive !== null &&
+        isActive !== undefined
+    ) {
+        values.push(
+            Boolean(isActive)
+        );
 
         sql += `
             AND is_active = $${values.length}
         `;
     }
 
-    if (isCompulsory !== null) {
-        values.push(isCompulsory);
+    if (
+        isCompulsory !== null &&
+        isCompulsory !== undefined
+    ) {
+        values.push(
+            Boolean(isCompulsory)
+        );
 
         sql += `
             AND is_compulsory = $${values.length}
@@ -164,25 +214,32 @@ async function findSubjects({
         ORDER BY subject_name ASC
     `;
 
-    const result = await query(sql, values);
+    const result = await query(
+        sql,
+        values
+    );
 
     return result.rows;
 }
 
-
 /*
-|--------------------------------------------------------------------------
-| Search Subjects
-|--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+ Search Subjects
+--------------------------------------------------------------------------
 */
 
 async function searchSubjects(
     searchTerm,
     schoolId
 ) {
-    if (!searchTerm || !schoolId) {
+    if (!schoolId) {
         return [];
     }
+
+    const term =
+        String(
+            searchTerm || ""
+        ).trim();
 
     const sql = `
         SELECT *
@@ -197,19 +254,21 @@ async function searchSubjects(
         LIMIT 100
     `;
 
-    const result = await query(sql, [
-        schoolId,
-        `%${searchTerm.trim()}%`
-    ]);
+    const result = await query(
+        sql,
+        [
+            schoolId,
+            `%${term}%`
+        ]
+    );
 
     return result.rows;
 }
 
-
 /*
-|--------------------------------------------------------------------------
-| Update Subject
-|--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+ Update Subject
+--------------------------------------------------------------------------
 */
 
 async function updateSubject(
@@ -217,6 +276,18 @@ async function updateSubject(
     schoolId,
     data
 ) {
+    if (!subjectId) {
+        throw new Error(
+            "Subject ID is required."
+        );
+    }
+
+    if (!schoolId) {
+        throw new Error(
+            "School ID is required."
+        );
+    }
+
     const allowedFields = {
         subjectName: "subject_name",
         subjectCode: "subject_code",
@@ -228,18 +299,50 @@ async function updateSubject(
     const updates = [];
     const values = [];
 
-    for (const key of Object.keys(data || {})) {
+    for (
+        const key of Object.keys(
+            data || {}
+        )
+    ) {
         if (
             allowedFields[key] &&
             data[key] !== undefined
         ) {
-            let value = data[key];
+            let value =
+                data[key];
 
             if (
-                typeof value === "string" &&
-                ["subjectName", "subjectCode"].includes(key)
+                key === "subjectName" &&
+                typeof value === "string"
             ) {
-                value = value.trim();
+                value =
+                    value.trim();
+            }
+
+            if (
+                key === "subjectCode" &&
+                typeof value === "string"
+            ) {
+                value =
+                    value.trim() ||
+                    null;
+            }
+
+            if (
+                key === "description" &&
+                typeof value === "string"
+            ) {
+                value =
+                    value.trim() ||
+                    null;
+            }
+
+            if (
+                key === "isCompulsory" ||
+                key === "isActive"
+            ) {
+                value =
+                    Boolean(value);
             }
 
             values.push(value);
@@ -257,36 +360,55 @@ async function updateSubject(
     }
 
     values.push(subjectId);
-    const subjectIdPosition = values.length;
+
+    const subjectIdPosition =
+        values.length;
 
     values.push(schoolId);
-    const schoolIdPosition = values.length;
+
+    const schoolIdPosition =
+        values.length;
 
     const sql = `
         UPDATE subjects
         SET
-            ${updates.join(", ")}
+            ${updates.join(", ")},
+            updated_at = NOW()
         WHERE id = $${subjectIdPosition}
           AND school_id = $${schoolIdPosition}
         RETURNING *
     `;
 
-    const result = await query(sql, values);
+    const result = await query(
+        sql,
+        values
+    );
 
     return result.rows[0] || null;
 }
 
-
 /*
-|--------------------------------------------------------------------------
-| Delete Subject
-|--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+ Delete Subject
+--------------------------------------------------------------------------
 */
 
 async function deleteSubject(
     subjectId,
     schoolId
 ) {
+    if (!subjectId) {
+        throw new Error(
+            "Subject ID is required."
+        );
+    }
+
+    if (!schoolId) {
+        throw new Error(
+            "School ID is required."
+        );
+    }
+
     const sql = `
         DELETE FROM subjects
         WHERE id = $1
@@ -294,19 +416,21 @@ async function deleteSubject(
         RETURNING *
     `;
 
-    const result = await query(sql, [
-        subjectId,
-        schoolId
-    ]);
+    const result = await query(
+        sql,
+        [
+            subjectId,
+            schoolId
+        ]
+    );
 
     return result.rows[0] || null;
 }
 
-
 /*
-|--------------------------------------------------------------------------
-| Assign Subject To Class
-|--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+ Assign Subject To Class
+--------------------------------------------------------------------------
 */
 
 async function assignSubjectToClass({
@@ -315,11 +439,15 @@ async function assignSubjectToClass({
     isCompulsory = false
 }) {
     if (!classId) {
-        throw new Error("Class ID is required.");
+        throw new Error(
+            "Class ID is required."
+        );
     }
 
     if (!subjectId) {
-        throw new Error("Subject ID is required.");
+        throw new Error(
+            "Subject ID is required."
+        );
     }
 
     const sql = `
@@ -334,30 +462,37 @@ async function assignSubjectToClass({
             subject_id
         )
         DO UPDATE SET
-            is_compulsory = EXCLUDED.is_compulsory
+            is_compulsory =
+                EXCLUDED.is_compulsory
         RETURNING *
     `;
 
-    const result = await query(sql, [
-        classId,
-        subjectId,
-        isCompulsory
-    ]);
+    const result = await query(
+        sql,
+        [
+            classId,
+            subjectId,
+            Boolean(isCompulsory)
+        ]
+    );
 
     return result.rows[0];
 }
 
-
 /*
-|--------------------------------------------------------------------------
-| Get Subjects For Class
-|--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+ Get Subjects For Class
+--------------------------------------------------------------------------
 */
 
 async function getSubjectsForClass(
     classId,
     schoolId
 ) {
+    if (!classId || !schoolId) {
+        return [];
+    }
+
     const sql = `
         SELECT
             cs.id,
@@ -372,31 +507,40 @@ async function getSubjectsForClass(
         FROM class_subjects cs
         INNER JOIN subjects sub
             ON sub.id = cs.subject_id
+        INNER JOIN classes c
+            ON c.id = cs.class_id
+           AND c.school_id = sub.school_id
         WHERE cs.class_id = $1
           AND sub.school_id = $2
         ORDER BY
             sub.subject_name ASC
     `;
 
-    const result = await query(sql, [
-        classId,
-        schoolId
-    ]);
+    const result = await query(
+        sql,
+        [
+            classId,
+            schoolId
+        ]
+    );
 
     return result.rows;
 }
 
-
 /*
-|--------------------------------------------------------------------------
-| Remove Subject From Class
-|--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+ Remove Subject From Class
+--------------------------------------------------------------------------
 */
 
 async function removeSubjectFromClass(
     classSubjectId,
     schoolId
 ) {
+    if (!classSubjectId || !schoolId) {
+        return null;
+    }
+
     const sql = `
         DELETE FROM class_subjects cs
         USING subjects sub
@@ -406,53 +550,80 @@ async function removeSubjectFromClass(
         RETURNING cs.*
     `;
 
-    const result = await query(sql, [
-        classSubjectId,
-        schoolId
-    ]);
+    const result = await query(
+        sql,
+        [
+            classSubjectId,
+            schoolId
+        ]
+    );
 
     return result.rows[0] || null;
 }
 
-
 /*
-|--------------------------------------------------------------------------
-| Subject Statistics
-|--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+ Subject Statistics
+--------------------------------------------------------------------------
 */
 
 async function getSubjectStatistics(
     schoolId
 ) {
+    if (!schoolId) {
+        return {
+            totalSubjects: 0,
+            activeSubjects: 0,
+            compulsorySubjects: 0
+        };
+    }
+
     const sql = `
         SELECT
-            COUNT(*)::INTEGER AS total_subjects,
+            COUNT(*)::INTEGER
+                AS total_subjects,
             COUNT(*) FILTER (
                 WHERE is_active = TRUE
-            )::INTEGER AS active_subjects,
+            )::INTEGER
+                AS active_subjects,
             COUNT(*) FILTER (
                 WHERE is_compulsory = TRUE
-            )::INTEGER AS compulsory_subjects
+            )::INTEGER
+                AS compulsory_subjects
         FROM subjects
         WHERE school_id = $1
     `;
 
-    const result = await query(sql, [schoolId]);
+    const result = await query(
+        sql,
+        [schoolId]
+    );
 
-    const row = result.rows[0];
+    const row =
+        result.rows[0] || {};
 
     return {
-        totalSubjects: Number(row.total_subjects),
-        activeSubjects: Number(row.active_subjects),
-        compulsorySubjects: Number(row.compulsory_subjects)
+        totalSubjects:
+            Number(
+                row.total_subjects || 0
+            ),
+
+        activeSubjects:
+            Number(
+                row.active_subjects || 0
+            ),
+
+        compulsorySubjects:
+            Number(
+                row.compulsory_subjects || 0
+            )
     };
 }
 
-
 /*
-|--------------------------------------------------------------------------
-| Check Subject Code
-|--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+ Check Subject Code
+--------------------------------------------------------------------------
 */
 
 async function subjectCodeExists(
@@ -473,12 +644,14 @@ async function subjectCodeExists(
     `;
 
     const values = [
-        subjectCode,
+        subjectCode.trim(),
         schoolId
     ];
 
     if (excludeSubjectId) {
-        values.push(excludeSubjectId);
+        values.push(
+            excludeSubjectId
+        );
 
         sql += `
             AND id <> $${values.length}
@@ -489,16 +662,20 @@ async function subjectCodeExists(
         ) AS exists
     `;
 
-    const result = await query(sql, values);
+    const result = await query(
+        sql,
+        values
+    );
 
-    return result.rows[0].exists;
+    return Boolean(
+        result.rows[0]?.exists
+    );
 }
 
-
 /*
-|--------------------------------------------------------------------------
-| Subject Name Exists
-|--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+ Subject Name Exists
+--------------------------------------------------------------------------
 */
 
 async function subjectNameExists(
@@ -514,8 +691,13 @@ async function subjectNameExists(
         SELECT EXISTS (
             SELECT 1
             FROM subjects
-            WHERE LOWER(subject_name) = LOWER($1)
-              AND school_id = $2
+            WHERE LOWER(
+                TRIM(subject_name)
+            ) =
+            LOWER(
+                TRIM($1)
+            )
+            AND school_id = $2
     `;
 
     const values = [
@@ -524,7 +706,9 @@ async function subjectNameExists(
     ];
 
     if (excludeSubjectId) {
-        values.push(excludeSubjectId);
+        values.push(
+            excludeSubjectId
+        );
 
         sql += `
             AND id <> $${values.length}
@@ -535,16 +719,20 @@ async function subjectNameExists(
         ) AS exists
     `;
 
-    const result = await query(sql, values);
+    const result = await query(
+        sql,
+        values
+    );
 
-    return result.rows[0].exists;
+    return Boolean(
+        result.rows[0]?.exists
+    );
 }
 
-
 /*
-|--------------------------------------------------------------------------
-| Export
-|--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+ Export
+--------------------------------------------------------------------------
 */
 
 module.exports = {

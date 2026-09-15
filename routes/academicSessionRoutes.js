@@ -14,145 +14,76 @@ const {
     getAcademicSessionStatistics
 } = require("../controllers/academicSessionController");
 
-const authMiddleware = require("../middleware/authMiddleware");
+const authenticate =
+    require("../middleware/authMiddleware");
+
+const {
+    requireSchoolContext
+} = require("../middleware/roleMiddleware");
 
 const router = express.Router();
 
-
-/*
-|--------------------------------------------------------------------------
-| ACADEMIC SESSION ROUTES
-|--------------------------------------------------------------------------
-|
-| Base URL:
-|
-| /api/academic-sessions
-|
-|--------------------------------------------------------------------------
-*/
-
-
-/*
-|--------------------------------------------------------------------------
-| GET ALL ACADEMIC SESSIONS
-|--------------------------------------------------------------------------
-*/
-
 router.get(
     "/",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
     getAcademicSessions
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| SEARCH ACADEMIC SESSIONS
-|--------------------------------------------------------------------------
-*/
-
 router.get(
     "/search",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
     searchAcademicSessions
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| GET CURRENT ACADEMIC SESSION
-|--------------------------------------------------------------------------
-*/
-
 router.get(
     "/current",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
     getCurrentAcademicSession
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| GET ACADEMIC SESSION STATISTICS
-|--------------------------------------------------------------------------
-*/
-
 router.get(
     "/statistics",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
     getAcademicSessionStatistics
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| CREATE ACADEMIC SESSION
-|--------------------------------------------------------------------------
-*/
-
 router.post(
     "/",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
     createAcademicSession
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| GET ACADEMIC SESSION BY ID
-|--------------------------------------------------------------------------
-*/
-
 router.get(
     "/:id",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
     getAcademicSessionById
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| UPDATE ACADEMIC SESSION
-|--------------------------------------------------------------------------
-*/
-
 router.put(
     "/:id",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
     updateAcademicSession
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| SET CURRENT ACADEMIC SESSION
-|--------------------------------------------------------------------------
-*/
-
 router.patch(
     "/:id/current",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
     setCurrentAcademicSession
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| DELETE ACADEMIC SESSION
-|--------------------------------------------------------------------------
-*/
-
 router.delete(
     "/:id",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
     deleteAcademicSession
 );
-
-
-/*
-|--------------------------------------------------------------------------
-| EXPORT ROUTER
-|--------------------------------------------------------------------------
-*/
 
 module.exports = router;

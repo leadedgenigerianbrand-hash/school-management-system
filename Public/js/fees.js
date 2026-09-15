@@ -1,1355 +1,2092 @@
 "use strict";
 
 (function () {
-    let feeRecords = [];
-    let students = [];
-    let editingFeeId = null;
+let feeRecords = [];
+let students = [];
+let academicSessions = [];
+let terms = [];
+let feeStructures = [];
+let editingFeeId = null;
+let feeModal = null;
 
-    /*
-    |--------------------------------------------------------------------------
-    | API REQUEST
-    |--------------------------------------------------------------------------
-    */
-
-    async function request(endpoint, options = {}) {
-        const token =
-            localStorage.getItem("school_management_token") ||
-            sessionStorage.getItem("school_management_token") ||
-            localStorage.getItem("token") ||
-            sessionStorage.getItem("token") ||
-            localStorage.getItem("accessToken") ||
-            sessionStorage.getItem("accessToken") ||
-            "";
-
-        let url = endpoint;
-
-        if (
-            !url.startsWith("http://") &&
-            !url.startsWith("https://")
-        ) {
-            if (!url.startsWith("/")) {
-                url = `/${url}`;
-            }
-
-            if (!url.startsWith("/api/")) {
-                url = `/api${url}`;
-            }
-        }
-
-        const headers = {
-            Accept: "application/json",
-            ...(options.headers || {})
-        };
-
-        if (
-            options.body &&
-            !(options.body instanceof FormData) &&
-            !headers["Content-Type"] &&
-            !headers["content-type"]
-        ) {
-            headers["Content-Type"] = "application/json";
-        }
-
-        if (token) {
-            headers.Authorization = `Bearer ${token}`;
-        }
-
-        let response;
-
-        try {
-            response = await fetch(url, {
-                ...options,
-                headers
-            });
-        } catch (error) {
-            console.error("API request failed:", error);
-            throw new Error(
-                "Unable to connect to the server. Please check your connection."
-            );
-        }
-
-        if (response.status === 401) {
-            localStorage.removeItem("school_management_token");
-            localStorage.removeItem("school_management_user");
-            sessionStorage.removeItem("school_management_token");
-            sessionStorage.removeItem("school_management_user");
-
-            if (!window.location.pathname.endsWith("/login.html")) {
-                window.location.replace("/pages/login.html");
-            }
-
-            throw new Error("Authentication required.");
-        }
-
-        if (response.status === 403) {
-            throw new Error(
-                "You do not have permission to perform this action."
-            );
-        }
-
-        const contentType =
-            response.headers.get("content-type") || "";
-
-        let data;
-
-        if (contentType.includes("application/json")) {
-            data = await response.json();
-        } else {
-            data = await response.text();
-        }
-
-        if (!response.ok) {
-            let message = "Request failed.";
-
-            if (data && typeof data === "object") {
-                message =
-                    data.message ||
-                    data.error ||
-                    message;
-            } else if (
-                typeof data === "string" &&
-                data.trim()
-            ) {
-                message = data;
-            }
-
-            throw new Error(message);
-        }
-
-        return data;
+```
+async function request(endpoint, options = {}) {
+    if (
+        window.apiRequest &&
+        typeof window.apiRequest === "function"
+    ) {
+        return window.apiRequest(endpoint, options);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | INITIALIZE
-    |--------------------------------------------------------------------------
-    */
+    const token =
+        localStorage.getItem("school_management_token") ||
+        sessionStorage.getItem("school_management_token") ||
+        localStorage.getItem("token") ||
+        sessionStorage.getItem("token") ||
+        localStorage.getItem("accessToken") ||
+        sessionStorage.getItem("accessToken") ||
+        "";
 
-    async function initialize() {
-        setupEvents();
+    let url = endpoint;
 
-        await loadStudents();
-        await loadFees();
+    if (!url.startsWith("/api/")) {
+        if (!url.startsWith("/")) {
+            url = "/" + url;
+        }
 
-        updateSummary();
+        url = "/api" + url;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | EVENTS
-    |--------------------------------------------------------------------------
-    */
+    const headers = {
+        Accept: "application/json",
+        ...(options.headers || {})
+    };
 
-    function setupEvents() {
-        const form =
-            document.querySelector("#feeForm") ||
-            document.querySelector("form[data-fee-form]");
+    if (
+        options.body &&
+        typeof options.body === "string" &&
+        !headers["Content-Type"] &&
+        !headers["content-type"]
+    ) {
+        headers["Content-Type"] = "application/json";
+    }
 
-        if (form) {
-            form.addEventListener(
-                "submit",
-                handleSubmit
-            );
-        }
+    if (token) {
+        headers.Authorization = "Bearer " + token;
+    }
 
-        const search =
-            document.querySelector("#feeSearch") ||
-            document.querySelector("[name='fee_search']");
+    const response = await fetch(url, {
+        ...options,
+        headers
+    });
 
-        if (search) {
-            const handler =
-                window.App &&
-                typeof window.App.debounce === "function"
-                    ? window.App.debounce(renderFees, 300)
-                    : renderFees;
+    const contentType =
+        response.headers.get("content-type") || "";
 
-            search.addEventListener(
-                "input",
-                handler
-            );
-        }
+    let data;
 
-        const studentSelect =
-            document.querySelector("#studentId") ||
-            document.querySelector("#student-id") ||
-            document.querySelector("[name='student_id']");
+    if (contentType.includes("application/json")) {
+        data = await response.json();
+    } else {
+        data = await response.text();
+    }
 
-        if (studentSelect) {
-            studentSelect.addEventListener(
-                "change",
-                function () {
-                    const student =
-                        students.find(item =>
-                            String(
-                                item.id ||
-                                item.student_id
-                            ) ===
-                            String(studentSelect.value)
-                        );
+    if (response.status === 401) {
+        clearAuthentication();
 
-                    if (student) {
-                        fillStudentDetails(student);
-                    }
-                }
-            );
-        }
+        window.location.replace("/pages/login.html");
 
-        const amountInput =
-            document.querySelector("#amount") ||
-            document.querySelector("[name='amount']");
+        throw new Error("Authentication required.");
+    }
 
-        if (amountInput) {
-            amountInput.addEventListener(
-                "input",
-                updateBalancePreview
-            );
-        }
-
-        document.addEventListener(
-            "click",
-            handleActionClick
+    if (response.status === 403) {
+        throw new Error(
+            "You do not have permission to perform this action."
         );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | LOAD STUDENTS
-    |--------------------------------------------------------------------------
-    */
-
-    async function loadStudents() {
-        try {
-            const data =
-                await request("/students");
-
-            students =
-                Array.isArray(data)
+    if (!response.ok) {
+        throw new Error(
+            data &&
+            typeof data === "object" &&
+            data.message
+                ? data.message
+                : typeof data === "string" && data
                     ? data
-                    : Array.isArray(data?.data)
-                        ? data.data
-                        : Array.isArray(data?.students)
-                            ? data.students
-                            : [];
-
-            populateStudentSelect();
-        } catch (error) {
-            console.error(
-                "Unable to load students:",
-                error
-            );
-
-            students = [];
-        }
+                    : "Request failed."
+        );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | LOAD FEES
-    |--------------------------------------------------------------------------
-    */
+    return data;
+}
 
-    async function loadFees() {
-        showLoading();
 
-        try {
-            const data =
-                await request("/fees");
+async function initialize() {
+    setupEvents();
+    initializeModal();
 
-            feeRecords =
-                Array.isArray(data)
-                    ? data
-                    : Array.isArray(data?.data)
-                        ? data.data
-                        : Array.isArray(data?.fees)
-                            ? data.fees
-                            : Array.isArray(data?.records)
-                                ? data.records
-                                : [];
+    await Promise.all([
+        loadStudents(),
+        loadAcademicSessions(),
+        loadTerms(),
+        loadFeeStructures()
+    ]);
 
-            renderFees();
-            updateSummary();
-        } catch (error) {
-            console.error(
-                "Unable to load fees:",
-                error
-            );
+    await loadFees();
+}
 
-            feeRecords = [];
 
-            showError(
-                error.message ||
-                "Unable to load fee records."
-            );
-        }
+function setupEvents() {
+    const form = document.querySelector("#feeForm");
+
+    if (form) {
+        form.addEventListener("submit", handleSubmit);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | POPULATE STUDENTS
-    |--------------------------------------------------------------------------
-    */
+    const searchInput =
+        document.querySelector("#searchInput");
 
-    function populateStudentSelect() {
-        const select =
-            document.querySelector("#studentId") ||
-            document.querySelector("#student-id") ||
-            document.querySelector("[name='student_id']");
+    if (searchInput) {
+        searchInput.addEventListener("input", renderFees);
+    }
 
-        if (!select) {
-            return;
-        }
+    const statusFilter =
+        document.querySelector("#statusFilter");
 
-        const currentValue =
-            select.value;
-
-        select.innerHTML =
-            `<option value="">Select student</option>`;
-
-        students.forEach(student => {
-            const option =
-                document.createElement("option");
-
-            option.value =
-                student.id ||
-                student.student_id;
-
-            option.textContent =
-                getStudentName(student);
-
-            select.appendChild(option);
+    if (statusFilter) {
+        statusFilter.addEventListener("change", function () {
+            loadFees();
         });
-
-        if (currentValue) {
-            select.value = currentValue;
-        }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | RENDER FEES
-    |--------------------------------------------------------------------------
-    */
+    const refreshButton =
+        document.querySelector("#refreshButton");
 
-    function renderFees() {
-        const container =
-            document.querySelector("#feesTableBody") ||
-            document.querySelector("#feeTableBody") ||
-            document.querySelector("tbody[data-fees-body]");
-
-        if (!container) {
-            return;
-        }
-
-        const search =
-            getValue(
-                "#feeSearch",
-                "[name='fee_search']"
-            )
-                .trim()
-                .toLowerCase();
-
-        let records = feeRecords;
-
-        if (search) {
-            records =
-                feeRecords.filter(record => {
-                    const studentName =
-                        getStudentName(record)
-                            .toLowerCase();
-
-                    const admission =
-                        String(
-                            record.admission_number ||
-                            record.admissionNumber ||
-                            ""
-                        ).toLowerCase();
-
-                    const reference =
-                        String(
-                            record.reference ||
-                            record.payment_reference ||
-                            ""
-                        ).toLowerCase();
-
-                    return (
-                        studentName.includes(search) ||
-                        admission.includes(search) ||
-                        reference.includes(search)
-                    );
-                });
-        }
-
-        if (!records.length) {
-            showNoRecords(container);
-            return;
-        }
-
-        container.innerHTML =
-            records
-                .map(renderFeeRow)
-                .join("");
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | FEE ROW
-    |--------------------------------------------------------------------------
-    */
-
-    function renderFeeRow(record) {
-        const id =
-            record.id ||
-            record.fee_id;
-
-        const studentName =
-            getStudentName(record);
-
-        const admission =
-            record.admission_number ||
-            record.admissionNumber ||
-            "-";
-
-        const session =
-            record.session_name ||
-            record.session ||
-            record.academic_session ||
-            "-";
-
-        const term =
-            record.term_name ||
-            record.term ||
-            "-";
-
-        const amount =
-            Number(
-                record.amount ??
-                record.fee_amount ??
-                0
-            );
-
-        const paid =
-            Number(
-                record.amount_paid ??
-                record.paid_amount ??
-                record.paid ??
-                0
-            );
-
-        const balance =
-            Math.max(
-                amount - paid,
-                0
-            );
-
-        const status =
-            getFeeStatus(
-                amount,
-                paid,
-                record.status
-            );
-
-        const paymentDate =
-            record.payment_date ||
-            record.paid_at ||
-            record.created_at ||
-            "";
-
-        return `
-            <tr>
-                <td>
-                    <div class="student-name">
-                        <div class="student-avatar">
-                            ${escapeHtml(
-                                getInitials(studentName)
-                            )}
-                        </div>
-
-                        <div class="student-name-text">
-                            <strong>
-                                ${escapeHtml(studentName)}
-                            </strong>
-                        </div>
-                    </div>
-                </td>
-
-                <td>
-                    ${escapeHtml(admission)}
-                </td>
-
-                <td>
-                    ${escapeHtml(session)}
-                </td>
-
-                <td>
-                    ${escapeHtml(term)}
-                </td>
-
-                <td>
-                    ${formatCurrency(amount)}
-                </td>
-
-                <td>
-                    ${formatCurrency(paid)}
-                </td>
-
-                <td>
-                    <strong>
-                        ${formatCurrency(balance)}
-                    </strong>
-                </td>
-
-                <td>
-                    <span class="student-status ${escapeHtml(status)}">
-                        ${escapeHtml(capitalize(status))}
-                    </span>
-                </td>
-
-                <td>
-                    ${escapeHtml(formatDate(paymentDate))}
-                </td>
-
-                <td>
-                    <div class="student-actions">
-                        <button
-                            type="button"
-                            class="student-action-btn"
-                            data-action="edit-fee"
-                            data-id="${escapeAttribute(id)}"
-                            title="Edit"
-                        >
-                            ✎
-                        </button>
-
-                        <button
-                            type="button"
-                            class="student-action-btn delete"
-                            data-action="delete-fee"
-                            data-id="${escapeAttribute(id)}"
-                            title="Delete"
-                        >
-                            ×
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | STATUS
-    |--------------------------------------------------------------------------
-    */
-
-    function getFeeStatus(
-        amount,
-        paid,
-        suppliedStatus
-    ) {
-        if (suppliedStatus) {
-            const normalized =
-                String(suppliedStatus)
-                    .toLowerCase();
-
-            if (
-                [
-                    "paid",
-                    "partial",
-                    "pending",
-                    "overdue"
-                ].includes(normalized)
-            ) {
-                return normalized;
+    if (refreshButton) {
+        refreshButton.addEventListener(
+            "click",
+            async function () {
+                await loadFees();
             }
-        }
-
-        if (paid <= 0) {
-            return "pending";
-        }
-
-        if (paid >= amount) {
-            return "paid";
-        }
-
-        return "partial";
+        );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | SUBMIT
-    |--------------------------------------------------------------------------
-    */
+    const addFeeButton =
+        document.querySelector("#addFeeButton");
 
-    async function handleSubmit(event) {
-        event.preventDefault();
+    if (addFeeButton) {
+        addFeeButton.addEventListener(
+            "click",
+            function () {
+                resetForm();
+                showFeeModal();
+            }
+        );
+    }
 
-        const form =
-            event.currentTarget;
+    const studentInput =
+        document.querySelector("#studentId");
+
+    if (studentInput) {
+        studentInput.addEventListener(
+            "change",
+            handleStudentChange
+        );
+    }
+
+    const feeStructureInput =
+        document.querySelector("#feeStructureId");
+
+    if (feeStructureInput) {
+        feeStructureInput.addEventListener(
+            "change",
+            handleFeeStructureChange
+        );
+    }
+
+    const amountPaidInput =
+        document.querySelector("#amountPaid");
+
+    if (amountPaidInput) {
+        amountPaidInput.addEventListener(
+            "input",
+            updateBalancePreview
+        );
+    }
+
+    document.addEventListener(
+        "click",
+        handleActionClick
+    );
+}
+
+
+function initializeModal() {
+    const modalElement =
+        document.querySelector("#feeModal");
+
+    if (
+        modalElement &&
+        window.bootstrap &&
+        window.bootstrap.Modal
+    ) {
+        feeModal =
+            window.bootstrap.Modal.getOrCreateInstance(
+                modalElement
+            );
+    }
+}
+
+
+async function loadStudents() {
+    try {
+        const data = await request("/students");
+
+        students = extractArray(data);
+
+        populateStudentSelect();
+    } catch (error) {
+        console.error(
+            "Unable to load students:",
+            error
+        );
+
+        students = [];
+
+        populateStudentSelect();
+    }
+}
+
+
+async function loadAcademicSessions() {
+    try {
+        const data =
+            await request("/academic-sessions");
+
+        academicSessions = extractArray(data);
+
+        populateSessionSelect();
+    } catch (error) {
+        console.error(
+            "Unable to load academic sessions:",
+            error
+        );
+
+        academicSessions = [];
+
+        populateSessionSelect();
+    }
+}
+
+
+async function loadTerms() {
+    try {
+        const data = await request("/terms");
+
+        terms = extractArray(data);
+
+        populateTermSelect();
+    } catch (error) {
+        console.error(
+            "Unable to load terms:",
+            error
+        );
+
+        terms = [];
+
+        populateTermSelect();
+    }
+}
+
+
+async function loadFeeStructures() {
+    try {
+        const data =
+            await request("/fees/structures");
+
+        feeStructures = extractArray(data);
+
+        populateFeeStructureSelect();
+    } catch (error) {
+        console.error(
+            "Unable to load fee structures:",
+            error
+        );
+
+        feeStructures = [];
+
+        populateFeeStructureSelect();
+    }
+}
+
+
+async function loadFees() {
+    showLoading();
+
+    try {
+        const searchInput =
+            document.querySelector("#searchInput");
+
+        const statusFilter =
+            document.querySelector("#statusFilter");
+
+        const params =
+            new URLSearchParams();
+
+        if (
+            searchInput &&
+            searchInput.value.trim()
+        ) {
+            params.set(
+                "search",
+                searchInput.value.trim()
+            );
+        }
+
+        if (
+            statusFilter &&
+            statusFilter.value
+        ) {
+            params.set(
+                "status",
+                statusFilter.value
+            );
+        }
+
+        const query =
+            params.toString()
+                ? "?" + params.toString()
+                : "";
 
         const data =
-            formToObject(form);
-
-        const amount =
-            Number(
-                data.amount ??
-                data.fee_amount ??
-                0
-            );
-
-        if (!data.student_id) {
-            notify(
-                "Please select a student.",
-                "error"
-            );
-            return;
-        }
-
-        if (
-            Number.isNaN(amount) ||
-            amount < 0
-        ) {
-            notify(
-                "Please enter a valid fee amount.",
-                "error"
-            );
-            return;
-        }
-
-        try {
-            if (editingFeeId) {
-                await request(
-                    `/fees/${encodeURIComponent(editingFeeId)}`,
-                    {
-                        method: "PUT",
-                        body: JSON.stringify(data)
-                    }
-                );
-
-                notify(
-                    "Fee record updated successfully.",
-                    "success"
-                );
-            } else {
-                await request(
-                    "/fees",
-                    {
-                        method: "POST",
-                        body: JSON.stringify(data)
-                    }
-                );
-
-                notify(
-                    "Fee record created successfully.",
-                    "success"
-                );
-            }
-
-            resetForm();
-            await loadFees();
-        } catch (error) {
-            console.error(
-                "Fee save failed:",
-                error
-            );
-
-            notify(
-                error.message ||
-                "Unable to save fee record.",
-                "error"
-            );
-        }
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | EDIT
-    |--------------------------------------------------------------------------
-    */
-
-    function editFee(id) {
-        const record =
-            feeRecords.find(
-                item =>
-                    String(
-                        item.id ||
-                        item.fee_id
-                    ) === String(id)
-            );
-
-        if (!record) {
-            return;
-        }
-
-        editingFeeId = id;
-
-        setFormValue(
-            "#studentId",
-            record.student_id ||
-            record.studentId
-        );
-
-        setFormValue(
-            "#amount",
-            record.amount ??
-            record.fee_amount
-        );
-
-        setFormValue(
-            "#amountPaid",
-            record.amount_paid ??
-            record.paid_amount ??
-            record.paid
-        );
-
-        setFormValue(
-            "#session",
-            record.session_id ||
-            record.session
-        );
-
-        setFormValue(
-            "#term",
-            record.term_id ||
-            record.term
-        );
-
-        setFormValue(
-            "#paymentDate",
-            record.payment_date
-        );
-
-        setFormValue(
-            "#paymentMethod",
-            record.payment_method
-        );
-
-        setFormValue(
-            "#reference",
-            record.reference ||
-            record.payment_reference
-        );
-
-        setFormValue(
-            "#remarks",
-            record.remarks ||
-            record.remark
-        );
-
-        updateFormMode("Update Fee");
-        updateBalancePreview();
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | DELETE
-    |--------------------------------------------------------------------------
-    */
-
-    async function deleteFee(id) {
-        if (
-            !window.confirm(
-                "Are you sure you want to delete this fee record?"
-            )
-        ) {
-            return;
-        }
-
-        try {
             await request(
-                `/fees/${encodeURIComponent(id)}`,
-                {
-                    method: "DELETE"
-                }
+                "/fees/records" + query
             );
 
-            notify(
-                "Fee record deleted successfully.",
-                "success"
-            );
+        feeRecords = extractArray(data);
 
-            await loadFees();
-        } catch (error) {
-            console.error(
-                "Fee deletion failed:",
-                error
-            );
+        renderFees();
+        updateSummary();
+    } catch (error) {
+        console.error(
+            "Unable to load fees:",
+            error
+        );
 
-            notify(
-                error.message ||
-                "Unable to delete fee record.",
-                "error"
-            );
-        }
+        feeRecords = [];
+
+        updateSummary();
+
+        showError(
+            error.message ||
+            "Unable to load fee records."
+        );
+    }
+}
+
+
+function populateStudentSelect() {
+    const input =
+        document.querySelector("#studentId");
+
+    if (!input) {
+        return;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | ACTION CLICK
-    |--------------------------------------------------------------------------
-    */
+    const currentValue = input.value;
 
-    async function handleActionClick(event) {
-        const button =
-            event.target.closest("[data-action]");
+    input.innerHTML =
+        '<option value="">Select student</option>';
 
-        if (!button) {
-            return;
-        }
-
-        const action =
-            button.getAttribute("data-action");
-
+    students.forEach(function (student) {
         const id =
-            button.getAttribute("data-id");
+            student.id ||
+            student.student_id;
 
         if (!id) {
             return;
         }
 
-        if (action === "edit-fee") {
-            editFee(id);
+        const option =
+            document.createElement("option");
+
+        option.value = id;
+
+        option.textContent =
+            getStudentName(student) +
+            getAdmissionText(student);
+
+        input.appendChild(option);
+    });
+
+    if (currentValue) {
+        input.value = currentValue;
+    }
+}
+
+
+function populateSessionSelect() {
+    const input =
+        document.querySelector("#sessionId");
+
+    if (!input) {
+        return;
+    }
+
+    const currentValue = input.value;
+
+    input.innerHTML =
+        '<option value="">Select academic session</option>';
+
+    academicSessions.forEach(function (session) {
+        const id =
+            session.id ||
+            session.session_id;
+
+        if (!id) {
             return;
         }
 
-        if (action === "delete-fee") {
-            await deleteFee(id);
-        }
+        const option =
+            document.createElement("option");
+
+        option.value = id;
+
+        option.textContent =
+            session.session_name ||
+            session.name ||
+            session.sessionName ||
+            "Academic Session";
+
+        input.appendChild(option);
+    });
+
+    if (currentValue) {
+        input.value = currentValue;
+    }
+}
+
+
+function populateTermSelect() {
+    const input =
+        document.querySelector("#termId");
+
+    if (!input) {
+        return;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | STUDENT DETAILS
-    |--------------------------------------------------------------------------
-    */
+    const currentValue = input.value;
 
-    function fillStudentDetails(student) {
-        setFormValue(
-            "#admissionNumber",
-            student.admission_number ||
-            student.admissionNumber
-        );
+    input.innerHTML =
+        '<option value="">Select term</option>';
 
-        setFormValue(
-            "#className",
-            student.class_name ||
-            student.className
-        );
-    }
+    terms.forEach(function (term) {
+        const id =
+            term.id ||
+            term.term_id;
 
-    /*
-    |--------------------------------------------------------------------------
-    | BALANCE
-    |--------------------------------------------------------------------------
-    */
-
-    function updateBalancePreview() {
-        const amount =
-            Number(
-                getValue(
-                    "#amount",
-                    "[name='amount']"
-                ) || 0
-            );
-
-        const paid =
-            Number(
-                getValue(
-                    "#amountPaid",
-                    "[name='amount_paid']"
-                ) || 0
-            );
-
-        const balance =
-            Math.max(
-                amount - paid,
-                0
-            );
-
-        const element =
-            document.querySelector("#feeBalance") ||
-            document.querySelector("#balance") ||
-            document.querySelector("[data-fee-balance]");
-
-        if (element) {
-            element.textContent =
-                formatCurrency(balance);
-        }
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | SUMMARY
-    |--------------------------------------------------------------------------
-    */
-
-    function updateSummary() {
-        const total =
-            feeRecords.reduce(
-                (sum, record) =>
-                    sum +
-                    Number(
-                        record.amount ??
-                        record.fee_amount ??
-                        0
-                    ),
-                0
-            );
-
-        const paid =
-            feeRecords.reduce(
-                (sum, record) =>
-                    sum +
-                    Number(
-                        record.amount_paid ??
-                        record.paid_amount ??
-                        record.paid ??
-                        0
-                    ),
-                0
-            );
-
-        const balance =
-            Math.max(
-                total - paid,
-                0
-            );
-
-        setSummary(
-            [
-                "#totalFees",
-                "#total-fees",
-                "[data-total-fees]"
-            ],
-            total
-        );
-
-        setSummary(
-            [
-                "#totalPaid",
-                "#total-paid",
-                "[data-total-paid]"
-            ],
-            paid
-        );
-
-        setSummary(
-            [
-                "#totalBalance",
-                "#total-balance",
-                "[data-total-balance]"
-            ],
-            balance
-        );
-    }
-
-    function setSummary(selectors, value) {
-        for (const selector of selectors) {
-            const element =
-                document.querySelector(selector);
-
-            if (element) {
-                element.textContent =
-                    formatCurrency(value);
-                return;
-            }
-        }
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | RESET
-    |--------------------------------------------------------------------------
-    */
-
-    function resetForm() {
-        editingFeeId = null;
-
-        const form =
-            document.querySelector("#feeForm");
-
-        if (form) {
-            form.reset();
+        if (!id) {
+            return;
         }
 
-        updateFormMode("Add Fee");
+        const option =
+            document.createElement("option");
+
+        option.value = id;
+
+        option.textContent =
+            term.term_name ||
+            term.name ||
+            term.termName ||
+            "Term";
+
+        input.appendChild(option);
+    });
+
+    if (currentValue) {
+        input.value = currentValue;
+    }
+}
+
+
+function populateFeeStructureSelect() {
+    const input =
+        document.querySelector("#feeStructureId");
+
+    if (!input) {
+        return;
+    }
+
+    const currentValue = input.value;
+
+    input.innerHTML =
+        '<option value="">Select fee structure</option>';
+
+    feeStructures.forEach(function (structure) {
+        const id =
+            structure.id ||
+            structure.fee_structure_id;
+
+        if (!id) {
+            return;
+        }
+
+        const option =
+            document.createElement("option");
+
+        option.value = id;
+
+        option.textContent =
+            getFeeStructureLabel(structure);
+
+        option.dataset.feeName =
+            structure.fee_name ||
+            structure.feeName ||
+            "";
+
+        option.dataset.amount =
+            structure.amount ||
+            "";
+
+        option.dataset.sessionId =
+            structure.academic_session_id ||
+            structure.session_id ||
+            "";
+
+        option.dataset.termId =
+            structure.term_id ||
+            "";
+
+        input.appendChild(option);
+    });
+
+    if (currentValue) {
+        input.value = currentValue;
+    }
+}
+
+
+function handleStudentChange(event) {
+    const studentId =
+        event.target.value;
+
+    const student =
+        students.find(function (item) {
+            return String(
+                item.id ||
+                item.student_id
+            ) === String(studentId);
+        });
+
+    if (student) {
+        fillStudentDetails(student);
+    }
+}
+
+
+function handleFeeStructureChange(event) {
+    const selectedOption =
+        event.target.options[
+            event.target.selectedIndex
+        ];
+
+    if (
+        !selectedOption ||
+        !selectedOption.value
+    ) {
+        setFormValue("#feeType", "");
+        setFormValue("#amount", "");
         updateBalancePreview();
+
+        return;
     }
 
-    function updateFormMode(text) {
-        const form =
-            document.querySelector("#feeForm");
+    const structure =
+        feeStructures.find(function (item) {
+            return String(
+                item.id ||
+                item.fee_structure_id
+            ) === String(
+                selectedOption.value
+            );
+        });
 
-        if (!form) {
+    if (!structure) {
+        return;
+    }
+
+    const feeName =
+        structure.fee_name ||
+        structure.feeName ||
+        "";
+
+    const amount =
+        structure.amount ||
+        "";
+
+    const sessionId =
+        structure.academic_session_id ||
+        structure.session_id ||
+        "";
+
+    const termId =
+        structure.term_id ||
+        "";
+
+    setFormValue("#feeType", feeName);
+    setFormValue("#amount", amount);
+
+    if (sessionId) {
+        setFormValue("#sessionId", sessionId);
+    }
+
+    if (termId) {
+        setFormValue("#termId", termId);
+    }
+
+    const existingFee =
+        findExistingFeeRecord(
+            getValue("#studentId"),
+            selectedOption.value
+        );
+
+    if (existingFee) {
+        const currentBalance =
+            getRecordBalance(existingFee);
+
+        setFormValue(
+            "#amountPaid",
+            currentBalance > 0
+                ? ""
+                : "0"
+        );
+    } else {
+        setFormValue("#amountPaid", "0");
+    }
+
+    updateBalancePreview();
+}
+
+
+async function handleSubmit(event) {
+    event.preventDefault();
+
+    const studentId =
+        getValue("#studentId");
+
+    const feeStructureId =
+        getValue("#feeStructureId");
+
+    const sessionId =
+        getValue("#sessionId");
+
+    const termId =
+        getValue("#termId");
+
+    const feeType =
+        getValue("#feeType");
+
+    const amount =
+        Number(
+            getValue("#amount")
+        );
+
+    const amountPaid =
+        Number(
+            getValue("#amountPaid") || 0
+        );
+
+    const paymentMethod =
+        getValue("#paymentMethod");
+
+    const notes =
+        getValue("#notes");
+
+    if (!studentId) {
+        notify(
+            "Please select a student.",
+            "danger"
+        );
+        return;
+    }
+
+    if (!feeStructureId) {
+        notify(
+            "Please select a fee structure.",
+            "danger"
+        );
+        return;
+    }
+
+    if (!sessionId) {
+        notify(
+            "Please select an academic session.",
+            "danger"
+        );
+        return;
+    }
+
+    if (!termId) {
+        notify(
+            "Please select a term.",
+            "danger"
+        );
+        return;
+    }
+
+    if (!feeType) {
+        notify(
+            "The selected fee structure has no fee name.",
+            "danger"
+        );
+        return;
+    }
+
+    if (
+        Number.isNaN(amount) ||
+        amount <= 0
+    ) {
+        notify(
+            "The selected fee structure has no valid amount.",
+            "danger"
+        );
+        return;
+    }
+
+    if (
+        Number.isNaN(amountPaid) ||
+        amountPaid < 0
+    ) {
+        notify(
+            "Please enter a valid amount paid.",
+            "danger"
+        );
+        return;
+    }
+
+    const existingFee =
+        findExistingFeeRecord(
+            studentId,
+            feeStructureId
+        );
+
+    const outstandingBalance =
+        existingFee
+            ? getRecordBalance(existingFee)
+            : amount;
+
+    if (
+        amountPaid > outstandingBalance
+    ) {
+        notify(
+            "Amount paid cannot be greater than the current outstanding balance.",
+            "danger"
+        );
+        return;
+    }
+
+    if (
+        amountPaid > 0 &&
+        !paymentMethod
+    ) {
+        notify(
+            "Please select a payment method.",
+            "danger"
+        );
+        return;
+    }
+
+    const submitButton =
+        event.submitter;
+
+    setSubmitState(
+        submitButton,
+        true
+    );
+
+    try {
+        if (editingFeeId) {
+            notify(
+                "Editing an existing student fee record is not enabled. Use the payment option to record additional payments.",
+                "danger"
+            );
+
             return;
         }
 
-        const button =
-            form.querySelector(
-                "button[type='submit']"
+        let studentFeeId =
+            existingFee
+                ? (
+                    existingFee.id ||
+                    existingFee.student_fee_id
+                )
+                : null;
+
+        if (!existingFee) {
+            const assignment =
+                await request(
+                    "/fees/assign",
+                    {
+                        method: "POST",
+                        body: JSON.stringify({
+                            schoolId: undefined,
+                            studentId: studentId,
+                            feeStructureId: feeStructureId,
+                            amount: amount
+                        })
+                    }
+                );
+
+            const assignedFee =
+                extractObject(assignment);
+
+            studentFeeId =
+                assignedFee.id ||
+                assignedFee.student_fee_id ||
+                assignedFee.studentFeeId;
+
+            if (!studentFeeId) {
+                throw new Error(
+                    "Fee was assigned, but the student fee ID was not returned."
+                );
+            }
+        }
+
+        if (amountPaid > 0) {
+            await request(
+                "/fees/payment",
+                {
+                    method: "POST",
+                    body: JSON.stringify({
+                        studentFeeId:
+                            studentFeeId,
+                        studentId:
+                            studentId,
+                        amount:
+                            amountPaid,
+                        paymentMethod:
+                            paymentMethod,
+                        notes:
+                            notes || null
+                    })
+                }
             );
 
-        if (button) {
-            button.textContent = text;
+            notify(
+                existingFee
+                    ? "Payment recorded successfully."
+                    : "Fee assigned and payment recorded successfully.",
+                "success"
+            );
+        } else {
+            notify(
+                existingFee
+                    ? "The fee is already assigned to this student."
+                    : "Fee assigned successfully.",
+                existingFee
+                    ? "info"
+                    : "success"
+            );
         }
+
+        resetForm();
+
+        hideFeeModal();
+
+        await loadFees();
+    } catch (error) {
+        console.error(
+            "Unable to save fee:",
+            error
+        );
+
+        notify(
+            error.message ||
+            "Unable to save fee.",
+            "danger"
+        );
+    } finally {
+        setSubmitState(
+            submitButton,
+            false
+        );
+    }
+}
+
+
+function findExistingFeeRecord(
+    studentId,
+    feeStructureId
+) {
+    if (
+        !studentId ||
+        !feeStructureId
+    ) {
+        return null;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | FORM HELPERS
-    |--------------------------------------------------------------------------
-    */
+    return feeRecords.find(function (record) {
+        const recordStudentId =
+            record.student_id ||
+            record.studentId;
 
-    function formToObject(form) {
-        const formData =
-            new FormData(form);
+        const recordFeeStructureId =
+            record.fee_structure_id ||
+            record.feeStructureId;
 
-        const data = {};
+        return (
+            String(recordStudentId) ===
+            String(studentId) &&
+            String(recordFeeStructureId) ===
+            String(feeStructureId)
+        );
+    }) || null;
+}
 
-        formData.forEach(
-            (value, key) => {
-                data[key] = value;
+
+function renderFees() {
+    const container =
+        document.querySelector(
+            "#feesTableBody"
+        );
+
+    if (!container) {
+        return;
+    }
+
+    const searchInput =
+        document.querySelector(
+            "#searchInput"
+        );
+
+    const statusFilter =
+        document.querySelector(
+            "#statusFilter"
+        );
+
+    const search =
+        searchInput
+            ? searchInput.value
+                .trim()
+                .toLowerCase()
+            : "";
+
+    const selectedStatus =
+        statusFilter
+            ? statusFilter.value
+            : "";
+
+    let records =
+        feeRecords.slice();
+
+    if (search) {
+        records =
+            records.filter(function (record) {
+                const studentName =
+                    getStudentName(
+                        record
+                    ).toLowerCase();
+
+                const admission =
+                    String(
+                        record.admission_number ||
+                        record.admissionNumber ||
+                        ""
+                    ).toLowerCase();
+
+                const feeName =
+                    String(
+                        record.fee_name ||
+                        record.feeName ||
+                        ""
+                    ).toLowerCase();
+
+                return (
+                    studentName.includes(search) ||
+                    admission.includes(search) ||
+                    feeName.includes(search)
+                );
+            });
+    }
+
+    if (selectedStatus) {
+        records =
+            records.filter(function (record) {
+                return normalizeStatus(
+                    record.payment_status ||
+                    record.paymentStatus
+                ) === selectedStatus;
+            });
+    }
+
+    if (!records.length) {
+        showNoRecords(container);
+        return;
+    }
+
+    container.innerHTML =
+        records
+            .map(renderFeeRow)
+            .join("");
+}
+
+
+function renderFeeRow(record) {
+    const id =
+        record.id ||
+        record.student_fee_id ||
+        "";
+
+    const studentName =
+        getStudentName(record);
+
+    const admission =
+        record.admission_number ||
+        record.admissionNumber ||
+        "-";
+
+    const feeType =
+        record.fee_name ||
+        record.feeName ||
+        "-";
+
+    const session =
+        record.session_name ||
+        record.sessionName ||
+        "-";
+
+    const term =
+        record.term_name ||
+        record.termName ||
+        "-";
+
+    const amount =
+        Number(
+            record.amount_due || 0
+        );
+
+    const paid =
+        Number(
+            record.amount_paid || 0
+        );
+
+    const balance =
+        getRecordBalance(record);
+
+    const status =
+        normalizeStatus(
+            record.payment_status ||
+            record.paymentStatus
+        );
+
+    return `
+        <tr>
+            <td>
+                <div class="d-flex align-items-center gap-2">
+                    <div
+                        class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center fw-semibold"
+                        style="width:38px;height:38px;"
+                    >
+                        ${escapeHtml(
+                            getInitials(
+                                studentName
+                            )
+                        )}
+                    </div>
+
+                    <div>
+                        <div class="student-name">
+                            ${escapeHtml(
+                                studentName
+                            )}
+                        </div>
+
+                        <div class="student-meta">
+                            Student Fee Record
+                        </div>
+                    </div>
+                </div>
+            </td>
+
+            <td>
+                ${escapeHtml(admission)}
+            </td>
+
+            <td>
+                ${escapeHtml(feeType)}
+            </td>
+
+            <td>
+                ${escapeHtml(session)}
+            </td>
+
+            <td>
+                ${escapeHtml(term)}
+            </td>
+
+            <td class="amount-cell">
+                ${formatCurrency(amount)}
+            </td>
+
+            <td class="amount-cell text-success">
+                ${formatCurrency(paid)}
+            </td>
+
+            <td class="amount-cell ${balance > 0 ? "text-danger" : "text-success"}">
+                ${formatCurrency(balance)}
+            </td>
+
+            <td>
+                <span class="badge status-badge ${getStatusClass(status)}">
+                    ${escapeHtml(
+                        getStatusLabel(status)
+                    )}
+                </span>
+            </td>
+
+            <td>
+                <div class="d-flex gap-1 flex-wrap">
+
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-primary"
+                        data-action="view-fee"
+                        data-id="${escapeAttribute(id)}"
+                    >
+                        <i class="bi bi-eye me-1"></i>
+                        View
+                    </button>
+
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-danger"
+                        data-action="delete-fee"
+                        data-id="${escapeAttribute(id)}"
+                    >
+                        <i class="bi bi-trash me-1"></i>
+                        Delete
+                    </button>
+
+                </div>
+            </td>
+        </tr>
+    `;
+}
+
+
+function normalizeStatus(status) {
+    const value =
+        String(status || "")
+            .trim()
+            .toLowerCase();
+
+    if (value === "paid") {
+        return "Paid";
+    }
+
+    if (
+        value === "partially paid" ||
+        value === "partial"
+    ) {
+        return "Partially Paid";
+    }
+
+    if (value === "overpaid") {
+        return "Overpaid";
+    }
+
+    return "Unpaid";
+}
+
+
+function getStatusLabel(status) {
+    if (status === "Paid") {
+        return "Paid";
+    }
+
+    if (status === "Partially Paid") {
+        return "Partially Paid";
+    }
+
+    if (status === "Overpaid") {
+        return "Overpaid";
+    }
+
+    return "Unpaid";
+}
+
+
+function getStatusClass(status) {
+    if (status === "Paid") {
+        return "text-bg-success";
+    }
+
+    if (status === "Partially Paid") {
+        return "text-bg-warning";
+    }
+
+    if (status === "Overpaid") {
+        return "text-bg-info";
+    }
+
+    return "text-bg-secondary";
+}
+
+
+function handleActionClick(event) {
+    const button =
+        event.target.closest(
+            "[data-action]"
+        );
+
+    if (!button) {
+        return;
+    }
+
+    const action =
+        button.getAttribute(
+            "data-action"
+        );
+
+    const id =
+        button.getAttribute(
+            "data-id"
+        );
+
+    if (
+        action === "view-fee" &&
+        id
+    ) {
+        viewFee(id);
+        return;
+    }
+
+    if (
+        action === "delete-fee" &&
+        id
+    ) {
+        deleteFee(id, button);
+    }
+}
+
+
+function viewFee(id) {
+    const record =
+        feeRecords.find(function (item) {
+            return String(
+                item.id ||
+                item.student_fee_id
+            ) === String(id);
+        });
+
+    if (!record) {
+        notify(
+            "Fee record could not be found.",
+            "danger"
+        );
+
+        return;
+    }
+
+    const studentId =
+        record.student_id ||
+        record.studentId ||
+        "";
+
+    const feeStructureId =
+        record.fee_structure_id ||
+        record.feeStructureId ||
+        "";
+
+    const currentBalance =
+        getRecordBalance(record);
+
+    resetForm();
+
+    setFormValue(
+        "#studentId",
+        studentId
+    );
+
+    setFormValue(
+        "#feeStructureId",
+        feeStructureId
+    );
+
+    setFormValue(
+        "#feeType",
+        record.fee_name ||
+        record.feeName ||
+        ""
+    );
+
+    setFormValue(
+        "#sessionId",
+        record.academic_session_id ||
+        record.session_id ||
+        ""
+    );
+
+    setFormValue(
+        "#termId",
+        record.term_id ||
+        ""
+    );
+
+    setFormValue(
+        "#amount",
+        record.amount_due ||
+        ""
+    );
+
+    setFormValue(
+        "#amountPaid",
+        currentBalance > 0
+            ? ""
+            : "0"
+    );
+
+    updateBalancePreview();
+
+    notify(
+        currentBalance > 0
+            ? "Fee record loaded. Enter the amount you want to pay."
+            : "This fee has no outstanding balance.",
+        "info"
+    );
+
+    showFeeModal();
+}
+
+
+async function deleteFee(
+    id,
+    button
+) {
+    const record =
+        feeRecords.find(function (item) {
+            return String(
+                item.id ||
+                item.student_fee_id
+            ) === String(id);
+        });
+
+    if (!record) {
+        notify(
+            "Fee record could not be found.",
+            "danger"
+        );
+
+        return;
+    }
+
+    const studentName =
+        getStudentName(record);
+
+    const feeName =
+        record.fee_name ||
+        record.feeName ||
+        "Fee";
+
+    const amountPaid =
+        Number(
+            record.amount_paid || 0
+        );
+
+    let message =
+        "Delete the fee record for " +
+        studentName +
+        " (" +
+        feeName +
+        ")?";
+
+    if (amountPaid > 0) {
+        message +=
+            "\n\nThis record has " +
+            formatCurrency(amountPaid) +
+            " in payments. Deleting the fee record may also delete its associated payment records according to the configured database relationship.";
+    }
+
+    message +=
+        "\n\nThis action cannot be undone.";
+
+    const confirmed =
+        window.confirm(message);
+
+    if (!confirmed) {
+        return;
+    }
+
+    if (button) {
+        button.disabled = true;
+
+        button.dataset.originalHtml =
+            button.innerHTML;
+
+        button.innerHTML =
+            '<span class="spinner-border spinner-border-sm me-1"></span>Deleting...';
+    }
+
+    try {
+        await request(
+            "/fees/student-records/" +
+            encodeURIComponent(id),
+            {
+                method: "DELETE"
             }
         );
 
-        return data;
-    }
+        notify(
+            "Fee record deleted successfully.",
+            "success"
+        );
 
-    function setFormValue(selector, value) {
-        const element =
-            document.querySelector(selector);
+        await loadFees();
+    } catch (error) {
+        console.error(
+            "Unable to delete fee record:",
+            error
+        );
 
-        if (element) {
-            element.value =
-                value ?? "";
-        }
-    }
+        notify(
+            error.message ||
+            "Unable to delete fee record.",
+            "danger"
+        );
+    } finally {
+        if (button) {
+            button.disabled = false;
 
-    function getValue(...selectors) {
-        for (const selector of selectors) {
-            const element =
-                document.querySelector(selector);
-
-            if (element) {
-                return element.value || "";
+            if (
+                button.dataset.originalHtml
+            ) {
+                button.innerHTML =
+                    button.dataset.originalHtml;
             }
         }
+    }
+}
 
+
+function fillStudentDetails(student) {
+    const studentId =
+        student.id ||
+        student.student_id;
+
+    if (studentId) {
+        setFormValue(
+            "#studentId",
+            studentId
+        );
+    }
+}
+
+
+function updateBalancePreview() {
+    const amount =
+        Number(
+            getValue("#amount") || 0
+        );
+
+    const paid =
+        Number(
+            getValue("#amountPaid") || 0
+        );
+
+    const balance =
+        Math.max(
+            amount - paid,
+            0
+        );
+
+    const element =
+        document.querySelector("#feeBalance") ||
+        document.querySelector("#balance") ||
+        document.querySelector("[data-fee-balance]");
+
+    if (element) {
+        element.textContent =
+            formatCurrency(balance);
+    }
+}
+
+
+function updateSummary() {
+    const totalRecords =
+        feeRecords.length;
+
+    const totalAmount =
+        feeRecords.reduce(
+            function (sum, record) {
+                return (
+                    sum +
+                    Number(
+                        record.amount_due || 0
+                    )
+                );
+            },
+            0
+        );
+
+    const totalPaid =
+        feeRecords.reduce(
+            function (sum, record) {
+                return (
+                    sum +
+                    Number(
+                        record.amount_paid || 0
+                    )
+                );
+            },
+            0
+        );
+
+    const totalBalance =
+        feeRecords.reduce(
+            function (sum, record) {
+                return (
+                    sum +
+                    getRecordBalance(record)
+                );
+            },
+            0
+        );
+
+    setText(
+        "#totalRecords",
+        String(totalRecords)
+    );
+
+    setText(
+        "#totalAmount",
+        formatCurrency(totalAmount)
+    );
+
+    setText(
+        "#totalPaid",
+        formatCurrency(totalPaid)
+    );
+
+    setText(
+        "#totalBalance",
+        formatCurrency(totalBalance)
+    );
+}
+
+
+function getRecordBalance(record) {
+    if (
+        record &&
+        record.balance !== null &&
+        record.balance !== undefined &&
+        record.balance !== ""
+    ) {
+        return Number(record.balance) || 0;
+    }
+
+    const amount =
+        Number(
+            record &&
+            record.amount_due
+                ? record.amount_due
+                : 0
+        );
+
+    const paid =
+        Number(
+            record &&
+            record.amount_paid
+                ? record.amount_paid
+                : 0
+        );
+
+    return amount - paid;
+}
+
+
+function resetForm() {
+    editingFeeId = null;
+
+    const form =
+        document.querySelector("#feeForm");
+
+    if (form) {
+        form.reset();
+    }
+
+    populateStudentSelect();
+    populateSessionSelect();
+    populateTermSelect();
+    populateFeeStructureSelect();
+
+    updateBalancePreview();
+}
+
+
+function showFeeModal() {
+    if (feeModal) {
+        feeModal.show();
+    }
+}
+
+
+function hideFeeModal() {
+    if (feeModal) {
+        feeModal.hide();
+    }
+}
+
+
+function setSubmitState(
+    button,
+    loading
+) {
+    if (!button) {
+        return;
+    }
+
+    if (loading) {
+        button.dataset.originalText =
+            button.innerHTML;
+
+        button.disabled = true;
+
+        button.innerHTML =
+            '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+
+        return;
+    }
+
+    button.disabled = false;
+
+    if (button.dataset.originalText) {
+        button.innerHTML =
+            button.dataset.originalText;
+    }
+}
+
+
+function setFormValue(
+    selector,
+    value
+) {
+    const element =
+        document.querySelector(selector);
+
+    if (element) {
+        element.value =
+            value === null ||
+            value === undefined
+                ? ""
+                : value;
+    }
+}
+
+
+function getValue(selector) {
+    const element =
+        document.querySelector(selector);
+
+    if (!element) {
         return "";
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | STUDENT NAME
-    |--------------------------------------------------------------------------
-    */
+    return element.value || "";
+}
 
-    function getStudentName(record) {
+
+function setText(
+    selector,
+    value
+) {
+    const element =
+        document.querySelector(selector);
+
+    if (element) {
+        element.textContent = value;
+    }
+}
+
+
+function getStudentName(record) {
+    const directName =
+        record.student_name ||
+        record.studentName;
+
+    if (directName) {
+        return directName;
+    }
+
+    return [
+        record.first_name ||
+        record.firstName ||
+        "",
+
+        record.middle_name ||
+        record.middleName ||
+        "",
+
+        record.last_name ||
+        record.lastName ||
+        ""
+    ]
+        .filter(Boolean)
+        .join(" ") ||
+        "Unknown Student";
+}
+
+
+function getAdmissionText(student) {
+    const admission =
+        student.admission_number ||
+        student.admissionNumber ||
+        "";
+
+    if (!admission) {
+        return "";
+    }
+
+    return " - " + admission;
+}
+
+
+function getFeeStructureLabel(structure) {
+    const name =
+        structure.fee_name ||
+        structure.feeName ||
+        "Fee Structure";
+
+    const amount =
+        Number(
+            structure.amount || 0
+        );
+
+    if (amount > 0) {
         return (
-            record.student_name ||
-            record.studentName ||
-            [
-                record.first_name ||
-                record.firstName ||
-                "",
-                record.middle_name ||
-                record.middleName ||
-                "",
-                record.last_name ||
-                record.lastName ||
-                ""
-            ]
-                .filter(Boolean)
-                .join(" ")
-        ) || "Unknown Student";
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | INITIALS
-    |--------------------------------------------------------------------------
-    */
-
-    function getInitials(name) {
-        if (
-            window.App &&
-            typeof window.App.getInitials === "function"
-        ) {
-            return window.App.getInitials(name);
-        }
-
-        return String(name)
-            .split(" ")
-            .filter(Boolean)
-            .slice(0, 2)
-            .map(word =>
-                word.charAt(0).toUpperCase()
-            )
-            .join("");
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | CURRENCY
-    |--------------------------------------------------------------------------
-    */
-
-    function formatCurrency(amount) {
-        return new Intl.NumberFormat(
-            "en-NG",
-            {
-                style: "currency",
-                currency: "NGN",
-                minimumFractionDigits: 2
-            }
-        ).format(
-            Number(amount) || 0
+            name +
+            " - " +
+            formatCurrency(amount)
         );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DATE
-    |--------------------------------------------------------------------------
-    */
+    return name;
+}
 
-    function formatDate(value) {
-        if (!value) {
-            return "-";
-        }
 
-        const date =
-            new Date(value);
-
-        if (Number.isNaN(date.getTime())) {
-            return String(value);
-        }
-
-        return date.toLocaleDateString(
-            "en-NG",
-            {
-                day: "2-digit",
-                month: "short",
-                year: "numeric"
-            }
-        );
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | CAPITALIZE
-    |--------------------------------------------------------------------------
-    */
-
-    function capitalize(value) {
-        if (!value) {
-            return "";
-        }
-
-        const text =
-            String(value);
-
-        return (
-            text.charAt(0).toUpperCase() +
-            text.slice(1).toLowerCase()
-        );
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | TABLE HELPERS
-    |--------------------------------------------------------------------------
-    */
-
-    function getTableContainer() {
-        return (
-            document.querySelector("#feesTableBody") ||
-            document.querySelector("#feeTableBody") ||
-            document.querySelector("tbody[data-fees-body]")
-        );
-    }
-
-    function showLoading() {
-        const container =
-            getTableContainer();
-
-        if (!container) {
-            return;
-        }
-
-        container.innerHTML = `
-            <tr>
-                <td colspan="10">
-                    <div class="students-loading">
-                        <div class="students-loading-spinner"></div>
-                        <p>Loading fee records...</p>
-                    </div>
-                </td>
-            </tr>
-        `;
-    }
-
-    function showNoRecords(container) {
-        container.innerHTML = `
-            <tr>
-                <td colspan="10">
-                    <div class="students-empty">
-                        <div class="students-empty-icon">₦</div>
-                        <h3>No fee records found</h3>
-                        <p>No school fee records are available.</p>
-                    </div>
-                </td>
-            </tr>
-        `;
-    }
-
-    function showError(message) {
-        const container =
-            getTableContainer();
-
-        if (!container) {
-            return;
-        }
-
-        container.innerHTML = `
-            <tr>
-                <td colspan="10">
-                    <div class="students-empty">
-                        <h3>Unable to load fees</h3>
-                        <p>${escapeHtml(message)}</p>
-                    </div>
-                </td>
-            </tr>
-        `;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | NOTIFICATION
-    |--------------------------------------------------------------------------
-    */
-
-    function notify(message, type = "success") {
-        if (
-            typeof window.showNotification ===
+function getInitials(name) {
+    if (
+        window.App &&
+        typeof window.App.getInitials ===
             "function"
-        ) {
-            window.showNotification(
-                message,
-                type
-            );
-            return;
+    ) {
+        return window.App.getInitials(name);
+    }
+
+    return String(name)
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(function (word) {
+            return word
+                .charAt(0)
+                .toUpperCase();
+        })
+        .join("");
+}
+
+
+function formatCurrency(amount) {
+    return new Intl.NumberFormat(
+        "en-NG",
+        {
+            style: "currency",
+            currency: "NGN",
+            minimumFractionDigits: 2
         }
+    ).format(
+        Number(amount) || 0
+    );
+}
 
-        let container =
-            document.querySelector(
-                "#notification-container"
-            );
 
-        if (!container) {
-            container =
-                document.createElement("div");
+function extractArray(data) {
+    if (Array.isArray(data)) {
+        return data;
+    }
 
-            container.id =
-                "notification-container";
+    if (
+        data &&
+        Array.isArray(data.data)
+    ) {
+        return data.data;
+    }
 
-            container.style.position =
-                "fixed";
+    if (
+        data &&
+        Array.isArray(data.rows)
+    ) {
+        return data.rows;
+    }
 
-            container.style.top =
-                "20px";
+    if (
+        data &&
+        data.data &&
+        Array.isArray(data.data.rows)
+    ) {
+        return data.data.rows;
+    }
 
-            container.style.right =
-                "20px";
+    return [];
+}
 
-            container.style.zIndex =
-                "9999";
 
-            document.body.appendChild(container);
-        }
+function extractObject(data) {
+    if (
+        data &&
+        data.data &&
+        !Array.isArray(data.data)
+    ) {
+        return data.data;
+    }
 
-        const notification =
+    if (
+        data &&
+        data.record
+    ) {
+        return data.record;
+    }
+
+    if (
+        data &&
+        data.studentFee
+    ) {
+        return data.studentFee;
+    }
+
+    if (
+        data &&
+        data.payment
+    ) {
+        return data.payment;
+    }
+
+    if (
+        data &&
+        typeof data === "object"
+    ) {
+        return data;
+    }
+
+    return {};
+}
+
+
+function showLoading() {
+    const container =
+        document.querySelector(
+            "#feesTableBody"
+        );
+
+    if (!container) {
+        return;
+    }
+
+    container.innerHTML = `
+        <tr>
+            <td colspan="10" class="text-center py-5 text-secondary">
+                <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                Loading fee records...
+            </td>
+        </tr>
+    `;
+}
+
+
+function showNoRecords(container) {
+    container.innerHTML = `
+        <tr>
+            <td colspan="10" class="text-center py-5 text-secondary">
+                <div class="fs-1 mb-2">₦</div>
+                <h5>No fee records found</h5>
+                <p class="mb-0">
+                    No student fee records match the current search or status filter.
+                </p>
+            </td>
+        </tr>
+    `;
+}
+
+
+function showError(message) {
+    const container =
+        document.querySelector(
+            "#feesTableBody"
+        );
+
+    if (!container) {
+        return;
+    }
+
+    container.innerHTML = `
+        <tr>
+            <td colspan="10" class="text-center py-5">
+                <h5>Unable to load fees</h5>
+                <p class="text-secondary mb-0">
+                    ${escapeHtml(message)}
+                </p>
+            </td>
+        </tr>
+    `;
+}
+
+
+function notify(
+    message,
+    type = "success"
+) {
+    if (
+        typeof window.showNotification ===
+        "function"
+    ) {
+        window.showNotification(
+            message,
+            type
+        );
+
+        return;
+    }
+
+    let container =
+        document.querySelector(
+            "#notification-container"
+        );
+
+    if (!container) {
+        container =
             document.createElement("div");
 
-        notification.className =
-            `alert alert-${type}`;
+        container.id =
+            "notification-container";
 
-        notification.textContent =
-            message;
+        container.style.position =
+            "fixed";
 
-        notification.style.marginBottom =
-            "10px";
+        container.style.top =
+            "20px";
 
-        container.appendChild(
-            notification
+        container.style.right =
+            "20px";
+
+        container.style.zIndex =
+            "9999";
+
+        document.body.appendChild(
+            container
         );
-
-        setTimeout(
-            () => notification.remove(),
-            4000
-        );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | ESCAPING
-    |--------------------------------------------------------------------------
-    */
+    const notification =
+        document.createElement("div");
 
-    function escapeHtml(value) {
-        if (
-            value === null ||
-            value === undefined
-        ) {
-            return "";
-        }
+    let bootstrapType = type;
 
-        if (
-            window.App &&
-            typeof window.App.escapeHtml === "function"
-        ) {
-            return window.App.escapeHtml(value);
-        }
-
-        return String(value)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
+    if (type === "error") {
+        bootstrapType = "danger";
     }
 
-    function escapeAttribute(value) {
-        return escapeHtml(value);
+    notification.className =
+        "alert alert-" +
+        bootstrapType;
+
+    notification.textContent =
+        message;
+
+    notification.style.marginBottom =
+        "10px";
+
+    container.appendChild(
+        notification
+    );
+
+    setTimeout(
+        function () {
+            notification.remove();
+        },
+        4000
+    );
+}
+
+
+function clearAuthentication() {
+    localStorage.removeItem(
+        "school_management_token"
+    );
+
+    localStorage.removeItem(
+        "school_management_user"
+    );
+
+    localStorage.removeItem(
+        "token"
+    );
+
+    localStorage.removeItem(
+        "accessToken"
+    );
+
+    sessionStorage.removeItem(
+        "school_management_token"
+    );
+
+    sessionStorage.removeItem(
+        "school_management_user"
+    );
+
+    sessionStorage.removeItem(
+        "token"
+    );
+
+    sessionStorage.removeItem(
+        "accessToken"
+    );
+}
+
+
+function escapeHtml(value) {
+    if (
+        value === null ||
+        value === undefined
+    ) {
+        return "";
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | EXPORT
-    |--------------------------------------------------------------------------
-    */
+    if (
+        window.App &&
+        typeof window.App.escapeHtml ===
+            "function"
+    ) {
+        return window.App.escapeHtml(value);
+    }
 
-    window.FeesPage = {
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+
+function escapeAttribute(value) {
+    return escapeHtml(value);
+}
+
+
+window.FeesPage = {
+    initialize,
+    loadFees,
+    loadStudents,
+    loadAcademicSessions,
+    loadTerms,
+    loadFeeStructures,
+    resetForm
+};
+
+
+if (
+    document.readyState ===
+    "loading"
+) {
+    document.addEventListener(
+        "DOMContentLoaded",
         initialize,
-        loadFees,
-        loadStudents,
-        editFee,
-        deleteFee,
-        resetForm
-    };
+        {
+            once: true
+        }
+    );
+} else {
+    initialize();
+}
+```
 
-    /*
-    |--------------------------------------------------------------------------
-    | START
-    |--------------------------------------------------------------------------
-    */
-
-    if (document.readyState === "loading") {
-        document.addEventListener(
-            "DOMContentLoaded",
-            initialize,
-            { once: true }
-        );
-    } else {
-        initialize();
-    }
 })();

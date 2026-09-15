@@ -4,10 +4,60 @@ const { query } = require("../config/database");
 
 /*
 |--------------------------------------------------------------------------
-| Report Model
+| REPORT MODEL
+|--------------------------------------------------------------------------
+|
+| Central reporting/data-summary layer for the school management system.
+|
+| Responsibilities:
+| - School overview
+| - Student statistics
+| - Students by class
+| - Staff statistics
+| - Staff by department
+| - Fee statistics
+| - Attendance statistics
+| - Result statistics
+| - Academic session reports
+| - Class reports
+| - Dashboard reports
+|
+| This model is read-only.
+|
+| It does not create, update or delete business records.
+|
 |--------------------------------------------------------------------------
 */
 
+/*
+|--------------------------------------------------------------------------
+| Validation Helpers
+|--------------------------------------------------------------------------
+*/
+
+function validateRequired(value, fieldName) {
+    if (
+        value === undefined ||
+        value === null ||
+        String(value).trim() === ""
+    ) {
+        throw new Error(`${fieldName} is required`);
+    }
+
+    return value;
+}
+
+function validateId(value, fieldName) {
+    validateRequired(value, fieldName);
+
+    const id = String(value).trim();
+
+    if (id.length === 0) {
+        throw new Error(`${fieldName} is invalid`);
+    }
+
+    return id;
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -16,6 +66,11 @@ const { query } = require("../config/database");
 */
 
 async function getSchoolOverview(schoolId) {
+    const validSchoolId = validateId(
+        schoolId,
+        "School ID"
+    );
+
     const sql = `
         SELECT
             (
@@ -28,7 +83,7 @@ async function getSchoolOverview(schoolId) {
                 SELECT COUNT(*)
                 FROM students
                 WHERE school_id = $1
-                  AND LOWER(status) = 'active'
+                  AND LOWER(COALESCE(status, '')) = 'active'
             )::INTEGER AS active_students,
 
             (
@@ -41,7 +96,7 @@ async function getSchoolOverview(schoolId) {
                 SELECT COUNT(*)
                 FROM staff
                 WHERE school_id = $1
-                  AND LOWER(status) = 'active'
+                  AND LOWER(COALESCE(status, '')) = 'active'
             )::INTEGER AS active_staff,
 
             (
@@ -63,20 +118,37 @@ async function getSchoolOverview(schoolId) {
             )::INTEGER AS total_guardians
     `;
 
-    const result = await query(sql, [schoolId]);
-    const row = result.rows[0];
+    const result = await query(
+        sql,
+        [validSchoolId]
+    );
+
+    const row = result.rows[0] || {};
 
     return {
-        totalStudents: Number(row.total_students),
-        activeStudents: Number(row.active_students),
-        totalStaff: Number(row.total_staff),
-        activeStaff: Number(row.active_staff),
-        totalClasses: Number(row.total_classes),
-        totalSubjects: Number(row.total_subjects),
-        totalGuardians: Number(row.total_guardians)
+        totalStudents: Number(
+            row.total_students || 0
+        ),
+        activeStudents: Number(
+            row.active_students || 0
+        ),
+        totalStaff: Number(
+            row.total_staff || 0
+        ),
+        activeStaff: Number(
+            row.active_staff || 0
+        ),
+        totalClasses: Number(
+            row.total_classes || 0
+        ),
+        totalSubjects: Number(
+            row.total_subjects || 0
+        ),
+        totalGuardians: Number(
+            row.total_guardians || 0
+        )
     };
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -85,24 +157,30 @@ async function getSchoolOverview(schoolId) {
 */
 
 async function getStudentStatistics(schoolId) {
+    const validSchoolId = validateId(
+        schoolId,
+        "School ID"
+    );
+
     const sql = `
         SELECT
             COUNT(*)::INTEGER AS total_students,
 
             COUNT(*) FILTER (
-                WHERE LOWER(status) = 'active'
+                WHERE LOWER(COALESCE(status, '')) = 'active'
             )::INTEGER AS active_students,
 
             COUNT(*) FILTER (
-                WHERE LOWER(status) <> 'active'
+                WHERE LOWER(COALESCE(status, '')) <> 'active'
+                   OR status IS NULL
             )::INTEGER AS inactive_students,
 
             COUNT(*) FILTER (
-                WHERE LOWER(gender) = 'male'
+                WHERE LOWER(COALESCE(gender, '')) = 'male'
             )::INTEGER AS male_students,
 
             COUNT(*) FILTER (
-                WHERE LOWER(gender) = 'female'
+                WHERE LOWER(COALESCE(gender, '')) = 'female'
             )::INTEGER AS female_students
 
         FROM students
@@ -110,18 +188,31 @@ async function getStudentStatistics(schoolId) {
         WHERE school_id = $1
     `;
 
-    const result = await query(sql, [schoolId]);
-    const row = result.rows[0];
+    const result = await query(
+        sql,
+        [validSchoolId]
+    );
+
+    const row = result.rows[0] || {};
 
     return {
-        totalStudents: Number(row.total_students),
-        activeStudents: Number(row.active_students),
-        inactiveStudents: Number(row.inactive_students),
-        maleStudents: Number(row.male_students),
-        femaleStudents: Number(row.female_students)
+        totalStudents: Number(
+            row.total_students || 0
+        ),
+        activeStudents: Number(
+            row.active_students || 0
+        ),
+        inactiveStudents: Number(
+            row.inactive_students || 0
+        ),
+        maleStudents: Number(
+            row.male_students || 0
+        ),
+        femaleStudents: Number(
+            row.female_students || 0
+        )
     };
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -133,11 +224,18 @@ async function getStudentsByClass(
     schoolId,
     sessionId = null
 ) {
+    const validSchoolId = validateId(
+        schoolId,
+        "School ID"
+    );
+
     let sql = `
         SELECT
             c.id AS class_id,
             c.class_name,
-            COUNT(DISTINCT se.student_id)::INTEGER AS student_count
+            c.class_code,
+            COUNT(DISTINCT se.student_id)::INTEGER
+                AS student_count
 
         FROM classes c
 
@@ -149,14 +247,23 @@ async function getStudentsByClass(
                 'Promoted',
                 'Repeated'
            )
+    `;
 
+    const values = [
+        validSchoolId
+    ];
+
+    sql += `
         WHERE c.school_id = $1
     `;
 
-    const values = [schoolId];
-
     if (sessionId) {
-        values.push(sessionId);
+        values.push(
+            validateId(
+                sessionId,
+                "Academic Session ID"
+            )
+        );
 
         sql += `
             AND se.academic_session_id = $${values.length}
@@ -167,6 +274,7 @@ async function getStudentsByClass(
         GROUP BY
             c.id,
             c.class_name,
+            c.class_code,
             c.class_order
 
         ORDER BY
@@ -174,15 +282,20 @@ async function getStudentsByClass(
             c.class_name ASC
     `;
 
-    const result = await query(sql, values);
+    const result = await query(
+        sql,
+        values
+    );
 
     return result.rows.map(row => ({
         classId: row.class_id,
         className: row.class_name,
-        studentCount: Number(row.student_count)
+        classCode: row.class_code,
+        studentCount: Number(
+            row.student_count || 0
+        )
     }));
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -191,16 +304,22 @@ async function getStudentsByClass(
 */
 
 async function getStaffStatistics(schoolId) {
+    const validSchoolId = validateId(
+        schoolId,
+        "School ID"
+    );
+
     const sql = `
         SELECT
             COUNT(*)::INTEGER AS total_staff,
 
             COUNT(*) FILTER (
-                WHERE LOWER(status) = 'active'
+                WHERE LOWER(COALESCE(status, '')) = 'active'
             )::INTEGER AS active_staff,
 
             COUNT(*) FILTER (
-                WHERE LOWER(status) <> 'active'
+                WHERE LOWER(COALESCE(status, '')) <> 'active'
+                   OR status IS NULL
             )::INTEGER AS inactive_staff
 
         FROM staff
@@ -208,16 +327,25 @@ async function getStaffStatistics(schoolId) {
         WHERE school_id = $1
     `;
 
-    const result = await query(sql, [schoolId]);
-    const row = result.rows[0];
+    const result = await query(
+        sql,
+        [validSchoolId]
+    );
+
+    const row = result.rows[0] || {};
 
     return {
-        totalStaff: Number(row.total_staff),
-        activeStaff: Number(row.active_staff),
-        inactiveStaff: Number(row.inactive_staff)
+        totalStaff: Number(
+            row.total_staff || 0
+        ),
+        activeStaff: Number(
+            row.active_staff || 0
+        ),
+        inactiveStaff: Number(
+            row.inactive_staff || 0
+        )
     };
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -226,37 +354,49 @@ async function getStaffStatistics(schoolId) {
 */
 
 async function getStaffByDepartment(schoolId) {
+    const validSchoolId = validateId(
+        schoolId,
+        "School ID"
+    );
+
     const sql = `
         SELECT
+            d.id AS department_id,
             COALESCE(
-                NULLIF(TRIM(department), ''),
+                NULLIF(TRIM(d.department_name), ''),
                 'Unassigned'
             ) AS department_name,
+            COUNT(s.id)::INTEGER AS staff_count
 
-            COUNT(*)::INTEGER AS staff_count
+        FROM departments d
 
-        FROM staff
+        LEFT JOIN staff s
+            ON s.department_id = d.id
+           AND s.school_id = d.school_id
 
-        WHERE school_id = $1
+        WHERE d.school_id = $1
 
         GROUP BY
-            COALESCE(
-                NULLIF(TRIM(department), ''),
-                'Unassigned'
-            )
+            d.id,
+            d.department_name
 
         ORDER BY
             department_name ASC
     `;
 
-    const result = await query(sql, [schoolId]);
+    const result = await query(
+        sql,
+        [validSchoolId]
+    );
 
     return result.rows.map(row => ({
+        departmentId: row.department_id,
         departmentName: row.department_name,
-        staffCount: Number(row.staff_count)
+        staffCount: Number(
+            row.staff_count || 0
+        )
     }));
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -265,53 +405,84 @@ async function getStaffByDepartment(schoolId) {
 */
 
 async function getFeeStatistics(schoolId) {
+    const validSchoolId = validateId(
+        schoolId,
+        "School ID"
+    );
+
     const sql = `
         SELECT
             COALESCE(
-                (
-                    SELECT SUM(sf.amount_due)
-                    FROM student_fees sf
-                    WHERE sf.school_id = $1
-                ),
+                SUM(amount_due),
                 0
             ) AS total_billed,
 
             COALESCE(
-                (
-                    SELECT SUM(sf.amount_paid)
-                    FROM student_fees sf
-                    WHERE sf.school_id = $1
-                ),
+                SUM(amount_paid),
                 0
             ) AS total_paid,
 
             COALESCE(
-                (
-                    SELECT SUM(sf.balance)
-                    FROM student_fees sf
-                    WHERE sf.school_id = $1
-                ),
+                SUM(balance),
                 0
             ) AS total_outstanding,
 
-            (
-                SELECT COUNT(*)
-                FROM student_fees sf
-                WHERE sf.school_id = $1
-            )::INTEGER AS total_records
+            COUNT(*)::INTEGER AS total_records,
+
+            COUNT(*) FILTER (
+                WHERE LOWER(
+                    COALESCE(payment_status, '')
+                ) = 'paid'
+            )::INTEGER AS paid_records,
+
+            COUNT(*) FILTER (
+                WHERE LOWER(
+                    COALESCE(payment_status, '')
+                ) = 'partially paid'
+            )::INTEGER AS partially_paid_records,
+
+            COUNT(*) FILTER (
+                WHERE LOWER(
+                    COALESCE(payment_status, '')
+                ) = 'unpaid'
+            )::INTEGER AS unpaid_records
+
+        FROM student_fees
+
+        WHERE school_id = $1
     `;
 
-    const result = await query(sql, [schoolId]);
-    const row = result.rows[0];
+    const result = await query(
+        sql,
+        [validSchoolId]
+    );
+
+    const row = result.rows[0] || {};
 
     return {
-        totalBilled: Number(row.total_billed),
-        totalPaid: Number(row.total_paid),
-        totalOutstanding: Number(row.total_outstanding),
-        totalRecords: Number(row.total_records)
+        totalBilled: Number(
+            row.total_billed || 0
+        ),
+        totalPaid: Number(
+            row.total_paid || 0
+        ),
+        totalOutstanding: Number(
+            row.total_outstanding || 0
+        ),
+        totalRecords: Number(
+            row.total_records || 0
+        ),
+        paidRecords: Number(
+            row.paid_records || 0
+        ),
+        partiallyPaidRecords: Number(
+            row.partially_paid_records || 0
+        ),
+        unpaidRecords: Number(
+            row.unpaid_records || 0
+        )
     };
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -325,24 +496,37 @@ async function getAttendanceStatistics(
     endDate = null,
     sessionId = null
 ) {
+    const validSchoolId = validateId(
+        schoolId,
+        "School ID"
+    );
+
     let sql = `
         SELECT
             COUNT(*)::INTEGER AS total_records,
 
             COUNT(*) FILTER (
-                WHERE LOWER(status) = 'present'
+                WHERE LOWER(
+                    COALESCE(status, '')
+                ) = 'present'
             )::INTEGER AS present,
 
             COUNT(*) FILTER (
-                WHERE LOWER(status) = 'absent'
+                WHERE LOWER(
+                    COALESCE(status, '')
+                ) = 'absent'
             )::INTEGER AS absent,
 
             COUNT(*) FILTER (
-                WHERE LOWER(status) = 'late'
+                WHERE LOWER(
+                    COALESCE(status, '')
+                ) = 'late'
             )::INTEGER AS late,
 
             COUNT(*) FILTER (
-                WHERE LOWER(status) = 'excused'
+                WHERE LOWER(
+                    COALESCE(status, '')
+                ) = 'excused'
             )::INTEGER AS excused
 
         FROM attendance
@@ -350,7 +534,9 @@ async function getAttendanceStatistics(
         WHERE school_id = $1
     `;
 
-    const values = [schoolId];
+    const values = [
+        validSchoolId
+    ];
 
     if (startDate) {
         values.push(startDate);
@@ -369,36 +555,58 @@ async function getAttendanceStatistics(
     }
 
     if (sessionId) {
-        values.push(sessionId);
+        values.push(
+            validateId(
+                sessionId,
+                "Academic Session ID"
+            )
+        );
 
         sql += `
             AND academic_session_id = $${values.length}
         `;
     }
 
-    const result = await query(sql, values);
-    const row = result.rows[0];
+    const result = await query(
+        sql,
+        values
+    );
 
-    const totalRecords = Number(row.total_records);
-    const present = Number(row.present);
+    const row = result.rows[0] || {};
+
+    const totalRecords = Number(
+        row.total_records || 0
+    );
+
+    const present = Number(
+        row.present || 0
+    );
 
     const attendanceRate =
         totalRecords > 0
             ? Number(
-                ((present / totalRecords) * 100).toFixed(2)
+                (
+                    (present / totalRecords) *
+                    100
+                ).toFixed(2)
             )
             : 0;
 
     return {
         totalRecords,
         present,
-        absent: Number(row.absent),
-        late: Number(row.late),
-        excused: Number(row.excused),
+        absent: Number(
+            row.absent || 0
+        ),
+        late: Number(
+            row.late || 0
+        ),
+        excused: Number(
+            row.excused || 0
+        ),
         attendanceRate
     };
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -411,32 +619,49 @@ async function getResultStatistics(
     sessionId = null,
     termId = null
 ) {
+    const validSchoolId = validateId(
+        schoolId,
+        "School ID"
+    );
+
     let sql = `
         SELECT
             COUNT(*)::INTEGER AS total_results,
 
             COUNT(*) FILTER (
-                WHERE UPPER(grade) = 'A'
+                WHERE UPPER(
+                    COALESCE(grade, '')
+                ) = 'A'
             )::INTEGER AS grade_a,
 
             COUNT(*) FILTER (
-                WHERE UPPER(grade) = 'B'
+                WHERE UPPER(
+                    COALESCE(grade, '')
+                ) = 'B'
             )::INTEGER AS grade_b,
 
             COUNT(*) FILTER (
-                WHERE UPPER(grade) = 'C'
+                WHERE UPPER(
+                    COALESCE(grade, '')
+                ) = 'C'
             )::INTEGER AS grade_c,
 
             COUNT(*) FILTER (
-                WHERE UPPER(grade) = 'D'
+                WHERE UPPER(
+                    COALESCE(grade, '')
+                ) = 'D'
             )::INTEGER AS grade_d,
 
             COUNT(*) FILTER (
-                WHERE UPPER(grade) = 'E'
+                WHERE UPPER(
+                    COALESCE(grade, '')
+                ) = 'E'
             )::INTEGER AS grade_e,
 
             COUNT(*) FILTER (
-                WHERE UPPER(grade) = 'F'
+                WHERE UPPER(
+                    COALESCE(grade, '')
+                ) = 'F'
             )::INTEGER AS grade_f
 
         FROM results
@@ -444,10 +669,17 @@ async function getResultStatistics(
         WHERE school_id = $1
     `;
 
-    const values = [schoolId];
+    const values = [
+        validSchoolId
+    ];
 
     if (sessionId) {
-        values.push(sessionId);
+        values.push(
+            validateId(
+                sessionId,
+                "Academic Session ID"
+            )
+        );
 
         sql += `
             AND academic_session_id = $${values.length}
@@ -455,27 +687,49 @@ async function getResultStatistics(
     }
 
     if (termId) {
-        values.push(termId);
+        values.push(
+            validateId(
+                termId,
+                "Term ID"
+            )
+        );
 
         sql += `
             AND term_id = $${values.length}
         `;
     }
 
-    const result = await query(sql, values);
-    const row = result.rows[0];
+    const result = await query(
+        sql,
+        values
+    );
+
+    const row = result.rows[0] || {};
 
     return {
-        totalResults: Number(row.total_results),
-        gradeA: Number(row.grade_a),
-        gradeB: Number(row.grade_b),
-        gradeC: Number(row.grade_c),
-        gradeD: Number(row.grade_d),
-        gradeE: Number(row.grade_e),
-        gradeF: Number(row.grade_f)
+        totalResults: Number(
+            row.total_results || 0
+        ),
+        gradeA: Number(
+            row.grade_a || 0
+        ),
+        gradeB: Number(
+            row.grade_b || 0
+        ),
+        gradeC: Number(
+            row.grade_c || 0
+        ),
+        gradeD: Number(
+            row.grade_d || 0
+        ),
+        gradeE: Number(
+            row.grade_e || 0
+        ),
+        gradeF: Number(
+            row.grade_f || 0
+        )
     };
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -487,6 +741,16 @@ async function getAcademicSessionReport(
     schoolId,
     sessionId
 ) {
+    const validSchoolId = validateId(
+        schoolId,
+        "School ID"
+    );
+
+    const validSessionId = validateId(
+        sessionId,
+        "Academic Session ID"
+    );
+
     const sql = `
         SELECT
             s.id AS session_id,
@@ -500,6 +764,7 @@ async function getAcademicSessionReport(
                 SELECT COUNT(*)
                 FROM terms t
                 WHERE t.school_id = s.school_id
+                  AND t.academic_session_id = s.id
             )::INTEGER AS total_terms,
 
             (
@@ -524,10 +789,13 @@ async function getAcademicSessionReport(
         LIMIT 1
     `;
 
-    const result = await query(sql, [
-        sessionId,
-        schoolId
-    ]);
+    const result = await query(
+        sql,
+        [
+            validSessionId,
+            validSchoolId
+        ]
+    );
 
     if (!result.rows[0]) {
         return null;
@@ -542,12 +810,17 @@ async function getAcademicSessionReport(
         endDate: row.end_date,
         isCurrent: row.is_current,
         isActive: row.is_active,
-        totalTerms: Number(row.total_terms),
-        totalEnrollments: Number(row.total_enrollments),
-        totalStudents: Number(row.total_students)
+        totalTerms: Number(
+            row.total_terms || 0
+        ),
+        totalEnrollments: Number(
+            row.total_enrollments || 0
+        ),
+        totalStudents: Number(
+            row.total_students || 0
+        )
     };
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -560,6 +833,16 @@ async function getClassReport(
     classId,
     sessionId = null
 ) {
+    const validSchoolId = validateId(
+        schoolId,
+        "School ID"
+    );
+
+    const validClassId = validateId(
+        classId,
+        "Class ID"
+    );
+
     let sql = `
         SELECT
             c.id AS class_id,
@@ -586,20 +869,28 @@ async function getClassReport(
         LEFT JOIN class_subjects cs
             ON cs.class_id = c.id
 
-        WHERE c.id = $2
-          AND c.school_id = $1
+        WHERE c.id = $1
+          AND c.school_id = $2
     `;
 
     const values = [
-        schoolId,
-        classId
+        validClassId,
+        validSchoolId
     ];
 
     if (sessionId) {
-        values.push(sessionId);
+        values.push(
+            validateId(
+                sessionId,
+                "Academic Session ID"
+            )
+        );
 
         sql += `
-            AND se.academic_session_id = $${values.length}
+            AND (
+                se.academic_session_id = $${values.length}
+                OR se.academic_session_id IS NULL
+            )
         `;
     }
 
@@ -612,7 +903,10 @@ async function getClassReport(
         LIMIT 1
     `;
 
-    const result = await query(sql, values);
+    const result = await query(
+        sql,
+        values
+    );
 
     if (!result.rows[0]) {
         return null;
@@ -624,11 +918,14 @@ async function getClassReport(
         classId: row.class_id,
         className: row.class_name,
         classCode: row.class_code,
-        studentCount: Number(row.student_count),
-        subjectCount: Number(row.subject_count)
+        studentCount: Number(
+            row.student_count || 0
+        ),
+        subjectCount: Number(
+            row.subject_count || 0
+        )
     };
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -637,6 +934,11 @@ async function getClassReport(
 */
 
 async function getDashboardReport(schoolId) {
+    const validSchoolId = validateId(
+        schoolId,
+        "School ID"
+    );
+
     const [
         overview,
         students,
@@ -645,12 +947,12 @@ async function getDashboardReport(schoolId) {
         attendance,
         results
     ] = await Promise.all([
-        getSchoolOverview(schoolId),
-        getStudentStatistics(schoolId),
-        getStaffStatistics(schoolId),
-        getFeeStatistics(schoolId),
-        getAttendanceStatistics(schoolId),
-        getResultStatistics(schoolId)
+        getSchoolOverview(validSchoolId),
+        getStudentStatistics(validSchoolId),
+        getStaffStatistics(validSchoolId),
+        getFeeStatistics(validSchoolId),
+        getAttendanceStatistics(validSchoolId),
+        getResultStatistics(validSchoolId)
     ]);
 
     return {
@@ -662,7 +964,6 @@ async function getDashboardReport(schoolId) {
         results
     };
 }
-
 
 /*
 |--------------------------------------------------------------------------

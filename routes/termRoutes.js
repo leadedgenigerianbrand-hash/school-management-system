@@ -1,3 +1,5 @@
+"use strict";
+
 const express = require("express");
 
 const {
@@ -8,99 +10,48 @@ const {
     deleteTerm
 } = require("../controllers/termController");
 
-const authMiddleware = require("../middleware/authMiddleware");
+const authenticate =
+    require("../middleware/authMiddleware");
+
+const {
+    requireSchoolContext
+} = require("../middleware/roleMiddleware");
 
 const router = express.Router();
 
-/*
-|--------------------------------------------------------------------------
-| TERM ROUTES
-|--------------------------------------------------------------------------
-| Base URL:
-| /api/terms
-|--------------------------------------------------------------------------
-*/
-
-
-/*
-|--------------------------------------------------------------------------
-| GET ALL TERMS
-|--------------------------------------------------------------------------
-| GET /api/terms
-|--------------------------------------------------------------------------
-*/
-
 router.get(
     "/",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
     getTerms
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| GET TERM BY ID
-|--------------------------------------------------------------------------
-| GET /api/terms/:id
-|--------------------------------------------------------------------------
-*/
-
 router.get(
     "/:id",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
     getTermById
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| CREATE TERM
-|--------------------------------------------------------------------------
-| POST /api/terms
-|--------------------------------------------------------------------------
-*/
-
 router.post(
     "/",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
     createTerm
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| UPDATE TERM
-|--------------------------------------------------------------------------
-| PUT /api/terms/:id
-|--------------------------------------------------------------------------
-*/
-
 router.put(
     "/:id",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
     updateTerm
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| DELETE TERM
-|--------------------------------------------------------------------------
-| DELETE /api/terms/:id
-|--------------------------------------------------------------------------
-*/
-
 router.delete(
     "/:id",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
     deleteTerm
 );
-
-
-/*
-|--------------------------------------------------------------------------
-| EXPORT ROUTER
-|--------------------------------------------------------------------------
-*/
 
 module.exports = router;

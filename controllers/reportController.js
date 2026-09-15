@@ -1,25 +1,86 @@
-const reportModel = require("../models/reportModel");
+"use strict";
 
+const reportService = require("../services/reportService");
 
 /*
 |--------------------------------------------------------------------------
 | REPORT CONTROLLER
 |--------------------------------------------------------------------------
 |
-| Handles school management system reports.
+| HTTP/API controller for the school management reporting system.
 |
-| Reports:
+| Responsibilities:
+| - Resolve the school ID
+| - Read request parameters
+| - Call reportService
+| - Return consistent JSON responses
+| - Pass unexpected errors to error middleware
 |
-| - Dashboard report
-| - Student report
-| - Academic report
-| - Attendance report
-| - Fee report
-| - Staff report
+| Architecture:
+|
+| Route
+| ↓
+| Controller
+| ↓
+| Service
+| ↓
+| Model
+| ↓
+| PostgreSQL
 |
 |--------------------------------------------------------------------------
 */
 
+/*
+|--------------------------------------------------------------------------
+| Helpers
+|--------------------------------------------------------------------------
+*/
+
+function resolveSchoolId(req) {
+    return (
+        req.user?.schoolId ||
+        req.user?.school_id ||
+        req.query?.schoolId ||
+        req.body?.schoolId ||
+        null
+    );
+}
+
+function getOptionalQuery(req, name) {
+    const value = req.query?.[name];
+
+    if (
+        value === undefined ||
+        value === null ||
+        String(value).trim() === ""
+    ) {
+        return null;
+    }
+
+    return String(value).trim();
+}
+
+function sendSuccess(
+    res,
+    data,
+    statusCode = 200
+) {
+    return res.status(statusCode).json({
+        success: true,
+        data
+    });
+}
+
+function sendBadRequest(
+    res,
+    message
+) {
+    return res.status(400).json({
+        success: false,
+        message
+    });
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -28,60 +89,43 @@ const reportModel = require("../models/reportModel");
 |
 | GET /api/reports/dashboard
 |
+|--------------------------------------------------------------------------
 */
 
-async function getDashboardReport(req, res, next) {
-
+async function getDashboardReport(
+    req,
+    res,
+    next
+) {
     try {
-
-        const schoolId =
-            req.query.schoolId ||
-            req.user?.schoolId ||
-            req.user?.school_id;
-
+        const schoolId = resolveSchoolId(req);
 
         if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
+            return sendBadRequest(
+                res,
+                "School ID is required."
+            );
         }
 
-
         const report =
-            await reportModel.getDashboardReport(
+            await reportService.getDashboardReport(
                 schoolId
             );
 
-
-        return res.status(200).json({
-
-            success: true,
-
-            data:
-                report
-
-        });
+        return sendSuccess(
+            res,
+            report
+        );
 
     } catch (error) {
-
         console.error(
             "Get dashboard report error:",
             error
         );
 
         next(error);
-
     }
-
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -90,83 +134,85 @@ async function getDashboardReport(req, res, next) {
 |
 | GET /api/reports/students
 |
+| Optional query parameters:
+| - sessionId
+| - classId
+|
+|--------------------------------------------------------------------------
 */
 
-async function getStudentReport(req, res, next) {
-
+async function getStudentReport(
+    req,
+    res,
+    next
+) {
     try {
-
-        const schoolId =
-            req.query.schoolId ||
-            req.user?.schoolId ||
-            req.user?.school_id;
-
+        const schoolId = resolveSchoolId(req);
 
         if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
+            return sendBadRequest(
+                res,
+                "School ID is required."
+            );
         }
 
+        const sessionId =
+            getOptionalQuery(
+                req,
+                "sessionId"
+            );
 
-        const {
-            sessionId,
-            classId,
-            status
-        } = req.query;
+        const classId =
+            getOptionalQuery(
+                req,
+                "classId"
+            );
 
+        if (classId) {
+            const report =
+                await reportService.getClassReport(
+                    schoolId,
+                    classId,
+                    sessionId
+                );
 
-        const report =
-            await reportModel.getStudentReport({
-
-                schoolId,
-
-                sessionId:
-                    sessionId || null,
-
-                classId:
-                    classId || null,
-
-                status:
-                    status || null
-
-            });
-
-
-        return res.status(200).json({
-
-            success: true,
-
-            count:
-                Array.isArray(report)
-                    ? report.length
-                    : undefined,
-
-            data:
+            return sendSuccess(
+                res,
                 report
+            );
+        }
 
-        });
+        const [
+            statistics,
+            studentsByClass
+        ] = await Promise.all([
+            reportService.getStudentStatistics(
+                schoolId
+            ),
+
+            reportService.getStudentsByClass(
+                schoolId,
+                sessionId
+            )
+        ]);
+
+        return sendSuccess(
+            res,
+            {
+                statistics,
+                studentsByClass
+            }
+        );
 
     } catch (error) {
-
         console.error(
             "Get student report error:",
             error
         );
 
         next(error);
-
     }
-
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -175,83 +221,145 @@ async function getStudentReport(req, res, next) {
 |
 | GET /api/reports/academic
 |
+| Optional query parameters:
+| - sessionId
+| - termId
+| - classId
+|
+|--------------------------------------------------------------------------
 */
 
-async function getAcademicReport(req, res, next) {
-
+async function getAcademicReport(
+    req,
+    res,
+    next
+) {
     try {
-
-        const schoolId =
-            req.query.schoolId ||
-            req.user?.schoolId ||
-            req.user?.school_id;
-
+        const schoolId = resolveSchoolId(req);
 
         if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
+            return sendBadRequest(
+                res,
+                "School ID is required."
+            );
         }
 
+        const sessionId =
+            getOptionalQuery(
+                req,
+                "sessionId"
+            );
 
-        const {
-            sessionId,
-            termId,
-            classId
-        } = req.query;
+        const termId =
+            getOptionalQuery(
+                req,
+                "termId"
+            );
 
+        const classId =
+            getOptionalQuery(
+                req,
+                "classId"
+            );
 
-        const report =
-            await reportModel.getAcademicReport({
+        if (sessionId && classId) {
+            const [
+                sessionReport,
+                classReport,
+                resultStatistics
+            ] = await Promise.all([
+                reportService.getAcademicSessionReport(
+                    schoolId,
+                    sessionId
+                ),
 
+                reportService.getClassReport(
+                    schoolId,
+                    classId,
+                    sessionId
+                ),
+
+                reportService.getResultStatistics(
+                    schoolId,
+                    sessionId,
+                    termId
+                )
+            ]);
+
+            return sendSuccess(
+                res,
+                {
+                    session: sessionReport,
+                    class: classReport,
+                    results: resultStatistics
+                }
+            );
+        }
+
+        if (sessionId) {
+            const [
+                sessionReport,
+                resultStatistics
+            ] = await Promise.all([
+                reportService.getAcademicSessionReport(
+                    schoolId,
+                    sessionId
+                ),
+
+                reportService.getResultStatistics(
+                    schoolId,
+                    sessionId,
+                    termId
+                )
+            ]);
+
+            return sendSuccess(
+                res,
+                {
+                    session: sessionReport,
+                    results: resultStatistics
+                }
+            );
+        }
+
+        if (classId) {
+            const classReport =
+                await reportService.getClassReport(
+                    schoolId,
+                    classId
+                );
+
+            return sendSuccess(
+                res,
+                {
+                    class: classReport
+                }
+            );
+        }
+
+        const resultStatistics =
+            await reportService.getResultStatistics(
                 schoolId,
+                null,
+                termId
+            );
 
-                sessionId:
-                    sessionId || null,
-
-                termId:
-                    termId || null,
-
-                classId:
-                    classId || null
-
-            });
-
-
-        return res.status(200).json({
-
-            success: true,
-
-            count:
-                Array.isArray(report)
-                    ? report.length
-                    : undefined,
-
-            data:
-                report
-
-        });
+        return sendSuccess(
+            res,
+            {
+                results: resultStatistics
+            }
+        );
 
     } catch (error) {
-
         console.error(
             "Get academic report error:",
             error
         );
 
         next(error);
-
     }
-
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -260,91 +368,69 @@ async function getAcademicReport(req, res, next) {
 |
 | GET /api/reports/attendance
 |
+| Optional query parameters:
+| - sessionId
+| - startDate
+| - endDate
+|
+|--------------------------------------------------------------------------
 */
 
-async function getAttendanceReport(req, res, next) {
-
+async function getAttendanceReport(
+    req,
+    res,
+    next
+) {
     try {
-
-        const schoolId =
-            req.query.schoolId ||
-            req.user?.schoolId ||
-            req.user?.school_id;
-
+        const schoolId = resolveSchoolId(req);
 
         if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
+            return sendBadRequest(
+                res,
+                "School ID is required."
+            );
         }
 
+        const sessionId =
+            getOptionalQuery(
+                req,
+                "sessionId"
+            );
 
-        const {
-            sessionId,
-            termId,
-            classId,
-            startDate,
-            endDate
-        } = req.query;
+        const startDate =
+            getOptionalQuery(
+                req,
+                "startDate"
+            );
 
+        const endDate =
+            getOptionalQuery(
+                req,
+                "endDate"
+            );
 
         const report =
-            await reportModel.getAttendanceReport({
-
+            await reportService.getAttendanceStatistics(
                 schoolId,
+                startDate,
+                endDate,
+                sessionId
+            );
 
-                sessionId:
-                    sessionId || null,
-
-                termId:
-                    termId || null,
-
-                classId:
-                    classId || null,
-
-                startDate:
-                    startDate || null,
-
-                endDate:
-                    endDate || null
-
-            });
-
-
-        return res.status(200).json({
-
-            success: true,
-
-            count:
-                Array.isArray(report)
-                    ? report.length
-                    : undefined,
-
-            data:
-                report
-
-        });
+        return sendSuccess(
+            res,
+            report
+        );
 
     } catch (error) {
-
         console.error(
             "Get attendance report error:",
             error
         );
 
         next(error);
-
     }
-
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -353,95 +439,43 @@ async function getAttendanceReport(req, res, next) {
 |
 | GET /api/reports/fees
 |
+|--------------------------------------------------------------------------
 */
 
-async function getFeeReport(req, res, next) {
-
+async function getFeeReport(
+    req,
+    res,
+    next
+) {
     try {
-
-        const schoolId =
-            req.query.schoolId ||
-            req.user?.schoolId ||
-            req.user?.school_id;
-
+        const schoolId = resolveSchoolId(req);
 
         if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
+            return sendBadRequest(
+                res,
+                "School ID is required."
+            );
         }
 
-
-        const {
-            sessionId,
-            termId,
-            classId,
-            status,
-            startDate,
-            endDate
-        } = req.query;
-
-
         const report =
-            await reportModel.getFeeReport({
+            await reportService.getFeeStatistics(
+                schoolId
+            );
 
-                schoolId,
-
-                sessionId:
-                    sessionId || null,
-
-                termId:
-                    termId || null,
-
-                classId:
-                    classId || null,
-
-                status:
-                    status || null,
-
-                startDate:
-                    startDate || null,
-
-                endDate:
-                    endDate || null
-
-            });
-
-
-        return res.status(200).json({
-
-            success: true,
-
-            count:
-                Array.isArray(report)
-                    ? report.length
-                    : undefined,
-
-            data:
-                report
-
-        });
+        return sendSuccess(
+            res,
+            report
+        );
 
     } catch (error) {
-
         console.error(
             "Get fee report error:",
             error
         );
 
         next(error);
-
     }
-
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -450,79 +484,159 @@ async function getFeeReport(req, res, next) {
 |
 | GET /api/reports/staff
 |
+| Optional query parameter:
+| - departmentId
+|
+|--------------------------------------------------------------------------
 */
 
-async function getStaffReport(req, res, next) {
-
+async function getStaffReport(
+    req,
+    res,
+    next
+) {
     try {
-
-        const schoolId =
-            req.query.schoolId ||
-            req.user?.schoolId ||
-            req.user?.school_id;
-
+        const schoolId = resolveSchoolId(req);
 
         if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
+            return sendBadRequest(
+                res,
+                "School ID is required."
+            );
         }
 
+        const departmentId =
+            getOptionalQuery(
+                req,
+                "departmentId"
+            );
 
-        const {
-            departmentId,
-            status
-        } = req.query;
+        const [
+            statistics,
+            departments
+        ] = await Promise.all([
+            reportService.getStaffStatistics(
+                schoolId
+            ),
 
+            reportService.getStaffByDepartment(
+                schoolId
+            )
+        ]);
 
-        const report =
-            await reportModel.getStaffReport({
+        let filteredDepartments =
+            departments;
 
-                schoolId,
+        if (departmentId) {
+            filteredDepartments =
+                departments.filter(
+                    department =>
+                        String(
+                            department.departmentId
+                        ) === String(
+                            departmentId
+                        )
+                );
+        }
 
-                departmentId:
-                    departmentId || null,
-
-                status:
-                    status || null
-
-            });
-
-
-        return res.status(200).json({
-
-            success: true,
-
-            count:
-                Array.isArray(report)
-                    ? report.length
-                    : undefined,
-
-            data:
-                report
-
-        });
+        return sendSuccess(
+            res,
+            {
+                statistics,
+                departments:
+                    filteredDepartments,
+                selectedDepartmentId:
+                    departmentId
+            }
+        );
 
     } catch (error) {
-
         console.error(
             "Get staff report error:",
             error
         );
 
         next(error);
-
     }
-
 }
 
+/*
+|--------------------------------------------------------------------------
+| Get Complete School Report
+|--------------------------------------------------------------------------
+|
+| GET /api/reports/complete
+|
+| Optional query parameters:
+| - sessionId
+| - termId
+| - startDate
+| - endDate
+|
+|--------------------------------------------------------------------------
+*/
+
+async function getCompleteSchoolReport(
+    req,
+    res,
+    next
+) {
+    try {
+        const schoolId = resolveSchoolId(req);
+
+        if (!schoolId) {
+            return sendBadRequest(
+                res,
+                "School ID is required."
+            );
+        }
+
+        const options = {
+            sessionId:
+                getOptionalQuery(
+                    req,
+                    "sessionId"
+                ),
+
+            termId:
+                getOptionalQuery(
+                    req,
+                    "termId"
+                ),
+
+            startDate:
+                getOptionalQuery(
+                    req,
+                    "startDate"
+                ),
+
+            endDate:
+                getOptionalQuery(
+                    req,
+                    "endDate"
+                )
+        };
+
+        const report =
+            await reportService.getCompleteSchoolReport(
+                schoolId,
+                options
+            );
+
+        return sendSuccess(
+            res,
+            report
+        );
+
+    } catch (error) {
+        console.error(
+            "Get complete school report error:",
+            error
+        );
+
+        next(error);
+    }
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -531,17 +645,11 @@ async function getStaffReport(req, res, next) {
 */
 
 module.exports = {
-
     getDashboardReport,
-
     getStudentReport,
-
     getAcademicReport,
-
     getAttendanceReport,
-
     getFeeReport,
-
-    getStaffReport
-
+    getStaffReport,
+    getCompleteSchoolReport
 };

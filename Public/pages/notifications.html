@@ -1,13 +1,16 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    ```
     <title>Notifications | School Management System</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
@@ -69,6 +72,7 @@
             border-radius: .75rem;
             background: #eff6ff;
             color: #2563eb;
+            flex-shrink: 0;
         }
 
         .notification {
@@ -101,6 +105,8 @@
             color: #4b5563;
             font-size: .9rem;
             line-height: 1.55;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
 
         .notification-meta {
@@ -126,24 +132,52 @@
             font-weight: 700;
         }
 
-        .badge-info {
+        .badge-general {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+
+        .badge-academic {
             background: #dbeafe;
             color: #1d4ed8;
         }
 
-        .badge-success {
+        .badge-attendance {
             background: #dcfce7;
             color: #166534;
         }
 
-        .badge-warning {
+        .badge-fees {
             background: #fef3c7;
             color: #92400e;
         }
 
-        .badge-danger {
-            background: #fee2e2;
-            color: #991b1b;
+        .badge-results {
+            background: #ede9fe;
+            color: #6d28d9;
+        }
+
+        .badge-system {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .badge-reminder {
+            background: #fce7f3;
+            color: #9d174d;
+        }
+
+        .priority-high {
+            color: #dc2626;
+            font-weight: 600;
+        }
+
+        .priority-normal {
+            color: #2563eb;
+        }
+
+        .priority-low {
+            color: #6b7280;
         }
 
         .empty-state,
@@ -157,30 +191,6 @@
             color: #374151;
             font-size: 1rem;
             margin-bottom: .5rem;
-        }
-
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, .65);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-            z-index: 1055;
-        }
-
-        .modal-overlay.show {
-            display: flex;
-        }
-
-        .notification-modal {
-            width: 100%;
-            max-width: 600px;
-            max-height: 90vh;
-            overflow-y: auto;
-            background: #fff;
-            border-radius: 1rem;
         }
 
         .message {
@@ -203,6 +213,16 @@
             color: #991b1b;
         }
 
+        .message.info {
+            display: block;
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .notification-modal {
+            max-width: 650px;
+        }
+
         @media (max-width: 991.98px) {
             .sidebar {
                 min-height: auto;
@@ -219,6 +239,8 @@
             }
         }
     </style>
+    ```
+
 </head>
 
 <body>
@@ -226,14 +248,17 @@
     <div class="container-fluid">
         <div class="row">
 
-            <!-- SIDEBAR -->
+            ```
             <aside class="col-lg-2 sidebar p-3">
 
                 <div class="d-flex align-items-center gap-2 mb-4">
                     <div class="bg-primary rounded-3 p-2 text-white">
                         <i class="bi bi-mortarboard-fill"></i>
                     </div>
-                    <span class="brand">School Management</span>
+
+                    <span class="brand">
+                        School Management
+                    </span>
                 </div>
 
                 <nav>
@@ -241,100 +266,135 @@
                     <div class="sidebar-section">Main</div>
 
                     <a class="nav-link px-3 py-2" href="dashboard.html">
-                        <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                        <i class="bi bi-speedometer2 me-2"></i>
+                        Dashboard
                     </a>
 
                     <a class="nav-link px-3 py-2" href="students.html">
-                        <i class="bi bi-people me-2"></i> Students
+                        <i class="bi bi-people me-2"></i>
+                        Students
                     </a>
 
                     <a class="nav-link px-3 py-2" href="staff.html">
-                        <i class="bi bi-person-badge me-2"></i> Staff
+                        <i class="bi bi-person-badge me-2"></i>
+                        Staff
                     </a>
 
                     <a class="nav-link px-3 py-2" href="guardians.html">
-                        <i class="bi bi-person-hearts me-2"></i> Guardians
+                        <i class="bi bi-person-hearts me-2"></i>
+                        Guardians
                     </a>
 
                     <div class="sidebar-section">Academic</div>
 
                     <a class="nav-link px-3 py-2" href="classes.html">
-                        <i class="bi bi-building me-2"></i> Classes
+                        <i class="bi bi-building me-2"></i>
+                        Classes
                     </a>
 
                     <a class="nav-link px-3 py-2" href="class-arms.html">
-                        <i class="bi bi-diagram-3 me-2"></i> Class Arms
+                        <i class="bi bi-diagram-3 me-2"></i>
+                        Class Arms
                     </a>
 
                     <a class="nav-link px-3 py-2" href="departments.html">
-                        <i class="bi bi-diagram-2 me-2"></i> Departments
+                        <i class="bi bi-diagram-2 me-2"></i>
+                        Departments
                     </a>
 
                     <a class="nav-link px-3 py-2" href="subjects.html">
-                        <i class="bi bi-book me-2"></i> Subjects
+                        <i class="bi bi-book me-2"></i>
+                        Subjects
                     </a>
 
                     <a class="nav-link px-3 py-2" href="academic-sessions.html">
-                        <i class="bi bi-calendar3 me-2"></i> Sessions
+                        <i class="bi bi-calendar3 me-2"></i>
+                        Sessions
                     </a>
 
                     <a class="nav-link px-3 py-2" href="terms.html">
-                        <i class="bi bi-calendar-week me-2"></i> Terms
+                        <i class="bi bi-calendar-week me-2"></i>
+                        Terms
+                    </a>
+
+                    <a class="nav-link px-3 py-2" href="timetable.html">
+                        <i class="bi bi-calendar-week me-2"></i>
+                        Timetable
                     </a>
 
                     <a class="nav-link px-3 py-2" href="attendance.html">
-                        <i class="bi bi-check2-square me-2"></i> Attendance
+                        <i class="bi bi-check2-square me-2"></i>
+                        Attendance
                     </a>
 
                     <a class="nav-link px-3 py-2" href="results.html">
-                        <i class="bi bi-bar-chart me-2"></i> Results
+                        <i class="bi bi-bar-chart me-2"></i>
+                        Results
                     </a>
 
                     <div class="sidebar-section">Finance & Records</div>
 
-                    <a class="nav-link px-3 py-2" href="fees.html">
-                        <i class="bi bi-cash-stack me-2"></i> Fees
+                    <a class="nav-link px-3 py-2" href="student-fees.html">
+                        <i class="bi bi-cash-stack me-2"></i>
+                        Fees & Payments
                     </a>
 
                     <a class="nav-link px-3 py-2" href="documents.html">
-                        <i class="bi bi-folder2-open me-2"></i> Documents
+                        <i class="bi bi-folder2-open me-2"></i>
+                        Documents
                     </a>
 
                     <a class="nav-link px-3 py-2" href="reports.html">
-                        <i class="bi bi-file-earmark-bar-graph me-2"></i> Reports
+                        <i class="bi bi-file-earmark-bar-graph me-2"></i>
+                        Reports
                     </a>
 
+                    <div class="sidebar-section">Communication</div>
+
                     <a class="nav-link active px-3 py-2" href="notifications.html">
-                        <i class="bi bi-bell me-2"></i> Notifications
+                        <i class="bi bi-bell me-2"></i>
+                        Notifications
+
+                        <span id="sidebarUnreadCount" class="badge bg-danger ms-2 d-none">
+                            0
+                        </span>
+                    </a>
+
+                    <a class="nav-link px-3 py-2" href="announcements.html">
+                        <i class="bi bi-megaphone me-2"></i>
+                        Announcements
                     </a>
 
                     <div class="sidebar-section">Administration</div>
 
                     <a class="nav-link px-3 py-2" href="users.html">
-                        <i class="bi bi-person-gear me-2"></i> Users
+                        <i class="bi bi-person-gear me-2"></i>
+                        Users
                     </a>
 
                     <a class="nav-link px-3 py-2" href="roles.html">
-                        <i class="bi bi-shield-check me-2"></i> Roles
+                        <i class="bi bi-shield-check me-2"></i>
+                        Roles
                     </a>
 
                     <a class="nav-link px-3 py-2" href="permissions.html">
-                        <i class="bi bi-key me-2"></i> Permissions
+                        <i class="bi bi-key me-2"></i>
+                        Permissions
                     </a>
 
                     <a class="nav-link px-3 py-2" href="profile.html">
-                        <i class="bi bi-person-circle me-2"></i> Profile
+                        <i class="bi bi-person-circle me-2"></i>
+                        Profile
                     </a>
 
                     <a class="nav-link px-3 py-2" href="settings.html">
-                        <i class="bi bi-gear me-2"></i> Settings
+                        <i class="bi bi-gear me-2"></i>
+                        Settings
                     </a>
 
                 </nav>
             </aside>
 
-
-            <!-- MAIN -->
             <main class="col-lg-10 main-content p-3 p-md-4">
 
                 <header class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
@@ -349,18 +409,23 @@
                         </h1>
 
                         <p class="text-secondary mb-0">
-                            Manage school system notifications and announcements.
+                            Manage school system notifications.
                         </p>
                     </div>
 
                     <div class="d-flex gap-2 flex-wrap">
 
-                        <button class="btn btn-outline-secondary" type="button" onclick="markAllAsRead()">
+                        <button class="btn btn-outline-secondary" type="button" id="markAllReadButton">
                             <i class="bi bi-check2-all me-2"></i>
                             Mark All Read
                         </button>
 
-                        <button class="btn btn-primary" type="button" onclick="openNotificationModal()">
+                        <button class="btn btn-outline-danger" type="button" id="deleteReadButton">
+                            <i class="bi bi-trash me-2"></i>
+                            Delete Read
+                        </button>
+
+                        <button class="btn btn-primary" type="button" id="createNotificationButton">
                             <i class="bi bi-plus-lg me-2"></i>
                             New Notification
                         </button>
@@ -369,23 +434,28 @@
 
                 </header>
 
-
                 <div id="message" class="message"></div>
 
-
-                <!-- SUMMARY -->
                 <section class="row g-3 mb-4">
 
                     <div class="col-sm-6 col-xl-3">
                         <div class="card h-100">
                             <div class="card-body d-flex justify-content-between align-items-center">
+
                                 <div>
-                                    <div class="text-secondary small">Total Notifications</div>
-                                    <div class="fs-3 fw-bold" id="totalNotifications">0</div>
+                                    <div class="text-secondary small">
+                                        Total Notifications
+                                    </div>
+
+                                    <div class="fs-3 fw-bold" id="totalNotifications">
+                                        0
+                                    </div>
                                 </div>
+
                                 <div class="summary-icon">
                                     <i class="bi bi-bell"></i>
                                 </div>
+
                             </div>
                         </div>
                     </div>
@@ -393,13 +463,21 @@
                     <div class="col-sm-6 col-xl-3">
                         <div class="card h-100">
                             <div class="card-body d-flex justify-content-between align-items-center">
+
                                 <div>
-                                    <div class="text-secondary small">Unread</div>
-                                    <div class="fs-3 fw-bold" id="unreadNotifications">0</div>
+                                    <div class="text-secondary small">
+                                        Unread
+                                    </div>
+
+                                    <div class="fs-3 fw-bold" id="unreadNotifications">
+                                        0
+                                    </div>
                                 </div>
+
                                 <div class="summary-icon">
                                     <i class="bi bi-envelope"></i>
                                 </div>
+
                             </div>
                         </div>
                     </div>
@@ -407,13 +485,21 @@
                     <div class="col-sm-6 col-xl-3">
                         <div class="card h-100">
                             <div class="card-body d-flex justify-content-between align-items-center">
+
                                 <div>
-                                    <div class="text-secondary small">Read</div>
-                                    <div class="fs-3 fw-bold" id="readNotifications">0</div>
+                                    <div class="text-secondary small">
+                                        Read
+                                    </div>
+
+                                    <div class="fs-3 fw-bold" id="readNotifications">
+                                        0
+                                    </div>
                                 </div>
+
                                 <div class="summary-icon">
                                     <i class="bi bi-envelope-open"></i>
                                 </div>
+
                             </div>
                         </div>
                     </div>
@@ -421,21 +507,27 @@
                     <div class="col-sm-6 col-xl-3">
                         <div class="card h-100">
                             <div class="card-body d-flex justify-content-between align-items-center">
+
                                 <div>
-                                    <div class="text-secondary small">Today</div>
-                                    <div class="fs-3 fw-bold" id="todayNotifications">0</div>
+                                    <div class="text-secondary small">
+                                        High Priority
+                                    </div>
+
+                                    <div class="fs-3 fw-bold" id="highPriorityNotifications">
+                                        0
+                                    </div>
                                 </div>
+
                                 <div class="summary-icon">
-                                    <i class="bi bi-calendar-day"></i>
+                                    <i class="bi bi-exclamation-triangle"></i>
                                 </div>
+
                             </div>
                         </div>
                     </div>
 
                 </section>
 
-
-                <!-- FILTERS -->
                 <section class="card mb-4">
 
                     <div class="card-body">
@@ -443,34 +535,76 @@
                         <div class="row g-2">
 
                             <div class="col-lg">
+
                                 <input type="search" class="form-control" id="searchInput"
-                                    placeholder="Search notifications..." oninput="filterNotifications()">
+                                    placeholder="Search notifications...">
+
                             </div>
 
                             <div class="col-md-4 col-lg-2">
-                                <select class="form-select" id="statusFilter" onchange="filterNotifications()">
-                                    <option value="">All Status</option>
-                                    <option value="unread">Unread</option>
-                                    <option value="read">Read</option>
+
+                                <select class="form-select" id="statusFilter">
+                                    <option value="">
+                                        All Status
+                                    </option>
+
+                                    <option value="unread">
+                                        Unread
+                                    </option>
+
+                                    <option value="read">
+                                        Read
+                                    </option>
                                 </select>
+
                             </div>
 
                             <div class="col-md-4 col-lg-2">
-                                <select class="form-select" id="typeFilter" onchange="filterNotifications()">
-                                    <option value="">All Types</option>
-                                    <option value="info">Information</option>
-                                    <option value="success">Success</option>
-                                    <option value="warning">Warning</option>
-                                    <option value="danger">Important</option>
+
+                                <select class="form-select" id="typeFilter">
+                                    <option value="">
+                                        All Types
+                                    </option>
+
+                                    <option value="General">
+                                        General
+                                    </option>
+
+                                    <option value="Academic">
+                                        Academic
+                                    </option>
+
+                                    <option value="Attendance">
+                                        Attendance
+                                    </option>
+
+                                    <option value="Fees">
+                                        Fees
+                                    </option>
+
+                                    <option value="Results">
+                                        Results
+                                    </option>
+
+                                    <option value="System">
+                                        System
+                                    </option>
+
+                                    <option value="Reminder">
+                                        Reminder
+                                    </option>
                                 </select>
+
                             </div>
 
                             <div class="col-md-4 col-lg-auto">
+
                                 <button class="btn btn-outline-secondary w-100" type="button"
-                                    onclick="loadNotifications()">
+                                    id="refreshNotificationsButton">
                                     <i class="bi bi-arrow-clockwise me-2"></i>
                                     Refresh
                                 </button>
+
                             </div>
 
                         </div>
@@ -479,8 +613,6 @@
 
                 </section>
 
-
-                <!-- NOTIFICATION LIST -->
                 <section class="card">
 
                     <div class="card-body p-0">
@@ -497,14 +629,15 @@
 
                         </div>
 
-
                         <div id="notificationList" class="notification-list">
-
                             <div class="loading">
-                                <div class="spinner-border spinner-border-sm text-primary me-2"></div>
-                                Loading notifications...
-                            </div>
 
+                                <div class="spinner-border spinner-border-sm text-primary me-2">
+                                </div>
+
+                                Loading notifications...
+
+                            </div>
                         </div>
 
                     </div>
@@ -514,1088 +647,167 @@
             </main>
 
         </div>
-    </div>
-
-
-    <!-- NOTIFICATION MODAL -->
-    <div id="notificationModal" class="modal-overlay">
-
-        <div class="notification-modal shadow-lg">
-
-            <div class="p-4 border-bottom d-flex justify-content-between align-items-start">
-
-                <div>
-                    <h2 class="h5 mb-1">
-                        Create Notification
-                    </h2>
-
-                    <p class="text-secondary small mb-0">
-                        Send an announcement to selected recipients.
-                    </p>
-                </div>
-
-                <button type="button" class="btn-close" aria-label="Close" onclick="closeNotificationModal()"></button>
-
-            </div>
-
-
-            <form id="notificationForm">
-
-                <div class="p-4">
-
-                    <div class="mb-3">
-
-                        <label for="notificationTitle" class="form-label fw-semibold">
-                            Title
-                        </label>
-
-                        <input type="text" class="form-control" id="notificationTitle" required maxlength="200"
-                            placeholder="Notification title">
-
-                    </div>
-
-
-                    <div class="mb-3">
-
-                        <label for="notificationType" class="form-label fw-semibold">
-                            Type
-                        </label>
-
-                        <select id="notificationType" class="form-select">
-                            <option value="info">Information</option>
-                            <option value="success">Success</option>
-                            <option value="warning">Warning</option>
-                            <option value="danger">Important</option>
-                        </select>
-
-                    </div>
-
-
-                    <div class="mb-3">
-
-                        <label for="notificationMessage" class="form-label fw-semibold">
-                            Message
-                        </label>
-
-                        <textarea id="notificationMessage" class="form-control" rows="5" required
-                            placeholder="Enter notification message..."></textarea>
-
-                    </div>
-
-
-                    <div class="mb-3">
-
-                        <label for="notificationRecipient" class="form-label fw-semibold">
-                            Recipient
-                        </label>
-
-                        <select id="notificationRecipient" class="form-select">
-                            <option value="all">Everyone</option>
-                            <option value="staff">Staff</option>
-                            <option value="students">Students</option>
-                            <option value="guardians">Guardians</option>
-                        </select>
-
-                    </div>
-
-                </div>
-
-
-                <div class="p-3 p-md-4 border-top d-flex justify-content-end gap-2">
-
-                    <button type="button" class="btn btn-outline-secondary" onclick="closeNotificationModal()">
-                        Cancel
-                    </button>
-
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-send me-2"></i>
-                        Send Notification
-                    </button>
-
-                </div>
-
-            </form>
-
-        </div>
+        ```
 
     </div>
 
+    <div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered notification-modal">
 
-    <script>
+            ```
+            <div class="modal-content border-0 shadow">
 
-        let notifications = [];
+                <div class="modal-header">
 
+                    <div>
+                        <h2 class="modal-title h5 mb-1" id="notificationModalLabel">
+                            Create Notification
+                        </h2>
 
-        document.addEventListener(
-            "DOMContentLoaded",
-            function () {
+                        <p class="text-secondary small mb-0">
+                            Send a notification to a specific system user.
+                        </p>
+                    </div>
 
-                loadNotifications();
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 
-                document
-                    .getElementById("notificationForm")
-                    .addEventListener(
-                        "submit",
-                        createNotification
-                    );
+                </div>
 
-            }
-        );
+                <form id="notificationForm">
 
+                    <div class="modal-body">
 
-        function getAuthHeaders() {
+                        <div id="notificationFormMessage" class="message"></div>
 
-            const token =
-                localStorage.getItem("school_management_token") ||
-                sessionStorage.getItem("school_management_token") ||
-                localStorage.getItem("token") ||
-                localStorage.getItem("accessToken") ||
-                localStorage.getItem("jwt");
+                        <div class="mb-3">
 
-            const headers = {
-                "Content-Type": "application/json"
-            };
+                            <label for="notificationUserId" class="form-label fw-semibold">
+                                Recipient User ID
+                            </label>
 
-            if (token) {
-                headers.Authorization =
-                    "Bearer " + token;
-            }
+                            <input type="text" class="form-control" id="notificationUserId" required
+                                placeholder="Enter recipient user ID">
 
-            return headers;
-        }
+                            <div class="form-text">
+                                Enter the user ID of the person who should receive this notification.
+                            </div>
 
+                        </div>
 
-        async function loadNotifications() {
+                        <div class="mb-3">
 
-            const list =
-                document.getElementById(
-                    "notificationList"
-                );
+                            <label for="notificationTitle" class="form-label fw-semibold">
+                                Title
+                            </label>
 
-            list.innerHTML = `
-        <div class="loading">
-            <div class="spinner-border spinner-border-sm text-primary me-2"></div>
-            Loading notifications...
+                            <input type="text" class="form-control" id="notificationTitle" required maxlength="200"
+                                placeholder="Notification title">
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label for="notificationType" class="form-label fw-semibold">
+                                Type
+                            </label>
+
+                            <select id="notificationType" class="form-select">
+                                <option value="General">
+                                    General
+                                </option>
+
+                                <option value="Academic">
+                                    Academic
+                                </option>
+
+                                <option value="Attendance">
+                                    Attendance
+                                </option>
+
+                                <option value="Fees">
+                                    Fees
+                                </option>
+
+                                <option value="Results">
+                                    Results
+                                </option>
+
+                                <option value="System">
+                                    System
+                                </option>
+
+                                <option value="Reminder">
+                                    Reminder
+                                </option>
+                            </select>
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label for="notificationPriority" class="form-label fw-semibold">
+                                Priority
+                            </label>
+
+                            <select id="notificationPriority" class="form-select">
+                                <option value="Normal">
+                                    Normal
+                                </option>
+
+                                <option value="High">
+                                    High
+                                </option>
+
+                                <option value="Low">
+                                    Low
+                                </option>
+                            </select>
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label for="notificationMessage" class="form-label fw-semibold">
+                                Message
+                            </label>
+
+                            <textarea id="notificationMessage" class="form-control" rows="5" required maxlength="5000"
+                                placeholder="Enter notification message..."></textarea>
+
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+
+                        <button type="submit" class="btn btn-primary" id="saveNotificationButton">
+                            <i class="bi bi-send me-2"></i>
+                            Send Notification
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
         </div>
-    `;
+        ```
 
-            try {
+    </div>
 
-                const response =
-                    await fetch(
-                        "/api/notifications",
-                        {
-                            method: "GET",
-                            headers: getAuthHeaders()
-                        }
-                    );
+    <script src="/js/api.js"></script>
 
-
-                if (!response.ok) {
-                    throw new Error(
-                        "Unable to load notifications."
-                    );
-                }
-
-
-                const result =
-                    await response.json();
-
-
-                notifications =
-                    Array.isArray(result)
-                        ? result
-                        : (
-                            result.data ||
-                            result.notifications ||
-                            []
-                        );
-
-
-                renderNotifications();
-
-                updateSummary();
-
-            } catch (error) {
-
-                console.error(
-                    "Load notifications error:",
-                    error
-                );
-
-
-                list.innerHTML = `
-            <div class="empty-state">
-                <i class="bi bi-bell-slash fs-1 d-block mb-3"></i>
-                <h3>Unable to load notifications</h3>
-                <p>
-                    No notification data could be loaded
-                    from the server.
-                </p>
-            </div>
-        `;
-
-
-                showMessage(
-                    error.message,
-                    "error"
-                );
-
-            }
-
-        }
-
-
-        function renderNotifications() {
-
-            const list =
-                document.getElementById(
-                    "notificationList"
-                );
-
-
-            const filtered =
-                getFilteredNotifications();
-
-
-            document.getElementById(
-                "notificationCount"
-            ).textContent =
-                `${filtered.length} notification${filtered.length === 1 ? "" : "s"}`;
-
-
-            if (!filtered.length) {
-
-                list.innerHTML = `
-            <div class="empty-state">
-                <i class="bi bi-inbox fs-1 d-block mb-3"></i>
-                <h3>No notifications found</h3>
-                <p>
-                    There are no notifications matching
-                    your current filters.
-                </p>
-            </div>
-        `;
-
-                return;
-
-            }
-
-
-            list.innerHTML =
-                filtered
-                    .map(
-                        notification =>
-                            createNotificationHTML(
-                                notification
-                            )
-                    )
-                    .join("");
-
-        }
-
-
-        function createNotificationHTML(
-            notification
-        ) {
-
-            const id =
-                notification.id ||
-                notification.notification_id ||
-                "";
-
-
-            const title =
-                escapeHTML(
-                    notification.title ||
-                    notification.notification_title ||
-                    "Notification"
-                );
-
-
-            const message =
-                escapeHTML(
-                    notification.message ||
-                    notification.notification_message ||
-                    notification.body ||
-                    ""
-                );
-
-
-            const type =
-                String(
-                    notification.type ||
-                    notification.notification_type ||
-                    "info"
-                ).toLowerCase();
-
-
-            const isRead =
-                notification.is_read === true ||
-                notification.read === true ||
-                notification.status === "read";
-
-
-            const createdAt =
-                notification.created_at ||
-                notification.createdAt ||
-                notification.date;
-
-
-            const dateText =
-                createdAt
-                    ? formatDate(createdAt)
-                    : "Recently";
-
-
-            const icon =
-                getNotificationIcon(type);
-
-
-            const badgeClass =
-                getBadgeClass(type);
-
-
-            return `
-        <article
-            class="notification ${isRead ? "" : "unread"}"
-            data-id="${escapeHTML(String(id))}"
-        >
-
-            <div class="notification-icon">
-                ${icon}
-            </div>
-
-
-            <div class="notification-content">
-
-                <div class="notification-title">
-                    ${title}
-                </div>
-
-                <div class="notification-message">
-                    ${message}
-                </div>
-
-                <div class="notification-meta">
-
-                    <span>
-                        <i class="bi bi-clock me-1"></i>
-                        ${dateText}
-                    </span>
-
-                    <span class="badge-type ${badgeClass}">
-                        ${escapeHTML(type)}
-                    </span>
-
-                    <span>
-                        ${isRead
-                    ? '<i class="bi bi-check2-all me-1"></i>Read'
-                    : '<i class="bi bi-dot me-1"></i>Unread'
-                }
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <div class="notification-actions">
-
-                ${!isRead
-                    ? `
-                        <button
-                            type="button"
-                            class="btn btn-sm btn-outline-primary"
-                            onclick="markAsRead('${escapeHTML(String(id))}')"
-                        >
-                            <i class="bi bi-check2 me-1"></i>
-                            Mark Read
-                        </button>
-                    `
-                    : ""
-                }
-
-
-                ${id
-                    ? `
-                        <button
-                            type="button"
-                            class="btn btn-sm btn-outline-danger"
-                            onclick="deleteNotification('${escapeHTML(String(id))}')"
-                        >
-                            <i class="bi bi-trash me-1"></i>
-                            Delete
-                        </button>
-                    `
-                    : ""
-                }
-
-            </div>
-
-        </article>
-    `;
-
-        }
-
-
-        function getFilteredNotifications() {
-
-            const search =
-                document
-                    .getElementById("searchInput")
-                    .value
-                    .trim()
-                    .toLowerCase();
-
-
-            const status =
-                document
-                    .getElementById("statusFilter")
-                    .value;
-
-
-            const type =
-                document
-                    .getElementById("typeFilter")
-                    .value;
-
-
-            return notifications.filter(
-                notification => {
-
-                    const title =
-                        String(
-                            notification.title ||
-                            notification.notification_title ||
-                            ""
-                        ).toLowerCase();
-
-
-                    const message =
-                        String(
-                            notification.message ||
-                            notification.notification_message ||
-                            notification.body ||
-                            ""
-                        ).toLowerCase();
-
-
-                    const notificationType =
-                        String(
-                            notification.type ||
-                            notification.notification_type ||
-                            "info"
-                        ).toLowerCase();
-
-
-                    const isRead =
-                        notification.is_read === true ||
-                        notification.read === true ||
-                        notification.status === "read";
-
-
-                    const matchesSearch =
-                        !search ||
-                        title.includes(search) ||
-                        message.includes(search);
-
-
-                    const matchesStatus =
-                        !status ||
-                        (
-                            status === "read"
-                                ? isRead
-                                : !isRead
-                        );
-
-
-                    const matchesType =
-                        !type ||
-                        notificationType === type;
-
-
-                    return (
-                        matchesSearch &&
-                        matchesStatus &&
-                        matchesType
-                    );
-
-                }
-            );
-
-        }
-
-
-        function filterNotifications() {
-
-            renderNotifications();
-
-        }
-
-
-        async function markAsRead(id) {
-
-            if (!id) {
-                return;
-            }
-
-
-            try {
-
-                const response =
-                    await fetch(
-                        `/api/notifications/${encodeURIComponent(id)}/read`,
-                        {
-                            method: "PATCH",
-                            headers: getAuthHeaders()
-                        }
-                    );
-
-
-                if (!response.ok) {
-
-                    throw new Error(
-                        "Unable to mark notification as read."
-                    );
-
-                }
-
-
-                const notification =
-                    notifications.find(
-                        item =>
-                            String(
-                                item.id ||
-                                item.notification_id
-                            ) === String(id)
-                    );
-
-
-                if (notification) {
-
-                    notification.is_read = true;
-                    notification.read = true;
-                    notification.status = "read";
-
-                }
-
-
-                renderNotifications();
-
-                updateSummary();
-
-            } catch (error) {
-
-                console.error(
-                    "Mark notification read error:",
-                    error
-                );
-
-                showMessage(
-                    error.message,
-                    "error"
-                );
-
-            }
-
-        }
-
-
-        async function markAllAsRead() {
-
-            try {
-
-                const response =
-                    await fetch(
-                        "/api/notifications/read-all",
-                        {
-                            method: "PATCH",
-                            headers: getAuthHeaders()
-                        }
-                    );
-
-
-                if (!response.ok) {
-
-                    throw new Error(
-                        "Unable to mark all notifications as read."
-                    );
-
-                }
-
-
-                notifications.forEach(
-                    notification => {
-
-                        notification.is_read = true;
-                        notification.read = true;
-                        notification.status = "read";
-
-                    }
-                );
-
-
-                renderNotifications();
-
-                updateSummary();
-
-
-                showMessage(
-                    "All notifications marked as read.",
-                    "success"
-                );
-
-            } catch (error) {
-
-                console.error(
-                    "Mark all notifications error:",
-                    error
-                );
-
-                showMessage(
-                    error.message,
-                    "error"
-                );
-
-            }
-
-        }
-
-
-        async function deleteNotification(id) {
-
-            if (!id) {
-                return;
-            }
-
-
-            const confirmed =
-                window.confirm(
-                    "Are you sure you want to delete this notification?"
-                );
-
-
-            if (!confirmed) {
-                return;
-            }
-
-
-            try {
-
-                const response =
-                    await fetch(
-                        `/api/notifications/${encodeURIComponent(id)}`,
-                        {
-                            method: "DELETE",
-                            headers: getAuthHeaders()
-                        }
-                    );
-
-
-                if (!response.ok) {
-
-                    throw new Error(
-                        "Unable to delete notification."
-                    );
-
-                }
-
-
-                notifications =
-                    notifications.filter(
-                        notification =>
-                            String(
-                                notification.id ||
-                                notification.notification_id
-                            ) !== String(id)
-                    );
-
-
-                renderNotifications();
-
-                updateSummary();
-
-
-                showMessage(
-                    "Notification deleted successfully.",
-                    "success"
-                );
-
-            } catch (error) {
-
-                console.error(
-                    "Delete notification error:",
-                    error
-                );
-
-                showMessage(
-                    error.message,
-                    "error"
-                );
-
-            }
-
-        }
-
-
-        function openNotificationModal() {
-
-            document
-                .getElementById(
-                    "notificationModal"
-                )
-                .classList.add("show");
-
-        }
-
-
-        function closeNotificationModal() {
-
-            document
-                .getElementById(
-                    "notificationModal"
-                )
-                .classList.remove("show");
-
-
-            document
-                .getElementById(
-                    "notificationForm"
-                )
-                .reset();
-
-        }
-
-
-        async function createNotification(
-            event
-        ) {
-
-            event.preventDefault();
-
-
-            const title =
-                document
-                    .getElementById(
-                        "notificationTitle"
-                    )
-                    .value
-                    .trim();
-
-
-            const type =
-                document
-                    .getElementById(
-                        "notificationType"
-                    )
-                    .value;
-
-
-            const message =
-                document
-                    .getElementById(
-                        "notificationMessage"
-                    )
-                    .value
-                    .trim();
-
-
-            const recipient =
-                document
-                    .getElementById(
-                        "notificationRecipient"
-                    )
-                    .value;
-
-
-            if (!title || !message) {
-
-                showMessage(
-                    "Title and message are required.",
-                    "error"
-                );
-
-                return;
-
-            }
-
-
-            try {
-
-                const response =
-                    await fetch(
-                        "/api/notifications",
-                        {
-                            method: "POST",
-                            headers: getAuthHeaders(),
-                            body: JSON.stringify({
-                                title,
-                                type,
-                                message,
-                                recipient
-                            })
-                        }
-                    );
-
-
-                if (!response.ok) {
-
-                    const errorData =
-                        await response
-                            .json()
-                            .catch(
-                                () => ({})
-                            );
-
-
-                    throw new Error(
-                        errorData.message ||
-                        "Unable to create notification."
-                    );
-
-                }
-
-
-                closeNotificationModal();
-
-                await loadNotifications();
-
-
-                showMessage(
-                    "Notification created successfully.",
-                    "success"
-                );
-
-            } catch (error) {
-
-                console.error(
-                    "Create notification error:",
-                    error
-                );
-
-                showMessage(
-                    error.message,
-                    "error"
-                );
-
-            }
-
-        }
-
-
-        function updateSummary() {
-
-            const total =
-                notifications.length;
-
-
-            const unread =
-                notifications.filter(
-                    notification =>
-                        !(
-                            notification.is_read === true ||
-                            notification.read === true ||
-                            notification.status === "read"
-                        )
-                ).length;
-
-
-            const read =
-                total - unread;
-
-
-            const today =
-                notifications.filter(
-                    notification => {
-
-                        const value =
-                            notification.created_at ||
-                            notification.createdAt ||
-                            notification.date;
-
-
-                        if (!value) {
-                            return false;
-                        }
-
-
-                        const date =
-                            new Date(value);
-
-
-                        const now =
-                            new Date();
-
-
-                        return (
-                            date.getFullYear() ===
-                            now.getFullYear() &&
-                            date.getMonth() ===
-                            now.getMonth() &&
-                            date.getDate() ===
-                            now.getDate()
-                        );
-
-                    }
-                ).length;
-
-
-            document.getElementById(
-                "totalNotifications"
-            ).textContent = total;
-
-
-            document.getElementById(
-                "unreadNotifications"
-            ).textContent = unread;
-
-
-            document.getElementById(
-                "readNotifications"
-            ).textContent = read;
-
-
-            document.getElementById(
-                "todayNotifications"
-            ).textContent = today;
-
-        }
-
-
-        function getNotificationIcon(type) {
-
-            switch (type) {
-
-                case "success":
-                    return '<i class="bi bi-check-circle-fill text-success"></i>';
-
-                case "warning":
-                    return '<i class="bi bi-exclamation-circle-fill text-warning"></i>';
-
-                case "danger":
-                    return '<i class="bi bi-exclamation-triangle-fill text-danger"></i>';
-
-                default:
-                    return '<i class="bi bi-info-circle-fill text-primary"></i>';
-
-            }
-
-        }
-
-
-        function getBadgeClass(type) {
-
-            switch (type) {
-
-                case "success":
-                    return "badge-success";
-
-                case "warning":
-                    return "badge-warning";
-
-                case "danger":
-                    return "badge-danger";
-
-                default:
-                    return "badge-info";
-
-            }
-
-        }
-
-
-        function formatDate(value) {
-
-            const date =
-                new Date(value);
-
-
-            if (Number.isNaN(date.getTime())) {
-                return "Recently";
-            }
-
-
-            return date.toLocaleString(
-                undefined,
-                {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit"
-                }
-            );
-
-        }
-
-
-        function showMessage(
-            text,
-            type
-        ) {
-
-            const element =
-                document.getElementById(
-                    "message"
-                );
-
-
-            element.textContent = text;
-
-            element.className =
-                `message ${type}`;
-
-
-            setTimeout(
-                () => {
-
-                    element.className =
-                        "message";
-
-                },
-                4000
-            );
-
-        }
-
-
-        function escapeHTML(value) {
-
-            return String(value)
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-
-        }
-
-
-        window.addEventListener(
-            "click",
-            function (event) {
-
-                const modal =
-                    document.getElementById(
-                        "notificationModal"
-                    );
-
-
-                if (
-                    event.target === modal
-                ) {
-
-                    closeNotificationModal();
-
-                }
-
-            }
-        );
-
-    </script>
+    <script src="/js/auth.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="../js/notifications.js"></script>
 
 </body>
 

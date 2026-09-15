@@ -4,12 +4,13 @@ const { query } = require("../config/database");
 
 /*
 |--------------------------------------------------------------------------
-| Staff Model
-|--------------------------------------------------------------------------
-| Compatible with the current PostgreSQL staff schema.
+| STAFF MODEL
 |--------------------------------------------------------------------------
 |
-| staff columns:
+| Database table:
+| staff
+|
+| Current staff columns:
 | id
 | school_id
 | user_id
@@ -26,6 +27,8 @@ const { query } = require("../config/database");
 | status
 | created_at
 | updated_at
+|
+| This model provides the stable database layer for the Staff module.
 |
 |--------------------------------------------------------------------------
 */
@@ -55,15 +58,15 @@ async function createStaff({
         throw new Error("School ID is required.");
     }
 
-    if (!staffNumber || !staffNumber.trim()) {
+    if (!staffNumber || !String(staffNumber).trim()) {
         throw new Error("Staff number is required.");
     }
 
-    if (!firstName || !firstName.trim()) {
+    if (!firstName || !String(firstName).trim()) {
         throw new Error("First name is required.");
     }
 
-    if (!lastName || !lastName.trim()) {
+    if (!lastName || !String(lastName).trim()) {
         throw new Error("Last name is required.");
     }
 
@@ -93,20 +96,20 @@ async function createStaff({
     const result = await query(sql, [
         schoolId,
         userId,
-        staffNumber.trim(),
-        firstName.trim(),
-        middleName,
-        lastName.trim(),
-        email,
-        phone,
-        position,
-        department,
-        employmentDate,
-        profilePhotoUrl,
-        status
+        String(staffNumber).trim(),
+        String(firstName).trim(),
+        middleName ? String(middleName).trim() : null,
+        String(lastName).trim(),
+        email ? String(email).trim() : null,
+        phone ? String(phone).trim() : null,
+        position ? String(position).trim() : null,
+        department ? String(department).trim() : null,
+        employmentDate || null,
+        profilePhotoUrl || null,
+        status ? String(status).trim() : "Active"
     ]);
 
-    return result.rows[0];
+    return result.rows[0] || null;
 }
 
 /*
@@ -115,10 +118,11 @@ async function createStaff({
 |--------------------------------------------------------------------------
 */
 
-async function findStaffById(
-    staffId,
-    schoolId = null
-) {
+async function findStaffById(staffId, schoolId = null) {
+    if (!staffId) {
+        return null;
+    }
+
     let sql = `
         SELECT
             st.*,
@@ -154,23 +158,28 @@ async function findStaffById(
 |--------------------------------------------------------------------------
 */
 
-async function findStaffByNumber(
-    staffNumber,
-    schoolId = null
-) {
+async function findStaffByNumber(staffNumber, schoolId = null) {
+    if (!staffNumber) {
+        return null;
+    }
+
     let sql = `
-        SELECT *
-        FROM staff
-        WHERE staff_number = $1
+        SELECT
+            st.*,
+            s.school_name
+        FROM staff st
+        LEFT JOIN schools s
+            ON s.id = st.school_id
+        WHERE st.staff_number = $1
     `;
 
-    const values = [staffNumber];
+    const values = [String(staffNumber).trim()];
 
     if (schoolId) {
         values.push(schoolId);
 
         sql += `
-            AND school_id = $${values.length}
+            AND st.school_id = $${values.length}
         `;
     }
 
@@ -212,16 +221,16 @@ async function findStaff({
 
     const values = [schoolId];
 
-    if (department) {
-        values.push(department);
+    if (department && String(department).trim()) {
+        values.push(String(department).trim());
 
         sql += `
             AND st.department = $${values.length}
         `;
     }
 
-    if (status) {
-        values.push(status);
+    if (status && String(status).trim()) {
+        values.push(String(status).trim());
 
         sql += `
             AND st.status = $${values.length}
@@ -243,7 +252,8 @@ async function findStaff({
     sql += `
         ORDER BY
             st.last_name ASC,
-            st.first_name ASC
+            st.first_name ASC,
+            st.id ASC
         LIMIT $${values.length}
     `;
 
@@ -264,11 +274,14 @@ async function findStaff({
 |--------------------------------------------------------------------------
 */
 
-async function searchStaff(
-    searchTerm,
-    schoolId
-) {
+async function searchStaff(searchTerm, schoolId) {
     if (!schoolId || !searchTerm) {
+        return [];
+    }
+
+    const cleanedSearchTerm = String(searchTerm).trim();
+
+    if (!cleanedSearchTerm) {
         return [];
     }
 
@@ -292,13 +305,14 @@ async function searchStaff(
           )
         ORDER BY
             st.last_name ASC,
-            st.first_name ASC
+            st.first_name ASC,
+            st.id ASC
         LIMIT 100
     `;
 
     const result = await query(sql, [
         schoolId,
-        `%${searchTerm.trim()}%`
+        `%${cleanedSearchTerm}%`
     ]);
 
     return result.rows;
@@ -310,11 +324,15 @@ async function searchStaff(
 |--------------------------------------------------------------------------
 */
 
-async function updateStaff(
-    staffId,
-    schoolId,
-    data
-) {
+async function updateStaff(staffId, schoolId, data) {
+    if (!staffId) {
+        throw new Error("Staff ID is required.");
+    }
+
+    if (!schoolId) {
+        throw new Error("School ID is required.");
+    }
+
     const allowedFields = {
         userId: "user_id",
         staffNumber: "staff_number",
@@ -345,11 +363,27 @@ async function updateStaff(
                     "staffNumber",
                     "firstName",
                     "middleName",
-                    "lastName"
-                ].includes(key) &&
-                typeof value === "string"
+                    "lastName",
+                    "email",
+                    "phone",
+                    "position",
+                    "department",
+                    "status"
+                ].includes(key)
             ) {
-                value = value.trim();
+                if (value === null || value === "") {
+                    value = null;
+                } else if (typeof value === "string") {
+                    value = value.trim();
+                }
+            }
+
+            if (key === "employmentDate" && value === "") {
+                value = null;
+            }
+
+            if (key === "profilePhotoUrl" && value === "") {
+                value = null;
             }
 
             values.push(value);
@@ -361,9 +395,7 @@ async function updateStaff(
     }
 
     if (updates.length === 0) {
-        throw new Error(
-            "No valid fields supplied for update."
-        );
+        throw new Error("No valid fields supplied for update.");
     }
 
     values.push(staffId);
@@ -393,10 +425,15 @@ async function updateStaff(
 |--------------------------------------------------------------------------
 */
 
-async function deleteStaff(
-    staffId,
-    schoolId
-) {
+async function deleteStaff(staffId, schoolId) {
+    if (!staffId) {
+        throw new Error("Staff ID is required.");
+    }
+
+    if (!schoolId) {
+        throw new Error("School ID is required.");
+    }
+
     const sql = `
         DELETE FROM staff
         WHERE id = $1
@@ -418,20 +455,22 @@ async function deleteStaff(
 |--------------------------------------------------------------------------
 */
 
-async function countStaff(
-    schoolId,
-    status = null
-) {
+async function countStaff(schoolId, status = null) {
+    if (!schoolId) {
+        throw new Error("School ID is required.");
+    }
+
     let sql = `
-        SELECT COUNT(*)::INTEGER AS staff_count
+        SELECT
+            COUNT(*)::INTEGER AS staff_count
         FROM staff
         WHERE school_id = $1
     `;
 
     const values = [schoolId];
 
-    if (status) {
-        values.push(status);
+    if (status && String(status).trim()) {
+        values.push(String(status).trim());
 
         sql += `
             AND status = $${values.length}
@@ -441,7 +480,7 @@ async function countStaff(
     const result = await query(sql, values);
 
     return Number(
-        result.rows[0].staff_count
+        result.rows[0]?.staff_count || 0
     );
 }
 
@@ -451,27 +490,29 @@ async function countStaff(
 |--------------------------------------------------------------------------
 */
 
-async function getStaffStatistics(
-    schoolId
-) {
+async function getStaffStatistics(schoolId) {
+    if (!schoolId) {
+        throw new Error("School ID is required.");
+    }
+
     const sql = `
         SELECT
             COUNT(*)::INTEGER AS total_staff,
 
             COUNT(*) FILTER (
-                WHERE LOWER(status) = 'active'
+                WHERE LOWER(COALESCE(status, '')) = 'active'
             )::INTEGER AS active_staff,
 
             COUNT(*) FILTER (
-                WHERE LOWER(status) = 'inactive'
+                WHERE LOWER(COALESCE(status, '')) = 'inactive'
             )::INTEGER AS inactive_staff,
 
             COUNT(*) FILTER (
-                WHERE LOWER(status) = 'suspended'
+                WHERE LOWER(COALESCE(status, '')) = 'suspended'
             )::INTEGER AS suspended_staff,
 
             COUNT(*) FILTER (
-                WHERE LOWER(status) = 'resigned'
+                WHERE LOWER(COALESCE(status, '')) = 'resigned'
             )::INTEGER AS resigned_staff
 
         FROM staff
@@ -480,14 +521,14 @@ async function getStaffStatistics(
 
     const result = await query(sql, [schoolId]);
 
-    const row = result.rows[0];
+    const row = result.rows[0] || {};
 
     return {
-        totalStaff: Number(row.total_staff),
-        activeStaff: Number(row.active_staff),
-        inactiveStaff: Number(row.inactive_staff),
-        suspendedStaff: Number(row.suspended_staff),
-        resignedStaff: Number(row.resigned_staff)
+        totalStaff: Number(row.total_staff || 0),
+        activeStaff: Number(row.active_staff || 0),
+        inactiveStaff: Number(row.inactive_staff || 0),
+        suspendedStaff: Number(row.suspended_staff || 0),
+        resignedStaff: Number(row.resigned_staff || 0)
     };
 }
 
@@ -497,10 +538,15 @@ async function getStaffStatistics(
 |--------------------------------------------------------------------------
 */
 
-async function getStaffByDepartment(
-    schoolId,
-    department
-) {
+async function getStaffByDepartment(schoolId, department) {
+    if (!schoolId) {
+        throw new Error("School ID is required.");
+    }
+
+    if (!department || !String(department).trim()) {
+        return [];
+    }
+
     const sql = `
         SELECT
             st.*,
@@ -512,12 +558,13 @@ async function getStaffByDepartment(
           AND st.department = $2
         ORDER BY
             st.last_name ASC,
-            st.first_name ASC
+            st.first_name ASC,
+            st.id ASC
     `;
 
     const result = await query(sql, [
         schoolId,
-        department
+        String(department).trim()
     ]);
 
     return result.rows;
@@ -534,6 +581,10 @@ async function staffNumberExists(
     schoolId,
     excludeStaffId = null
 ) {
+    if (!staffNumber || !schoolId) {
+        return false;
+    }
+
     let sql = `
         SELECT EXISTS (
             SELECT 1
@@ -543,7 +594,7 @@ async function staffNumberExists(
     `;
 
     const values = [
-        staffNumber,
+        String(staffNumber).trim(),
         schoolId
     ];
 
@@ -561,7 +612,7 @@ async function staffNumberExists(
 
     const result = await query(sql, values);
 
-    return result.rows[0].exists;
+    return Boolean(result.rows[0]?.exists);
 }
 
 /*

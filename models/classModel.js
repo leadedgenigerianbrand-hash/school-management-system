@@ -2,40 +2,131 @@
 
 const { query } = require("../config/database");
 
-/*
-|--------------------------------------------------------------------------
-| Class Model
-|--------------------------------------------------------------------------
-| Compatible with the current PostgreSQL school_management schema.
-|
-| classes:
-| id, school_id, academic_level_id, class_name, class_code,
-| class_order, description, is_active, created_at, updated_at
-|--------------------------------------------------------------------------
-*/
+function normalizeBoolean(value, defaultValue = true) {
+    if (
+        value === undefined ||
+        value === null ||
+        value === ""
+    ) {
+        return defaultValue;
+    }
 
+    if (typeof value === "boolean") {
+        return value;
+    }
 
-/*
-|--------------------------------------------------------------------------
-| Create Class
-|--------------------------------------------------------------------------
-*/
+    const normalized =
+        String(value)
+            .trim()
+            .toLowerCase();
+
+    if (
+        normalized === "true" ||
+        normalized === "1" ||
+        normalized === "yes" ||
+        normalized === "active"
+    ) {
+        return true;
+    }
+
+    if (
+        normalized === "false" ||
+        normalized === "0" ||
+        normalized === "no" ||
+        normalized === "inactive"
+    ) {
+        return false;
+    }
+
+    return defaultValue;
+}
+
+function normalizePositiveInteger(
+    value,
+    defaultValue = 0
+) {
+    const number = Number(value);
+
+    if (
+        !Number.isInteger(number) ||
+        number < 0
+    ) {
+        return defaultValue;
+    }
+
+    return number;
+}
+
+function normalizeText(
+    value,
+    defaultValue = null
+) {
+    if (
+        value === undefined ||
+        value === null
+    ) {
+        return defaultValue;
+    }
+
+    const text =
+        String(value).trim();
+
+    return text || defaultValue;
+}
 
 async function createClass({
     schoolId,
+    academicLevelId,
     className,
     classCode = null,
-    academicLevelId = null,
-    description = null,
     classOrder = 0,
+    description = null,
     isActive = true
 }) {
     if (!schoolId) {
-        throw new Error("School ID is required.");
+        throw new Error(
+            "School ID is required."
+        );
     }
 
-    if (!className || !className.trim()) {
-        throw new Error("Class name is required.");
+    if (!academicLevelId) {
+        throw new Error(
+            "Academic level ID is required."
+        );
+    }
+
+    const normalizedClassName =
+        normalizeText(className);
+
+    if (!normalizedClassName) {
+        throw new Error(
+            "Class name is required."
+        );
+    }
+
+    const levelExistsQuery = `
+        SELECT id
+        FROM academic_levels
+        WHERE id = $1
+          AND school_id = $2
+        LIMIT 1
+    `;
+
+    const levelResult =
+        await query(
+            levelExistsQuery,
+            [
+                academicLevelId,
+                schoolId
+            ]
+        );
+
+    if (
+        levelResult.rows.length === 0
+    ) {
+        throw new Error(
+            "Academic level not found."
+        );
     }
 
     const sql = `
@@ -48,171 +139,284 @@ async function createClass({
             description,
             is_active
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        VALUES (
+            $1,
+            $2,
+            $3,
+            $4,
+            $5,
+            $6,
+            $7
+        )
         RETURNING *
     `;
 
-    const result = await query(sql, [
-        schoolId,
-        academicLevelId,
-        className.trim(),
-        classCode,
-        classOrder,
-        description,
-        isActive
-    ]);
+    const result =
+        await query(
+            sql,
+            [
+                schoolId,
+                academicLevelId,
+                normalizedClassName,
+                normalizeText(classCode),
+                normalizePositiveInteger(
+                    classOrder
+                ),
+                normalizeText(description),
+                normalizeBoolean(
+                    isActive,
+                    true
+                )
+            ]
+        );
 
     return result.rows[0];
 }
 
+async function findClassById(
+    classId,
+    schoolId
+) {
+    if (!classId) {
+        throw new Error(
+            "Class ID is required."
+        );
+    }
 
-/*
-|--------------------------------------------------------------------------
-| Find Class By ID
-|--------------------------------------------------------------------------
-*/
+    if (!schoolId) {
+        throw new Error(
+            "School ID is required."
+        );
+    }
 
-async function findClassById(classId, schoolId = null) {
-    let sql = `
+    const sql = `
         SELECT
             c.*,
             al.level_name,
-            al.level_code
+            al.level_order,
+            al.description AS level_description
         FROM classes c
-        LEFT JOIN academic_levels al
+        INNER JOIN academic_levels al
             ON al.id = c.academic_level_id
+           AND al.school_id = c.school_id
         WHERE c.id = $1
-    `;
-
-    const values = [classId];
-
-    if (schoolId) {
-        values.push(schoolId);
-
-        sql += `
-            AND c.school_id = $${values.length}
-        `;
-    }
-
-    sql += `
+          AND c.school_id = $2
         LIMIT 1
     `;
 
-    const result = await query(sql, values);
+    const result =
+        await query(
+            sql,
+            [
+                classId,
+                schoolId
+            ]
+        );
 
     return result.rows[0] || null;
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| List Classes
-|--------------------------------------------------------------------------
-*/
-
 async function findClasses({
     schoolId,
     academicLevelId = null,
-    isActive = null
+    isActive = null,
+    search = null,
+    limit = 100,
+    offset = 0
 }) {
     if (!schoolId) {
-        throw new Error("School ID is required.");
+        throw new Error(
+            "School ID is required."
+        );
     }
+
+    const values = [
+        schoolId
+    ];
 
     let sql = `
         SELECT
             c.*,
             al.level_name,
-            al.level_code
+            al.level_order,
+            al.description AS level_description
         FROM classes c
-        LEFT JOIN academic_levels al
+        INNER JOIN academic_levels al
             ON al.id = c.academic_level_id
+           AND al.school_id = c.school_id
         WHERE c.school_id = $1
     `;
 
-    const values = [schoolId];
-
     if (academicLevelId) {
-        values.push(academicLevelId);
+        values.push(
+            academicLevelId
+        );
 
         sql += `
             AND c.academic_level_id = $${values.length}
         `;
     }
 
-    if (isActive !== null && isActive !== undefined) {
-        values.push(isActive);
+    if (
+        isActive !== null &&
+        isActive !== undefined &&
+        isActive !== ""
+    ) {
+        values.push(
+            normalizeBoolean(
+                isActive
+            )
+        );
 
         sql += `
             AND c.is_active = $${values.length}
         `;
     }
 
+    const searchTerm =
+        normalizeText(search, "");
+
+    if (searchTerm) {
+        values.push(
+            `%${searchTerm}%`
+        );
+
+        sql += `
+            AND (
+                c.class_name ILIKE $${values.length}
+                OR c.class_code ILIKE $${values.length}
+                OR c.description ILIKE $${values.length}
+                OR al.level_name ILIKE $${values.length}
+            )
+        `;
+    }
+
+    const safeLimit =
+        Math.min(
+            Math.max(
+                normalizePositiveInteger(
+                    limit,
+                    100
+                ),
+                1
+            ),
+            500
+        );
+
+    const safeOffset =
+        Math.max(
+            normalizePositiveInteger(
+                offset,
+                0
+            ),
+            0
+        );
+
+    values.push(
+        safeLimit
+    );
+
     sql += `
         ORDER BY
-            COALESCE(al.level_name, '') ASC,
+            al.level_order ASC,
             c.class_order ASC,
             c.class_name ASC
+        LIMIT $${values.length}
     `;
 
-    const result = await query(sql, values);
+    values.push(
+        safeOffset
+    );
+
+    sql += `
+        OFFSET $${values.length}
+    `;
+
+    const result =
+        await query(
+            sql,
+            values
+        );
 
     return result.rows;
 }
 
+async function searchClasses(
+    searchTerm,
+    schoolId
+) {
+    if (!schoolId) {
+        throw new Error(
+            "School ID is required."
+        );
+    }
 
-/*
-|--------------------------------------------------------------------------
-| Search Classes
-|--------------------------------------------------------------------------
-*/
+    const term =
+        normalizeText(
+            searchTerm,
+            ""
+        );
 
-async function searchClasses(searchTerm, schoolId) {
-    const term = String(searchTerm || "").trim();
+    if (!term) {
+        return findClasses({
+            schoolId
+        });
+    }
 
     const sql = `
         SELECT
             c.*,
             al.level_name,
-            al.level_code
+            al.level_order,
+            al.description AS level_description
         FROM classes c
-        LEFT JOIN academic_levels al
+        INNER JOIN academic_levels al
             ON al.id = c.academic_level_id
+           AND al.school_id = c.school_id
         WHERE c.school_id = $1
           AND (
               c.class_name ILIKE $2
               OR c.class_code ILIKE $2
               OR c.description ILIKE $2
               OR al.level_name ILIKE $2
-              OR al.level_code ILIKE $2
           )
         ORDER BY
-            COALESCE(al.level_name, '') ASC,
+            al.level_order ASC,
             c.class_order ASC,
             c.class_name ASC
         LIMIT 100
     `;
 
-    const result = await query(sql, [
-        schoolId,
-        `%${term}%`
-    ]);
+    const result =
+        await query(
+            sql,
+            [
+                schoolId,
+                `%${term}%`
+            ]
+        );
 
     return result.rows;
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Check Whether Class Exists
-|--------------------------------------------------------------------------
-*/
 
 async function classExists(
     schoolId,
     className,
     excludeClassId = null
 ) {
+    if (!schoolId) {
+        throw new Error(
+            "School ID is required."
+        );
+    }
+
+    const normalizedClassName =
+        normalizeText(className);
+
+    if (!normalizedClassName) {
+        return false;
+    }
+
     let sql = `
         SELECT EXISTS (
             SELECT 1
@@ -223,11 +427,13 @@ async function classExists(
 
     const values = [
         schoolId,
-        className
+        normalizedClassName
     ];
 
     if (excludeClassId) {
-        values.push(excludeClassId);
+        values.push(
+            excludeClassId
+        );
 
         sql += `
             AND id <> $${values.length}
@@ -238,68 +444,182 @@ async function classExists(
         ) AS exists
     `;
 
-    const result = await query(sql, values);
+    const result =
+        await query(
+            sql,
+            values
+        );
 
-    return result.rows[0].exists;
+    return Boolean(
+        result.rows[0].exists
+    );
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Update Class
-|--------------------------------------------------------------------------
-*/
 
 async function updateClass(
     classId,
     schoolId,
-    data
+    data = {}
 ) {
+    if (!classId) {
+        throw new Error(
+            "Class ID is required."
+        );
+    }
+
+    if (!schoolId) {
+        throw new Error(
+            "School ID is required."
+        );
+    }
+
     const allowedFields = {
-        className: "class_name",
-        classCode: "class_code",
-        academicLevelId: "academic_level_id",
-        classOrder: "class_order",
-        description: "description",
-        isActive: "is_active"
+        academicLevelId:
+            "academic_level_id",
+        className:
+            "class_name",
+        classCode:
+            "class_code",
+        classOrder:
+            "class_order",
+        description:
+            "description",
+        isActive:
+            "is_active"
     };
 
     const updates = [];
     const values = [];
 
-    for (const key of Object.keys(data || {})) {
+    for (
+        const key of Object.keys(data)
+    ) {
         if (
-            allowedFields[key] &&
-            data[key] !== undefined
+            !Object.prototype.hasOwnProperty.call(
+                allowedFields,
+                key
+            )
         ) {
-            let value = data[key];
-
-            if (
-                key === "className" &&
-                typeof value === "string"
-            ) {
-                value = value.trim();
-            }
-
-            values.push(value);
-
-            updates.push(
-                `${allowedFields[key]} = $${values.length}`
-            );
+            continue;
         }
+
+        if (
+            data[key] === undefined
+        ) {
+            continue;
+        }
+
+        let value =
+            data[key];
+
+        if (
+            key === "academicLevelId"
+        ) {
+            value =
+                normalizeText(value);
+
+            if (!value) {
+                throw new Error(
+                    "Academic level ID is required."
+                );
+            }
+        }
+
+        if (
+            key === "className"
+        ) {
+            value =
+                normalizeText(value);
+
+            if (!value) {
+                throw new Error(
+                    "Class name is required."
+                );
+            }
+        }
+
+        if (
+            key === "classCode"
+        ) {
+            value =
+                normalizeText(value);
+        }
+
+        if (
+            key === "classOrder"
+        ) {
+            value =
+                normalizePositiveInteger(
+                    value
+                );
+        }
+
+        if (
+            key === "description"
+        ) {
+            value =
+                normalizeText(value);
+        }
+
+        if (
+            key === "isActive"
+        ) {
+            value =
+                normalizeBoolean(
+                    value
+                );
+        }
+
+        values.push(value);
+
+        updates.push(
+            `${allowedFields[key]} = $${values.length}`
+        );
     }
 
-    if (updates.length === 0) {
+    if (
+        updates.length === 0
+    ) {
         throw new Error(
             "No valid fields supplied for update."
         );
     }
 
+    if (
+        data.academicLevelId !== undefined
+    ) {
+        const levelResult =
+            await query(
+                `
+                    SELECT id
+                    FROM academic_levels
+                    WHERE id = $1
+                      AND school_id = $2
+                    LIMIT 1
+                `,
+                [
+                    data.academicLevelId,
+                    schoolId
+                ]
+            );
+
+        if (
+            levelResult.rows.length === 0
+        ) {
+            throw new Error(
+                "Academic level not found."
+            );
+        }
+    }
+
     values.push(classId);
-    const classIdPosition = values.length;
+
+    const classIdPosition =
+        values.length;
 
     values.push(schoolId);
-    const schoolIdPosition = values.length;
+
+    const schoolIdPosition =
+        values.length;
 
     const sql = `
         UPDATE classes
@@ -311,23 +631,32 @@ async function updateClass(
         RETURNING *
     `;
 
-    const result = await query(sql, values);
+    const result =
+        await query(
+            sql,
+            values
+        );
 
     return result.rows[0] || null;
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Activate / Deactivate Class
-|--------------------------------------------------------------------------
-*/
 
 async function setClassActive(
     classId,
     schoolId,
     isActive
 ) {
+    if (!classId) {
+        throw new Error(
+            "Class ID is required."
+        );
+    }
+
+    if (!schoolId) {
+        throw new Error(
+            "School ID is required."
+        );
+    }
+
     const sql = `
         UPDATE classes
         SET
@@ -338,27 +667,43 @@ async function setClassActive(
         RETURNING *
     `;
 
-    const result = await query(sql, [
-        isActive,
-        classId,
-        schoolId
-    ]);
+    const result =
+        await query(
+            sql,
+            [
+                normalizeBoolean(
+                    isActive
+                ),
+                classId,
+                schoolId
+            ]
+        );
 
     return result.rows[0] || null;
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Update Class Order
-|--------------------------------------------------------------------------
-*/
 
 async function updateClassOrder(
     classId,
     schoolId,
     classOrder
 ) {
+    if (!classId) {
+        throw new Error(
+            "Class ID is required."
+        );
+    }
+
+    if (!schoolId) {
+        throw new Error(
+            "School ID is required."
+        );
+    }
+
+    const normalizedOrder =
+        normalizePositiveInteger(
+            classOrder
+        );
+
     const sql = `
         UPDATE classes
         SET
@@ -369,289 +714,208 @@ async function updateClassOrder(
         RETURNING *
     `;
 
-    const result = await query(sql, [
-        classOrder,
-        classId,
-        schoolId
-    ]);
+    const result =
+        await query(
+            sql,
+            [
+                normalizedOrder,
+                classId,
+                schoolId
+            ]
+        );
 
     return result.rows[0] || null;
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Get Class Arms
-|--------------------------------------------------------------------------
-*/
 
 async function getClassArms(
     classId,
     schoolId
 ) {
+    if (!classId) {
+        throw new Error(
+            "Class ID is required."
+        );
+    }
+
+    if (!schoolId) {
+        throw new Error(
+            "School ID is required."
+        );
+    }
+
     const sql = `
         SELECT
             ca.*
         FROM class_arms ca
         WHERE ca.class_id = $1
           AND ca.school_id = $2
-        ORDER BY ca.arm_name ASC
+        ORDER BY
+            ca.arm_name ASC
     `;
 
-    const result = await query(sql, [
-        classId,
-        schoolId
-    ]);
+    const result =
+        await query(
+            sql,
+            [
+                classId,
+                schoolId
+            ]
+        );
 
     return result.rows;
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Find Class Arm By ID
-|--------------------------------------------------------------------------
-*/
 
 async function findClassArmById(
     classArmId,
     schoolId
 ) {
+    if (!classArmId) {
+        throw new Error(
+            "Class arm ID is required."
+        );
+    }
+
+    if (!schoolId) {
+        throw new Error(
+            "School ID is required."
+        );
+    }
+
     const sql = `
         SELECT
             ca.*,
             c.class_name,
             c.class_code,
+            c.academic_level_id,
             al.level_name,
-            al.level_code
+            al.level_order
         FROM class_arms ca
         INNER JOIN classes c
             ON c.id = ca.class_id
-        LEFT JOIN academic_levels al
+           AND c.school_id = ca.school_id
+        INNER JOIN academic_levels al
             ON al.id = c.academic_level_id
+           AND al.school_id = c.school_id
         WHERE ca.id = $1
           AND ca.school_id = $2
         LIMIT 1
     `;
 
-    const result = await query(sql, [
-        classArmId,
-        schoolId
-    ]);
+    const result =
+        await query(
+            sql,
+            [
+                classArmId,
+                schoolId
+            ]
+        );
 
     return result.rows[0] || null;
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Get Students In Class
-|--------------------------------------------------------------------------
-*/
-
-async function getStudentsInClass({
-    schoolId,
-    classId,
-    classArmId = null,
-    sessionId,
-    termId = null
-}) {
+async function getClassStatistics(
+    schoolId
+) {
     if (!schoolId) {
-        throw new Error("School ID is required.");
+        throw new Error(
+            "School ID is required."
+        );
     }
 
-    if (!classId) {
-        throw new Error("Class ID is required.");
-    }
-
-    if (!sessionId) {
-        throw new Error("Academic session ID is required.");
-    }
-
-    let sql = `
-        SELECT
-            s.*,
-            se.id AS enrollment_id,
-            se.academic_session_id,
-            se.enrollment_date,
-            se.admission_status,
-            se.department_id,
-            ca.arm_name,
-            ca.arm_code
-        FROM student_enrollments se
-        INNER JOIN students s
-            ON s.id = se.student_id
-        LEFT JOIN class_arms ca
-            ON ca.id = se.class_arm_id
-        WHERE se.school_id = $1
-          AND se.class_id = $2
-          AND se.academic_session_id = $3
-          AND se.admission_status IN (
-              'Enrolled',
-              'Promoted',
-              'Repeated'
-          )
-          AND s.school_id = $1
-          AND LOWER(s.status) = 'active'
-    `;
-
-    const values = [
-        schoolId,
-        classId,
-        sessionId
-    ];
-
-    if (classArmId) {
-        values.push(classArmId);
-
-        sql += `
-            AND se.class_arm_id = $${values.length}
-        `;
-    }
-
-    sql += `
-        ORDER BY
-            s.last_name ASC,
-            s.first_name ASC,
-            s.middle_name ASC
-    `;
-
-    const result = await query(sql, values);
-
-    return result.rows;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Count Students In Class
-|--------------------------------------------------------------------------
-*/
-
-async function countStudentsInClass({
-    schoolId,
-    classId,
-    classArmId = null,
-    sessionId,
-    termId = null
-}) {
-    if (!schoolId) {
-        throw new Error("School ID is required.");
-    }
-
-    if (!classId) {
-        throw new Error("Class ID is required.");
-    }
-
-    if (!sessionId) {
-        throw new Error("Academic session ID is required.");
-    }
-
-    let sql = `
-        SELECT COUNT(*) AS student_count
-        FROM student_enrollments se
-        INNER JOIN students s
-            ON s.id = se.student_id
-        WHERE se.school_id = $1
-          AND se.class_id = $2
-          AND se.academic_session_id = $3
-          AND se.admission_status IN (
-              'Enrolled',
-              'Promoted',
-              'Repeated'
-          )
-          AND s.school_id = $1
-          AND LOWER(s.status) = 'active'
-    `;
-
-    const values = [
-        schoolId,
-        classId,
-        sessionId
-    ];
-
-    if (classArmId) {
-        values.push(classArmId);
-
-        sql += `
-            AND se.class_arm_id = $${values.length}
-        `;
-    }
-
-    const result = await query(sql, values);
-
-    return Number(
-        result.rows[0].student_count
-    );
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Class Statistics
-|--------------------------------------------------------------------------
-*/
-
-async function getClassStatistics(schoolId) {
     const sql = `
         SELECT
             (
                 SELECT COUNT(*)
                 FROM classes
                 WHERE school_id = $1
-                  AND is_active = TRUE
             )::INTEGER AS total_classes,
+
+            (
+                SELECT COUNT(*)
+                FROM classes
+                WHERE school_id = $1
+                  AND is_active = TRUE
+            )::INTEGER AS active_classes,
+
+            (
+                SELECT COUNT(*)
+                FROM classes
+                WHERE school_id = $1
+                  AND is_active = FALSE
+            )::INTEGER AS inactive_classes,
+
+            (
+                SELECT COUNT(*)
+                FROM class_arms
+                WHERE school_id = $1
+            )::INTEGER AS total_arms,
 
             (
                 SELECT COUNT(*)
                 FROM class_arms
                 WHERE school_id = $1
                   AND is_active = TRUE
-            )::INTEGER AS total_arms,
-
-            (
-                SELECT COUNT(*)
-                FROM student_enrollments se
-                INNER JOIN students s
-                    ON s.id = se.student_id
-                WHERE se.school_id = $1
-                  AND se.admission_status IN (
-                      'Enrolled',
-                      'Promoted',
-                      'Repeated'
-                  )
-                  AND s.school_id = $1
-                  AND LOWER(s.status) = 'active'
-            )::INTEGER AS total_enrollments
+            )::INTEGER AS active_arms
     `;
 
-    const result = await query(sql, [schoolId]);
+    const result =
+        await query(
+            sql,
+            [
+                schoolId
+            ]
+        );
 
-    const row = result.rows[0];
+    const row =
+        result.rows[0];
 
     return {
-        totalClasses: Number(row.total_classes),
-        totalArms: Number(row.total_arms),
-        totalEnrollments: Number(row.total_enrollments)
+        totalClasses:
+            Number(row.total_classes),
+
+        activeClasses:
+            Number(row.active_classes),
+
+        inactiveClasses:
+            Number(row.inactive_classes),
+
+        totalArms:
+            Number(row.total_arms),
+
+        activeArms:
+            Number(row.active_arms)
     };
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Get Class Details
-|--------------------------------------------------------------------------
-*/
 
 async function getClassDetails(
     classId,
     schoolId
 ) {
+    if (!classId) {
+        throw new Error(
+            "Class ID is required."
+        );
+    }
+
+    if (!schoolId) {
+        throw new Error(
+            "School ID is required."
+        );
+    }
+
     const sql = `
         SELECT
             c.*,
             al.level_name,
-            al.level_code,
+            al.level_order,
+            al.description AS level_description,
+
+            (
+                SELECT COUNT(*)
+                FROM class_arms ca
+                WHERE ca.class_id = c.id
+                  AND ca.school_id = c.school_id
+            )::INTEGER AS total_arms,
 
             (
                 SELECT COUNT(*)
@@ -659,28 +923,13 @@ async function getClassDetails(
                 WHERE ca.class_id = c.id
                   AND ca.school_id = c.school_id
                   AND ca.is_active = TRUE
-            )::INTEGER AS total_arms,
-
-            (
-                SELECT COUNT(*)
-                FROM student_enrollments se
-                INNER JOIN students s
-                    ON s.id = se.student_id
-                WHERE se.class_id = c.id
-                  AND se.school_id = c.school_id
-                  AND se.admission_status IN (
-                      'Enrolled',
-                      'Promoted',
-                      'Repeated'
-                  )
-                  AND s.school_id = c.school_id
-                  AND LOWER(s.status) = 'active'
-            )::INTEGER AS total_students
+            )::INTEGER AS active_arms
 
         FROM classes c
 
-        LEFT JOIN academic_levels al
+        INNER JOIN academic_levels al
             ON al.id = c.academic_level_id
+           AND al.school_id = c.school_id
 
         WHERE c.id = $1
           AND c.school_id = $2
@@ -688,25 +937,34 @@ async function getClassDetails(
         LIMIT 1
     `;
 
-    const result = await query(sql, [
-        classId,
-        schoolId
-    ]);
+    const result =
+        await query(
+            sql,
+            [
+                classId,
+                schoolId
+            ]
+        );
 
     return result.rows[0] || null;
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Delete Class
-|--------------------------------------------------------------------------
-*/
 
 async function deleteClass(
     classId,
     schoolId
 ) {
+    if (!classId) {
+        throw new Error(
+            "Class ID is required."
+        );
+    }
+
+    if (!schoolId) {
+        throw new Error(
+            "School ID is required."
+        );
+    }
+
     const sql = `
         DELETE FROM classes
         WHERE id = $1
@@ -714,20 +972,17 @@ async function deleteClass(
         RETURNING *
     `;
 
-    const result = await query(sql, [
-        classId,
-        schoolId
-    ]);
+    const result =
+        await query(
+            sql,
+            [
+                classId,
+                schoolId
+            ]
+        );
 
     return result.rows[0] || null;
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Export
-|--------------------------------------------------------------------------
-*/
 
 module.exports = {
     createClass,
@@ -740,8 +995,6 @@ module.exports = {
     updateClassOrder,
     getClassArms,
     findClassArmById,
-    getStudentsInClass,
-    countStudentsInClass,
     getClassStatistics,
     getClassDetails,
     deleteClass

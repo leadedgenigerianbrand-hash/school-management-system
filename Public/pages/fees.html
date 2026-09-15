@@ -1,9 +1,12 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    ```
     <title>Fees Management</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -74,7 +77,6 @@
 
         .table td {
             vertical-align: middle;
-            white-space: nowrap;
         }
 
         .page-title {
@@ -90,127 +92,192 @@
             margin-bottom: .4rem;
         }
 
+        .form-label {
+            color: #374151;
+        }
+
+        .form-text {
+            font-size: .78rem;
+        }
+
+        .status-badge {
+            font-size: .75rem;
+            font-weight: 600;
+            padding: .4rem .6rem;
+            border-radius: 999px;
+        }
+
+        .student-name {
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .student-meta {
+            font-size: .78rem;
+            color: #64748b;
+        }
+
+        .amount-cell {
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
         @media (max-width: 991.98px) {
             .sidebar {
                 min-height: auto;
             }
         }
     </style>
+    ```
+
 </head>
 
 <body>
 
+    ```
     <div class="container-fluid">
         <div class="row">
 
-            <!-- SIDEBAR -->
             <aside class="col-lg-2 col-xl-2 sidebar p-3">
 
                 <div class="d-flex align-items-center gap-2 mb-4">
                     <div class="bg-primary rounded-3 p-2 text-white">
                         <i class="bi bi-mortarboard-fill"></i>
                     </div>
-                    <span class="brand">School Management</span>
+
+                    <span class="brand">
+                        School Management
+                    </span>
                 </div>
 
                 <nav>
 
-                    <div class="sidebar-section">Main</div>
+                    <div class="sidebar-section">
+                        Main
+                    </div>
 
                     <a class="nav-link px-3 py-2" href="dashboard.html">
-                        <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                        <i class="bi bi-speedometer2 me-2"></i>
+                        Dashboard
                     </a>
 
                     <a class="nav-link px-3 py-2" href="students.html">
-                        <i class="bi bi-people me-2"></i> Students
+                        <i class="bi bi-people me-2"></i>
+                        Students
                     </a>
 
                     <a class="nav-link px-3 py-2" href="staff.html">
-                        <i class="bi bi-person-badge me-2"></i> Staff
+                        <i class="bi bi-person-badge me-2"></i>
+                        Staff
                     </a>
 
                     <a class="nav-link px-3 py-2" href="guardians.html">
-                        <i class="bi bi-person-hearts me-2"></i> Guardians
+                        <i class="bi bi-person-hearts me-2"></i>
+                        Guardians
                     </a>
 
-                    <div class="sidebar-section">Academic</div>
+
+                    <div class="sidebar-section">
+                        Academic
+                    </div>
 
                     <a class="nav-link px-3 py-2" href="classes.html">
-                        <i class="bi bi-building me-2"></i> Classes
+                        <i class="bi bi-building me-2"></i>
+                        Classes
                     </a>
 
                     <a class="nav-link px-3 py-2" href="class-arms.html">
-                        <i class="bi bi-diagram-3 me-2"></i> Class Arms
+                        <i class="bi bi-diagram-3 me-2"></i>
+                        Class Arms
                     </a>
 
                     <a class="nav-link px-3 py-2" href="departments.html">
-                        <i class="bi bi-diagram-2 me-2"></i> Departments
+                        <i class="bi bi-diagram-2 me-2"></i>
+                        Departments
                     </a>
 
                     <a class="nav-link px-3 py-2" href="subjects.html">
-                        <i class="bi bi-book me-2"></i> Subjects
+                        <i class="bi bi-book me-2"></i>
+                        Subjects
                     </a>
 
                     <a class="nav-link px-3 py-2" href="academic-sessions.html">
-                        <i class="bi bi-calendar3 me-2"></i> Sessions
+                        <i class="bi bi-calendar3 me-2"></i>
+                        Sessions
                     </a>
 
                     <a class="nav-link px-3 py-2" href="terms.html">
-                        <i class="bi bi-calendar-week me-2"></i> Terms
+                        <i class="bi bi-calendar-week me-2"></i>
+                        Terms
                     </a>
 
                     <a class="nav-link px-3 py-2" href="attendance.html">
-                        <i class="bi bi-check2-square me-2"></i> Attendance
+                        <i class="bi bi-check2-square me-2"></i>
+                        Attendance
                     </a>
 
                     <a class="nav-link px-3 py-2" href="results.html">
-                        <i class="bi bi-bar-chart me-2"></i> Results
+                        <i class="bi bi-bar-chart me-2"></i>
+                        Results
                     </a>
 
-                    <div class="sidebar-section">Finance & Records</div>
+
+                    <div class="sidebar-section">
+                        Finance & Records
+                    </div>
 
                     <a class="nav-link active px-3 py-2" href="fees.html">
-                        <i class="bi bi-cash-stack me-2"></i> Fees
+                        <i class="bi bi-cash-stack me-2"></i>
+                        Fees
                     </a>
 
                     <a class="nav-link px-3 py-2" href="documents.html">
-                        <i class="bi bi-folder2-open me-2"></i> Documents
+                        <i class="bi bi-folder2-open me-2"></i>
+                        Documents
                     </a>
 
                     <a class="nav-link px-3 py-2" href="reports.html">
-                        <i class="bi bi-file-earmark-bar-graph me-2"></i> Reports
+                        <i class="bi bi-file-earmark-bar-graph me-2"></i>
+                        Reports
                     </a>
 
-                    <div class="sidebar-section">Administration</div>
+
+                    <div class="sidebar-section">
+                        Administration
+                    </div>
 
                     <a class="nav-link px-3 py-2" href="users.html">
-                        <i class="bi bi-person-gear me-2"></i> Users
+                        <i class="bi bi-person-gear me-2"></i>
+                        Users
                     </a>
 
                     <a class="nav-link px-3 py-2" href="roles.html">
-                        <i class="bi bi-shield-check me-2"></i> Roles
+                        <i class="bi bi-shield-check me-2"></i>
+                        Roles
                     </a>
 
                     <a class="nav-link px-3 py-2" href="permissions.html">
-                        <i class="bi bi-key me-2"></i> Permissions
+                        <i class="bi bi-key me-2"></i>
+                        Permissions
                     </a>
 
                     <a class="nav-link px-3 py-2" href="profile.html">
-                        <i class="bi bi-person-circle me-2"></i> Profile
+                        <i class="bi bi-person-circle me-2"></i>
+                        Profile
                     </a>
 
                     <a class="nav-link px-3 py-2" href="settings.html">
-                        <i class="bi bi-gear me-2"></i> Settings
+                        <i class="bi bi-gear me-2"></i>
+                        Settings
                     </a>
 
                 </nav>
+
             </aside>
 
 
-            <!-- MAIN CONTENT -->
             <main class="col-lg-10 col-xl-10 main-content p-3 p-md-4">
 
-                <!-- HEADER -->
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
 
                     <div>
@@ -235,92 +302,126 @@
                 </div>
 
 
-                <!-- STATISTICS -->
                 <div class="row g-3 mb-4">
 
                     <div class="col-sm-6 col-xl-3">
+
                         <div class="card stat-card h-100">
                             <div class="card-body">
+
                                 <div class="d-flex justify-content-between align-items-start">
+
                                     <div>
                                         <div class="text-secondary small mb-2">
                                             Total Fee Records
                                         </div>
-                                        <h3 class="mb-0" id="totalRecords">0</h3>
+
+                                        <h3 class="mb-0" id="totalRecords">
+                                            0
+                                        </h3>
                                     </div>
 
                                     <div class="stat-icon">
                                         <i class="bi bi-receipt"></i>
                                     </div>
+
                                 </div>
+
                             </div>
                         </div>
+
                     </div>
 
 
                     <div class="col-sm-6 col-xl-3">
+
                         <div class="card stat-card h-100">
                             <div class="card-body">
+
                                 <div class="d-flex justify-content-between align-items-start">
+
                                     <div>
                                         <div class="text-secondary small mb-2">
                                             Total Fees
                                         </div>
-                                        <h3 class="mb-0" id="totalAmount">₦0.00</h3>
+
+                                        <h3 class="mb-0" id="totalAmount">
+                                            ₦0.00
+                                        </h3>
                                     </div>
 
                                     <div class="stat-icon">
                                         <i class="bi bi-wallet2"></i>
                                     </div>
+
                                 </div>
+
                             </div>
                         </div>
+
                     </div>
 
 
                     <div class="col-sm-6 col-xl-3">
+
                         <div class="card stat-card h-100">
                             <div class="card-body">
+
                                 <div class="d-flex justify-content-between align-items-start">
+
                                     <div>
                                         <div class="text-secondary small mb-2">
                                             Total Paid
                                         </div>
-                                        <h3 class="mb-0 text-success" id="totalPaid">₦0.00</h3>
+
+                                        <h3 class="mb-0 text-success" id="totalPaid">
+                                            ₦0.00
+                                        </h3>
                                     </div>
 
                                     <div class="stat-icon">
                                         <i class="bi bi-check-circle"></i>
                                     </div>
+
                                 </div>
+
                             </div>
                         </div>
+
                     </div>
 
 
                     <div class="col-sm-6 col-xl-3">
+
                         <div class="card stat-card h-100">
                             <div class="card-body">
+
                                 <div class="d-flex justify-content-between align-items-start">
+
                                     <div>
                                         <div class="text-secondary small mb-2">
                                             Total Outstanding
                                         </div>
-                                        <h3 class="mb-0 text-danger" id="totalBalance">₦0.00</h3>
+
+                                        <h3 class="mb-0 text-danger" id="totalBalance">
+                                            ₦0.00
+                                        </h3>
                                     </div>
 
                                     <div class="stat-icon">
                                         <i class="bi bi-exclamation-circle"></i>
                                     </div>
+
                                 </div>
+
                             </div>
                         </div>
+
                     </div>
 
                 </div>
 
 
-                <!-- FEES TABLE -->
                 <div class="card content-card">
 
                     <div class="card-body p-3 p-md-4">
@@ -333,28 +434,49 @@
                                 </h2>
 
                                 <p class="text-secondary small mb-0">
-                                    Search and manage student fee records.
+                                    Search and manage student fee records and payment balances.
                                 </p>
                             </div>
+
 
                             <div class="d-flex flex-column flex-md-row gap-2">
 
                                 <div class="input-group">
+
                                     <span class="input-group-text bg-white">
                                         <i class="bi bi-search"></i>
                                     </span>
 
                                     <input type="search" class="form-control" id="searchInput"
-                                        placeholder="Search student, admission number or fee...">
+                                        placeholder="Search student, admission number or fee..." autocomplete="off">
+
                                 </div>
 
+
                                 <select class="form-select" id="statusFilter">
-                                    <option value="">All Statuses</option>
-                                    <option value="paid">Paid</option>
-                                    <option value="partial">Partial</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="overdue">Overdue</option>
+
+                                    <option value="">
+                                        All Statuses
+                                    </option>
+
+                                    <option value="Unpaid">
+                                        Unpaid
+                                    </option>
+
+                                    <option value="Partially Paid">
+                                        Partially Paid
+                                    </option>
+
+                                    <option value="Paid">
+                                        Paid
+                                    </option>
+
+                                    <option value="Overpaid">
+                                        Overpaid
+                                    </option>
+
                                 </select>
+
 
                                 <button type="button" class="btn btn-outline-secondary" id="refreshButton">
                                     <i class="bi bi-arrow-clockwise me-1"></i>
@@ -390,10 +512,15 @@
                                 <tbody id="feesTableBody">
 
                                     <tr>
+
                                         <td colspan="10" class="text-center py-5 text-secondary">
+
                                             <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+
                                             Loading fee records...
+
                                         </td>
+
                                     </tr>
 
                                 </tbody>
@@ -412,7 +539,6 @@
     </div>
 
 
-    <!-- RECORD FEE MODAL -->
     <div class="modal fade" id="feeModal" tabindex="-1" aria-labelledby="feeModalLabel" aria-hidden="true">
 
         <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -422,13 +548,15 @@
                 <div class="modal-header">
 
                     <div>
+
                         <h2 class="modal-title h5 mb-1" id="feeModalLabel">
                             Record Student Fee
                         </h2>
 
                         <p class="text-secondary small mb-0">
-                            Enter the student's fee information and payment details.
+                            Select the student, fee structure and payment information.
                         </p>
+
                     </div>
 
                     <button type="button" class="btn-close" id="closeModalButton" data-bs-dismiss="modal"
@@ -447,10 +575,41 @@
                             <div class="col-md-6">
 
                                 <label for="studentId" class="form-label fw-semibold">
-                                    Student ID
+                                    Student
                                 </label>
 
-                                <input type="number" class="form-control" id="studentId" required>
+                                <select class="form-select" id="studentId" required>
+
+                                    <option value="">
+                                        Select student
+                                    </option>
+
+                                </select>
+
+                                <div class="form-text">
+                                    Select the student whose fee is being recorded.
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <label for="feeStructureId" class="form-label fw-semibold">
+                                    Fee Structure
+                                </label>
+
+                                <select class="form-select" id="feeStructureId" required>
+
+                                    <option value="">
+                                        Select fee structure
+                                    </option>
+
+                                </select>
+
+                                <div class="form-text">
+                                    Select the fee structure configured for the school.
+                                </div>
 
                             </div>
 
@@ -461,7 +620,11 @@
                                     Fee Type
                                 </label>
 
-                                <input type="text" class="form-control" id="feeType" placeholder="School Fees" required>
+                                <input type="text" class="form-control" id="feeType" placeholder="School Fees" readonly>
+
+                                <div class="form-text">
+                                    Filled automatically from the selected fee structure.
+                                </div>
 
                             </div>
 
@@ -469,10 +632,16 @@
                             <div class="col-md-6">
 
                                 <label for="sessionId" class="form-label fw-semibold">
-                                    Academic Session ID
+                                    Academic Session
                                 </label>
 
-                                <input type="number" class="form-control" id="sessionId">
+                                <select class="form-select" id="sessionId" required>
+
+                                    <option value="">
+                                        Select academic session
+                                    </option>
+
+                                </select>
 
                             </div>
 
@@ -480,10 +649,16 @@
                             <div class="col-md-6">
 
                                 <label for="termId" class="form-label fw-semibold">
-                                    Term ID
+                                    Term
                                 </label>
 
-                                <input type="number" class="form-control" id="termId">
+                                <select class="form-select" id="termId" required>
+
+                                    <option value="">
+                                        Select term
+                                    </option>
+
+                                </select>
 
                             </div>
 
@@ -491,13 +666,22 @@
                             <div class="col-md-6">
 
                                 <label for="amount" class="form-label fw-semibold">
-                                    Amount
+                                    Fee Amount
                                 </label>
 
                                 <div class="input-group">
-                                    <span class="input-group-text">₦</span>
 
-                                    <input type="number" class="form-control" id="amount" min="0" step="0.01" required>
+                                    <span class="input-group-text">
+                                        ₦
+                                    </span>
+
+                                    <input type="number" class="form-control" id="amount" min="0" step="0.01" required
+                                        readonly>
+
+                                </div>
+
+                                <div class="form-text">
+                                    Filled automatically from the selected fee structure.
                                 </div>
 
                             </div>
@@ -510,11 +694,56 @@
                                 </label>
 
                                 <div class="input-group">
-                                    <span class="input-group-text">₦</span>
+
+                                    <span class="input-group-text">
+                                        ₦
+                                    </span>
 
                                     <input type="number" class="form-control" id="amountPaid" min="0" step="0.01"
                                         value="0">
+
                                 </div>
+
+                                <div class="form-text">
+                                    Enter the amount received at this time.
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <label for="paymentMethod" class="form-label fw-semibold">
+                                    Payment Method
+                                </label>
+
+                                <select class="form-select" id="paymentMethod">
+
+                                    <option value="">
+                                        Select payment method
+                                    </option>
+
+                                    <option value="Cash">
+                                        Cash
+                                    </option>
+
+                                    <option value="Bank Transfer">
+                                        Bank Transfer
+                                    </option>
+
+                                    <option value="POS">
+                                        POS
+                                    </option>
+
+                                    <option value="Card">
+                                        Card
+                                    </option>
+
+                                    <option value="Online">
+                                        Online Payment
+                                    </option>
+
+                                </select>
 
                             </div>
 
@@ -525,8 +754,8 @@
                                     Notes
                                 </label>
 
-                                <textarea class="form-control" id="notes" rows="4" placeholder="Optional notes">
-                            </textarea>
+                                <textarea class="form-control" id="notes" rows="3"
+                                    placeholder="Optional payment or fee notes"></textarea>
 
                             </div>
 
@@ -538,12 +767,17 @@
                     <div class="modal-footer">
 
                         <button type="button" class="btn btn-light" id="cancelFeeButton" data-bs-dismiss="modal">
+
                             Cancel
+
                         </button>
 
                         <button type="submit" class="btn btn-primary">
+
                             <i class="bi bi-check2-circle me-1"></i>
+
                             Save Fee
+
                         </button>
 
                     </div>
@@ -559,6 +793,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../js/fees.js"></script>
+    ```
 
 </body>
 

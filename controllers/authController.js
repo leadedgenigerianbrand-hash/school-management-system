@@ -1,151 +1,105 @@
 "use strict";
 
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-
 const {
     findUserForLogin,
     updateLastLogin
 } = require("../models/userModel");
 
+const {
+    comparePassword
+} = require("../utils/passwordUtils");
 
-/*
-|--------------------------------------------------------------------------
-| AUTHENTICATION CONFIGURATION
-|--------------------------------------------------------------------------
-*/
+const {
+    generateToken
+} = require("../utils/tokenUtils");
 
-function getJwtSecret() {
-
-    const secret = process.env.JWT_SECRET;
-
-    if (!secret) {
-
-        throw new Error(
-            "JWT_SECRET is not configured in .env"
-        );
-
-    }
-
-    return secret;
-
+function normalizeIdentifier(identifier) {
+    return String(identifier)
+        .trim();
 }
 
-
-function getJwtExpiresIn() {
-
-    return process.env.JWT_EXPIRES_IN || "1d";
-
+function buildSafeUser(user) {
+    return {
+        id: user.id,
+        schoolId: user.school_id,
+        roleId: user.role_id,
+        roleName: user.role_name,
+        username: user.username,
+        email: user.email,
+        firstName: user.first_name,
+        middleName: user.middle_name,
+        lastName: user.last_name,
+        phone: user.phone,
+        profilePhotoUrl: user.profile_photo_url,
+        isActive: user.is_active,
+        lastLoginAt: user.last_login_at,
+        schoolName: user.school_name,
+        schoolCode: user.school_code
+    };
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| LOGIN
-|--------------------------------------------------------------------------
-*/
 
 async function login(req, res, next) {
-
     try {
-
         const {
             identifier,
             password
-        } = req.body;
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | VALIDATE REQUEST
-        |--------------------------------------------------------------------------
-        */
+        } = req.body || {};
 
         if (
             typeof identifier !== "string" ||
             !identifier.trim()
         ) {
+            const error = new Error(
+                "Username or email is required."
+            );
 
-            return res.status(400).json({
+            error.statusCode = 400;
 
-                success: false,
-
-                message:
-                    "Username or email is required."
-
-            });
-
+            return next(error);
         }
-
 
         if (
             typeof password !== "string" ||
             !password
         ) {
+            const error = new Error(
+                "Password is required."
+            );
 
-            return res.status(400).json({
+            error.statusCode = 400;
 
-                success: false,
-
-                message:
-                    "Password is required."
-
-            });
-
+            return next(error);
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | FIND USER
-        |--------------------------------------------------------------------------
-        */
+        const normalizedIdentifier =
+            normalizeIdentifier(
+                identifier
+            );
 
         const user =
             await findUserForLogin(
-                identifier.trim()
+                normalizedIdentifier
             );
 
-
         if (!user) {
+            const error = new Error(
+                "Invalid username/email or password."
+            );
 
-            return res.status(401).json({
+            error.statusCode = 401;
 
-                success: false,
-
-                message:
-                    "Invalid username/email or password."
-
-            });
-
+            return next(error);
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | CHECK USER ACCOUNT
-        |--------------------------------------------------------------------------
-        */
 
         if (user.is_active !== true) {
+            const error = new Error(
+                "Your account has been deactivated."
+            );
 
-            return res.status(403).json({
+            error.statusCode = 403;
 
-                success: false,
-
-                message:
-                    "Your account has been deactivated."
-
-            });
-
+            return next(error);
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | CHECK SCHOOL
-        |--------------------------------------------------------------------------
-        */
 
         if (
             user.school_status &&
@@ -153,324 +107,158 @@ async function login(req, res, next) {
                 .trim()
                 .toLowerCase() !== "active"
         ) {
+            const error = new Error(
+                "This school's account is not active."
+            );
 
-            return res.status(403).json({
+            error.statusCode = 403;
 
-                success: false,
-
-                message:
-                    "This school's account is not active."
-
-            });
-
+            return next(error);
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | CHECK PASSWORD HASH
-        |--------------------------------------------------------------------------
-        */
-
-        if (!user.password_hash) {
-
+        if (
+            !user.password_hash ||
+            typeof user.password_hash !== "string"
+        ) {
             console.error(
                 "User authentication data is missing a password hash."
             );
 
-            return res.status(500).json({
+            const error = new Error(
+                "User authentication data is incomplete."
+            );
 
-                success: false,
+            error.statusCode = 500;
 
-                message:
-                    "User authentication data is incomplete."
-
-            });
-
+            return next(error);
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | VERIFY PASSWORD
-        |--------------------------------------------------------------------------
-        */
-
         const passwordMatches =
-            await bcrypt.compare(
+            await comparePassword(
                 password,
                 user.password_hash
             );
 
-
         if (!passwordMatches) {
+            const error = new Error(
+                "Invalid username/email or password."
+            );
 
-            return res.status(401).json({
+            error.statusCode = 401;
 
-                success: false,
-
-                message:
-                    "Invalid username/email or password."
-
-            });
-
+            return next(error);
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | UPDATE LAST LOGIN
-        |--------------------------------------------------------------------------
-        */
+        const token =
+            generateToken({
+                userId: user.id,
+                schoolId: user.school_id,
+                roleId: user.role_id,
+                roleName: user.role_name
+            });
 
         await updateLastLogin(
             user.id
         );
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | GET JWT SECRET
-        |--------------------------------------------------------------------------
-        */
-
-        let jwtSecret;
-
-        try {
-
-            jwtSecret =
-                getJwtSecret();
-
-        } catch (error) {
-
-            console.error(
-                error.message
+        const safeUser =
+            buildSafeUser(
+                user
             );
-
-            return res.status(500).json({
-
-                success: false,
-
-                message:
-                    "Authentication service is not configured."
-
-            });
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | JWT PAYLOAD
-        |--------------------------------------------------------------------------
-        */
-
-        const payload = {
-
-            id:
-                user.id,
-
-            schoolId:
-                user.school_id,
-
-            roleId:
-                user.role_id,
-
-            roleName:
-                user.role_name,
-
-            username:
-                user.username,
-
-            email:
-                user.email
-
-        };
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | CREATE TOKEN
-        |--------------------------------------------------------------------------
-        */
-
-        const token =
-            jwt.sign(
-                payload,
-                jwtSecret,
-                {
-                    expiresIn:
-                        getJwtExpiresIn()
-                }
-            );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | SAFE USER RESPONSE
-        |--------------------------------------------------------------------------
-        */
-
-        const safeUser = {
-
-            id:
-                user.id,
-
-            schoolId:
-                user.school_id,
-
-            roleId:
-                user.role_id,
-
-            roleName:
-                user.role_name,
-
-            username:
-                user.username,
-
-            email:
-                user.email,
-
-            firstName:
-                user.first_name,
-
-            lastName:
-                user.last_name,
-
-            phone:
-                user.phone,
-
-            isActive:
-                user.is_active,
-
-            lastLoginAt:
-                user.last_login_at,
-
-            schoolName:
-                user.school_name,
-
-            schoolCode:
-                user.school_code
-
-        };
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | LOGIN SUCCESS
-        |--------------------------------------------------------------------------
-        */
 
         return res.status(200).json({
-
             success: true,
-
-            message:
-                "Login successful.",
-
+            message: "Login successful.",
             token,
-
-            user:
-                safeUser
-
+            user: safeUser
         });
-
-
     } catch (error) {
-
         console.error(
             "Login error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| GET CURRENT USER
-|--------------------------------------------------------------------------
-*/
 
 async function getCurrentUser(
     req,
     res,
     next
 ) {
-
     try {
-
         if (!req.user) {
+            const error = new Error(
+                "Authentication required."
+            );
 
-            return res.status(401).json({
+            error.statusCode = 401;
 
-                success: false,
-
-                message:
-                    "Authentication required."
-
-            });
-
+            return next(error);
         }
 
-
         return res.status(200).json({
-
             success: true,
-
             user: {
-
                 id:
-                    req.user.id,
-
+                    req.user.userId ??
+                    req.user.id ??
+                    null,
                 schoolId:
-                    req.user.schoolId,
-
+                    req.user.schoolId ??
+                    req.user.school_id ??
+                    null,
                 roleId:
-                    req.user.roleId,
-
+                    req.user.roleId ??
+                    req.user.role_id ??
+                    null,
                 roleName:
-                    req.user.roleName,
-
+                    req.user.roleName ??
+                    req.user.role_name ??
+                    req.user.role ??
+                    null,
                 username:
-                    req.user.username,
-
+                    req.user.username ??
+                    null,
                 email:
-                    req.user.email
-
+                    req.user.email ??
+                    null
             }
-
         });
-
-
     } catch (error) {
-
         console.error(
             "Get current user error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
 
+async function logout(
+    req,
+    res,
+    next
+) {
+    try {
+        return res.status(200).json({
+            success: true,
+            message:
+                "Logout successful. Please remove the authentication token from the client."
+        });
+    } catch (error) {
+        console.error(
+            "Logout error:",
+            error
+        );
 
-/*
-|--------------------------------------------------------------------------
-| EXPORT
-|--------------------------------------------------------------------------
-*/
+        return next(error);
+    }
+}
 
 module.exports = {
-
     login,
-
-    getCurrentUser
-
+    getCurrentUser,
+    logout
 };

@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    ```
+    <title>Student Enrollment - School Management System</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/forms.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    <link rel="stylesheet" href="../css/students.css">
+
+    <style>
+        .enrollment-page {
+            padding: 24px;
+        }
+
+        .enrollment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .enrollment-header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .enrollment-header p {
+            margin: 6px 0 0;
+            color: #6c757d;
+        }
+
+        .enrollment-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 24px;
+        }
+
+        .enrollment-card h2 {
+            margin: 0 0 6px;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .enrollment-card-description {
+            margin-bottom: 20px;
+            color: #6c757d;
+        }
+
+        .form-label {
+            font-weight: 600;
+        }
+
+        .required-mark {
+            color: #dc3545;
+        }
+
+        .student-summary {
+            display: none;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 16px;
+            background: #f8f9fa;
+        }
+
+        .student-summary.visible {
+            display: block;
+        }
+
+        .student-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit,
+                    minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .summary-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .summary-label {
+            font-size: 12px;
+            color: #6c757d;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .summary-value {
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .enrollment-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .enrollment-message {
+            display: none;
+            margin-bottom: 20px;
+        }
+
+        .enrollment-message.show {
+            display: block;
+        }
+
+        .loading-indicator {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            color: #6c757d;
+            margin-top: 8px;
+        }
+
+        .loading-indicator.show {
+            display: flex;
+        }
+
+        .existing-enrollment {
+            display: none;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 18px;
+            background: #f8f9fa;
+            margin-top: 20px;
+        }
+
+        .existing-enrollment.show {
+            display: block;
+        }
+
+        .existing-enrollment h3 {
+            font-size: 17px;
+            margin-bottom: 14px;
+            font-weight: 700;
+        }
+
+        .existing-enrollment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit,
+                    minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .page-loading {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+
+        @media (max-width: 768px) {
+            .enrollment-page {
+                padding: 16px;
+            }
+
+            .enrollment-card {
+                padding: 18px;
+            }
+
+            .enrollment-header h1 {
+                font-size: 24px;
+            }
+
+            .enrollment-actions {
+                justify-content: stretch;
+            }
+
+            .enrollment-actions .btn {
+                width: 100%;
+            }
+        }
+    </style>
+    ```
+
+</head>
+
+<body>
+
+    ```
+    <div class="app-wrapper">
+
+        <aside class="sidebar" id="sidebar">
+
+            <div class="sidebar-header">
+                <div class="sidebar-brand">
+                    <span class="brand-title">
+                        School Management
+                    </span>
+                </div>
+
+                <button type="button" class="sidebar-close" id="sidebarCloseButton" aria-label="Close navigation">
+                    &times;
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+
+                <a href="/pages/dashboard.html" class="sidebar-link">
+                    Dashboard
+                </a>
+
+                <a href="/pages/students.html" class="sidebar-link active">
+                    Students
+                </a>
+
+                <a href="/pages/staff.html" class="sidebar-link">
+                    Staff
+                </a>
+
+                <a href="/pages/guardians.html" class="sidebar-link">
+                    Guardians
+                </a>
+
+                <a href="/pages/classes.html" class="sidebar-link">
+                    Classes
+                </a>
+
+                <a href="/pages/class-arms.html" class="sidebar-link">
+                    Class Arms
+                </a>
+
+                <a href="/pages/departments.html" class="sidebar-link">
+                    Departments
+                </a>
+
+                <a href="/pages/subjects.html" class="sidebar-link">
+                    Subjects
+                </a>
+
+                <a href="/pages/academic-levels.html" class="sidebar-link">
+                    Academic Levels
+                </a>
+
+                <a href="/pages/academic-sessions.html" class="sidebar-link">
+                    Academic Sessions
+                </a>
+
+                <a href="/pages/terms.html" class="sidebar-link">
+                    Terms
+                </a>
+
+                <a href="/pages/attendance.html" class="sidebar-link">
+                    Attendance
+                </a>
+
+                <a href="/pages/results.html" class="sidebar-link">
+                    Results
+                </a>
+
+                <a href="/pages/fees.html" class="sidebar-link">
+                    Fees
+                </a>
+
+                <a href="/pages/documents.html" class="sidebar-link">
+                    Documents
+                </a>
+
+                <a href="/pages/reports.html" class="sidebar-link">
+                    Reports
+                </a>
+
+                <a href="/pages/users.html" class="sidebar-link">
+                    Users
+                </a>
+
+                <a href="/pages/roles.html" class="sidebar-link">
+                    Roles
+                </a>
+
+                <a href="/pages/permissions.html" class="sidebar-link">
+                    Permissions
+                </a>
+
+                <a href="/pages/profile.html" class="sidebar-link">
+                    My Profile
+                </a>
+
+                <a href="/pages/settings.html" class="sidebar-link">
+                    Settings
+                </a>
+
+            </nav>
+        </aside>
+
+        <div class="main-content">
+
+            <header class="topbar">
+
+                <button type="button" class="sidebar-toggle" id="sidebarToggleButton" aria-label="Open navigation">
+                    &#9776;
+                </button>
+
+                <div class="topbar-title">
+                    Student Enrollment
+                </div>
+
+            </header>
+
+            <main class="enrollment-page">
+
+                <div class="enrollment-header">
+
+                    <div>
+                        <h1>Student Enrollment</h1>
+
+                        <p>
+                            Enroll a student into an academic session,
+                            class and class arm.
+                        </p>
+                    </div>
+
+                    <div>
+                        <a href="/pages/students.html" class="btn btn-outline-secondary" id="backToStudentsButton">
+                            Back to Students
+                        </a>
+                    </div>
+
+                </div>
+
+                <div id="enrollmentMessage" class="alert enrollment-message" role="alert" aria-live="polite"></div>
+
+                <div id="pageLoading" class="page-loading">
+                    Loading enrollment page...
+                </div>
+
+                <form id="enrollmentForm" class="enrollment-form" novalidate style="display: none;">
+
+                    <div class="enrollment-card">
+
+                        <h2>Student</h2>
+
+                        <p class="enrollment-card-description">
+                            Select the student you want to enroll.
+                        </p>
+
+                        <div class="row g-3">
+
+                            <div class="col-12">
+
+                                <label for="studentId" class="form-label">
+                                    Student
+                                    <span class="required-mark">
+                                        *
+                                    </span>
+                                </label>
+
+                                <select id="studentId" name="studentId" class="form-select" required>
+                                    <option value="">
+                                        Select student
+                                    </option>
+                                </select>
+
+                                <div id="studentLoading" class="loading-indicator">
+                                    <span class="spinner-border spinner-border-sm" role="status"
+                                        aria-hidden="true"></span>
+
+                                    Loading students...
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div id="studentSummary" class="student-summary">
+
+                            <div class="student-summary-grid">
+
+                                <div class="summary-item">
+                                    <span class="summary-label">
+                                        Student Number
+                                    </span>
+
+                                    <span id="summaryStudentNumber" class="summary-value">
+                                        Not selected
+                                    </span>
+                                </div>
+
+                                <div class="summary-item">
+                                    <span class="summary-label">
+                                        Student Name
+                                    </span>
+
+                                    <span id="summaryStudentName" class="summary-value">
+                                        Not selected
+                                    </span>
+                                </div>
+
+                                <div class="summary-item">
+                                    <span class="summary-label">
+                                        Gender
+                                    </span>
+
+                                    <span id="summaryStudentGender" class="summary-value">
+                                        Not provided
+                                    </span>
+                                </div>
+
+                                <div class="summary-item">
+                                    <span class="summary-label">
+                                        Email
+                                    </span>
+
+                                    <span id="summaryStudentEmail" class="summary-value">
+                                        Not provided
+                                    </span>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="enrollment-card">
+
+                        <h2>Academic Placement</h2>
+
+                        <p class="enrollment-card-description">
+                            Select the academic session and the student's
+                            current academic placement.
+                        </p>
+
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+
+                                <label for="academicSessionId" class="form-label">
+                                    Academic Session
+                                    <span class="required-mark">
+                                        *
+                                    </span>
+                                </label>
+
+                                <select id="academicSessionId" name="academicSessionId" class="form-select" required>
+                                    <option value="">
+                                        Select academic session
+                                    </option>
+                                </select>
+
+                                <div id="sessionLoading" class="loading-indicator">
+                                    <span class="spinner-border spinner-border-sm" role="status"
+                                        aria-hidden="true"></span>
+
+                                    Loading sessions...
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <label for="academicLevelId" class="form-label">
+                                    Academic Level
+                                </label>
+
+                                <select id="academicLevelId" name="academicLevelId" class="form-select">
+                                    <option value="">
+                                        Select academic level
+                                    </option>
+                                </select>
+
+                                <div id="levelLoading" class="loading-indicator">
+                                    <span class="spinner-border spinner-border-sm" role="status"
+                                        aria-hidden="true"></span>
+
+                                    Loading levels...
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <label for="classId" class="form-label">
+                                    Class
+                                    <span class="required-mark">
+                                        *
+                                    </span>
+                                </label>
+
+                                <select id="classId" name="classId" class="form-select" required>
+                                    <option value="">
+                                        Select class
+                                    </option>
+                                </select>
+
+                                <div id="classLoading" class="loading-indicator">
+                                    <span class="spinner-border spinner-border-sm" role="status"
+                                        aria-hidden="true"></span>
+
+                                    Loading classes...
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <label for="classArmId" class="form-label">
+                                    Class Arm
+                                </label>
+
+                                <select id="classArmId" name="classArmId" class="form-select">
+                                    <option value="">
+                                        Select class arm
+                                    </option>
+                                </select>
+
+                                <div id="classArmLoading" class="loading-indicator">
+                                    <span class="spinner-border spinner-border-sm" role="status"
+                                        aria-hidden="true"></span>
+
+                                    Loading class arms...
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <label for="departmentId" class="form-label">
+                                    Department
+                                </label>
+
+                                <select id="departmentId" name="departmentId" class="form-select">
+                                    <option value="">
+                                        Select department
+                                    </option>
+                                </select>
+
+                                <div id="departmentLoading" class="loading-indicator">
+                                    <span class="spinner-border spinner-border-sm" role="status"
+                                        aria-hidden="true"></span>
+
+                                    Loading departments...
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="enrollment-card">
+
+                        <h2>Enrollment Details</h2>
+
+                        <p class="enrollment-card-description">
+                            Enter the student's enrollment date and current
+                            enrollment status.
+                        </p>
+
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+
+                                <label for="enrollmentDate" class="form-label">
+                                    Enrollment Date
+                                </label>
+
+                                <input type="date" id="enrollmentDate" name="enrollmentDate" class="form-control">
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <label for="admissionStatus" class="form-label">
+                                    Enrollment Status
+                                    <span class="required-mark">
+                                        *
+                                    </span>
+                                </label>
+
+                                <select id="admissionStatus" name="admissionStatus" class="form-select" required>
+                                    <option value="Enrolled">
+                                        Enrolled
+                                    </option>
+
+                                    <option value="Active">
+                                        Active
+                                    </option>
+
+                                    <option value="Pending">
+                                        Pending
+                                    </option>
+
+                                    <option value="Withdrawn">
+                                        Withdrawn
+                                    </option>
+
+                                    <option value="Graduated">
+                                        Graduated
+                                    </option>
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div id="existingEnrollment" class="existing-enrollment">
+
+                        <h3>
+                            Current Enrollment
+                        </h3>
+
+                        <div class="existing-enrollment-grid">
+
+                            <div class="summary-item">
+                                <span class="summary-label">
+                                    Session
+                                </span>
+
+                                <span id="existingEnrollmentSession" class="summary-value">
+                                    Not available
+                                </span>
+                            </div>
+
+                            <div class="summary-item">
+                                <span class="summary-label">
+                                    Level
+                                </span>
+
+                                <span id="existingEnrollmentLevel" class="summary-value">
+                                    Not available
+                                </span>
+                            </div>
+
+                            <div class="summary-item">
+                                <span class="summary-label">
+                                    Class
+                                </span>
+
+                                <span id="existingEnrollmentClass" class="summary-value">
+                                    Not available
+                                </span>
+                            </div>
+
+                            <div class="summary-item">
+                                <span class="summary-label">
+                                    Class Arm
+                                </span>
+
+                                <span id="existingEnrollmentArm" class="summary-value">
+                                    Not available
+                                </span>
+                            </div>
+
+                            <div class="summary-item">
+                                <span class="summary-label">
+                                    Department
+                                </span>
+
+                                <span id="existingEnrollmentDepartment" class="summary-value">
+                                    Not available
+                                </span>
+                            </div>
+
+                            <div class="summary-item">
+                                <span class="summary-label">
+                                    Enrollment Date
+                                </span>
+
+                                <span id="existingEnrollmentDate" class="summary-value">
+                                    Not available
+                                </span>
+                            </div>
+
+                            <div class="summary-item">
+                                <span class="summary-label">
+                                    Status
+                                </span>
+
+                                <span id="existingEnrollmentStatus" class="summary-value">
+                                    Not available
+                                </span>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="enrollment-actions">
+
+                        <a href="/pages/students.html" class="btn btn-outline-secondary" id="cancelEnrollmentButton">
+                            Cancel
+                        </a>
+
+                        <button type="reset" class="btn btn-outline-secondary" id="resetEnrollmentButton">
+                            Reset
+                        </button>
+
+                        <button type="submit" class="btn btn-primary" id="saveEnrollmentButton">
+                            Save Enrollment
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </main>
+
+        </div>
+
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/enrollment.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    ```
+
+</body>
+
+</html>

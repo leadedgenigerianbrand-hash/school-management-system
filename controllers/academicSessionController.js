@@ -1,1289 +1,803 @@
-const academicSessionModel = require("../models/academicSessionModel");
+"use strict";
 
-
-/*
-|--------------------------------------------------------------------------
-Academic Session Controller
-|--------------------------------------------------------------------------
-
-Handles:
-
-- Create academic session
-- Get all academic sessions
-- Get academic session by ID
-- Get current/active session
-- Get upcoming sessions
-- Get completed sessions
-- Update academic session
-- Rename academic session
-- Activate academic session
-- Set session as upcoming
-- Complete academic session
-- Update session dates
-- Delete academic session
-- Search academic sessions
-- Get session statistics
-- Get session with terms
-
-|--------------------------------------------------------------------------
-*/
-
-
-/*
-|--------------------------------------------------------------------------
-Get School ID
-|--------------------------------------------------------------------------
-
-The school ID can come from:
-
-1. Authenticated user
-2. Request body
-3. Query string
-
-|--------------------------------------------------------------------------
-*/
+const academicSessionModel =
+    require("../models/academicSessionModel");
 
 function getSchoolId(req) {
-
     return (
         req.user?.schoolId ||
         req.user?.school_id ||
-        req.body?.schoolId ||
-        req.query?.schoolId
+        null
     );
-
 }
 
+function isValidDateRange(
+    startDate,
+    endDate
+) {
+    if (
+        !startDate ||
+        !endDate
+    ) {
+        return true;
+    }
 
-/*
-|--------------------------------------------------------------------------
-Create Academic Session
-|--------------------------------------------------------------------------
-*/
+    return (
+        new Date(startDate) <=
+        new Date(endDate)
+    );
+}
 
-async function createAcademicSession(req, res, next) {
+function sendError(
+    next,
+    message,
+    statusCode = 400
+) {
+    const error =
+        new Error(message);
 
+    error.statusCode =
+        statusCode;
+
+    return next(error);
+}
+
+async function createAcademicSession(
+    req,
+    res,
+    next
+) {
     try {
+        const schoolId =
+            getSchoolId(req);
 
-        const schoolId = getSchoolId(req);
-
+        if (!schoolId) {
+            return sendError(
+                next,
+                "Authenticated school context is required.",
+                401
+            );
+        }
 
         const {
             sessionName,
-            sessionCode,
-            startDate,
-            endDate,
-            description,
-            status
-        } = req.body;
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Validate School
-        |--------------------------------------------------------------------------
-        */
-
-        if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Validate Session Name
-        |--------------------------------------------------------------------------
-        */
+            startDate = null,
+            endDate = null,
+            status = "upcoming"
+        } = req.body || {};
 
         if (
-            !sessionName ||
             typeof sessionName !== "string" ||
             !sessionName.trim()
         ) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Academic session name is required."
-
-            });
-
+            return sendError(
+                next,
+                "Academic session name is required."
+            );
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Create Session
-        |--------------------------------------------------------------------------
-        */
+        if (
+            !isValidDateRange(
+                startDate,
+                endDate
+            )
+        ) {
+            return sendError(
+                next,
+                "Session start date cannot be later than the end date."
+            );
+        }
 
         const session =
-            await academicSessionModel.createAcademicSession({
-
-                schoolId,
-
-                sessionName:
-                    sessionName.trim(),
-
-                sessionCode:
-                    sessionCode || null,
-
-                startDate:
-                    startDate || null,
-
-                endDate:
-                    endDate || null,
-
-                description:
-                    description || null,
-
-                status:
-                    status || "upcoming"
-
-            });
-
+            await academicSessionModel.createAcademicSession(
+                {
+                    schoolId,
+                    sessionName:
+                        sessionName.trim(),
+                    startDate:
+                        startDate || null,
+                    endDate:
+                        endDate || null,
+                    status:
+                        status || "upcoming"
+                }
+            );
 
         return res.status(201).json({
-
             success: true,
-
             message:
                 "Academic session created successfully.",
-
             data: session
-
         });
-
-
     } catch (error) {
-
         console.error(
             "Create academic session error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-Get Academic Sessions
-|--------------------------------------------------------------------------
-*/
-
-async function getAcademicSessions(req, res, next) {
-
+async function getAcademicSessions(
+    req,
+    res,
+    next
+) {
     try {
-
-        const schoolId = getSchoolId(req);
-
+        const schoolId =
+            getSchoolId(req);
 
         if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
+            return sendError(
+                next,
+                "Authenticated school context is required.",
+                401
+            );
         }
 
-
         const {
-            status,
+            status = null,
             limit = 100,
             offset = 0
         } = req.query;
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Validate Pagination
-        |--------------------------------------------------------------------------
-        */
-
         const parsedLimit =
-            Number.parseInt(limit, 10);
+            Number.parseInt(
+                limit,
+                10
+            );
 
         const parsedOffset =
-            Number.parseInt(offset, 10);
-
+            Number.parseInt(
+                offset,
+                10
+            );
 
         if (
-            Number.isNaN(parsedLimit) ||
-            parsedLimit < 1
+            !Number.isInteger(
+                parsedLimit
+            ) ||
+            parsedLimit < 1 ||
+            parsedLimit > 500
         ) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Limit must be a positive number."
-
-            });
-
+            return sendError(
+                next,
+                "Limit must be between 1 and 500."
+            );
         }
 
-
         if (
-            Number.isNaN(parsedOffset) ||
+            !Number.isInteger(
+                parsedOffset
+            ) ||
             parsedOffset < 0
         ) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Offset must be zero or greater."
-
-            });
-
+            return sendError(
+                next,
+                "Offset must be zero or greater."
+            );
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Find Sessions
-        |--------------------------------------------------------------------------
-        */
 
         const sessions =
             await academicSessionModel.findAcademicSessionsBySchool(
-
                 schoolId,
-
                 {
-
                     status:
                         status || null
-
                 }
-
             );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Apply Pagination
-        |--------------------------------------------------------------------------
-        |
-        | The current model method does not accept limit/offset.
-        | Therefore pagination is safely applied here.
-        |
-        |--------------------------------------------------------------------------
-        */
 
         const paginatedSessions =
             sessions.slice(
                 parsedOffset,
-                parsedOffset + parsedLimit
+                parsedOffset +
+                    parsedLimit
             );
 
-
         return res.status(200).json({
-
             success: true,
-
             count:
                 paginatedSessions.length,
-
             total:
                 sessions.length,
-
             limit:
                 parsedLimit,
-
             offset:
                 parsedOffset,
-
             data:
                 paginatedSessions
-
         });
-
-
     } catch (error) {
-
         console.error(
             "Get academic sessions error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-Get Academic Session By ID
-|--------------------------------------------------------------------------
-*/
-
-async function getAcademicSessionById(req, res, next) {
-
+async function getAcademicSessionById(
+    req,
+    res,
+    next
+) {
     try {
-
-        const schoolId = getSchoolId(req);
+        const schoolId =
+            getSchoolId(req);
 
         const {
             id
         } = req.params;
 
-
         if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
+            return sendError(
+                next,
+                "Authenticated school context is required.",
+                401
+            );
         }
-
 
         if (!id) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Academic session ID is required."
-
-            });
-
+            return sendError(
+                next,
+                "Academic session ID is required."
+            );
         }
-
 
         const session =
             await academicSessionModel.findAcademicSessionById(
-
                 id,
-
                 schoolId
-
             );
 
-
         if (!session) {
-
             return res.status(404).json({
-
                 success: false,
-
                 message:
                     "Academic session not found."
-
             });
-
         }
 
-
         return res.status(200).json({
-
             success: true,
-
-            data:
-                session
-
+            data: session
         });
-
-
     } catch (error) {
-
         console.error(
             "Get academic session by ID error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
-
-
-/*
-|--------------------------------------------------------------------------
-Get Current Academic Session
-|--------------------------------------------------------------------------
-*/
 
 async function getCurrentAcademicSession(
     req,
     res,
     next
 ) {
-
     try {
-
-        const schoolId = getSchoolId(req);
-
+        const schoolId =
+            getSchoolId(req);
 
         if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
+            return sendError(
+                next,
+                "Authenticated school context is required.",
+                401
+            );
         }
-
 
         const session =
             await academicSessionModel.findCurrentSession(
-
                 schoolId
-
             );
 
-
         if (!session) {
-
             return res.status(404).json({
-
                 success: false,
-
                 message:
                     "No current academic session has been set."
-
             });
-
         }
 
-
         return res.status(200).json({
-
             success: true,
-
-            data:
-                session
-
+            data: session
         });
-
-
     } catch (error) {
-
         console.error(
             "Get current academic session error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
-
-
-/*
-|--------------------------------------------------------------------------
-Get Upcoming Academic Sessions
-|--------------------------------------------------------------------------
-*/
 
 async function getUpcomingAcademicSessions(
     req,
     res,
     next
 ) {
-
     try {
-
-        const schoolId = getSchoolId(req);
-
+        const schoolId =
+            getSchoolId(req);
 
         if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
+            return sendError(
+                next,
+                "Authenticated school context is required.",
+                401
+            );
         }
-
 
         const sessions =
             await academicSessionModel.findUpcomingSessions(
-
                 schoolId
-
             );
 
-
         return res.status(200).json({
-
             success: true,
-
             count:
                 sessions.length,
-
             data:
                 sessions
-
         });
-
-
     } catch (error) {
-
         console.error(
             "Get upcoming academic sessions error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
-
-
-/*
-|--------------------------------------------------------------------------
-Get Completed Academic Sessions
-|--------------------------------------------------------------------------
-*/
 
 async function getCompletedAcademicSessions(
     req,
     res,
     next
 ) {
-
     try {
-
-        const schoolId = getSchoolId(req);
-
+        const schoolId =
+            getSchoolId(req);
 
         if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
+            return sendError(
+                next,
+                "Authenticated school context is required.",
+                401
+            );
         }
-
 
         const sessions =
             await academicSessionModel.findCompletedSessions(
-
                 schoolId
-
             );
 
-
         return res.status(200).json({
-
             success: true,
-
             count:
                 sessions.length,
-
             data:
                 sessions
-
         });
-
-
     } catch (error) {
-
         console.error(
             "Get completed academic sessions error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
-
-
-/*
-|--------------------------------------------------------------------------
-Update Academic Session
-|--------------------------------------------------------------------------
-*/
 
 async function updateAcademicSession(
     req,
     res,
     next
 ) {
-
     try {
-
-        const schoolId = getSchoolId(req);
+        const schoolId =
+            getSchoolId(req);
 
         const {
             id
         } = req.params;
 
-
         if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
+            return sendError(
+                next,
+                "Authenticated school context is required.",
+                401
+            );
         }
-
 
         if (!id) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Academic session ID is required."
-
-            });
-
+            return sendError(
+                next,
+                "Academic session ID is required."
+            );
         }
-
-
-        const {
-            sessionName,
-            sessionCode,
-            startDate,
-            endDate,
-            description,
-            status
-        } = req.body;
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | First retrieve the existing session.
-        |--------------------------------------------------------------------------
-        |
-        | This allows partial updates while keeping the model's update
-        | method compatible with the database.
-        |
-        |--------------------------------------------------------------------------
-        */
 
         const existingSession =
             await academicSessionModel.findAcademicSessionById(
-
                 id,
-
                 schoolId
-
             );
 
-
         if (!existingSession) {
-
             return res.status(404).json({
-
                 success: false,
-
                 message:
                     "Academic session not found."
-
             });
-
         }
 
+        const {
+            sessionName,
+            startDate,
+            endDate,
+            status
+        } = req.body || {};
 
         const finalSessionName =
             sessionName !== undefined
                 ? sessionName
                 : existingSession.session_name;
 
+        const finalStartDate =
+            startDate !== undefined
+                ? startDate
+                : existingSession.start_date;
+
+        const finalEndDate =
+            endDate !== undefined
+                ? endDate
+                : existingSession.end_date;
+
+        const finalStatus =
+            status !== undefined
+                ? status
+                : (
+                    existingSession.is_current
+                        ? "active"
+                        : (
+                            existingSession.is_active
+                                ? "upcoming"
+                                : "completed"
+                        )
+                );
 
         if (
-            !finalSessionName ||
-            typeof finalSessionName !== "string" ||
+            typeof finalSessionName !==
+                "string" ||
             !finalSessionName.trim()
         ) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Academic session name is required."
-
-            });
-
+            return sendError(
+                next,
+                "Academic session name is required."
+            );
         }
 
+        if (
+            !isValidDateRange(
+                finalStartDate,
+                finalEndDate
+            )
+        ) {
+            return sendError(
+                next,
+                "Session start date cannot be later than the end date."
+            );
+        }
 
         const session =
             await academicSessionModel.updateAcademicSession(
-
                 id,
-
                 schoolId,
-
                 {
-
                     sessionName:
                         finalSessionName.trim(),
-
-                    sessionCode:
-                        sessionCode !== undefined
-                            ? sessionCode
-                            : existingSession.session_code,
-
                     startDate:
-                        startDate !== undefined
-                            ? startDate
-                            : existingSession.start_date,
-
+                        finalStartDate,
                     endDate:
-                        endDate !== undefined
-                            ? endDate
-                            : existingSession.end_date,
-
-                    description:
-                        description !== undefined
-                            ? description
-                            : existingSession.description,
-
+                        finalEndDate,
                     status:
-                        status !== undefined
-                            ? status
-                            : existingSession.status
-
+                        finalStatus
                 }
-
             );
 
-
         if (!session) {
-
             return res.status(404).json({
-
                 success: false,
-
                 message:
                     "Academic session not found."
-
             });
-
         }
 
-
         return res.status(200).json({
-
             success: true,
-
             message:
                 "Academic session updated successfully.",
-
-            data:
-                session
-
+            data: session
         });
-
-
     } catch (error) {
-
         console.error(
             "Update academic session error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
-
-
-/*
-|--------------------------------------------------------------------------
-Rename Academic Session
-|--------------------------------------------------------------------------
-*/
 
 async function renameAcademicSession(
     req,
     res,
     next
 ) {
-
     try {
-
-        const schoolId = getSchoolId(req);
+        const schoolId =
+            getSchoolId(req);
 
         const {
             id
         } = req.params;
 
         const {
-            sessionName,
-            newName
-        } = req.body;
-
+            newName,
+            sessionName
+        } = req.body || {};
 
         const finalName =
-            newName ||
-            sessionName;
-
+            newName !== undefined
+                ? newName
+                : sessionName;
 
         if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
+            return sendError(
+                next,
+                "Authenticated school context is required.",
+                401
+            );
         }
-
 
         if (!id) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Academic session ID is required."
-
-            });
-
+            return sendError(
+                next,
+                "Academic session ID is required."
+            );
         }
-
 
         if (
-            !finalName ||
-            typeof finalName !== "string" ||
+            typeof finalName !==
+                "string" ||
             !finalName.trim()
         ) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "New session name is required."
-
-            });
-
+            return sendError(
+                next,
+                "New academic session name is required."
+            );
         }
-
 
         const session =
             await academicSessionModel.renameAcademicSession(
-
                 id,
-
                 schoolId,
-
                 finalName.trim()
-
             );
 
-
         if (!session) {
-
             return res.status(404).json({
-
                 success: false,
-
                 message:
                     "Academic session not found."
-
             });
-
         }
 
-
         return res.status(200).json({
-
             success: true,
-
             message:
                 "Academic session renamed successfully.",
-
-            data:
-                session
-
+            data: session
         });
-
-
     } catch (error) {
-
         console.error(
             "Rename academic session error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
-
-
-/*
-|--------------------------------------------------------------------------
-Set Current / Activate Academic Session
-|--------------------------------------------------------------------------
-*/
 
 async function setCurrentAcademicSession(
     req,
     res,
     next
 ) {
-
     try {
-
-        const schoolId = getSchoolId(req);
+        const schoolId =
+            getSchoolId(req);
 
         const {
             id
         } = req.params;
 
-
         if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
+            return sendError(
+                next,
+                "Authenticated school context is required.",
+                401
+            );
         }
-
 
         if (!id) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Academic session ID is required."
-
-            });
-
+            return sendError(
+                next,
+                "Academic session ID is required."
+            );
         }
-
 
         const session =
             await academicSessionModel.activateSession(
-
                 id,
-
                 schoolId
-
             );
 
-
         if (!session) {
-
             return res.status(404).json({
-
                 success: false,
-
                 message:
                     "Academic session not found."
-
             });
-
         }
 
-
         return res.status(200).json({
-
             success: true,
-
             message:
                 "Current academic session updated successfully.",
-
-            data:
-                session
-
+            data: session
         });
-
-
     } catch (error) {
-
         console.error(
             "Set current academic session error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
-
-
-/*
-|--------------------------------------------------------------------------
-Set Academic Session As Upcoming
-|--------------------------------------------------------------------------
-*/
 
 async function setAcademicSessionUpcoming(
     req,
     res,
     next
 ) {
-
     try {
-
-        const schoolId = getSchoolId(req);
+        const schoolId =
+            getSchoolId(req);
 
         const {
             id
         } = req.params;
 
-
         if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
+            return sendError(
+                next,
+                "Authenticated school context is required.",
+                401
+            );
         }
-
 
         if (!id) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Academic session ID is required."
-
-            });
-
+            return sendError(
+                next,
+                "Academic session ID is required."
+            );
         }
-
 
         const session =
             await academicSessionModel.setSessionUpcoming(
-
                 id,
-
                 schoolId
-
             );
 
-
         if (!session) {
-
             return res.status(404).json({
-
                 success: false,
-
                 message:
                     "Academic session not found."
-
             });
-
         }
 
-
         return res.status(200).json({
-
             success: true,
-
             message:
                 "Academic session set as upcoming successfully.",
-
-            data:
-                session
-
+            data: session
         });
-
-
     } catch (error) {
-
         console.error(
             "Set academic session upcoming error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
-
-
-/*
-|--------------------------------------------------------------------------
-Complete Academic Session
-|--------------------------------------------------------------------------
-*/
 
 async function completeAcademicSession(
     req,
     res,
     next
 ) {
-
     try {
-
-        const schoolId = getSchoolId(req);
+        const schoolId =
+            getSchoolId(req);
 
         const {
             id
         } = req.params;
 
-
         if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
+            return sendError(
+                next,
+                "Authenticated school context is required.",
+                401
+            );
         }
-
 
         if (!id) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Academic session ID is required."
-
-            });
-
+            return sendError(
+                next,
+                "Academic session ID is required."
+            );
         }
-
 
         const session =
             await academicSessionModel.completeSession(
-
                 id,
-
                 schoolId
-
             );
 
-
         if (!session) {
-
             return res.status(404).json({
-
                 success: false,
-
                 message:
                     "Academic session not found."
-
             });
-
         }
 
-
         return res.status(200).json({
-
             success: true,
-
             message:
                 "Academic session completed successfully.",
-
-            data:
-                session
-
+            data: session
         });
-
-
     } catch (error) {
-
         console.error(
             "Complete academic session error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
-
-
-/*
-|--------------------------------------------------------------------------
-Update Academic Session Dates
-|--------------------------------------------------------------------------
-*/
 
 async function updateAcademicSessionDates(
     req,
     res,
     next
 ) {
-
     try {
-
-        const schoolId = getSchoolId(req);
+        const schoolId =
+            getSchoolId(req);
 
         const {
             id
@@ -1292,624 +806,424 @@ async function updateAcademicSessionDates(
         const {
             startDate,
             endDate
-        } = req.body;
-
+        } = req.body || {};
 
         if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
+            return sendError(
+                next,
+                "Authenticated school context is required.",
+                401
+            );
         }
-
 
         if (!id) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Academic session ID is required."
-
-            });
-
+            return sendError(
+                next,
+                "Academic session ID is required."
+            );
         }
-
 
         if (!startDate) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Start date is required."
-
-            });
-
+            return sendError(
+                next,
+                "Start date is required."
+            );
         }
-
 
         if (!endDate) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "End date is required."
-
-            });
-
+            return sendError(
+                next,
+                "End date is required."
+            );
         }
-
 
         if (
-            new Date(startDate) > new Date(endDate)
+            !isValidDateRange(
+                startDate,
+                endDate
+            )
         ) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Start date cannot be after end date."
-
-            });
-
+            return sendError(
+                next,
+                "Start date cannot be after end date."
+            );
         }
-
 
         const session =
             await academicSessionModel.updateSessionDates(
-
                 id,
-
                 schoolId,
-
                 startDate,
-
                 endDate
-
             );
 
-
         if (!session) {
-
             return res.status(404).json({
-
                 success: false,
-
                 message:
                     "Academic session not found."
-
             });
-
         }
 
-
         return res.status(200).json({
-
             success: true,
-
             message:
                 "Academic session dates updated successfully.",
-
-            data:
-                session
-
+            data: session
         });
-
-
     } catch (error) {
-
         console.error(
             "Update academic session dates error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
-
-
-/*
-|--------------------------------------------------------------------------
-Delete Academic Session
-|--------------------------------------------------------------------------
-*/
 
 async function deleteAcademicSession(
     req,
     res,
     next
 ) {
-
     try {
-
-        const schoolId = getSchoolId(req);
+        const schoolId =
+            getSchoolId(req);
 
         const {
             id
         } = req.params;
 
-
         if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
+            return sendError(
+                next,
+                "Authenticated school context is required.",
+                401
+            );
         }
-
 
         if (!id) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Academic session ID is required."
-
-            });
-
+            return sendError(
+                next,
+                "Academic session ID is required."
+            );
         }
-
 
         const session =
             await academicSessionModel.deleteAcademicSession(
-
                 id,
-
                 schoolId
-
             );
 
-
         if (!session) {
-
             return res.status(404).json({
-
                 success: false,
-
                 message:
                     "Academic session not found."
-
             });
-
         }
 
-
         return res.status(200).json({
-
             success: true,
-
             message:
                 "Academic session deleted successfully.",
-
-            data:
-                session
-
+            data: session
         });
-
-
     } catch (error) {
-
         console.error(
             "Delete academic session error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
-
-
-/*
-|--------------------------------------------------------------------------
-Search Academic Sessions
-|--------------------------------------------------------------------------
-*/
 
 async function searchAcademicSessions(
     req,
     res,
     next
 ) {
-
     try {
-
-        const schoolId = getSchoolId(req);
+        const schoolId =
+            getSchoolId(req);
 
         const {
             q,
             search
         } = req.query;
 
-
         const searchTerm =
-            (
+            String(
                 q ||
                 search ||
                 ""
             ).trim();
 
-
         if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
+            return sendError(
+                next,
+                "Authenticated school context is required.",
+                401
+            );
         }
-
 
         if (!searchTerm) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Search term is required."
-
-            });
-
+            return sendError(
+                next,
+                "Search term is required."
+            );
         }
-
 
         const sessions =
             await academicSessionModel.searchAcademicSessions(
-
                 searchTerm,
-
                 schoolId
-
             );
 
-
         return res.status(200).json({
-
             success: true,
-
             count:
                 sessions.length,
-
             data:
                 sessions
-
         });
-
-
     } catch (error) {
-
         console.error(
             "Search academic sessions error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
-
-
-/*
-|--------------------------------------------------------------------------
-Get Academic Session Statistics
-|--------------------------------------------------------------------------
-*/
 
 async function getAcademicSessionStatistics(
     req,
     res,
     next
 ) {
-
     try {
-
-        const schoolId = getSchoolId(req);
+        const schoolId =
+            getSchoolId(req);
 
         const {
             id
         } = req.params;
 
-
         if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
+            return sendError(
+                next,
+                "Authenticated school context is required.",
+                401
+            );
         }
-
 
         if (!id) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Academic session ID is required."
-
-            });
-
+            return sendError(
+                next,
+                "Academic session ID is required."
+            );
         }
-
 
         const statistics =
             await academicSessionModel.getSessionStatistics(
-
                 id,
-
                 schoolId
-
             );
 
-
         if (!statistics) {
-
             return res.status(404).json({
-
                 success: false,
-
                 message:
                     "Academic session not found."
-
             });
-
         }
 
-
         return res.status(200).json({
-
             success: true,
-
-            data:
-                statistics
-
+            data: statistics
         });
-
-
     } catch (error) {
-
         console.error(
             "Get academic session statistics error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
-
-
-/*
-|--------------------------------------------------------------------------
-Get Academic Session With Terms
-|--------------------------------------------------------------------------
-*/
 
 async function getAcademicSessionWithTerms(
     req,
     res,
     next
 ) {
-
     try {
-
-        const schoolId = getSchoolId(req);
+        const schoolId =
+            getSchoolId(req);
 
         const {
             id
         } = req.params;
 
-
         if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
+            return sendError(
+                next,
+                "Authenticated school context is required.",
+                401
+            );
         }
-
 
         if (!id) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Academic session ID is required."
-
-            });
-
+            return sendError(
+                next,
+                "Academic session ID is required."
+            );
         }
 
-
-        const rows =
+        const result =
             await academicSessionModel.getSessionWithTerms(
-
                 id,
-
                 schoolId
-
             );
 
-
-        if (!rows.length) {
-
+        if (!result) {
             return res.status(404).json({
-
                 success: false,
-
                 message:
                     "Academic session not found."
-
             });
-
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Convert flat SQL rows into a cleaner API response.
-        |--------------------------------------------------------------------------
-        */
-
-        const firstRow =
-            rows[0];
-
-
-        const terms =
-            rows
-                .filter(
-                    row => row.term_id !== null
-                )
-                .map(
-                    row => ({
-
-                        id:
-                            row.term_id,
-
-                        termName:
-                            row.term_name,
-
-                        termCode:
-                            row.term_code,
-
-                        startDate:
-                            row.term_start_date,
-
-                        endDate:
-                            row.term_end_date,
-
-                        status:
-                            row.term_status
-
-                    })
-                );
-
-
-        return res.status(200).json({
-
-            success: true,
-
-            data: {
-
-                id:
-                    firstRow.session_id,
-
-                sessionName:
-                    firstRow.session_name,
-
-                sessionCode:
-                    firstRow.session_code,
-
-                startDate:
-                    firstRow.session_start_date,
-
-                endDate:
-                    firstRow.session_end_date,
-
-                status:
-                    firstRow.session_status,
-
-                terms
-
+        if (
+            Array.isArray(result)
+        ) {
+            if (
+                result.length === 0
+            ) {
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "Academic session not found."
+                });
             }
 
+            const firstRow =
+                result[0];
+
+            const terms =
+                result
+                    .filter(
+                        row =>
+                            row.term_id !== null &&
+                            row.term_id !== undefined
+                    )
+                    .map(
+                        row => ({
+                            id:
+                                row.term_id,
+                            termName:
+                                row.term_name,
+                            termOrder:
+                                row.term_order,
+                            startDate:
+                                row.term_start_date,
+                            endDate:
+                                row.term_end_date,
+                            isCurrent:
+                                row.term_is_current,
+                            isActive:
+                                row.term_is_active
+                        })
+                    );
+
+            return res.status(200).json({
+                success: true,
+                data: {
+                    id:
+                        firstRow.session_id,
+                    sessionName:
+                        firstRow.session_name,
+                    startDate:
+                        firstRow.session_start_date,
+                    endDate:
+                        firstRow.session_end_date,
+                    isCurrent:
+                        firstRow.session_is_current,
+                    isActive:
+                        firstRow.session_is_active,
+                    terms
+                }
+            });
+        }
+
+        const session =
+            result.session ||
+            result;
+
+        const terms =
+            Array.isArray(
+                result.terms
+            )
+                ? result.terms.map(
+                    term => ({
+                        id:
+                            term.id,
+                        termName:
+                            term.term_name ||
+                            term.termName,
+                        termOrder:
+                            term.term_order ??
+                            term.termOrder,
+                        startDate:
+                            term.start_date ||
+                            term.startDate,
+                        endDate:
+                            term.end_date ||
+                            term.endDate,
+                        isCurrent:
+                            term.is_current ??
+                            term.isCurrent,
+                        isActive:
+                            term.is_active ??
+                            term.isActive
+                    })
+                )
+                : [];
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                ...session,
+                terms
+            }
         });
-
-
     } catch (error) {
-
         console.error(
             "Get academic session with terms error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-EXPORTS
-|--------------------------------------------------------------------------
-*/
-
 module.exports = {
-
     createAcademicSession,
-
     getAcademicSessions,
-
     getAcademicSessionById,
-
     getCurrentAcademicSession,
-
     getUpcomingAcademicSessions,
-
     getCompletedAcademicSessions,
-
     updateAcademicSession,
-
     renameAcademicSession,
-
     setCurrentAcademicSession,
-
     setAcademicSessionUpcoming,
-
     completeAcademicSession,
-
     updateAcademicSessionDates,
-
     deleteAcademicSession,
-
     searchAcademicSessions,
-
     getAcademicSessionStatistics,
-
     getAcademicSessionWithTerms
-
 };

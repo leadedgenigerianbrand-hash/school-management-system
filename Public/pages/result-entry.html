@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    ```
+    <title>Result Entry | School Management System</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f5f7fb;
+            min-height: 100vh;
+        }
+
+        .page-wrapper {
+            min-height: 100vh;
+        }
+
+        .topbar {
+            background: #ffffff;
+            border-bottom: 1px solid #dee2e6;
+            padding: 14px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .page-content {
+            padding: 24px;
+        }
+
+        .page-header {
+            margin-bottom: 24px;
+        }
+
+        .page-header h1 {
+            margin-bottom: 4px;
+            font-size: 1.7rem;
+            font-weight: 700;
+        }
+
+        .page-header p {
+            margin-bottom: 0;
+            color: #6c757d;
+        }
+
+        .card {
+            border: 1px solid #e1e5ea;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .card-header {
+            background: #ffffff;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+        }
+
+        .student-summary {
+            display: none;
+        }
+
+        .student-summary .summary-value {
+            font-weight: 600;
+        }
+
+        .score-input {
+            min-width: 90px;
+        }
+
+        .calculated-field {
+            background: #f8f9fa;
+        }
+
+        .subject-table th {
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        .subject-table td {
+            vertical-align: middle;
+        }
+
+        .result-summary-box {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .validation-message {
+            display: none;
+        }
+
+        .sidebar-link {
+            text-decoration: none;
+        }
+
+        .sidebar-link:hover {
+            text-decoration: none;
+        }
+
+        @media (max-width: 991.98px) {
+            .page-content {
+                padding: 16px;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .page-header h1 {
+                font-size: 1.4rem;
+            }
+
+            .subject-table {
+                min-width: 850px;
+            }
+
+            .subject-table-wrapper {
+                overflow-x: auto;
+            }
+        }
+    </style>
+    ```
+
+</head>
+
+<body>
+
+    <div class="page-wrapper">
+
+        ```
+        <header class="topbar">
+            <div class="container-fluid">
+                <div class="d-flex align-items-center justify-content-between gap-3">
+
+                    <div class="d-flex align-items-center gap-3">
+
+                        <a href="/pages/results.html" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-arrow-left"></i>
+                            Back to Results
+                        </a>
+
+                        <div>
+                            <strong>
+                                School Management System
+                            </strong>
+                        </div>
+
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+
+                        <span id="currentUser" class="text-muted small">
+                            User
+                        </span>
+
+                        <button type="button" id="logoutButton" class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-box-arrow-right"></i>
+                            Logout
+                        </button>
+
+                    </div>
+
+                </div>
+            </div>
+        </header>
+
+        <main class="page-content">
+
+            <div class="container-fluid">
+
+                <div class="page-header d-flex flex-wrap align-items-center justify-content-between gap-3">
+
+                    <div>
+                        <h1>
+                            <i class="bi bi-journal-check"></i>
+                            Result Entry
+                        </h1>
+
+                        <p>
+                            Enter and save academic results for a student.
+                        </p>
+                    </div>
+
+                    <div>
+                        <a href="/pages/results.html" class="btn btn-primary">
+                            <i class="bi bi-list-check"></i>
+                            View Results
+                        </a>
+                    </div>
+
+                </div>
+
+                <div id="resultEntryMessageContainer" class="mb-3"></div>
+
+                <div class="card mb-4">
+
+                    <div class="card-header py-3">
+                        <i class="bi bi-person-search"></i>
+                        Student Information
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="row g-3 align-items-end">
+
+                            <div class="col-lg-5 col-md-6">
+
+                                <label for="admissionNumber" class="form-label">
+                                    Admission Number
+                                </label>
+
+                                <div class="input-group">
+
+                                    <input type="text" id="admissionNumber" class="form-control"
+                                        placeholder="Enter admission number" autocomplete="off">
+
+                                    <button type="button" id="findStudentButton" class="btn btn-primary">
+                                        <i class="bi bi-search"></i>
+                                        Find Student
+                                    </button>
+
+                                </div>
+
+                                <div id="studentSearchMessage" class="form-text">
+                                    Enter the student's admission number.
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div id="studentSummary" class="student-summary mt-4">
+
+                            <div class="row g-3">
+
+                                <div class="col-lg-4 col-md-6">
+
+                                    <div class="border rounded p-3 bg-light">
+
+                                        <div class="small text-muted">
+                                            Student Name
+                                        </div>
+
+                                        <div id="studentName" class="summary-value">
+                                            -
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                                <div class="col-lg-4 col-md-6">
+
+                                    <div class="border rounded p-3 bg-light">
+
+                                        <div class="small text-muted">
+                                            Admission Number
+                                        </div>
+
+                                        <div id="displayAdmissionNumber" class="summary-value">
+                                            -
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                                <div class="col-lg-4 col-md-6">
+
+                                    <div class="border rounded p-3 bg-light">
+
+                                        <div class="small text-muted">
+                                            Class
+                                        </div>
+
+                                        <div id="studentClass" class="summary-value">
+                                            -
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <form id="resultEntryForm" novalidate>
+
+                    <div class="card mb-4">
+
+                        <div class="card-header py-3">
+                            <i class="bi bi-calendar3"></i>
+                            Academic Period
+                        </div>
+
+                        <div class="card-body">
+
+                            <div class="row g-3">
+
+                                <div class="col-lg-6 col-md-6">
+
+                                    <label for="sessionId" class="form-label">
+                                        Academic Session
+                                    </label>
+
+                                    <select id="sessionId" class="form-select" required>
+                                        <option value="">
+                                            Select academic session
+                                        </option>
+                                    </select>
+
+                                </div>
+
+                                <div class="col-lg-6 col-md-6">
+
+                                    <label for="termId" class="form-label">
+                                        Term
+                                    </label>
+
+                                    <select id="termId" class="form-select" required>
+                                        <option value="">
+                                            Select term
+                                        </option>
+                                    </select>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="card mb-4">
+
+                        <div class="card-header py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+
+                            <div>
+                                <i class="bi bi-book"></i>
+                                Subject Results
+                            </div>
+
+                            <button type="button" id="addSubjectButton" class="btn btn-primary btn-sm">
+                                <i class="bi bi-plus-circle"></i>
+                                Add Subject
+                            </button>
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <div id="resultValidationMessage" class="alert alert-danger validation-message"
+                                role="alert"></div>
+
+                            <div class="subject-table-wrapper">
+
+                                <table class="table table-bordered table-hover subject-table align-middle">
+
+                                    <thead class="table-light">
+
+                                        <tr>
+
+                                            <th>
+                                                Subject
+                                            </th>
+
+                                            <th>
+                                                CA
+                                            </th>
+
+                                            <th>
+                                                Exam
+                                            </th>
+
+                                            <th>
+                                                Total
+                                            </th>
+
+                                            <th>
+                                                Grade
+                                            </th>
+
+                                            <th>
+                                                Remark
+                                            </th>
+
+                                            <th>
+                                                Action
+                                            </th>
+
+                                        </tr>
+
+                                    </thead>
+
+                                    <tbody id="subjectResultsBody">
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                            <div id="noSubjectMessage" class="text-center text-muted py-4">
+                                No subjects have been added yet.
+                                Click "Add Subject" to begin entering results.
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="card mb-4">
+
+                        <div class="card-header py-3">
+                            <i class="bi bi-bar-chart"></i>
+                            Result Summary
+                        </div>
+
+                        <div class="card-body">
+
+                            <div class="result-summary-box">
+
+                                <div class="row g-3">
+
+                                    <div class="col-xl-3 col-lg-6 col-md-6">
+
+                                        <label for="subjectCount" class="form-label">
+                                            Subjects
+                                        </label>
+
+                                        <input type="text" id="subjectCount" class="form-control calculated-field"
+                                            value="0" readonly>
+
+                                    </div>
+
+                                    <div class="col-xl-3 col-lg-6 col-md-6">
+
+                                        <label for="overallTotal" class="form-label">
+                                            Overall Total
+                                        </label>
+
+                                        <input type="text" id="overallTotal" class="form-control calculated-field"
+                                            value="0.00" readonly>
+
+                                    </div>
+
+                                    <div class="col-xl-3 col-lg-6 col-md-6">
+
+                                        <label for="overallAverage" class="form-label">
+                                            Overall Average
+                                        </label>
+
+                                        <input type="text" id="overallAverage" class="form-control calculated-field"
+                                            value="0.00" readonly>
+
+                                    </div>
+
+                                    <div class="col-xl-3 col-lg-6 col-md-6">
+
+                                        <label for="overallStatus" class="form-label">
+                                            Overall Status
+                                        </label>
+
+                                        <input type="text" id="overallStatus" class="form-control calculated-field"
+                                            value="-" readonly>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="card mb-4">
+
+                        <div class="card-header py-3">
+                            <i class="bi bi-chat-left-text"></i>
+                            Teacher Remark
+                        </div>
+
+                        <div class="card-body">
+
+                            <label for="teacherComment" class="form-label">
+                                Teacher Comment
+                            </label>
+
+                            <textarea id="teacherComment" class="form-control" rows="4"
+                                placeholder="Enter teacher's remark for this result"></textarea>
+
+                        </div>
+
+                    </div>
+
+                    <div class="card mb-4">
+
+                        <div class="card-body">
+
+                            <div class="d-flex flex-wrap justify-content-end gap-2">
+
+                                <button type="button" id="resetResultEntryButton" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                    Reset
+                                </button>
+
+                                <button type="button" id="saveResultButton" class="btn btn-success">
+                                    <i class="bi bi-check-circle"></i>
+                                    Save Result
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </main>
+        ```
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="/js/api.js"></script>
+
+    <script src="/js/auth.js"></script>
+
+    <script src="../js/result-entry.js"></script>
+
+</body>
+
+</html>

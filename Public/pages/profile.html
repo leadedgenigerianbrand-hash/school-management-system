@@ -1,10 +1,12 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    ```
     <title>My Profile | School Management System</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -35,7 +37,7 @@
 
         .brand {
             padding: 22px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .brand-icon {
@@ -46,8 +48,9 @@
             align-items: center;
             justify-content: center;
             background: #2563eb;
-            color: #fff;
+            color: #ffffff;
             font-size: 21px;
+            flex-shrink: 0;
         }
 
         .nav-section {
@@ -56,7 +59,7 @@
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: .08em;
+            letter-spacing: 0.08em;
         }
 
         .app-nav-link {
@@ -69,27 +72,28 @@
             text-decoration: none;
             border-radius: 9px;
             font-size: 14px;
-            transition: .2s;
+            transition: background-color 0.2s ease, color 0.2s ease;
         }
 
         .app-nav-link i {
             font-size: 17px;
             width: 21px;
+            flex-shrink: 0;
         }
 
         .app-nav-link:hover {
             background: #1f2937;
-            color: #fff;
+            color: #ffffff;
         }
 
         .app-nav-link.active {
             background: #2563eb;
-            color: #fff;
+            color: #ffffff;
         }
 
         .topbar {
             height: 72px;
-            background: #fff;
+            background: #ffffff;
             border-bottom: 1px solid #e5e7eb;
             position: sticky;
             top: 0;
@@ -101,7 +105,7 @@
             height: 108px;
             border-radius: 50%;
             background: linear-gradient(135deg, #2563eb, #1d4ed8);
-            color: #fff;
+            color: #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -114,7 +118,7 @@
         .content-card {
             border: 1px solid #e5e7eb;
             border-radius: 16px;
-            box-shadow: 0 4px 18px rgba(15, 23, 42, .05);
+            box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05);
         }
 
         .profile-card {
@@ -145,7 +149,7 @@
 
         .form-control:focus {
             border-color: #2563eb;
-            box-shadow: 0 0 0 .2rem rgba(37, 99, 235, .1);
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.1);
         }
 
         .form-control[readonly] {
@@ -161,10 +165,29 @@
             display: none;
         }
 
+        .sidebar-user {
+            padding: 15px;
+            margin: 10px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .sidebar-user-name {
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .sidebar-user-role {
+            color: #94a3b8;
+            font-size: 11px;
+            margin-top: 2px;
+        }
+
         @media (max-width: 991.98px) {
             .app-sidebar {
                 transform: translateX(-100%);
-                transition: transform .25s ease;
+                transition: transform 0.25s ease;
             }
 
             .app-sidebar.show {
@@ -179,15 +202,18 @@
                 display: block;
                 position: fixed;
                 inset: 0;
-                background: rgba(15, 23, 42, .45);
+                background: rgba(15, 23, 42, 0.45);
                 z-index: 1025;
             }
         }
     </style>
+    ```
+
 </head>
 
 <body>
 
+    ```
     <div class="mobile-overlay" id="sidebarOverlay"></div>
 
     <aside class="app-sidebar" id="appSidebar">
@@ -200,118 +226,138 @@
 
                 <div>
                     <div class="text-white fw-bold">School Management</div>
-                    <small class="text-secondary">Administration Portal</small>
+                    <small class="text-secondary">Management Portal</small>
                 </div>
             </div>
         </div>
 
-        <div class="nav-section">Main</div>
+        <div class="sidebar-user">
+            <div class="sidebar-user-name" id="sidebarUserName">
+                Loading...
+            </div>
 
-        <a href="/pages/dashboard.html" class="app-nav-link">
-            <i class="bi bi-grid-1x2-fill"></i>
-            Dashboard
-        </a>
+            <div class="sidebar-user-role" id="sidebarUserRole">
+                Loading...
+            </div>
+        </div>
 
-        <a href="/pages/students.html" class="app-nav-link">
-            <i class="bi bi-people-fill"></i>
-            Students
-        </a>
+        <nav id="sidebarNavigation">
 
-        <a href="/pages/staff.html" class="app-nav-link">
-            <i class="bi bi-person-badge-fill"></i>
-            Staff
-        </a>
+            <div class="nav-section">Main</div>
 
-        <a href="/pages/guardians.html" class="app-nav-link">
-            <i class="bi bi-person-hearts"></i>
-            Guardians
-        </a>
+            <a href="/pages/dashboard.html" class="app-nav-link">
+                <i class="bi bi-grid-1x2-fill"></i>
+                <span>Dashboard</span>
+            </a>
 
-        <div class="nav-section">Academic</div>
+            <a href="/pages/profile.html" class="app-nav-link active">
+                <i class="bi bi-person-circle"></i>
+                <span>My Profile</span>
+            </a>
 
-        <a href="/pages/classes.html" class="app-nav-link">
-            <i class="bi bi-building"></i>
-            Classes
-        </a>
+            <div id="managementNavigation">
 
-        <a href="/pages/class-arms.html" class="app-nav-link">
-            <i class="bi bi-diagram-3-fill"></i>
-            Class Arms
-        </a>
+                <div class="nav-section">Management</div>
 
-        <a href="/pages/departments.html" class="app-nav-link">
-            <i class="bi bi-diagram-2-fill"></i>
-            Departments
-        </a>
+                <a href="/pages/students.html" class="app-nav-link">
+                    <i class="bi bi-people-fill"></i>
+                    <span>Students</span>
+                </a>
 
-        <a href="/pages/subjects.html" class="app-nav-link">
-            <i class="bi bi-book-fill"></i>
-            Subjects
-        </a>
+                <a href="/pages/staff.html" class="app-nav-link">
+                    <i class="bi bi-person-badge-fill"></i>
+                    <span>Staff</span>
+                </a>
 
-        <a href="/pages/academic-sessions.html" class="app-nav-link">
-            <i class="bi bi-calendar3"></i>
-            Academic Sessions
-        </a>
+                <a href="/pages/guardians.html" class="app-nav-link">
+                    <i class="bi bi-person-hearts"></i>
+                    <span>Guardians</span>
+                </a>
 
-        <a href="/pages/terms.html" class="app-nav-link">
-            <i class="bi bi-calendar-check-fill"></i>
-            Terms
-        </a>
+                <div class="nav-section">Academic</div>
 
-        <a href="/pages/attendance.html" class="app-nav-link">
-            <i class="bi bi-check2-square"></i>
-            Attendance
-        </a>
+                <a href="/pages/classes.html" class="app-nav-link">
+                    <i class="bi bi-building"></i>
+                    <span>Classes</span>
+                </a>
 
-        <a href="/pages/results.html" class="app-nav-link">
-            <i class="bi bi-bar-chart-fill"></i>
-            Results
-        </a>
+                <a href="/pages/class-arms.html" class="app-nav-link">
+                    <i class="bi bi-diagram-3-fill"></i>
+                    <span>Class Arms</span>
+                </a>
 
-        <div class="nav-section">Finance & Records</div>
+                <a href="/pages/departments.html" class="app-nav-link">
+                    <i class="bi bi-diagram-2-fill"></i>
+                    <span>Departments</span>
+                </a>
 
-        <a href="/pages/fees.html" class="app-nav-link">
-            <i class="bi bi-cash-stack"></i>
-            Fees
-        </a>
+                <a href="/pages/subjects.html" class="app-nav-link">
+                    <i class="bi bi-book-fill"></i>
+                    <span>Subjects</span>
+                </a>
 
-        <a href="/pages/documents.html" class="app-nav-link">
-            <i class="bi bi-folder-fill"></i>
-            Documents
-        </a>
+                <a href="/pages/academic-sessions.html" class="app-nav-link">
+                    <i class="bi bi-calendar3"></i>
+                    <span>Academic Sessions</span>
+                </a>
 
-        <a href="/pages/reports.html" class="app-nav-link">
-            <i class="bi bi-file-earmark-bar-graph-fill"></i>
-            Reports
-        </a>
+                <a href="/pages/terms.html" class="app-nav-link">
+                    <i class="bi bi-calendar-check-fill"></i>
+                    <span>Terms</span>
+                </a>
 
-        <div class="nav-section">Administration</div>
+                <a href="/pages/attendance.html" class="app-nav-link">
+                    <i class="bi bi-check2-square"></i>
+                    <span>Attendance</span>
+                </a>
 
-        <a href="/pages/users.html" class="app-nav-link">
-            <i class="bi bi-person-gear"></i>
-            Users
-        </a>
+                <a href="/pages/results.html" class="app-nav-link">
+                    <i class="bi bi-bar-chart-fill"></i>
+                    <span>Results</span>
+                </a>
 
-        <a href="/pages/roles.html" class="app-nav-link">
-            <i class="bi bi-shield-check"></i>
-            Roles
-        </a>
+                <div class="nav-section">Finance & Records</div>
 
-        <a href="/pages/permissions.html" class="app-nav-link">
-            <i class="bi bi-key-fill"></i>
-            Permissions
-        </a>
+                <a href="/pages/fees.html" class="app-nav-link">
+                    <i class="bi bi-cash-stack"></i>
+                    <span>Fees</span>
+                </a>
 
-        <a href="/pages/profile.html" class="app-nav-link active">
-            <i class="bi bi-person-circle"></i>
-            My Profile
-        </a>
+                <a href="/pages/documents.html" class="app-nav-link">
+                    <i class="bi bi-folder-fill"></i>
+                    <span>Documents</span>
+                </a>
 
-        <a href="/pages/settings.html" class="app-nav-link">
-            <i class="bi bi-gear-fill"></i>
-            Settings
-        </a>
+                <a href="/pages/reports.html" class="app-nav-link">
+                    <i class="bi bi-file-earmark-bar-graph-fill"></i>
+                    <span>Reports</span>
+                </a>
+
+                <div class="nav-section">Administration</div>
+
+                <a href="/pages/users.html" class="app-nav-link">
+                    <i class="bi bi-person-gear"></i>
+                    <span>Users</span>
+                </a>
+
+                <a href="/pages/roles.html" class="app-nav-link">
+                    <i class="bi bi-shield-check"></i>
+                    <span>Roles</span>
+                </a>
+
+                <a href="/pages/permissions.html" class="app-nav-link">
+                    <i class="bi bi-key-fill"></i>
+                    <span>Permissions</span>
+                </a>
+
+                <a href="/pages/settings.html" class="app-nav-link">
+                    <i class="bi bi-gear-fill"></i>
+                    <span>Settings</span>
+                </a>
+
+            </div>
+
+        </nav>
 
     </aside>
 
@@ -321,7 +367,7 @@
 
             <div class="d-flex align-items-center gap-3">
 
-                <button class="btn btn-light d-lg-none" id="sidebarToggle" type="button">
+                <button class="btn btn-light d-lg-none" id="sidebarToggle" type="button" aria-label="Open navigation">
                     <i class="bi bi-list fs-4"></i>
                 </button>
 
@@ -351,19 +397,27 @@
 
             <div class="mb-4">
                 <h1 class="h3 fw-bold mb-1">My Profile</h1>
+
                 <p class="text-secondary mb-0">
                     View and manage your account information and security settings.
                 </p>
             </div>
 
-            <div id="message" class="alert message" role="alert"></div>
-
-            <div id="loading" class="text-center py-5">
-                <div class="spinner-border text-primary mb-3" role="status"></div>
-                <div class="text-secondary">Loading profile...</div>
+            <div id="message" class="alert message" role="alert">
             </div>
 
-            <div id="profileContent" style="display:none;">
+            <div id="loading" class="text-center py-5">
+
+                <div class="spinner-border text-primary mb-3" role="status" aria-label="Loading">
+                </div>
+
+                <div class="text-secondary">
+                    Loading profile...
+                </div>
+
+            </div>
+
+            <div id="profileContent" style="display: none;">
 
                 <div class="row g-4">
 
@@ -399,13 +453,23 @@
                                     </div>
 
                                     <div class="mb-2">
-                                        <div class="text-secondary small">School Name</div>
-                                        <div class="fw-semibold small" id="schoolName">-</div>
+                                        <div class="text-secondary small">
+                                            School Name
+                                        </div>
+
+                                        <div class="fw-semibold small" id="schoolName">
+                                            -
+                                        </div>
                                     </div>
 
                                     <div>
-                                        <div class="text-secondary small">School Code</div>
-                                        <div class="fw-semibold small" id="schoolCode">-</div>
+                                        <div class="text-secondary small">
+                                            School Code
+                                        </div>
+
+                                        <div class="fw-semibold small" id="schoolCode">
+                                            -
+                                        </div>
                                     </div>
 
                                 </div>
@@ -420,13 +484,16 @@
 
                         <div class="card content-card mb-4">
 
-                            <div class="card-body p-4 p-lg-4">
+                            <div class="card-body p-4">
 
                                 <div
                                     class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 border-bottom pb-3 mb-4">
 
                                     <div>
-                                        <div class="section-title">Personal Information</div>
+                                        <div class="section-title">
+                                            Personal Information
+                                        </div>
+
                                         <div class="text-secondary small">
                                             Keep your account details up to date.
                                         </div>
@@ -444,43 +511,61 @@
                                     <div class="row g-3">
 
                                         <div class="col-md-6">
-                                            <label for="firstName" class="form-label">First Name</label>
+                                            <label for="firstName" class="form-label">
+                                                First Name
+                                            </label>
+
                                             <input type="text" class="form-control" id="firstName" name="firstName"
                                                 readonly required>
                                         </div>
 
                                         <div class="col-md-6">
-                                            <label for="lastName" class="form-label">Last Name</label>
+                                            <label for="lastName" class="form-label">
+                                                Last Name
+                                            </label>
+
                                             <input type="text" class="form-control" id="lastName" name="lastName"
                                                 readonly required>
                                         </div>
 
                                         <div class="col-md-6">
-                                            <label for="username" class="form-label">Username</label>
+                                            <label for="username" class="form-label">
+                                                Username
+                                            </label>
+
                                             <input type="text" class="form-control" id="username" name="username"
                                                 readonly>
                                         </div>
 
                                         <div class="col-md-6">
-                                            <label for="email" class="form-label">Email Address</label>
+                                            <label for="email" class="form-label">
+                                                Email Address
+                                            </label>
+
                                             <input type="email" class="form-control" id="email" name="email" readonly
                                                 required>
                                         </div>
 
                                         <div class="col-md-6">
-                                            <label for="phone" class="form-label">Phone Number</label>
+                                            <label for="phone" class="form-label">
+                                                Phone Number
+                                            </label>
+
                                             <input type="tel" class="form-control" id="phone" name="phone" readonly>
                                         </div>
 
                                         <div class="col-md-6">
-                                            <label for="role" class="form-label">Role</label>
+                                            <label for="role" class="form-label">
+                                                Role
+                                            </label>
+
                                             <input type="text" class="form-control" id="role" readonly>
                                         </div>
 
                                     </div>
 
                                     <div class="d-flex justify-content-end gap-2 mt-4" id="profileActions"
-                                        style="display:none !important;">
+                                        style="display: none !important;">
 
                                         <button type="button" class="btn btn-light border" id="cancelBtn">
                                             Cancel
@@ -504,6 +589,7 @@
                             <div class="card-body p-4">
 
                                 <div class="border-bottom pb-3 mb-4">
+
                                     <div class="section-title">
                                         <i class="bi bi-shield-lock me-2 text-primary"></i>
                                         Change Password
@@ -512,6 +598,7 @@
                                     <div class="text-secondary small mt-1">
                                         Use a strong password to protect your account.
                                     </div>
+
                                 </div>
 
                                 <form id="passwordForm">
@@ -519,30 +606,36 @@
                                     <div class="row g-3">
 
                                         <div class="col-12">
+
                                             <label for="currentPassword" class="form-label">
                                                 Current Password
                                             </label>
 
                                             <input type="password" class="form-control" id="currentPassword"
                                                 autocomplete="current-password" required>
+
                                         </div>
 
                                         <div class="col-md-6">
+
                                             <label for="newPassword" class="form-label">
                                                 New Password
                                             </label>
 
                                             <input type="password" class="form-control" id="newPassword"
                                                 autocomplete="new-password" minlength="6" required>
+
                                         </div>
 
                                         <div class="col-md-6">
+
                                             <label for="confirmPassword" class="form-label">
                                                 Confirm New Password
                                             </label>
 
                                             <input type="password" class="form-control" id="confirmPassword"
                                                 autocomplete="new-password" minlength="6" required>
+
                                         </div>
 
                                     </div>
@@ -573,6 +666,8 @@
     </div>
 
     <script>
+        "use strict";
+
         const API_BASE = "/api";
 
         let currentUser = null;
@@ -581,11 +676,7 @@
         function getToken() {
             return (
                 localStorage.getItem("school_management_token") ||
-                sessionStorage.getItem("school_management_token") ||
-                localStorage.getItem("token") ||
-                localStorage.getItem("accessToken") ||
-                sessionStorage.getItem("token") ||
-                sessionStorage.getItem("accessToken")
+                sessionStorage.getItem("school_management_token")
             );
         }
 
@@ -617,7 +708,8 @@
                 throw new Error("Your session has expired.");
             }
 
-            const contentType = response.headers.get("content-type") || "";
+            const contentType =
+                response.headers.get("content-type") || "";
 
             let data;
 
@@ -625,6 +717,7 @@
                 data = await response.json();
             } else {
                 const text = await response.text();
+
                 data = {
                     success: response.ok,
                     message: text
@@ -632,17 +725,23 @@
             }
 
             if (!response.ok) {
-                throw new Error(data.message || "Request failed.");
+                throw new Error(
+                    data.message || "Request failed."
+                );
             }
 
             return data;
         }
 
         function showMessage(message, type = "success") {
-            const element = document.getElementById("message");
+            const element =
+                document.getElementById("message");
 
             element.textContent = message;
-            element.className = `alert message alert-${type === "error" ? "danger" : "success"}`;
+
+            element.className =
+                `alert message alert-${type === "error" ? "danger" : "success"}`;
+
             element.style.display = "block";
 
             window.scrollTo({
@@ -650,7 +749,7 @@
                 behavior: "smooth"
             });
 
-            setTimeout(() => {
+            window.setTimeout(() => {
                 element.style.display = "none";
                 element.textContent = "";
             }, 5000);
@@ -669,8 +768,15 @@
         }
 
         function fullName(user) {
-            const first = user.first_name || user.firstName || "";
-            const last = user.last_name || user.lastName || "";
+            const first =
+                user.first_name ||
+                user.firstName ||
+                "";
+
+            const last =
+                user.last_name ||
+                user.lastName ||
+                "";
 
             return `${first} ${last}`.trim() ||
                 user.username ||
@@ -702,22 +808,45 @@
             );
         }
 
-        function setProfileFields(user) {
+        function isManagementUser(user) {
+            const role = getRoleName(user).toLowerCase();
 
+            return [
+                "admin",
+                "administrator",
+                "super admin",
+                "superadmin",
+                "school admin",
+                "principal",
+                "head teacher",
+                "management",
+                "hr",
+                "manager"
+            ].some(roleName => role.includes(roleName));
+        }
+
+        function setProfileFields(user) {
             document.getElementById("firstName").value =
-                user.first_name || user.firstName || "";
+                user.first_name ||
+                user.firstName ||
+                "";
 
             document.getElementById("lastName").value =
-                user.last_name || user.lastName || "";
+                user.last_name ||
+                user.lastName ||
+                "";
 
             document.getElementById("username").value =
-                user.username || "";
+                user.username ||
+                "";
 
             document.getElementById("email").value =
-                user.email || "";
+                user.email ||
+                "";
 
             document.getElementById("phone").value =
-                user.phone || "";
+                user.phone ||
+                "";
 
             document.getElementById("role").value =
                 getRoleName(user);
@@ -733,6 +862,15 @@
 
             document.getElementById("schoolCode").textContent =
                 getSchoolCode(user);
+
+            document.getElementById("topUserName").textContent =
+                fullName(user);
+
+            document.getElementById("sidebarUserName").textContent =
+                fullName(user);
+
+            document.getElementById("sidebarUserRole").textContent =
+                getRoleName(user);
 
             const name = fullName(user);
 
@@ -753,18 +891,24 @@
             const status =
                 document.getElementById("displayStatus");
 
-            status.textContent = active ? "Active" : "Inactive";
+            status.textContent =
+                active ? "Active" : "Inactive";
 
-            status.className = active
-                ? "badge rounded-pill text-bg-success px-3 py-2"
-                : "badge rounded-pill text-bg-danger px-3 py-2";
+            status.className =
+                active
+                    ? "badge rounded-pill text-bg-success px-3 py-2"
+                    : "badge rounded-pill text-bg-danger px-3 py-2";
 
-            document.getElementById("topUserName").textContent =
-                fullName(user);
+            const managementNavigation =
+                document.getElementById("managementNavigation");
+
+            managementNavigation.style.display =
+                isManagementUser(user)
+                    ? "block"
+                    : "none";
         }
 
         async function loadProfile() {
-
             const loading =
                 document.getElementById("loading");
 
@@ -772,15 +916,22 @@
                 document.getElementById("profileContent");
 
             try {
-
                 const data =
-                    await apiRequest(`${API_BASE}/users/me`);
+                    await apiRequest(`${API_BASE}/auth/me`);
 
                 currentUser =
                     getUserData(data);
 
+                if (!currentUser) {
+                    throw new Error(
+                        "Unable to identify the current user."
+                    );
+                }
+
                 originalProfile =
-                    JSON.parse(JSON.stringify(currentUser));
+                    JSON.parse(
+                        JSON.stringify(currentUser)
+                    );
 
                 setProfileFields(currentUser);
 
@@ -788,25 +939,37 @@
                 content.style.display = "block";
 
             } catch (error) {
-
                 loading.innerHTML = `
-                    <div class="text-danger mb-2">
-                        <i class="bi bi-exclamation-circle fs-3"></i>
-                    </div>
-                    <div class="fw-semibold">
-                        ${error.message || "Unable to load your profile."}
-                    </div>
-                `;
+                <div class="text-danger mb-2">
+                    <i class="bi bi-exclamation-circle fs-3"></i>
+                </div>
+                <div class="fw-semibold">
+                    ${escapeHtml(
+                    error.message ||
+                    "Unable to load your profile."
+                )}
+                </div>
+            `;
 
                 showMessage(
-                    error.message || "Unable to load your profile.",
+                    error.message ||
+                    "Unable to load your profile.",
                     "error"
                 );
             }
         }
 
-        function enableEditing() {
+        function escapeHtml(value) {
+            const div =
+                document.createElement("div");
 
+            div.textContent =
+                String(value);
+
+            return div.innerHTML;
+        }
+
+        function enableEditing() {
             const fields = [
                 "firstName",
                 "lastName",
@@ -821,18 +984,15 @@
             document.getElementById("editBtn").style.display =
                 "none";
 
-            const actions =
-                document.getElementById("profileActions");
-
-            actions.style.setProperty(
-                "display",
-                "flex",
-                "important"
-            );
+            document.getElementById("profileActions")
+                .style.setProperty(
+                    "display",
+                    "flex",
+                    "important"
+                );
         }
 
         function disableEditing() {
-
             const fields = [
                 "firstName",
                 "lastName",
@@ -856,7 +1016,6 @@
         }
 
         function restoreProfile() {
-
             if (originalProfile) {
                 setProfileFields(originalProfile);
             }
@@ -865,20 +1024,27 @@
         }
 
         async function updateProfile(event) {
-
             event.preventDefault();
 
             const firstName =
-                document.getElementById("firstName").value.trim();
+                document.getElementById("firstName")
+                    .value
+                    .trim();
 
             const lastName =
-                document.getElementById("lastName").value.trim();
+                document.getElementById("lastName")
+                    .value
+                    .trim();
 
             const email =
-                document.getElementById("email").value.trim();
+                document.getElementById("email")
+                    .value
+                    .trim();
 
             const phone =
-                document.getElementById("phone").value.trim();
+                document.getElementById("phone")
+                    .value
+                    .trim();
 
             if (!firstName || !lastName || !email) {
                 showMessage(
@@ -889,26 +1055,29 @@
             }
 
             try {
-
                 const data =
-                    await apiRequest(`${API_BASE}/users/me`, {
-                        method: "PUT",
-                        body: JSON.stringify({
-                            firstName,
-                            lastName,
-                            email,
-                            phone: phone || null
-                        })
-                    });
+                    await apiRequest(
+                        `${API_BASE}/users/me`,
+                        {
+                            method: "PUT",
+                            body: JSON.stringify({
+                                firstName,
+                                lastName,
+                                email,
+                                phone: phone || null
+                            })
+                        }
+                    );
 
                 currentUser =
                     getUserData(data);
 
                 originalProfile =
-                    JSON.parse(JSON.stringify(currentUser));
+                    JSON.parse(
+                        JSON.stringify(currentUser)
+                    );
 
                 setProfileFields(currentUser);
-
                 disableEditing();
 
                 showMessage(
@@ -917,26 +1086,36 @@
                 );
 
             } catch (error) {
-
                 showMessage(
-                    error.message || "Unable to update profile.",
+                    error.message ||
+                    "Unable to update profile.",
                     "error"
                 );
             }
         }
 
         async function changePassword(event) {
-
             event.preventDefault();
 
             const currentPassword =
-                document.getElementById("currentPassword").value;
+                document.getElementById("currentPassword")
+                    .value;
 
             const newPassword =
-                document.getElementById("newPassword").value;
+                document.getElementById("newPassword")
+                    .value;
 
             const confirmPassword =
-                document.getElementById("confirmPassword").value;
+                document.getElementById("confirmPassword")
+                    .value;
+
+            if (!currentPassword) {
+                showMessage(
+                    "Current password is required.",
+                    "error"
+                );
+                return;
+            }
 
             if (newPassword.length < 6) {
                 showMessage(
@@ -955,7 +1134,6 @@
             }
 
             try {
-
                 await apiRequest(
                     `${API_BASE}/users/me/password`,
                     {
@@ -967,7 +1145,9 @@
                     }
                 );
 
-                document.getElementById("passwordForm").reset();
+                document.getElementById(
+                    "passwordForm"
+                ).reset();
 
                 showMessage(
                     "Password changed successfully.",
@@ -975,69 +1155,110 @@
                 );
 
             } catch (error) {
-
                 showMessage(
-                    error.message || "Unable to change password.",
+                    error.message ||
+                    "Unable to change password.",
                     "error"
                 );
             }
         }
 
         function handleLogout() {
+            localStorage.removeItem(
+                "school_management_token"
+            );
 
-            localStorage.removeItem("school_management_token");
-            localStorage.removeItem("school_management_user");
+            localStorage.removeItem(
+                "school_management_user"
+            );
 
-            sessionStorage.removeItem("school_management_token");
-            sessionStorage.removeItem("school_management_user");
+            sessionStorage.removeItem(
+                "school_management_token"
+            );
 
-            localStorage.removeItem("token");
-            localStorage.removeItem("accessToken");
-
-            sessionStorage.removeItem("token");
-            sessionStorage.removeItem("accessToken");
+            sessionStorage.removeItem(
+                "school_management_user"
+            );
 
             window.location.href =
                 "/pages/login.html";
         }
 
+        function toggleSidebar() {
+            document.getElementById("appSidebar")
+                .classList.toggle("show");
+
+            document.getElementById("sidebarOverlay")
+                .classList.toggle("show");
+        }
+
+        function closeSidebar() {
+            document.getElementById("appSidebar")
+                .classList.remove("show");
+
+            document.getElementById("sidebarOverlay")
+                .classList.remove("show");
+        }
+
         document.getElementById("editBtn")
-            .addEventListener("click", enableEditing);
+            .addEventListener(
+                "click",
+                enableEditing
+            );
 
         document.getElementById("cancelBtn")
-            .addEventListener("click", restoreProfile);
+            .addEventListener(
+                "click",
+                restoreProfile
+            );
 
         document.getElementById("profileForm")
-            .addEventListener("submit", updateProfile);
+            .addEventListener(
+                "submit",
+                updateProfile
+            );
 
         document.getElementById("passwordForm")
-            .addEventListener("submit", changePassword);
+            .addEventListener(
+                "submit",
+                changePassword
+            );
 
         document.getElementById("logoutBtn")
-            .addEventListener("click", handleLogout);
+            .addEventListener(
+                "click",
+                handleLogout
+            );
 
         document.getElementById("sidebarToggle")
-            .addEventListener("click", () => {
-                document.getElementById("appSidebar")
-                    .classList.toggle("show");
-
-                document.getElementById("sidebarOverlay")
-                    .classList.toggle("show");
-            });
+            .addEventListener(
+                "click",
+                toggleSidebar
+            );
 
         document.getElementById("sidebarOverlay")
-            .addEventListener("click", () => {
-                document.getElementById("appSidebar")
-                    .classList.remove("show");
+            .addEventListener(
+                "click",
+                closeSidebar
+            );
 
-                document.getElementById("sidebarOverlay")
-                    .classList.remove("show");
-            });
+        document.addEventListener(
+            "click",
+            event => {
+                if (
+                    window.innerWidth <= 991.98 &&
+                    event.target.closest(".app-nav-link")
+                ) {
+                    closeSidebar();
+                }
+            }
+        );
 
         loadProfile();
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    ```
 
 </body>
 

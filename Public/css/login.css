@@ -1,25 +1,41 @@
-:root {
-    --primary: #2563eb;
-    --primary-dark: #1e3a8a;
-    --dark: #0f172a;
-    --muted: #64748b;
-    --border: #e2e8f0;
-    --surface: #ffffff;
-    --background: #f8fafc;
-}
+/*
+|--------------------------------------------------------------------------
+| SCHOOL MANAGEMENT SYSTEM
+| LOGIN PAGE STYLES
+|--------------------------------------------------------------------------
+*/
+
+/*
+|--------------------------------------------------------------------------
+| LOGIN PAGE
+|--------------------------------------------------------------------------
+*/
 
 body.login-page {
-    margin: 0;
     min-height: 100vh;
-    background: var(--background);
-    color: var(--dark);
+    margin: 0;
+    background: var(--sms-background, #f8fafc);
+    color: var(--sms-dark, #0f172a);
     font-family:
         Inter,
         system-ui,
         -apple-system,
         BlinkMacSystemFont,
         "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
         sans-serif;
+}
+
+/*
+|--------------------------------------------------------------------------
+| LOGIN APPLICATION WRAPPER
+|--------------------------------------------------------------------------
+*/
+
+.login-page .container-fluid {
+    min-height: 100vh;
 }
 
 /*
@@ -31,7 +47,8 @@ body.login-page {
 .login-brand-panel {
     position: relative;
     min-height: 100vh;
-    background: linear-gradient(135deg,
+    background:
+        linear-gradient(135deg,
             #0f172a 0%,
             #1e3a8a 55%,
             #2563eb 100%);
@@ -48,6 +65,7 @@ body.login-page {
     background: rgba(255, 255, 255, 0.05);
     top: -180px;
     right: -150px;
+    pointer-events: none;
 }
 
 .login-brand-panel::after {
@@ -59,6 +77,7 @@ body.login-page {
     background: rgba(255, 255, 255, 0.04);
     bottom: -180px;
     left: -150px;
+    pointer-events: none;
 }
 
 .brand-content {
@@ -81,6 +100,7 @@ body.login-page {
     border: 1px solid rgba(255, 255, 255, 0.18);
     color: #ffffff;
     font-size: 34px;
+    line-height: 1;
     margin-bottom: 28px;
 }
 
@@ -120,6 +140,7 @@ body.login-page {
     gap: 14px;
     color: rgba(255, 255, 255, 0.9);
     font-size: 15px;
+    line-height: 1.5;
 }
 
 .brand-features i {
@@ -144,7 +165,7 @@ body.login-page {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--background);
+    background: var(--sms-background, #f8fafc);
     padding: 40px 20px;
 }
 
@@ -155,24 +176,25 @@ body.login-page {
 
 .login-title {
     margin: 8px 0;
-    color: var(--dark);
+    color: var(--sms-dark, #0f172a);
     font-size: 32px;
     line-height: 1.2;
-    font-weight: 750;
+    font-weight: 700;
     letter-spacing: -0.5px;
 }
 
 .login-container>p {
-    color: var(--muted);
+    color: var(--sms-muted, #64748b);
+    line-height: 1.6;
 }
 
 /*
 |--------------------------------------------------------------------------
-| FORM
+| LOGIN FORM
 |--------------------------------------------------------------------------
 */
 
-.form-label {
+.login-form-panel .form-label {
     color: #334155;
     font-weight: 600;
 }
@@ -184,33 +206,75 @@ body.login-page {
 .input-group-lg .input-group-text {
     min-width: 48px;
     justify-content: center;
-    background: var(--surface);
-    border-color: var(--border);
-    color: #64748b;
+    background: var(--sms-surface, #ffffff);
+    border-color: var(--sms-border, #e2e8f0);
+    color: var(--sms-muted, #64748b);
 }
 
 .input-group-lg .form-control {
     min-height: 52px;
-    border-color: var(--border);
-    background: var(--surface);
-    color: var(--dark);
+    border-color: var(--sms-border, #e2e8f0);
+    background: var(--sms-surface, #ffffff);
+    color: var(--sms-dark, #0f172a);
     box-shadow: none;
     font-size: 15px;
 }
 
 .input-group-lg .form-control::placeholder {
     color: #94a3b8;
+    opacity: 1;
 }
 
 .input-group-lg .form-control:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.12);
+    border-color: var(--sms-primary, #2563eb);
+    box-shadow:
+        0 0 0 0.2rem rgba(37, 99, 235, 0.12);
     z-index: 2;
 }
 
 .input-group-lg:focus-within .input-group-text {
-    border-color: var(--primary);
-    color: var(--primary);
+    border-color: var(--sms-primary, #2563eb);
+    color: var(--sms-primary, #2563eb);
+}
+
+.login-form-panel .form-check-input {
+    border-color: #cbd5e1;
+}
+
+.login-form-panel .form-check-input:checked {
+    background-color: var(--sms-primary, #2563eb);
+    border-color: var(--sms-primary, #2563eb);
+}
+
+.login-form-panel .form-check-label {
+    color: #475569;
+    font-size: 14px;
+}
+
+/*
+|--------------------------------------------------------------------------
+| LOGIN VALIDATION
+|--------------------------------------------------------------------------
+*/
+
+.login-form-panel .form-control.is-invalid {
+    border-color: #dc2626;
+}
+
+.login-form-panel .form-control.is-invalid:focus {
+    border-color: #dc2626;
+    box-shadow:
+        0 0 0 0.2rem rgba(220, 38, 38, 0.1);
+}
+
+.login-form-panel .form-control.is-valid {
+    border-color: #16a34a;
+}
+
+.login-form-panel .form-control.is-valid:focus {
+    border-color: #16a34a;
+    box-shadow:
+        0 0 0 0.2rem rgba(22, 163, 74, 0.1);
 }
 
 /*
@@ -225,19 +289,22 @@ body.login-page {
     border: 0;
     border-radius: 10px;
     font-weight: 600;
-    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18);
+    box-shadow:
+        0 8px 18px rgba(37, 99, 235, 0.18);
     transition:
         transform 0.2s ease,
         box-shadow 0.2s ease,
-        background 0.2s ease;
+        background-color 0.2s ease,
+        opacity 0.2s ease;
 }
 
-.login-button:hover {
+.login-button:hover:not(:disabled) {
     transform: translateY(-1px);
-    box-shadow: 0 12px 24px rgba(37, 99, 235, 0.25);
+    box-shadow:
+        0 12px 24px rgba(37, 99, 235, 0.25);
 }
 
-.login-button:active {
+.login-button:active:not(:disabled) {
     transform: translateY(0);
 }
 
@@ -261,8 +328,22 @@ body.login-page {
 
 .mobile-logo .brand-logo {
     margin-bottom: 0;
-    background: var(--primary);
+    background: var(--sms-primary, #2563eb);
     color: #ffffff;
+}
+
+/*
+|--------------------------------------------------------------------------
+| LOGIN LINKS
+|--------------------------------------------------------------------------
+*/
+
+.login-form-panel a {
+    color: var(--sms-primary, #2563eb);
+}
+
+.login-form-panel a:hover {
+    color: var(--sms-primary-dark, #1e3a8a);
 }
 
 /*
@@ -274,6 +355,24 @@ body.login-page {
 .login-form-panel .alert {
     border-radius: 10px;
     font-size: 14px;
+    line-height: 1.5;
+}
+
+.login-form-panel .alert:last-child {
+    margin-bottom: 0;
+}
+
+/*
+|--------------------------------------------------------------------------
+| DISABLED FORM CONTROLS
+|--------------------------------------------------------------------------
+*/
+
+.login-form-panel .form-control:disabled,
+.login-form-panel .form-control[readonly] {
+    background: #f8fafc;
+    color: #64748b;
+    cursor: not-allowed;
 }
 
 /*
@@ -284,7 +383,8 @@ body.login-page {
 
 .login-button:focus-visible,
 .login-form-panel input:focus-visible,
-.login-form-panel button:focus-visible {
+.login-form-panel button:focus-visible,
+.login-form-panel a:focus-visible {
     outline: 3px solid rgba(37, 99, 235, 0.2);
     outline-offset: 2px;
 }
@@ -307,6 +407,38 @@ body.login-page {
 
     .brand-content h1 {
         font-size: 38px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .login-brand-panel {
+        min-height: auto;
+    }
+
+    .brand-content {
+        max-width: 100%;
+        padding: 35px 25px;
+    }
+
+    .brand-content h1 {
+        font-size: 34px;
+    }
+
+    .brand-content h2 {
+        font-size: 21px;
+    }
+
+    .brand-content>p {
+        font-size: 15px;
+        line-height: 1.7;
+    }
+
+    .brand-features {
+        gap: 13px;
+    }
+
+    .brand-features div {
+        font-size: 14px;
     }
 }
 
@@ -334,7 +466,66 @@ body.login-page {
     .brand-content h2 {
         font-size: 20px;
     }
+
+    .brand-content>p {
+        margin-bottom: 25px;
+        font-size: 14px;
+    }
+
+    .brand-logo {
+        width: 64px;
+        height: 64px;
+        font-size: 28px;
+        margin-bottom: 22px;
+    }
+
+    .input-group-lg .form-control,
+    .input-group-lg .input-group-text {
+        min-height: 50px;
+    }
+
+    .login-button {
+        min-height: 52px;
+    }
 }
+
+@media (max-width: 380px) {
+    .login-form-panel {
+        padding: 20px 12px;
+    }
+
+    .login-title {
+        font-size: 25px;
+    }
+
+    .brand-content {
+        padding: 25px 15px;
+    }
+
+    .brand-content h1 {
+        font-size: 29px;
+    }
+
+    .brand-content h2 {
+        font-size: 18px;
+    }
+
+    .brand-features div {
+        gap: 10px;
+        font-size: 13px;
+    }
+
+    .brand-features i {
+        width: 30px;
+        height: 30px;
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| REDUCED MOTION
+|--------------------------------------------------------------------------
+*/
 
 @media (prefers-reduced-motion: reduce) {
     .login-button {

@@ -1,643 +1,963 @@
+"use strict";
+
 const roleModel = require("../models/roleModel");
 
-
-/*
-|--------------------------------------------------------------------------
-| Role Controller
-|--------------------------------------------------------------------------
-|
-| Handles:
-|
-| - Create role
-| - Get all roles
-| - Get role by ID
-| - Update role
-| - Delete role
-| - Search roles
-|
-|--------------------------------------------------------------------------
-*/
-
-
-/*
-|--------------------------------------------------------------------------
-| Get School ID
-|--------------------------------------------------------------------------
-*/
-
-function getSchoolId(req) {
-
+function getAuthenticatedSchoolId(req) {
     return (
         req.user?.schoolId ||
         req.user?.school_id ||
-        req.body?.schoolId ||
-        req.body?.school_id ||
-        req.query?.schoolId
+        null
     );
-
 }
 
+function getRequestedRoleId(req) {
+    return (
+        req.params?.id ||
+        req.params?.roleId ||
+        null
+    );
+}
 
-/*
-|--------------------------------------------------------------------------
-| Create Role
-|--------------------------------------------------------------------------
-*/
+function normalizeText(value) {
+    if (
+        value === undefined ||
+        value === null
+    ) {
+        return "";
+    }
 
-async function createRole(req, res, next) {
+    return String(value).trim();
+}
 
+function getRoleName(req) {
+    return normalizeText(
+        req.body?.roleName ||
+        req.body?.role_name
+    );
+}
+
+function getDescription(req) {
+    const value =
+        req.body?.description;
+
+    if (
+        value === undefined ||
+        value === null
+    ) {
+        return null;
+    }
+
+    const description =
+        normalizeText(value);
+
+    return description || null;
+}
+
+function ensureSchoolContext(req) {
+    const schoolId =
+        getAuthenticatedSchoolId(req);
+
+    if (!schoolId) {
+        const error = new Error(
+            "Authenticated school context is required."
+        );
+
+        error.statusCode = 403;
+
+        throw error;
+    }
+
+    return schoolId;
+}
+
+function buildSafeRole(role) {
+    if (!role) {
+        return null;
+    }
+
+    return {
+        id: role.id,
+        roleName:
+            role.role_name ||
+            role.roleName ||
+            null,
+        description:
+            role.description || null,
+        permissionCount:
+            role.permission_count !== undefined
+                ? Number(
+                    role.permission_count
+                )
+                : undefined,
+        userCount:
+            role.user_count !== undefined
+                ? Number(
+                    role.user_count
+                )
+                : undefined,
+        createdAt:
+            role.created_at ||
+            role.createdAt ||
+            null
+    };
+}
+
+function buildSafePermission(
+    permission
+) {
+    if (!permission) {
+        return null;
+    }
+
+    return {
+        id: permission.id,
+        permissionName:
+            permission.permission_name ||
+            permission.permissionName ||
+            null,
+        description:
+            permission.description ||
+            null,
+        createdAt:
+            permission.created_at ||
+            permission.createdAt ||
+            null
+    };
+}
+
+function buildSafeUser(user) {
+    if (!user) {
+        return null;
+    }
+
+    return {
+        id: user.id,
+        username:
+            user.username || null,
+        email:
+            user.email || null,
+        roleId:
+            user.role_id ||
+            user.roleId ||
+            null,
+        schoolId:
+            user.school_id ||
+            user.schoolId ||
+            null,
+        firstName:
+            user.first_name ||
+            user.firstName ||
+            null,
+        middleName:
+            user.middle_name ||
+            user.middleName ||
+            null,
+        lastName:
+            user.last_name ||
+            user.lastName ||
+            null,
+        phone:
+            user.phone || null,
+        profilePhotoUrl:
+            user.profile_photo_url ||
+            user.profilePhotoUrl ||
+            null,
+        isActive:
+            user.is_active !== undefined
+                ? user.is_active
+                : user.isActive
+    };
+}
+
+async function createRole(
+    req,
+    res,
+    next
+) {
     try {
+        ensureSchoolContext(req);
 
-        const schoolId = getSchoolId(req);
+        const roleName =
+            getRoleName(req);
 
-        const {
-            roleName,
-            role_name,
-            description
-        } = req.body;
+        const description =
+            getDescription(req);
 
-
-        const name =
-            roleName ||
-            role_name;
-
-
-        if (!name) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Role name is required."
-
-            });
-
-        }
-
-
-        if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
-        }
-
-
-        const existing =
-            await roleModel.findRoleByName(
-                schoolId,
-                name
+        if (!roleName) {
+            const error = new Error(
+                "Role name is required."
             );
 
+            error.statusCode = 400;
 
-        if (existing) {
-
-            return res.status(409).json({
-
-                success: false,
-
-                message:
-                    "A role with this name already exists."
-
-            });
-
+            return next(error);
         }
 
+        const exists =
+            await roleModel.roleExists(
+                roleName
+            );
+
+        if (exists) {
+            const error = new Error(
+                "A role with this name already exists."
+            );
+
+            error.statusCode = 409;
+
+            return next(error);
+        }
 
         const role =
             await roleModel.createRole({
-
-                schoolId,
-
-                roleName: name,
-
-                description:
-                    description || null
-
+                roleName,
+                description
             });
 
-
         return res.status(201).json({
-
             success: true,
-
             message:
                 "Role created successfully.",
-
-            data: role
-
+            data:
+                buildSafeRole(role)
         });
-
     } catch (error) {
-
         console.error(
             "Create role error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Get All Roles
-|--------------------------------------------------------------------------
-*/
-
-async function getRoles(req, res, next) {
-
+async function getRoles(
+    req,
+    res,
+    next
+) {
     try {
-
-        const schoolId = getSchoolId(req);
-
-
-        if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
-        }
-
+        ensureSchoolContext(req);
 
         const roles =
-            await roleModel.findRolesBySchool(
-                schoolId
-            );
-
+            await roleModel.findRoles();
 
         return res.status(200).json({
-
             success: true,
-
-            data: roles
-
+            data:
+                roles.map(
+                    buildSafeRole
+                )
         });
-
     } catch (error) {
-
         console.error(
             "Get roles error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Get Role By ID
-|--------------------------------------------------------------------------
-*/
-
-async function getRoleById(req, res, next) {
-
+async function getRoleById(
+    req,
+    res,
+    next
+) {
     try {
+        ensureSchoolContext(req);
 
-        const {
-            id
-        } = req.params;
+        const roleId =
+            getRequestedRoleId(req);
 
+        if (!roleId) {
+            const error = new Error(
+                "Role ID is required."
+            );
 
-        if (!id) {
+            error.statusCode = 400;
 
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Role ID is required."
-
-            });
-
+            return next(error);
         }
-
 
         const role =
-            await roleModel.findRoleById(id);
-
+            await roleModel.findRoleById(
+                roleId
+            );
 
         if (!role) {
+            const error = new Error(
+                "Role not found."
+            );
 
-            return res.status(404).json({
+            error.statusCode = 404;
 
-                success: false,
-
-                message:
-                    "Role not found."
-
-            });
-
+            return next(error);
         }
-
-
-        const schoolId =
-            getSchoolId(req);
-
-
-        if (
-            schoolId &&
-            role.school_id &&
-            String(role.school_id) !==
-            String(schoolId)
-        ) {
-
-            return res.status(404).json({
-
-                success: false,
-
-                message:
-                    "Role not found."
-
-            });
-
-        }
-
 
         return res.status(200).json({
-
             success: true,
-
-            data: role
-
+            data:
+                buildSafeRole(role)
         });
-
     } catch (error) {
-
         console.error(
             "Get role by ID error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Update Role
-|--------------------------------------------------------------------------
-*/
-
-async function updateRole(req, res, next) {
-
+async function updateRole(
+    req,
+    res,
+    next
+) {
     try {
+        ensureSchoolContext(req);
 
-        const {
-            id
-        } = req.params;
+        const roleId =
+            getRequestedRoleId(req);
 
+        if (!roleId) {
+            const error = new Error(
+                "Role ID is required."
+            );
 
-        const schoolId =
-            getSchoolId(req);
+            error.statusCode = 400;
 
-
-        if (!id) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Role ID is required."
-
-            });
-
+            return next(error);
         }
 
+        const existingRole =
+            await roleModel.findRoleById(
+                roleId
+            );
 
-        if (!schoolId) {
+        if (!existingRole) {
+            const error = new Error(
+                "Role not found."
+            );
 
-            return res.status(400).json({
+            error.statusCode = 404;
 
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
+            return next(error);
         }
 
+        const suppliedRoleName =
+            getRoleName(req);
 
-        const existing =
-            await roleModel.findRoleById(id);
+        const roleName =
+            suppliedRoleName ||
+            existingRole.role_name;
 
+        const description =
+            req.body?.description !==
+            undefined
+                ? getDescription(req)
+                : existingRole.description;
 
-        if (!existing) {
+        const duplicate =
+            await roleModel.roleExists(
+                roleName,
+                roleId
+            );
 
-            return res.status(404).json({
+        if (duplicate) {
+            const error = new Error(
+                "A role with this name already exists."
+            );
 
-                success: false,
+            error.statusCode = 409;
 
-                message:
-                    "Role not found."
-
-            });
-
+            return next(error);
         }
-
-
-        if (
-            existing.school_id &&
-            String(existing.school_id) !==
-            String(schoolId)
-        ) {
-
-            return res.status(404).json({
-
-                success: false,
-
-                message:
-                    "Role not found."
-
-            });
-
-        }
-
-
-        const {
-            roleName,
-            role_name,
-            description
-        } = req.body;
-
-
-        const name =
-            roleName ||
-            role_name ||
-            existing.role_name;
-
 
         const updatedRole =
             await roleModel.updateRole(
-                id,
+                roleId,
                 {
-                    roleName: name,
-                    description:
-                        description !== undefined
-                            ? description
-                            : existing.description
+                    roleName,
+                    description
                 }
             );
 
-
         if (!updatedRole) {
+            const error = new Error(
+                "Role could not be updated."
+            );
 
-            return res.status(404).json({
+            error.statusCode = 404;
 
-                success: false,
-
-                message:
-                    "Role could not be updated."
-
-            });
-
+            return next(error);
         }
 
-
         return res.status(200).json({
-
             success: true,
-
             message:
                 "Role updated successfully.",
-
-            data: updatedRole
-
+            data:
+                buildSafeRole(
+                    updatedRole
+                )
         });
-
     } catch (error) {
-
         console.error(
             "Update role error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Delete Role
-|--------------------------------------------------------------------------
-*/
-
-async function deleteRole(req, res, next) {
-
+async function deleteRole(
+    req,
+    res,
+    next
+) {
     try {
+        ensureSchoolContext(req);
 
-        const {
-            id
-        } = req.params;
+        const roleId =
+            getRequestedRoleId(req);
 
+        if (!roleId) {
+            const error = new Error(
+                "Role ID is required."
+            );
 
-        const schoolId =
-            getSchoolId(req);
+            error.statusCode = 400;
 
-
-        if (!id) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Role ID is required."
-
-            });
-
+            return next(error);
         }
 
+        const existingRole =
+            await roleModel.findRoleById(
+                roleId
+            );
 
-        const existing =
-            await roleModel.findRoleById(id);
+        if (!existingRole) {
+            const error = new Error(
+                "Role not found."
+            );
 
+            error.statusCode = 404;
 
-        if (!existing) {
-
-            return res.status(404).json({
-
-                success: false,
-
-                message:
-                    "Role not found."
-
-            });
-
+            return next(error);
         }
 
+        const roleUsers =
+            await roleModel.getRoleUsers(
+                roleId
+            );
 
         if (
-            schoolId &&
-            existing.school_id &&
-            String(existing.school_id) !==
-            String(schoolId)
+            roleUsers.length > 0
         ) {
+            const error = new Error(
+                "This role cannot be deleted because it is assigned to one or more users."
+            );
 
-            return res.status(404).json({
+            error.statusCode = 409;
 
-                success: false,
-
-                message:
-                    "Role not found."
-
-            });
-
+            return next(error);
         }
 
+        const permissions =
+            await roleModel.getRolePermissions(
+                roleId
+            );
+
+        if (
+            permissions.length > 0
+        ) {
+            const error = new Error(
+                "This role cannot be deleted while permissions are assigned to it."
+            );
+
+            error.statusCode = 409;
+
+            return next(error);
+        }
 
         const deletedRole =
-            await roleModel.deleteRole(id);
-
+            await roleModel.deleteRole(
+                roleId
+            );
 
         if (!deletedRole) {
+            const error = new Error(
+                "Role could not be deleted."
+            );
 
-            return res.status(404).json({
+            error.statusCode = 404;
 
-                success: false,
-
-                message:
-                    "Role could not be deleted."
-
-            });
-
+            return next(error);
         }
 
-
         return res.status(200).json({
-
             success: true,
-
             message:
                 "Role deleted successfully.",
-
-            data: deletedRole
-
+            data:
+                buildSafeRole(
+                    deletedRole
+                )
         });
-
     } catch (error) {
-
         console.error(
             "Delete role error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Search Roles
-|--------------------------------------------------------------------------
-*/
-
-async function searchRoles(req, res, next) {
-
+async function searchRoles(
+    req,
+    res,
+    next
+) {
     try {
+        ensureSchoolContext(req);
 
-        const schoolId =
-            getSchoolId(req);
-
-
-        const search =
-            req.query.q ||
-            req.query.search ||
-            "";
-
-
-        if (!schoolId) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
-        }
-
-
-        const roles =
-            await roleModel.searchRoles(
-                schoolId,
-                search
+        const searchTerm =
+            normalizeText(
+                req.query?.q ||
+                req.query?.search
             );
 
+        const roles =
+            await roleModel.findRoles();
+
+        const filteredRoles =
+            searchTerm
+                ? roles.filter(
+                    function (role) {
+                        const roleName =
+                            normalizeText(
+                                role.role_name
+                            ).toLowerCase();
+
+                        const description =
+                            normalizeText(
+                                role.description
+                            ).toLowerCase();
+
+                        const term =
+                            searchTerm.toLowerCase();
+
+                        return (
+                            roleName.includes(
+                                term
+                            ) ||
+                            description.includes(
+                                term
+                            )
+                        );
+                    }
+                )
+                : roles;
 
         return res.status(200).json({
-
             success: true,
-
-            data: roles
-
+            data:
+                filteredRoles.map(
+                    buildSafeRole
+                )
         });
-
     } catch (error) {
-
         console.error(
             "Search roles error:",
             error
         );
 
-        next(error);
-
+        return next(error);
     }
-
 }
 
+async function getRolePermissions(
+    req,
+    res,
+    next
+) {
+    try {
+        ensureSchoolContext(req);
 
-/*
-|--------------------------------------------------------------------------
-| Export
-|--------------------------------------------------------------------------
-*/
+        const roleId =
+            getRequestedRoleId(req);
+
+        if (!roleId) {
+            const error = new Error(
+                "Role ID is required."
+            );
+
+            error.statusCode = 400;
+
+            return next(error);
+        }
+
+        const role =
+            await roleModel.findRoleById(
+                roleId
+            );
+
+        if (!role) {
+            const error = new Error(
+                "Role not found."
+            );
+
+            error.statusCode = 404;
+
+            return next(error);
+        }
+
+        const permissions =
+            await roleModel.getRolePermissions(
+                roleId
+            );
+
+        return res.status(200).json({
+            success: true,
+            data:
+                permissions.map(
+                    buildSafePermission
+                )
+        });
+    } catch (error) {
+        console.error(
+            "Get role permissions error:",
+            error
+        );
+
+        return next(error);
+    }
+}
+
+async function assignPermission(
+    req,
+    res,
+    next
+) {
+    try {
+        ensureSchoolContext(req);
+
+        const roleId =
+            getRequestedRoleId(req);
+
+        const permissionId =
+            req.body?.permissionId ||
+            req.body?.permission_id;
+
+        if (!roleId) {
+            const error = new Error(
+                "Role ID is required."
+            );
+
+            error.statusCode = 400;
+
+            return next(error);
+        }
+
+        if (!permissionId) {
+            const error = new Error(
+                "Permission ID is required."
+            );
+
+            error.statusCode = 400;
+
+            return next(error);
+        }
+
+        const role =
+            await roleModel.findRoleById(
+                roleId
+            );
+
+        if (!role) {
+            const error = new Error(
+                "Role not found."
+            );
+
+            error.statusCode = 404;
+
+            return next(error);
+        }
+
+        const assigned =
+            await roleModel.assignPermission(
+                roleId,
+                permissionId
+            );
+
+        return res.status(200).json({
+            success: true,
+            message:
+                assigned
+                    ? "Permission assigned successfully."
+                    : "Permission is already assigned to this role.",
+            data:
+                assigned || null
+        });
+    } catch (error) {
+        console.error(
+            "Assign permission error:",
+            error
+        );
+
+        return next(error);
+    }
+}
+
+async function removePermission(
+    req,
+    res,
+    next
+) {
+    try {
+        ensureSchoolContext(req);
+
+        const roleId =
+            getRequestedRoleId(req);
+
+        const permissionId =
+            req.body?.permissionId ||
+            req.body?.permission_id ||
+            req.params?.permissionId;
+
+        if (!roleId) {
+            const error = new Error(
+                "Role ID is required."
+            );
+
+            error.statusCode = 400;
+
+            return next(error);
+        }
+
+        if (!permissionId) {
+            const error = new Error(
+                "Permission ID is required."
+            );
+
+            error.statusCode = 400;
+
+            return next(error);
+        }
+
+        const role =
+            await roleModel.findRoleById(
+                roleId
+            );
+
+        if (!role) {
+            const error = new Error(
+                "Role not found."
+            );
+
+            error.statusCode = 404;
+
+            return next(error);
+        }
+
+        const removed =
+            await roleModel.removePermission(
+                roleId,
+                permissionId
+            );
+
+        if (!removed) {
+            const error = new Error(
+                "Permission assignment was not found."
+            );
+
+            error.statusCode = 404;
+
+            return next(error);
+        }
+
+        return res.status(200).json({
+            success: true,
+            message:
+                "Permission removed successfully.",
+            data: removed
+        });
+    } catch (error) {
+        console.error(
+            "Remove permission error:",
+            error
+        );
+
+        return next(error);
+    }
+}
+
+async function getRoleUsers(
+    req,
+    res,
+    next
+) {
+    try {
+        const schoolId =
+            ensureSchoolContext(req);
+
+        const roleId =
+            getRequestedRoleId(req);
+
+        if (!roleId) {
+            const error = new Error(
+                "Role ID is required."
+            );
+
+            error.statusCode = 400;
+
+            return next(error);
+        }
+
+        const role =
+            await roleModel.findRoleById(
+                roleId
+            );
+
+        if (!role) {
+            const error = new Error(
+                "Role not found."
+            );
+
+            error.statusCode = 404;
+
+            return next(error);
+        }
+
+        const users =
+            await roleModel.getRoleUsers(
+                roleId,
+                schoolId
+            );
+
+        return res.status(200).json({
+            success: true,
+            data:
+                users.map(
+                    buildSafeUser
+                )
+        });
+    } catch (error) {
+        console.error(
+            "Get role users error:",
+            error
+        );
+
+        return next(error);
+    }
+}
+
+async function getRoleSummary(
+    req,
+    res,
+    next
+) {
+    try {
+        ensureSchoolContext(req);
+
+        const summary =
+            await roleModel.getRoleSummary();
+
+        return res.status(200).json({
+            success: true,
+            data:
+                summary.map(
+                    buildSafeRole
+                )
+        });
+    } catch (error) {
+        console.error(
+            "Get role summary error:",
+            error
+        );
+
+        return next(error);
+    }
+}
+
+async function getUserRoles(
+    req,
+    res,
+    next
+) {
+    try {
+        const schoolId =
+            ensureSchoolContext(req);
+
+        const userId =
+            req.params?.userId ||
+            req.params?.id;
+
+        if (!userId) {
+            const error = new Error(
+                "User ID is required."
+            );
+
+            error.statusCode = 400;
+
+            return next(error);
+        }
+
+        const roles =
+            await roleModel.getUserRoles(
+                userId
+            );
+
+        const filteredRoles =
+            roles.filter(
+                function (role) {
+                    return (
+                        role.school_id ===
+                        undefined ||
+                        role.school_id ===
+                        null ||
+                        String(
+                            role.school_id
+                        ) ===
+                        String(
+                            schoolId
+                        )
+                    );
+                }
+            );
+
+        return res.status(200).json({
+            success: true,
+            data:
+                filteredRoles.map(
+                    buildSafeRole
+                )
+        });
+    } catch (error) {
+        console.error(
+            "Get user roles error:",
+            error
+        );
+
+        return next(error);
+    }
+}
 
 module.exports = {
-
     createRole,
-
     getRoles,
-
     getRoleById,
-
     updateRole,
-
     deleteRole,
-
-    searchRoles
-
+    searchRoles,
+    getRolePermissions,
+    assignPermission,
+    removePermission,
+    getRoleUsers,
+    getRoleSummary,
+    getUserRoles
 };

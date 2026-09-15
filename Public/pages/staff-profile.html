@@ -1,14 +1,15 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    ```
     <title>Staff Profile | School Management System</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
@@ -295,10 +296,13 @@
             }
         }
     </style>
+    ```
+
 </head>
 
 <body>
 
+    ```
     <div id="sidebarOverlay"></div>
 
     <aside id="sidebar" class="app-sidebar">
@@ -426,25 +430,27 @@
 
     </aside>
 
-
     <div class="main-wrapper">
 
         <header class="topbar">
 
             <div class="d-flex align-items-center gap-3">
+
                 <button id="sidebarToggle" class="btn btn-light d-lg-none" type="button">
                     <i class="bi bi-list fs-5"></i>
                 </button>
 
                 <div>
                     <h1 class="h5 mb-0 fw-bold">Staff Profile</h1>
+
                     <small class="text-muted">
                         View and manage staff information
                     </small>
                 </div>
+
             </div>
 
-            <div class="d-flex align-items-center gap-2">
+            <div>
                 <a href="staff.html" class="btn btn-outline-secondary btn-sm">
                     <i class="bi bi-arrow-left me-1"></i>
                     Back to Staff
@@ -453,14 +459,12 @@
 
         </header>
 
-
         <main class="page-content">
 
             <div id="errorMessage" class="alert alert-danger d-none">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i>
                 <span></span>
             </div>
-
 
             <div id="loading" class="text-center py-5">
 
@@ -471,7 +475,6 @@
                 </div>
 
             </div>
-
 
             <div id="profileContainer" class="d-none">
 
@@ -510,7 +513,6 @@
 
                             </div>
 
-
                             <div class="profile-actions d-flex gap-2 flex-wrap">
 
                                 <button class="btn btn-light" type="button" onclick="openEditModal()">
@@ -537,7 +539,6 @@
                     </div>
 
                 </section>
-
 
                 <div class="row g-4">
 
@@ -586,14 +587,14 @@
                                         <div id="phone" class="detail-value empty-value">—</div>
                                     </div>
 
-                                    <div class="col-sm-6">
+                                    <div class="col-12">
                                         <div class="detail-label">Email</div>
                                         <div id="email" class="detail-value empty-value">—</div>
                                     </div>
 
-                                    <div class="col-sm-6">
-                                        <div class="detail-label">Nationality</div>
-                                        <div id="nationality" class="detail-value empty-value">—</div>
+                                    <div class="col-12">
+                                        <div class="detail-label">Address</div>
+                                        <div id="address" class="detail-value empty-value">—</div>
                                     </div>
 
                                 </div>
@@ -603,7 +604,6 @@
                         </section>
 
                     </div>
-
 
                     <div class="col-lg-6">
 
@@ -663,90 +663,6 @@
 
                     </div>
 
-
-                    <div class="col-lg-6">
-
-                        <section class="card info-card">
-
-                            <div class="card-header">
-                                <h3 class="h6 mb-0 fw-bold">
-                                    <i class="bi bi-geo-alt-fill text-primary me-2"></i>
-                                    Address Information
-                                </h3>
-                            </div>
-
-                            <div class="card-body">
-
-                                <div class="row g-4">
-
-                                    <div class="col-12">
-                                        <div class="detail-label">Address</div>
-                                        <div id="address" class="detail-value empty-value">—</div>
-                                    </div>
-
-                                    <div class="col-sm-4">
-                                        <div class="detail-label">City</div>
-                                        <div id="city" class="detail-value empty-value">—</div>
-                                    </div>
-
-                                    <div class="col-sm-4">
-                                        <div class="detail-label">State</div>
-                                        <div id="state" class="detail-value empty-value">—</div>
-                                    </div>
-
-                                    <div class="col-sm-4">
-                                        <div class="detail-label">Country</div>
-                                        <div id="country" class="detail-value empty-value">—</div>
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </section>
-
-                    </div>
-
-
-                    <div class="col-lg-6">
-
-                        <section class="card info-card">
-
-                            <div class="card-header">
-                                <h3 class="h6 mb-0 fw-bold">
-                                    <i class="bi bi-telephone-forward-fill text-primary me-2"></i>
-                                    Emergency Contact
-                                </h3>
-                            </div>
-
-                            <div class="card-body">
-
-                                <div class="row g-4">
-
-                                    <div class="col-sm-6">
-                                        <div class="detail-label">Name</div>
-                                        <div id="emergencyName" class="detail-value empty-value">—</div>
-                                    </div>
-
-                                    <div class="col-sm-6">
-                                        <div class="detail-label">Relationship</div>
-                                        <div id="emergencyRelationship" class="detail-value empty-value">—</div>
-                                    </div>
-
-                                    <div class="col-sm-6">
-                                        <div class="detail-label">Phone</div>
-                                        <div id="emergencyPhone" class="detail-value empty-value">—</div>
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </section>
-
-                    </div>
-
-
                     <div class="col-12">
 
                         <section class="card info-card">
@@ -788,10 +704,9 @@
 
     </div>
 
-
     <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
 
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
 
             <div class="modal-content">
 
@@ -811,17 +726,27 @@
 
                 </div>
 
-
                 <form id="editForm">
 
                     <div class="modal-body">
 
+                        <div id="editError" class="alert alert-danger d-none"></div>
+
                         <div class="row g-3">
+
+                            <div class="col-md-4">
+                                <label for="editStaffNumber" class="form-label">
+                                    Staff Number
+                                </label>
+
+                                <input type="text" id="editStaffNumber" class="form-control" disabled>
+                            </div>
 
                             <div class="col-md-4">
                                 <label for="editFirstName" class="form-label">
                                     First Name
                                 </label>
+
                                 <input type="text" id="editFirstName" class="form-control" required>
                             </div>
 
@@ -829,6 +754,7 @@
                                 <label for="editLastName" class="form-label">
                                     Last Name
                                 </label>
+
                                 <input type="text" id="editLastName" class="form-control" required>
                             </div>
 
@@ -836,6 +762,7 @@
                                 <label for="editMiddleName" class="form-label">
                                     Middle Name
                                 </label>
+
                                 <input type="text" id="editMiddleName" class="form-control">
                             </div>
 
@@ -843,6 +770,7 @@
                                 <label for="editGender" class="form-label">
                                     Gender
                                 </label>
+
                                 <select id="editGender" class="form-select">
                                     <option value="">Select Gender</option>
                                     <option value="Male">Male</option>
@@ -854,13 +782,15 @@
                                 <label for="editDateOfBirth" class="form-label">
                                     Date of Birth
                                 </label>
+
                                 <input type="date" id="editDateOfBirth" class="form-control">
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <label for="editPhone" class="form-label">
                                     Phone
                                 </label>
+
                                 <input type="text" id="editPhone" class="form-control">
                             </div>
 
@@ -868,97 +798,53 @@
                                 <label for="editEmail" class="form-label">
                                     Email
                                 </label>
+
                                 <input type="email" id="editEmail" class="form-control">
-                            </div>
-
-                            <div class="col-md-6">
-                                <label for="editPosition" class="form-label">
-                                    Position
-                                </label>
-                                <input type="text" id="editPosition" class="form-control">
-                            </div>
-
-                            <div class="col-md-4">
-                                <label for="editEmploymentType" class="form-label">
-                                    Employment Type
-                                </label>
-                                <input type="text" id="editEmploymentType" class="form-control">
-                            </div>
-
-                            <div class="col-md-4">
-                                <label for="editDateEmployed" class="form-label">
-                                    Date Employed
-                                </label>
-                                <input type="date" id="editDateEmployed" class="form-control">
-                            </div>
-
-                            <div class="col-md-4">
-                                <label for="editQualification" class="form-label">
-                                    Qualification
-                                </label>
-                                <input type="text" id="editQualification" class="form-control">
-                            </div>
-
-                            <div class="col-md-6">
-                                <label for="editNationality" class="form-label">
-                                    Nationality
-                                </label>
-                                <input type="text" id="editNationality" class="form-control">
                             </div>
 
                             <div class="col-12">
                                 <label for="editAddress" class="form-label">
                                     Address
                                 </label>
+
                                 <textarea id="editAddress" class="form-control" rows="3"></textarea>
                             </div>
 
-                            <div class="col-md-4">
-                                <label for="editCity" class="form-label">
-                                    City
+                            <div class="col-md-6">
+                                <label for="editPosition" class="form-label">
+                                    Position
                                 </label>
-                                <input type="text" id="editCity" class="form-control">
+
+                                <input type="text" id="editPosition" class="form-control">
                             </div>
 
-                            <div class="col-md-4">
-                                <label for="editState" class="form-label">
-                                    State
+                            <div class="col-md-6">
+                                <label for="editEmploymentType" class="form-label">
+                                    Employment Type
                                 </label>
-                                <input type="text" id="editState" class="form-control">
+
+                                <input type="text" id="editEmploymentType" class="form-control">
                             </div>
 
-                            <div class="col-md-4">
-                                <label for="editCountry" class="form-label">
-                                    Country
+                            <div class="col-md-6">
+                                <label for="editDateEmployed" class="form-label">
+                                    Date Employed
                                 </label>
-                                <input type="text" id="editCountry" class="form-control">
+
+                                <input type="date" id="editDateEmployed" class="form-control">
                             </div>
 
-                            <div class="col-md-4">
-                                <label for="editEmergencyName" class="form-label">
-                                    Emergency Contact Name
+                            <div class="col-md-6">
+                                <label for="editQualification" class="form-label">
+                                    Qualification
                                 </label>
-                                <input type="text" id="editEmergencyName" class="form-control">
-                            </div>
 
-                            <div class="col-md-4">
-                                <label for="editEmergencyRelationship" class="form-label">
-                                    Emergency Relationship
-                                </label>
-                                <input type="text" id="editEmergencyRelationship" class="form-control">
-                            </div>
-
-                            <div class="col-md-4">
-                                <label for="editEmergencyPhone" class="form-label">
-                                    Emergency Phone
-                                </label>
-                                <input type="text" id="editEmergencyPhone" class="form-control">
+                                <input type="text" id="editQualification" class="form-control">
                             </div>
 
                         </div>
 
                     </div>
-
 
                     <div class="modal-footer">
 
@@ -966,7 +852,7 @@
                             Cancel
                         </button>
 
-                        <button type="submit" class="btn btn-primary">
+                        <button id="saveChangesButton" type="submit" class="btn btn-primary">
                             <i class="bi bi-check2-circle me-1"></i>
                             Save Changes
                         </button>
@@ -980,7 +866,6 @@
         </div>
 
     </div>
-
 
     <div id="toast" class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-4"
         role="alert" aria-live="assertive" aria-atomic="true">
@@ -996,10 +881,11 @@
 
     </div>
 
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+        "use strict";
+
         const API_BASE = "/api";
 
         let staffId = null;
@@ -1040,11 +926,28 @@
             return headers;
         }
 
+        function getField(object, ...names) {
+            if (!object) {
+                return "";
+            }
+
+            for (const name of names) {
+                if (
+                    object[name] !== undefined &&
+                    object[name] !== null
+                ) {
+                    return object[name];
+                }
+            }
+
+            return "";
+        }
+
         function displayValue(value) {
             if (
                 value === null ||
                 value === undefined ||
-                value === ""
+                String(value).trim() === ""
             ) {
                 return "—";
             }
@@ -1063,14 +966,11 @@
                 return displayValue(value);
             }
 
-            return date.toLocaleDateString(
-                "en-NG",
-                {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric"
-                }
-            );
+            return date.toLocaleDateString("en-NG", {
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+            });
         }
 
         function formatDateInput(value) {
@@ -1082,25 +982,28 @@
         }
 
         function getName(staff) {
-            const first =
-                staff.first_name ||
-                staff.firstName ||
-                "";
+            const firstName = getField(
+                staff,
+                "first_name",
+                "firstName"
+            );
 
-            const middle =
-                staff.middle_name ||
-                staff.middleName ||
-                "";
+            const middleName = getField(
+                staff,
+                "middle_name",
+                "middleName"
+            );
 
-            const last =
-                staff.last_name ||
-                staff.lastName ||
-                "";
+            const lastName = getField(
+                staff,
+                "last_name",
+                "lastName"
+            );
 
             return [
-                first,
-                middle,
-                last
+                firstName,
+                middleName,
+                lastName
             ]
                 .filter(Boolean)
                 .join(" ")
@@ -1112,11 +1015,10 @@
                 return "ST";
             }
 
-            const parts =
-                name
-                    .trim()
-                    .split(/\s+/)
-                    .filter(Boolean);
+            const parts = name
+                .trim()
+                .split(/\s+/)
+                .filter(Boolean);
 
             if (parts.length === 1) {
                 return parts[0]
@@ -1130,11 +1032,20 @@
             ).toUpperCase();
         }
 
+        function formatStatus(status) {
+            if (!status) {
+                return "Unknown";
+            }
+
+            return String(status)
+                .replace(/_/g, " ")
+                .replace(/\b\w/g, letter => letter.toUpperCase());
+        }
+
         function getStatusClass(status) {
-            const normalized =
-                String(status || "")
-                    .toLowerCase()
-                    .replace(/\s+/g, "_");
+            const normalized = String(status || "")
+                .toLowerCase()
+                .replace(/\s+/g, "_");
 
             if (normalized === "inactive") {
                 return "status-inactive";
@@ -1150,18 +1061,6 @@
             return "status-active";
         }
 
-        function formatStatus(status) {
-            if (!status) {
-                return "Unknown";
-            }
-
-            return String(status)
-                .replace(/_/g, " ")
-                .replace(/\b\w/g, letter =>
-                    letter.toUpperCase()
-                );
-        }
-
         function setText(id, value) {
             const element = document.getElementById(id);
 
@@ -1169,12 +1068,7 @@
                 return;
             }
 
-            const finalValue =
-                value === null ||
-                    value === undefined ||
-                    value === ""
-                    ? "—"
-                    : value;
+            const finalValue = displayValue(value);
 
             element.textContent = finalValue;
 
@@ -1185,8 +1079,11 @@
         }
 
         function showError(message) {
-            const element =
-                document.getElementById("errorMessage");
+            const element = document.getElementById("errorMessage");
+
+            if (!element) {
+                return;
+            }
 
             element.querySelector("span").textContent =
                 message || "An error occurred.";
@@ -1195,17 +1092,40 @@
         }
 
         function hideError() {
-            document
-                .getElementById("errorMessage")
-                .classList.add("d-none");
+            const element = document.getElementById("errorMessage");
+
+            if (element) {
+                element.classList.add("d-none");
+            }
         }
 
-        function showToast(
-            message,
-            type = "success"
-        ) {
-            const toastElement =
-                document.getElementById("toast");
+        function showEditError(message) {
+            const element = document.getElementById("editError");
+
+            if (!element) {
+                return;
+            }
+
+            element.textContent =
+                message || "Unable to save staff information.";
+
+            element.classList.remove("d-none");
+        }
+
+        function hideEditError() {
+            const element = document.getElementById("editError");
+
+            if (element) {
+                element.classList.add("d-none");
+            }
+        }
+
+        function showToast(message, type = "success") {
+            const toastElement = document.getElementById("toast");
+
+            if (!toastElement) {
+                return;
+            }
 
             toastElement.classList.remove(
                 "text-bg-success",
@@ -1218,9 +1138,8 @@
                     : "text-bg-success"
             );
 
-            toastElement.querySelector(
-                ".toast-body"
-            ).textContent = message;
+            toastElement.querySelector(".toast-body").textContent =
+                message;
 
             const toast =
                 bootstrap.Toast.getOrCreateInstance(
@@ -1233,25 +1152,97 @@
             toast.show();
         }
 
-        function getField(staff, ...names) {
-            for (const name of names) {
-                if (
-                    staff[name] !== undefined &&
-                    staff[name] !== null
-                ) {
-                    return staff[name];
-                }
+        function getResponseData(result) {
+            if (!result) {
+                return null;
             }
 
-            return "";
+            if (result.data !== undefined) {
+                return result.data;
+            }
+
+            if (result.staff !== undefined) {
+                return result.staff;
+            }
+
+            return result;
+        }
+
+        function renderPhoto(staff, fullName) {
+            const photo = getField(
+                staff,
+                "photo_url",
+                "photoUrl",
+                "profile_photo",
+                "profilePhoto",
+                "photo"
+            );
+
+            const photoContainer =
+                document.getElementById("profilePhoto");
+
+            if (!photoContainer) {
+                return;
+            }
+
+            if (!photo) {
+                photoContainer.innerHTML =
+                    `<span id="initials">${getInitials(fullName)}</span>`;
+
+                return;
+            }
+
+            const safePhoto = String(photo)
+                .replace(/"/g, "&quot;");
+
+            const safeName = String(fullName)
+                .replace(/"/g, "&quot;");
+
+            photoContainer.innerHTML =
+                `<img src="${safePhoto}" alt="${safeName}">`;
+        }
+
+        function renderStatus(status) {
+            const finalStatus = status || "active";
+
+            const badge =
+                document.getElementById("statusBadge");
+
+            const activateButton =
+                document.getElementById("activateButton");
+
+            const deactivateButton =
+                document.getElementById("deactivateButton");
+
+            const normalizedStatus =
+                String(finalStatus)
+                    .toLowerCase()
+                    .replace(/\s+/g, "_");
+
+            badge.className =
+                `status-badge ${getStatusClass(finalStatus)}`;
+
+            badge.innerHTML =
+                normalizedStatus === "active"
+                    ? `<i class="bi bi-check-circle-fill"></i> Active`
+                    : `<i class="bi bi-info-circle-fill"></i> ${formatStatus(finalStatus)}`;
+
+            activateButton.style.display =
+                normalizedStatus === "active"
+                    ? "none"
+                    : "inline-block";
+
+            deactivateButton.style.display =
+                normalizedStatus === "inactive"
+                    ? "none"
+                    : "inline-block";
         }
 
         function renderProfile(staff) {
             currentStaff = staff;
 
             const fullName =
-                getName(staff) ||
-                "Staff Member";
+                getName(staff) || "Staff Member";
 
             const staffNumber =
                 getField(
@@ -1263,9 +1254,15 @@
             const position =
                 getField(
                     staff,
-                    "position",
-                    "job_title",
-                    "jobTitle"
+                    "position"
+                );
+
+            const department =
+                getField(
+                    staff,
+                    "department_name",
+                    "departmentName",
+                    "department"
                 );
 
             const status =
@@ -1274,35 +1271,20 @@
                     "status"
                 ) || "active";
 
-            const department =
-                getField(
-                    staff,
-                    "department_name",
-                    "departmentName"
-                );
-
-            const photo =
-                getField(
-                    staff,
-                    "photo_url",
-                    "photoUrl",
-                    "profile_photo",
-                    "profilePhoto",
-                    "photo"
-                );
-
             setText("staffName", fullName);
 
             setText(
                 "staffNumber",
                 staffNumber
-                    ? `Staff No: ${staffNumber}`
+                    ? `Staff Number: ${staffNumber}`
                     : "Staff Number: —"
             );
 
             setText(
                 "staffPosition",
-                position || "Position: —"
+                position
+                    ? `Position: ${position}`
+                    : "Position: —"
             );
 
             setText(
@@ -1343,8 +1325,7 @@
                     getField(
                         staff,
                         "date_of_birth",
-                        "dateOfBirth",
-                        "dob"
+                        "dateOfBirth"
                     )
                 )
             );
@@ -1353,20 +1334,24 @@
                 "phone",
                 getField(
                     staff,
-                    "phone",
-                    "phone_number",
-                    "phoneNumber"
+                    "phone"
                 )
             );
 
             setText(
                 "email",
-                getField(staff, "email")
+                getField(
+                    staff,
+                    "email"
+                )
             );
 
             setText(
-                "nationality",
-                getField(staff, "nationality")
+                "address",
+                getField(
+                    staff,
+                    "address"
+                )
             );
 
             setText(
@@ -1398,10 +1383,10 @@
                 formatDate(
                     getField(
                         staff,
-                        "date_employed",
-                        "dateEmployed",
                         "employment_date",
-                        "employmentDate"
+                        "employmentDate",
+                        "date_employed",
+                        "dateEmployed"
                     )
                 )
             );
@@ -1410,67 +1395,13 @@
                 "qualification",
                 getField(
                     staff,
-                    "qualification",
-                    "highest_qualification",
-                    "highestQualification"
+                    "qualification"
                 )
             );
 
             setText(
                 "employmentStatus",
                 formatStatus(status)
-            );
-
-            setText(
-                "address",
-                getField(
-                    staff,
-                    "address",
-                    "home_address",
-                    "homeAddress"
-                )
-            );
-
-            setText(
-                "city",
-                getField(staff, "city")
-            );
-
-            setText(
-                "state",
-                getField(staff, "state")
-            );
-
-            setText(
-                "country",
-                getField(staff, "country")
-            );
-
-            setText(
-                "emergencyName",
-                getField(
-                    staff,
-                    "emergency_contact_name",
-                    "emergencyContactName"
-                )
-            );
-
-            setText(
-                "emergencyRelationship",
-                getField(
-                    staff,
-                    "emergency_contact_relationship",
-                    "emergencyContactRelationship"
-                )
-            );
-
-            setText(
-                "emergencyPhone",
-                getField(
-                    staff,
-                    "emergency_contact_phone",
-                    "emergencyContactPhone"
-                )
             );
 
             setText(
@@ -1495,55 +1426,8 @@
                 )
             );
 
-            document.getElementById(
-                "initials"
-            ).textContent =
-                getInitials(fullName);
-
-            if (photo) {
-                const profilePhoto =
-                    document.getElementById(
-                        "profilePhoto"
-                    );
-
-                profilePhoto.innerHTML =
-                    `<img src="${String(photo).replace(/"/g, "&quot;")}" alt="${String(fullName).replace(/"/g, "&quot;")}">`;
-            }
-
-            const statusBadge =
-                document.getElementById(
-                    "statusBadge"
-                );
-
-            statusBadge.textContent =
-                formatStatus(status);
-
-            statusBadge.className =
-                `status-badge ${getStatusClass(status)}`;
-
-            const activateButton =
-                document.getElementById(
-                    "activateButton"
-                );
-
-            const deactivateButton =
-                document.getElementById(
-                    "deactivateButton"
-                );
-
-            const normalizedStatus =
-                String(status)
-                    .toLowerCase();
-
-            activateButton.style.display =
-                normalizedStatus === "active"
-                    ? "none"
-                    : "inline-block";
-
-            deactivateButton.style.display =
-                normalizedStatus === "inactive"
-                    ? "none"
-                    : "inline-block";
+            renderPhoto(staff, fullName);
+            renderStatus(status);
 
             document
                 .getElementById("loading")
@@ -1572,25 +1456,21 @@
             }
 
             try {
-                const response =
-                    await fetch(
-                        `${API_BASE}/staff/${encodeURIComponent(staffId)}`,
-                        {
-                            method: "GET",
-                            headers: authHeaders()
-                        }
-                    );
+                const response = await fetch(
+                    `${API_BASE}/staff/${encodeURIComponent(staffId)}`,
+                    {
+                        method: "GET",
+                        headers: authHeaders()
+                    }
+                );
 
                 if (response.status === 401) {
-                    showError(
+                    throw new Error(
                         "Your session has expired. Please log in again."
                     );
-
-                    return;
                 }
 
-                const result =
-                    await response.json();
+                const result = await response.json();
 
                 if (!response.ok) {
                     throw new Error(
@@ -1599,16 +1479,19 @@
                     );
                 }
 
-                const staff =
-                    result.data ||
-                    result.staff ||
-                    result;
+                const staff = getResponseData(result);
+
+                if (!staff || typeof staff !== "object") {
+                    throw new Error(
+                        "The server returned an invalid staff record."
+                    );
+                }
 
                 renderProfile(staff);
 
             } catch (error) {
                 console.error(
-                    "Load staff error:",
+                    "Load staff profile error:",
                     error
                 );
 
@@ -1624,180 +1507,95 @@
         }
 
         function fillEditForm(staff) {
-            document.getElementById(
-                "editFirstName"
-            ).value =
+            document.getElementById("editStaffNumber").value =
+                getField(
+                    staff,
+                    "staff_number",
+                    "staffNumber"
+                );
+
+            document.getElementById("editFirstName").value =
                 getField(
                     staff,
                     "first_name",
                     "firstName"
                 );
 
-            document.getElementById(
-                "editLastName"
-            ).value =
+            document.getElementById("editLastName").value =
                 getField(
                     staff,
                     "last_name",
                     "lastName"
                 );
 
-            document.getElementById(
-                "editMiddleName"
-            ).value =
+            document.getElementById("editMiddleName").value =
                 getField(
                     staff,
                     "middle_name",
                     "middleName"
                 );
 
-            document.getElementById(
-                "editGender"
-            ).value =
+            document.getElementById("editGender").value =
                 getField(
                     staff,
                     "gender"
                 );
 
-            document.getElementById(
-                "editDateOfBirth"
-            ).value =
+            document.getElementById("editDateOfBirth").value =
                 formatDateInput(
                     getField(
                         staff,
                         "date_of_birth",
-                        "dateOfBirth",
-                        "dob"
+                        "dateOfBirth"
                     )
                 );
 
-            document.getElementById(
-                "editPhone"
-            ).value =
+            document.getElementById("editPhone").value =
                 getField(
                     staff,
-                    "phone",
-                    "phone_number",
-                    "phoneNumber"
+                    "phone"
                 );
 
-            document.getElementById(
-                "editEmail"
-            ).value =
+            document.getElementById("editEmail").value =
                 getField(
                     staff,
                     "email"
                 );
 
-            document.getElementById(
-                "editPosition"
-            ).value =
+            document.getElementById("editAddress").value =
                 getField(
                     staff,
-                    "position",
-                    "job_title",
-                    "jobTitle"
+                    "address"
                 );
 
-            document.getElementById(
-                "editEmploymentType"
-            ).value =
+            document.getElementById("editPosition").value =
+                getField(
+                    staff,
+                    "position"
+                );
+
+            document.getElementById("editEmploymentType").value =
                 getField(
                     staff,
                     "employment_type",
                     "employmentType"
                 );
 
-            document.getElementById(
-                "editDateEmployed"
-            ).value =
+            document.getElementById("editDateEmployed").value =
                 formatDateInput(
                     getField(
                         staff,
-                        "date_employed",
-                        "dateEmployed",
                         "employment_date",
-                        "employmentDate"
+                        "employmentDate",
+                        "date_employed",
+                        "dateEmployed"
                     )
                 );
 
-            document.getElementById(
-                "editQualification"
-            ).value =
+            document.getElementById("editQualification").value =
                 getField(
                     staff,
-                    "qualification",
-                    "highest_qualification",
-                    "highestQualification"
-                );
-
-            document.getElementById(
-                "editNationality"
-            ).value =
-                getField(
-                    staff,
-                    "nationality"
-                );
-
-            document.getElementById(
-                "editAddress"
-            ).value =
-                getField(
-                    staff,
-                    "address",
-                    "home_address",
-                    "homeAddress"
-                );
-
-            document.getElementById(
-                "editCity"
-            ).value =
-                getField(
-                    staff,
-                    "city"
-                );
-
-            document.getElementById(
-                "editState"
-            ).value =
-                getField(
-                    staff,
-                    "state"
-                );
-
-            document.getElementById(
-                "editCountry"
-            ).value =
-                getField(
-                    staff,
-                    "country"
-                );
-
-            document.getElementById(
-                "editEmergencyName"
-            ).value =
-                getField(
-                    staff,
-                    "emergency_contact_name",
-                    "emergencyContactName"
-                );
-
-            document.getElementById(
-                "editEmergencyRelationship"
-            ).value =
-                getField(
-                    staff,
-                    "emergency_contact_relationship",
-                    "emergencyContactRelationship"
-                );
-
-            document.getElementById(
-                "editEmergencyPhone"
-            ).value =
-                getField(
-                    staff,
-                    "emergency_contact_phone",
-                    "emergencyContactPhone"
+                    "qualification"
                 );
         }
 
@@ -1810,6 +1608,8 @@
 
                 return;
             }
+
+            hideEditError();
 
             fillEditForm(currentStaff);
 
@@ -1827,123 +1627,145 @@
             }
         }
 
+        function setSavingState(isSaving) {
+            const button =
+                document.getElementById(
+                    "saveChangesButton"
+                );
+
+            if (!button) {
+                return;
+            }
+
+            button.disabled = isSaving;
+
+            button.innerHTML = isSaving
+                ? `<span class="spinner-border spinner-border-sm me-1" role="status"></span> Saving...`
+                : `<i class="bi bi-check2-circle me-1"></i> Save Changes`;
+        }
+
         async function updateStaff(event) {
             event.preventDefault();
 
             if (!staffId) {
+                showEditError(
+                    "No staff ID was provided."
+                );
+
                 return;
             }
 
+            hideEditError();
+            setSavingState(true);
+
             const payload = {
                 firstName:
-                    document.getElementById(
-                        "editFirstName"
-                    ).value.trim(),
+                    document
+                        .getElementById("editFirstName")
+                        .value
+                        .trim(),
 
                 lastName:
-                    document.getElementById(
-                        "editLastName"
-                    ).value.trim(),
+                    document
+                        .getElementById("editLastName")
+                        .value
+                        .trim(),
 
                 middleName:
-                    document.getElementById(
-                        "editMiddleName"
-                    ).value.trim(),
+                    document
+                        .getElementById("editMiddleName")
+                        .value
+                        .trim(),
 
                 gender:
-                    document.getElementById(
-                        "editGender"
-                    ).value,
+                    document
+                        .getElementById("editGender")
+                        .value,
 
                 dateOfBirth:
-                    document.getElementById(
-                        "editDateOfBirth"
-                    ).value || null,
+                    document
+                        .getElementById("editDateOfBirth")
+                        .value || null,
 
                 phone:
-                    document.getElementById(
-                        "editPhone"
-                    ).value.trim(),
+                    document
+                        .getElementById("editPhone")
+                        .value
+                        .trim(),
 
                 email:
-                    document.getElementById(
-                        "editEmail"
-                    ).value.trim(),
-
-                position:
-                    document.getElementById(
-                        "editPosition"
-                    ).value.trim(),
-
-                employmentType:
-                    document.getElementById(
-                        "editEmploymentType"
-                    ).value.trim(),
-
-                dateEmployed:
-                    document.getElementById(
-                        "editDateEmployed"
-                    ).value || null,
-
-                qualification:
-                    document.getElementById(
-                        "editQualification"
-                    ).value.trim(),
-
-                nationality:
-                    document.getElementById(
-                        "editNationality"
-                    ).value.trim(),
+                    document
+                        .getElementById("editEmail")
+                        .value
+                        .trim(),
 
                 address:
-                    document.getElementById(
-                        "editAddress"
-                    ).value.trim(),
+                    document
+                        .getElementById("editAddress")
+                        .value
+                        .trim(),
 
-                city:
-                    document.getElementById(
-                        "editCity"
-                    ).value.trim(),
+                position:
+                    document
+                        .getElementById("editPosition")
+                        .value
+                        .trim(),
 
-                state:
-                    document.getElementById(
-                        "editState"
-                    ).value.trim(),
+                employmentType:
+                    document
+                        .getElementById("editEmploymentType")
+                        .value
+                        .trim(),
 
-                country:
-                    document.getElementById(
-                        "editCountry"
-                    ).value.trim(),
+                employmentDate:
+                    document
+                        .getElementById("editDateEmployed")
+                        .value || null,
 
-                emergencyContactName:
-                    document.getElementById(
-                        "editEmergencyName"
-                    ).value.trim(),
-
-                emergencyContactRelationship:
-                    document.getElementById(
-                        "editEmergencyRelationship"
-                    ).value.trim(),
-
-                emergencyContactPhone:
-                    document.getElementById(
-                        "editEmergencyPhone"
-                    ).value.trim()
+                qualification:
+                    document
+                        .getElementById("editQualification")
+                        .value
+                        .trim()
             };
 
-            try {
-                const response =
-                    await fetch(
-                        `${API_BASE}/staff/${encodeURIComponent(staffId)}`,
-                        {
-                            method: "PUT",
-                            headers: authHeaders(),
-                            body: JSON.stringify(payload)
-                        }
-                    );
+            if (!payload.firstName) {
+                showEditError(
+                    "First name is required."
+                );
 
-                const result =
-                    await response.json();
+                setSavingState(false);
+
+                return;
+            }
+
+            if (!payload.lastName) {
+                showEditError(
+                    "Last name is required."
+                );
+
+                setSavingState(false);
+
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `${API_BASE}/staff/${encodeURIComponent(staffId)}`,
+                    {
+                        method: "PUT",
+                        headers: authHeaders(),
+                        body: JSON.stringify(payload)
+                    }
+                );
+
+                if (response.status === 401) {
+                    throw new Error(
+                        "Your session has expired. Please log in again."
+                    );
+                }
+
+                const result = await response.json();
 
                 if (!response.ok) {
                     throw new Error(
@@ -1953,11 +1775,16 @@
                 }
 
                 const updatedStaff =
-                    result.data ||
-                    result.staff ||
-                    result;
+                    getResponseData(result);
 
-                renderProfile(updatedStaff);
+                if (
+                    updatedStaff &&
+                    typeof updatedStaff === "object"
+                ) {
+                    renderProfile(updatedStaff);
+                } else {
+                    await loadStaff();
+                }
 
                 closeEditModal();
 
@@ -1967,15 +1794,17 @@
 
             } catch (error) {
                 console.error(
-                    "Update staff error:",
+                    "Update staff profile error:",
                     error
                 );
 
-                showToast(
+                showEditError(
                     error.message ||
-                    "Unable to update staff profile.",
-                    "error"
+                    "Unable to update staff profile."
                 );
+
+            } finally {
+                setSavingState(false);
             }
         }
 
@@ -1989,30 +1818,33 @@
                     ? "activate"
                     : "deactivate";
 
-            const confirmed =
-                window.confirm(
-                    `Are you sure you want to ${action} this staff member?`
-                );
+            const confirmed = window.confirm(
+                `Are you sure you want to ${action} this staff member?`
+            );
 
             if (!confirmed) {
                 return;
             }
 
             try {
-                const response =
-                    await fetch(
-                        `${API_BASE}/staff/${encodeURIComponent(staffId)}`,
-                        {
-                            method: "PUT",
-                            headers: authHeaders(),
-                            body: JSON.stringify({
-                                status
-                            })
-                        }
-                    );
+                const response = await fetch(
+                    `${API_BASE}/staff/${encodeURIComponent(staffId)}`,
+                    {
+                        method: "PUT",
+                        headers: authHeaders(),
+                        body: JSON.stringify({
+                            status
+                        })
+                    }
+                );
 
-                const result =
-                    await response.json();
+                if (response.status === 401) {
+                    throw new Error(
+                        "Your session has expired. Please log in again."
+                    );
+                }
+
+                const result = await response.json();
 
                 if (!response.ok) {
                     throw new Error(
@@ -2022,10 +1854,12 @@
                 }
 
                 const updatedStaff =
-                    result.data ||
-                    result.staff;
+                    getResponseData(result);
 
-                if (updatedStaff) {
+                if (
+                    updatedStaff &&
+                    typeof updatedStaff === "object"
+                ) {
                     renderProfile(updatedStaff);
                 } else {
                     await loadStaff();
@@ -2049,52 +1883,50 @@
             }
         }
 
-        function goBack() {
-            window.location.href = "staff.html";
+        function initialiseSidebar() {
+            const sidebar =
+                document.getElementById("sidebar");
+
+            const overlay =
+                document.getElementById("sidebarOverlay");
+
+            const toggle =
+                document.getElementById("sidebarToggle");
+
+            toggle.addEventListener(
+                "click",
+                function () {
+                    sidebar.classList.toggle("show");
+                    overlay.classList.toggle("show");
+                }
+            );
+
+            overlay.addEventListener(
+                "click",
+                function () {
+                    sidebar.classList.remove("show");
+                    overlay.classList.remove("show");
+                }
+            );
         }
-
-        document
-            .getElementById("editForm")
-            .addEventListener(
-                "submit",
-                updateStaff
-            );
-
-        document
-            .getElementById("sidebarToggle")
-            .addEventListener(
-                "click",
-                function () {
-                    document
-                        .getElementById("sidebar")
-                        .classList.toggle("show");
-
-                    document
-                        .getElementById("sidebarOverlay")
-                        .classList.toggle("show");
-                }
-            );
-
-        document
-            .getElementById("sidebarOverlay")
-            .addEventListener(
-                "click",
-                function () {
-                    document
-                        .getElementById("sidebar")
-                        .classList.remove("show");
-
-                    this.classList.remove("show");
-                }
-            );
 
         document.addEventListener(
             "DOMContentLoaded",
             function () {
+                initialiseSidebar();
+
+                document
+                    .getElementById("editForm")
+                    .addEventListener(
+                        "submit",
+                        updateStaff
+                    );
+
                 loadStaff();
             }
         );
     </script>
+    ```
 
 </body>
 

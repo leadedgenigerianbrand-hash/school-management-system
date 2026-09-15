@@ -1,580 +1,1196 @@
 "use strict";
 
 (function () {
-    let roles = [];
+let roles = [];
+let selectedRoleId = null;
+let availablePermissions = [];
+let eventsInitialized = false;
 
-    function getToken() {
-        return (
-            localStorage.getItem("school_management_token") ||
-            sessionStorage.getItem("school_management_token") ||
-            localStorage.getItem("token") ||
-            sessionStorage.getItem("token") ||
-            localStorage.getItem("accessToken") ||
-            sessionStorage.getItem("accessToken") ||
-            ""
-        );
+```
+function getElements() {
+    return {
+        tableBody:
+            document.getElementById("rolesTableBody") ||
+            document.querySelector("#rolesTable tbody"),
+
+        searchInput:
+            document.getElementById("searchInput"),
+
+        message:
+            document.getElementById("message"),
+
+        roleCount:
+            document.getElementById("roleCount"),
+
+        refreshButton:
+            document.getElementById("refreshRolesButton"),
+
+        createButton:
+            document.getElementById("openCreateRoleButton"),
+
+        roleModal:
+            document.getElementById("roleModal"),
+
+        roleForm:
+            document.getElementById("roleForm"),
+
+        roleId:
+            document.getElementById("roleId"),
+
+        roleName:
+            document.getElementById("roleName"),
+
+        roleDescription:
+            document.getElementById("roleDescription"),
+
+        modalTitle:
+            document.getElementById("modalTitle"),
+
+        saveRoleButton:
+            document.getElementById("saveRoleButton"),
+
+        cancelRoleButton:
+            document.getElementById("cancelRoleButton"),
+
+        permissionsModal:
+            document.getElementById("permissionsModal"),
+
+        permissionsTitle:
+            document.getElementById("permissionsTitle"),
+
+        permissionsList:
+            document.getElementById("permissionsList"),
+
+        saveRolePermissionsButton:
+            document.getElementById(
+                "saveRolePermissionsButton"
+            ),
+
+        cancelPermissionsButton:
+            document.getElementById(
+                "cancelPermissionsButton"
+            )
+    };
+}
+
+function showMessage(
+    text,
+    type = "success"
+) {
+    const { message } = getElements();
+
+    if (!message) {
+        return;
     }
 
-    async function request(endpoint, options = {}) {
-        if (typeof window.apiRequest === "function") {
-            return window.apiRequest(endpoint, options);
-        }
+    message.textContent = text;
+    message.className =
+        `message ${type}`;
 
-        let url = endpoint;
+    window.clearTimeout(
+        showMessage.timeout
+    );
 
-        if (
-            !url.startsWith("http://") &&
-            !url.startsWith("https://")
-        ) {
-            if (!url.startsWith("/")) {
-                url = "/" + url;
-            }
-
-            if (!url.startsWith("/api/")) {
-                url = "/api" + url;
-            }
-        }
-
-        const headers = {
-            ...(options.headers || {})
-        };
-
-        const token = getToken();
-
-        if (token) {
-            headers.Authorization = `Bearer ${token}`;
-        }
-
-        if (
-            options.body &&
-            !(options.body instanceof FormData) &&
-            !headers["Content-Type"] &&
-            !headers["content-type"]
-        ) {
-            headers["Content-Type"] = "application/json";
-        }
-
-        let response;
-
-        try {
-            response = await fetch(url, {
-                ...options,
-                headers
-            });
-        } catch (error) {
-            console.error("Roles API error:", error);
-            throw new Error(
-                "Unable to connect to the server."
-            );
-        }
-
-        if (response.status === 401) {
-            localStorage.removeItem("school_management_token");
-            localStorage.removeItem("school_management_user");
-            sessionStorage.removeItem("school_management_token");
-            sessionStorage.removeItem("school_management_user");
-
-            if (!window.location.pathname.endsWith("/login.html")) {
-                window.location.href = "/pages/login.html";
-            }
-
-            throw new Error("Authentication required.");
-        }
-
-        if (response.status === 403) {
-            throw new Error(
-                "You do not have permission to perform this action."
-            );
-        }
-
-        const contentType =
-            response.headers.get("content-type") || "";
-
-        const data = contentType.includes("application/json")
-            ? await response.json()
-            : await response.text();
-
-        if (!response.ok) {
-            throw new Error(
-                typeof data === "object"
-                    ? data.message ||
-                      data.error ||
-                      "Request failed."
-                    : data || "Request failed."
-            );
-        }
-
-        return data;
-    }
-
-    function getElements() {
-        return {
-            tableBody:
-                document.getElementById("rolesTableBody") ||
-                document.getElementById("roleTableBody") ||
-                document.querySelector("#rolesTable tbody"),
-
-            searchInput:
-                document.getElementById("searchInput") ||
-                document.getElementById("roleSearch"),
-
-            statusFilter:
-                document.getElementById("statusFilter") ||
-                document.getElementById("roleStatusFilter"),
-
-            message:
-                document.getElementById("message") ||
-                document.getElementById("messageContainer")
-        };
-    }
-
-    function showMessage(text, type = "success") {
-        const { message } = getElements();
-
-        if (!message) {
-            return;
-        }
-
-        message.textContent = text;
-        message.className = `message ${type}`;
-
-        setTimeout(() => {
+    showMessage.timeout =
+        window.setTimeout(() => {
             message.textContent = "";
             message.className = "message";
         }, 4000);
+}
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function formatDate(value) {
+    if (!value) {
+        return "-";
     }
 
-    async function loadRoles() {
-        showLoading();
+    const date = new Date(value);
 
-        try {
-            const result = await request("/roles");
+    if (Number.isNaN(date.getTime())) {
+        return "-";
+    }
 
-            roles =
-                Array.isArray(result)
-                    ? result
-                    : Array.isArray(result?.data)
-                        ? result.data
-                        : Array.isArray(result?.roles)
-                            ? result.roles
-                            : Array.isArray(result?.records)
-                                ? result.records
-                                : [];
-
-            renderRoles();
-        } catch (error) {
-            console.error(
-                "Load roles error:",
-                error
-            );
-
-            roles = [];
-
-            showEmpty("Unable to load roles.");
-
-            showMessage(
-                error.message ||
-                "Unable to load roles.",
-                "error"
-            );
+    return date.toLocaleDateString(
+        "en-NG",
+        {
+            year: "numeric",
+            month: "short",
+            day: "numeric"
         }
+    );
+}
+
+function normalizeRole(role) {
+    return {
+        id:
+            role?.id ??
+            role?.role_id ??
+            null,
+
+        role_name:
+            role?.role_name ??
+            role?.roleName ??
+            role?.name ??
+            "",
+
+        description:
+            role?.description ??
+            "",
+
+        permissions_count:
+            role?.permissions_count ??
+            role?.permission_count ??
+            role?.permissionsCount ??
+            null,
+
+        created_at:
+            role?.created_at ??
+            role?.createdAt ??
+            null
+    };
+}
+
+function extractArray(result, propertyNames = []) {
+    if (Array.isArray(result)) {
+        return result;
     }
 
-    function renderRoles() {
-        const {
-            tableBody,
-            searchInput,
-            statusFilter
-        } = getElements();
-
-        if (!tableBody) {
-            return;
-        }
-
-        const searchTerm =
-            searchInput?.value.trim().toLowerCase() || "";
-
-        const selectedStatus =
-            statusFilter?.value.trim().toLowerCase() || "";
-
-        const filteredRoles = roles.filter((role) => {
-            const name = String(
-                role.name ||
-                role.role_name ||
-                role.roleName ||
-                ""
-            ).toLowerCase();
-
-            const description = String(
-                role.description || ""
-            ).toLowerCase();
-
-            const status = String(
-                role.status || "active"
-            ).toLowerCase();
-
-            const matchesSearch =
-                !searchTerm ||
-                name.includes(searchTerm) ||
-                description.includes(searchTerm);
-
-            const matchesStatus =
-                !selectedStatus ||
-                status === selectedStatus;
-
-            return matchesSearch && matchesStatus;
-        });
-
-        if (!filteredRoles.length) {
-            showEmpty("No roles found.");
-            return;
-        }
-
-        tableBody.innerHTML =
-            filteredRoles
-                .map(createRoleRow)
-                .join("");
+    if (
+        result &&
+        Array.isArray(result.data)
+    ) {
+        return result.data;
     }
 
-    function createRoleRow(role) {
-        const id =
-            role.id ??
-            role.role_id ??
-            "";
-
-        const name =
-            role.name ||
-            role.role_name ||
-            role.roleName ||
-            "-";
-
-        const description =
-            role.description ||
-            "-";
-
-        const status =
-            String(
-                role.status || "active"
-            ).toLowerCase();
-
-        const createdAt =
-            role.created_at ||
-            role.createdAt;
-
-        const permissionsCount =
-            role.permissions_count ??
-            role.permission_count ??
-            role.permissionsCount ??
-            "";
-
-        return `
-            <tr>
-                <td>
-                    ${escapeHtml(name)}
-                </td>
-
-                <td>
-                    ${escapeHtml(description)}
-                </td>
-
-                <td>
-                    ${
-                        permissionsCount !== ""
-                            ? escapeHtml(permissionsCount)
-                            : "-"
-                    }
-                </td>
-
-                <td>
-                    <span
-                        class="status-badge status-${escapeAttribute(status)}"
-                    >
-                        ${escapeHtml(
-                            formatStatus(status)
-                        )}
-                    </span>
-                </td>
-
-                <td>
-                    ${formatDate(createdAt)}
-                </td>
-
-                <td>
-                    <div class="action-buttons">
-                        <button
-                            type="button"
-                            class="btn btn-sm btn-primary"
-                            data-action="view-role"
-                            data-id="${escapeAttribute(id)}"
-                        >
-                            View
-                        </button>
-
-                        <button
-                            type="button"
-                            class="btn btn-sm btn-secondary"
-                            data-action="edit-role"
-                            data-id="${escapeAttribute(id)}"
-                        >
-                            Edit
-                        </button>
-
-                        <button
-                            type="button"
-                            class="btn btn-sm btn-danger"
-                            data-action="delete-role"
-                            data-id="${escapeAttribute(id)}"
-                        >
-                            Delete
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `;
-    }
-
-    function addRole() {
-        window.location.href =
-            "role-form.html";
-    }
-
-    function viewRole(id) {
-        window.location.href =
-            `role-profile.html?id=${encodeURIComponent(id)}`;
-    }
-
-    function editRole(id) {
-        window.location.href =
-            `role-form.html?id=${encodeURIComponent(id)}`;
-    }
-
-    async function deleteRole(id) {
-        const role = roles.find(
-            (item) =>
-                String(
-                    item.id ??
-                    item.role_id
-                ) === String(id)
-        );
-
-        const roleName =
-            role?.name ||
-            role?.role_name ||
-            role?.roleName ||
-            "this role";
-
+    for (const propertyName of propertyNames) {
         if (
-            !window.confirm(
-                `Are you sure you want to delete "${roleName}"?`
-            )
+            result &&
+            Array.isArray(result[propertyName])
         ) {
-            return;
-        }
-
-        try {
-            await request(
-                `/roles/${encodeURIComponent(id)}`,
-                {
-                    method: "DELETE"
-                }
-            );
-
-            showMessage(
-                "Role deleted successfully.",
-                "success"
-            );
-
-            await loadRoles();
-        } catch (error) {
-            console.error(
-                "Delete role error:",
-                error
-            );
-
-            showMessage(
-                error.message ||
-                "Unable to delete role.",
-                "error"
-            );
+            return result[propertyName];
         }
     }
 
-    function showLoading() {
-        const { tableBody } = getElements();
+    return [];
+}
 
-        if (!tableBody) {
-            return;
-        }
+async function apiRequest(
+    endpoint,
+    options = {}
+) {
+    if (
+        typeof window.apiRequest ===
+        "function"
+    ) {
+        return window.apiRequest(
+            endpoint,
+            options
+        );
+    }
 
+    throw new Error(
+        "The central API service is not available."
+    );
+}
+
+async function loadRoles() {
+    const {
+        tableBody
+    } = getElements();
+
+    if (tableBody) {
         tableBody.innerHTML = `
             <tr>
-                <td
-                    colspan="6"
-                    style="text-align:center;padding:30px;"
-                >
+                <td colspan="6" style="text-align:center;padding:30px;">
                     Loading roles...
                 </td>
             </tr>
         `;
     }
 
-    function showEmpty(text) {
-        const { tableBody } = getElements();
+    try {
+        const result =
+            await apiRequest("/roles");
 
-        if (!tableBody) {
-            return;
-        }
+        roles = extractArray(
+            result,
+            ["roles", "records"]
+        ).map(normalizeRole);
 
-        tableBody.innerHTML = `
-            <tr>
-                <td
-                    colspan="6"
-                    style="text-align:center;padding:30px;"
-                >
-                    ${escapeHtml(text)}
-                </td>
-            </tr>
-        `;
+        renderRoles();
+        updateRoleCount();
+    } catch (error) {
+        console.error(
+            "Load roles error:",
+            error
+        );
+
+        roles = [];
+
+        showEmpty(
+            "Unable to load roles."
+        );
+
+        updateRoleCount();
+
+        showMessage(
+            error.message ||
+            "Unable to load roles.",
+            "error"
+        );
+    }
+}
+
+function updateRoleCount() {
+    const {
+        roleCount
+    } = getElements();
+
+    if (!roleCount) {
+        return;
     }
 
-    function formatStatus(status) {
-        const labels = {
-            active: "Active",
-            inactive: "Inactive",
-            suspended: "Suspended",
-            disabled: "Disabled"
-        };
+    roleCount.textContent =
+        String(roles.length);
+}
+
+function getFilteredRoles() {
+    const {
+        searchInput
+    } = getElements();
+
+    const searchTerm =
+        searchInput?.value
+            .trim()
+            .toLowerCase() || "";
+
+    if (!searchTerm) {
+        return roles;
+    }
+
+    return roles.filter((role) => {
+        const name =
+            String(
+                role.role_name || ""
+            ).toLowerCase();
+
+        const description =
+            String(
+                role.description || ""
+            ).toLowerCase();
 
         return (
-            labels[status] ||
-            String(status)
-                .replace(/_/g, " ")
-                .replace(/\b\w/g, (letter) =>
-                    letter.toUpperCase()
-                )
+            name.includes(searchTerm) ||
+            description.includes(searchTerm)
+        );
+    });
+}
+
+function renderRoles() {
+    const {
+        tableBody
+    } = getElements();
+
+    if (!tableBody) {
+        return;
+    }
+
+    const filteredRoles =
+        getFilteredRoles();
+
+    if (!filteredRoles.length) {
+        showEmpty(
+            roles.length
+                ? "No roles match your search."
+                : "No roles found."
+        );
+
+        return;
+    }
+
+    tableBody.innerHTML =
+        filteredRoles
+            .map(createRoleRow)
+            .join("");
+}
+
+function createRoleRow(role) {
+    const id =
+        role.id ?? "";
+
+    const name =
+        role.role_name || "-";
+
+    const description =
+        role.description || "-";
+
+    const permissionsCount =
+        role.permissions_count;
+
+    return `
+        <tr>
+            <td>
+                ${escapeHtml(name)}
+            </td>
+
+            <td>
+                ${escapeHtml(description)}
+            </td>
+
+            <td>
+                ${
+                    permissionsCount !== null &&
+                    permissionsCount !== undefined
+                        ? escapeHtml(
+                            permissionsCount
+                        )
+                        : "-"
+                }
+            </td>
+
+            <td>
+                ${formatDate(
+                    role.created_at
+                )}
+            </td>
+
+            <td>
+                <div class="action-buttons">
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-primary"
+                        data-action="manage-permissions"
+                        data-id="${escapeHtml(id)}"
+                    >
+                        Permissions
+                    </button>
+
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-secondary"
+                        data-action="edit-role"
+                        data-id="${escapeHtml(id)}"
+                    >
+                        Edit
+                    </button>
+
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-danger"
+                        data-action="delete-role"
+                        data-id="${escapeHtml(id)}"
+                    >
+                        Delete
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `;
+}
+
+function showLoadingPermissions() {
+    const {
+        permissionsList
+    } = getElements();
+
+    if (!permissionsList) {
+        return;
+    }
+
+    permissionsList.innerHTML = `
+        <div style="text-align:center;padding:25px;">
+            Loading permissions...
+        </div>
+    `;
+}
+
+function showEmpty(text) {
+    const {
+        tableBody
+    } = getElements();
+
+    if (!tableBody) {
+        return;
+    }
+
+    tableBody.innerHTML = `
+        <tr>
+            <td colspan="6" style="text-align:center;padding:30px;">
+                ${escapeHtml(text)}
+            </td>
+        </tr>
+    `;
+}
+
+function openRoleModal(role = null) {
+    const {
+        roleModal,
+        roleForm,
+        roleId,
+        roleName,
+        roleDescription,
+        modalTitle
+    } = getElements();
+
+    if (!roleModal) {
+        return;
+    }
+
+    if (roleForm) {
+        roleForm.reset();
+    }
+
+    if (roleId) {
+        roleId.value =
+            role?.id ?? "";
+    }
+
+    if (roleName) {
+        roleName.value =
+            role?.role_name ?? "";
+    }
+
+    if (roleDescription) {
+        roleDescription.value =
+            role?.description ?? "";
+    }
+
+    if (modalTitle) {
+        modalTitle.textContent =
+            role
+                ? "Edit Role"
+                : "Create Role";
+    }
+
+    roleModal.classList.add(
+        "show"
+    );
+
+    roleModal.setAttribute(
+        "aria-hidden",
+        "false"
+    );
+
+    if (roleName) {
+        window.setTimeout(
+            () => roleName.focus(),
+            50
         );
     }
+}
 
-    function formatDate(value) {
-        if (!value) {
-            return "-";
-        }
+function closeRoleModal() {
+    const {
+        roleModal,
+        roleForm
+    } = getElements();
 
-        const date = new Date(value);
+    if (roleForm) {
+        roleForm.reset();
+    }
 
-        if (Number.isNaN(date.getTime())) {
-            return "-";
-        }
+    if (roleModal) {
+        roleModal.classList.remove(
+            "show"
+        );
 
-        return date.toLocaleDateString(
-            "en-NG",
-            {
-                year: "numeric",
-                month: "short",
-                day: "numeric"
-            }
+        roleModal.setAttribute(
+            "aria-hidden",
+            "true"
         );
     }
+}
 
-    function escapeHtml(value) {
-        return String(value ?? "")
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
+async function saveRole(event) {
+    if (event) {
+        event.preventDefault();
     }
 
-    function escapeAttribute(value) {
-        return escapeHtml(value);
-    }
+    const {
+        roleId,
+        roleName,
+        roleDescription,
+        saveRoleButton
+    } = getElements();
 
-    function setupEvents() {
-        const {
-            searchInput,
-            statusFilter
-        } = getElements();
+    const name =
+        roleName?.value.trim() || "";
 
-        if (searchInput) {
-            searchInput.addEventListener(
-                "input",
-                renderRoles
-            );
-        }
+    const description =
+        roleDescription?.value.trim() || "";
 
-        if (statusFilter) {
-            statusFilter.addEventListener(
-                "change",
-                renderRoles
-            );
-        }
-
-        document.addEventListener(
-            "click",
-            async (event) => {
-                const button =
-                    event.target.closest(
-                        "[data-action]"
-                    );
-
-                if (!button) {
-                    return;
-                }
-
-                const action =
-                    button.dataset.action;
-
-                const id =
-                    button.dataset.id;
-
-                if (!id) {
-                    return;
-                }
-
-                if (action === "view-role") {
-                    viewRole(id);
-                    return;
-                }
-
-                if (action === "edit-role") {
-                    editRole(id);
-                    return;
-                }
-
-                if (action === "delete-role") {
-                    await deleteRole(id);
-                }
-            }
+    if (!name) {
+        showMessage(
+            "Role name is required.",
+            "error"
         );
+
+        roleName?.focus();
+
+        return;
     }
 
-    window.loadRoles = loadRoles;
-    window.addRole = addRole;
-    window.viewRole = viewRole;
-    window.editRole = editRole;
-    window.deleteRole = deleteRole;
+    const id =
+        roleId?.value.trim() || "";
 
-    window.RolesPage = {
-        initialize: loadRoles,
-        loadRoles,
-        addRole,
-        viewRole,
-        editRole,
-        deleteRole
+    const payload = {
+        role_name: name,
+        description
     };
 
-    function initialize() {
-        setupEvents();
-        loadRoles();
+    const isEditing =
+        Boolean(id);
+
+    if (saveRoleButton) {
+        saveRoleButton.disabled = true;
+        saveRoleButton.textContent =
+            isEditing
+                ? "Updating..."
+                : "Creating...";
     }
 
-    if (document.readyState === "loading") {
-        document.addEventListener(
-            "DOMContentLoaded",
-            initialize,
-            { once: true }
+    try {
+        await apiRequest(
+            isEditing
+                ? `/roles/${encodeURIComponent(id)}`
+                : "/roles",
+            {
+                method:
+                    isEditing
+                        ? "PUT"
+                        : "POST",
+                body:
+                    JSON.stringify(
+                        payload
+                    )
+            }
         );
-    } else {
-        initialize();
+
+        showMessage(
+            isEditing
+                ? "Role updated successfully."
+                : "Role created successfully.",
+            "success"
+        );
+
+        closeRoleModal();
+
+        await loadRoles();
+    } catch (error) {
+        console.error(
+            "Save role error:",
+            error
+        );
+
+        showMessage(
+            error.message ||
+            "Unable to save role.",
+            "error"
+        );
+    } finally {
+        if (saveRoleButton) {
+            saveRoleButton.disabled =
+                false;
+
+            saveRoleButton.textContent =
+                "Save Role";
+        }
     }
+}
+
+function findRole(id) {
+    return roles.find(
+        (role) =>
+            String(role.id) ===
+            String(id)
+    );
+}
+
+function editRole(id) {
+    const role =
+        findRole(id);
+
+    if (!role) {
+        showMessage(
+            "The selected role could not be found.",
+            "error"
+        );
+
+        return;
+    }
+
+    openRoleModal(role);
+}
+
+async function deleteRole(id) {
+    const role =
+        findRole(id);
+
+    if (!role) {
+        showMessage(
+            "The selected role could not be found.",
+            "error"
+        );
+
+        return;
+    }
+
+    const roleName =
+        role.role_name ||
+        "this role";
+
+    const confirmed =
+        window.confirm(
+            `Are you sure you want to delete "${roleName}"?`
+        );
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+        await apiRequest(
+            `/roles/${encodeURIComponent(id)}`,
+            {
+                method: "DELETE"
+            }
+        );
+
+        showMessage(
+            "Role deleted successfully.",
+            "success"
+        );
+
+        await loadRoles();
+    } catch (error) {
+        console.error(
+            "Delete role error:",
+            error
+        );
+
+        showMessage(
+            error.message ||
+            "Unable to delete role.",
+            "error"
+        );
+    }
+}
+
+async function loadPermissionsForRole(
+    roleId
+) {
+    showLoadingPermissions();
+
+    try {
+        const result =
+            await apiRequest(
+                `/roles/${encodeURIComponent(
+                    roleId
+                )}/permissions`
+            );
+
+        const permissions =
+            extractArray(
+                result,
+                [
+                    "permissions",
+                    "records"
+                ]
+            );
+
+        availablePermissions =
+            permissions.map(
+                normalizePermission
+            );
+
+        renderPermissions();
+    } catch (error) {
+        console.error(
+            "Load role permissions error:",
+            error
+        );
+
+        availablePermissions = [];
+
+        const {
+            permissionsList
+        } = getElements();
+
+        if (permissionsList) {
+            permissionsList.innerHTML = `
+                <div style="text-align:center;padding:25px;">
+                    Unable to load permissions.
+                </div>
+            `;
+        }
+
+        showMessage(
+            error.message ||
+            "Unable to load role permissions.",
+            "error"
+        );
+    }
+}
+
+function normalizePermission(
+    permission
+) {
+    return {
+        id:
+            permission?.id ??
+            permission?.permission_id ??
+            null,
+
+        permission_name:
+            permission?.permission_name ??
+            permission?.permissionName ??
+            permission?.name ??
+            "",
+
+        description:
+            permission?.description ??
+            "",
+
+        assigned:
+            Boolean(
+                permission?.assigned ??
+                permission?.is_assigned ??
+                permission?.has_permission ??
+                false
+            )
+    };
+}
+
+function renderPermissions() {
+    const {
+        permissionsList
+    } = getElements();
+
+    if (!permissionsList) {
+        return;
+    }
+
+    if (!availablePermissions.length) {
+        permissionsList.innerHTML = `
+            <div style="text-align:center;padding:25px;">
+                No permissions available.
+            </div>
+        `;
+
+        return;
+    }
+
+    permissionsList.innerHTML =
+        availablePermissions
+            .map(
+                (permission) => `
+                    <label
+                        class="permission-item"
+                        style="display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid #e5e7eb;cursor:pointer;"
+                    >
+                        <input
+                            type="checkbox"
+                            class="role-permission-checkbox"
+                            value="${escapeHtml(
+                                permission.id
+                            )}"
+                            ${
+                                permission.assigned
+                                    ? "checked"
+                                    : ""
+                            }
+                        >
+
+                        <span>
+                            <strong>
+                                ${escapeHtml(
+                                    permission.permission_name
+                                )}
+                            </strong>
+
+                            ${
+                                permission.description
+                                    ? `
+                                        <small style="display:block;margin-top:3px;">
+                                            ${escapeHtml(
+                                                permission.description
+                                            )}
+                                        </small>
+                                    `
+                                    : ""
+                            }
+                        </span>
+                    </label>
+                `
+            )
+            .join("");
+}
+
+async function openPermissionsModal(
+    roleId
+) {
+    const role =
+        findRole(roleId);
+
+    if (!role) {
+        showMessage(
+            "The selected role could not be found.",
+            "error"
+        );
+
+        return;
+    }
+
+    const {
+        permissionsModal,
+        permissionsTitle,
+        permissionsList
+    } = getElements();
+
+    selectedRoleId =
+        roleId;
+
+    if (permissionsTitle) {
+        permissionsTitle.textContent =
+            `Permissions — ${role.role_name}`;
+    }
+
+    if (permissionsList) {
+        permissionsList.innerHTML = "";
+    }
+
+    if (permissionsModal) {
+        permissionsModal.classList.add(
+            "show"
+        );
+
+        permissionsModal.setAttribute(
+            "aria-hidden",
+            "false"
+        );
+    }
+
+    await loadPermissionsForRole(
+        roleId
+    );
+}
+
+function closePermissionsModal() {
+    const {
+        permissionsModal,
+        permissionsList
+    } = getElements();
+
+    selectedRoleId = null;
+    availablePermissions = [];
+
+    if (permissionsList) {
+        permissionsList.innerHTML = "";
+    }
+
+    if (permissionsModal) {
+        permissionsModal.classList.remove(
+            "show"
+        );
+
+        permissionsModal.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+    }
+}
+
+async function saveRolePermissions() {
+    if (!selectedRoleId) {
+        showMessage(
+            "No role is selected.",
+            "error"
+        );
+
+        return;
+    }
+
+    const {
+        saveRolePermissionsButton,
+        permissionsList
+    } = getElements();
+
+    const selectedPermissions =
+        permissionsList
+            ? Array.from(
+                permissionsList.querySelectorAll(
+                    ".role-permission-checkbox:checked"
+                )
+            ).map(
+                (checkbox) =>
+                    checkbox.value
+            )
+            : [];
+
+    if (saveRolePermissionsButton) {
+        saveRolePermissionsButton.disabled =
+            true;
+
+        saveRolePermissionsButton.textContent =
+            "Saving...";
+    }
+
+    try {
+        await apiRequest(
+            `/roles/${encodeURIComponent(
+                selectedRoleId
+            )}/permissions`,
+            {
+                method: "PUT",
+                body:
+                    JSON.stringify({
+                        permissionIds:
+                            selectedPermissions
+                    })
+            }
+        );
+
+        showMessage(
+            "Role permissions updated successfully.",
+            "success"
+        );
+
+        closePermissionsModal();
+
+        await loadRoles();
+    } catch (error) {
+        console.error(
+            "Save role permissions error:",
+            error
+        );
+
+        showMessage(
+            error.message ||
+            "Unable to update role permissions.",
+            "error"
+        );
+    } finally {
+        if (saveRolePermissionsButton) {
+            saveRolePermissionsButton.disabled =
+                false;
+
+            saveRolePermissionsButton.textContent =
+                "Save Permissions";
+        }
+    }
+}
+
+function setupEvents() {
+    if (eventsInitialized) {
+        return;
+    }
+
+    eventsInitialized = true;
+
+    const {
+        searchInput,
+        refreshButton,
+        createButton,
+        roleForm,
+        cancelRoleButton,
+        cancelPermissionsButton,
+        saveRolePermissionsButton
+    } = getElements();
+
+    if (searchInput) {
+        searchInput.addEventListener(
+            "input",
+            renderRoles
+        );
+    }
+
+    if (refreshButton) {
+        refreshButton.addEventListener(
+            "click",
+            loadRoles
+        );
+    }
+
+    if (createButton) {
+        createButton.addEventListener(
+            "click",
+            () => openRoleModal()
+        );
+    }
+
+    if (roleForm) {
+        roleForm.addEventListener(
+            "submit",
+            saveRole
+        );
+    }
+
+    if (cancelRoleButton) {
+        cancelRoleButton.addEventListener(
+            "click",
+            closeRoleModal
+        );
+    }
+
+    if (cancelPermissionsButton) {
+        cancelPermissionsButton.addEventListener(
+            "click",
+            closePermissionsModal
+        );
+    }
+
+    if (saveRolePermissionsButton) {
+        saveRolePermissionsButton.addEventListener(
+            "click",
+            saveRolePermissions
+        );
+    }
+
+    document.addEventListener(
+        "click",
+        async (event) => {
+            const button =
+                event.target.closest(
+                    "[data-action]"
+                );
+
+            if (!button) {
+                return;
+            }
+
+            const action =
+                button.dataset.action;
+
+            const id =
+                button.dataset.id;
+
+            if (!id) {
+                return;
+            }
+
+            if (
+                action ===
+                "edit-role"
+            ) {
+                editRole(id);
+
+                return;
+            }
+
+            if (
+                action ===
+                "delete-role"
+            ) {
+                await deleteRole(id);
+
+                return;
+            }
+
+            if (
+                action ===
+                "manage-permissions"
+            ) {
+                await openPermissionsModal(
+                    id
+                );
+            }
+        }
+    );
+
+    document.addEventListener(
+        "keydown",
+        (event) => {
+            if (
+                event.key !==
+                "Escape"
+            ) {
+                return;
+            }
+
+            closeRoleModal();
+            closePermissionsModal();
+        }
+    );
+
+    document.addEventListener(
+        "click",
+        (event) => {
+            const {
+                roleModal,
+                permissionsModal
+            } = getElements();
+
+            if (
+                roleModal &&
+                event.target ===
+                    roleModal
+            ) {
+                closeRoleModal();
+            }
+
+            if (
+                permissionsModal &&
+                event.target ===
+                    permissionsModal
+            ) {
+                closePermissionsModal();
+            }
+        }
+    );
+}
+
+function initialize() {
+    setupEvents();
+    loadRoles();
+}
+
+window.RolesPage = {
+    initialize,
+    loadRoles,
+    renderRoles,
+    addRole: () =>
+        openRoleModal(),
+    editRole,
+    deleteRole,
+    openPermissionsModal,
+    closePermissionsModal,
+    saveRolePermissions
+};
+
+window.loadRoles =
+    loadRoles;
+
+window.addRole =
+    () => openRoleModal();
+
+window.editRole =
+    editRole;
+
+window.deleteRole =
+    deleteRole;
+
+if (
+    document.readyState ===
+    "loading"
+) {
+    document.addEventListener(
+        "DOMContentLoaded",
+        initialize,
+        {
+            once: true
+        }
+    );
+} else {
+    initialize();
+}
+
+
 })();

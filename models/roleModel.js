@@ -2,54 +2,81 @@
 
 const { query } = require("../config/database");
 
-/*
-|--------------------------------------------------------------------------
-| Role Model
-|--------------------------------------------------------------------------
-| Handles system roles and role permissions.
-|--------------------------------------------------------------------------
-*/
+function requireValue(value, message) {
+    if (
+        value === undefined ||
+        value === null ||
+        String(value).trim() === ""
+    ) {
+        const error = new Error(message);
+        error.statusCode = 400;
+        throw error;
+    }
+}
 
+function normalizeRoleName(roleName) {
+    return String(roleName)
+        .trim();
+}
 
-/*
-|--------------------------------------------------------------------------
-| Create Role
-|--------------------------------------------------------------------------
-*/
+function normalizePermissionName(permissionName) {
+    return String(permissionName)
+        .trim()
+        .toLowerCase();
+}
 
 async function createRole({
     roleName,
     description = null
 }) {
-    if (!roleName || !roleName.trim()) {
-        throw new Error("Role name is required.");
-    }
+    requireValue(
+        roleName,
+        "Role name is required."
+    );
+
+    const normalizedRoleName =
+        normalizeRoleName(roleName);
+
+    const normalizedDescription =
+        description === null ||
+        description === undefined ||
+        String(description).trim() === ""
+            ? null
+            : String(description).trim();
 
     const sql = `
         INSERT INTO roles (
             role_name,
             description
         )
-        VALUES ($1, $2)
-        RETURNING *
+        VALUES (
+            $1,
+            $2
+        )
+        RETURNING
+            id,
+            role_name,
+            description,
+            created_at
     `;
 
-    const result = await query(sql, [
-        roleName.trim(),
-        description
-    ]);
+    const result = await query(
+        sql,
+        [
+            normalizedRoleName,
+            normalizedDescription
+        ]
+    );
 
-    return result.rows[0];
+    return result.rows[0] || null;
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Find Role By ID
-|--------------------------------------------------------------------------
-*/
-
 async function findRoleById(roleId) {
+    requireValue(
+        roleId,
+        "Role ID is required."
+    );
+
     const sql = `
         SELECT
             id,
@@ -61,19 +88,20 @@ async function findRoleById(roleId) {
         LIMIT 1
     `;
 
-    const result = await query(sql, [roleId]);
+    const result = await query(
+        sql,
+        [roleId]
+    );
 
     return result.rows[0] || null;
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Find Role By Name
-|--------------------------------------------------------------------------
-*/
-
 async function findRoleByName(roleName) {
+    requireValue(
+        roleName,
+        "Role name is required."
+    );
+
     const sql = `
         SELECT
             id,
@@ -85,17 +113,13 @@ async function findRoleByName(roleName) {
         LIMIT 1
     `;
 
-    const result = await query(sql, [roleName]);
+    const result = await query(
+        sql,
+        [normalizeRoleName(roleName)]
+    );
 
     return result.rows[0] || null;
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Find All Roles
-|--------------------------------------------------------------------------
-*/
 
 async function findRoles() {
     const sql = `
@@ -104,22 +128,17 @@ async function findRoles() {
             r.role_name,
             r.description,
             r.created_at,
-
             COUNT(
                 DISTINCT rp.permission_id
             )::INTEGER AS permission_count
-
         FROM roles r
-
         LEFT JOIN role_permissions rp
             ON rp.role_id = r.id
-
         GROUP BY
             r.id,
             r.role_name,
             r.description,
             r.created_at
-
         ORDER BY
             r.role_name ASC
     `;
@@ -129,13 +148,6 @@ async function findRoles() {
     return result.rows;
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Update Role
-|--------------------------------------------------------------------------
-*/
-
 async function updateRole(
     roleId,
     {
@@ -143,9 +155,25 @@ async function updateRole(
         description = null
     }
 ) {
-    if (!roleName || !roleName.trim()) {
-        throw new Error("Role name is required.");
-    }
+    requireValue(
+        roleId,
+        "Role ID is required."
+    );
+
+    requireValue(
+        roleName,
+        "Role name is required."
+    );
+
+    const normalizedRoleName =
+        normalizeRoleName(roleName);
+
+    const normalizedDescription =
+        description === null ||
+        description === undefined ||
+        String(description).trim() === ""
+            ? null
+            : String(description).trim();
 
     const sql = `
         UPDATE roles
@@ -153,201 +181,231 @@ async function updateRole(
             role_name = $1,
             description = $2
         WHERE id = $3
-        RETURNING *
+        RETURNING
+            id,
+            role_name,
+            description,
+            created_at
     `;
 
-    const result = await query(sql, [
-        roleName.trim(),
-        description,
-        roleId
-    ]);
+    const result = await query(
+        sql,
+        [
+            normalizedRoleName,
+            normalizedDescription,
+            roleId
+        ]
+    );
 
     return result.rows[0] || null;
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Delete Role
-|--------------------------------------------------------------------------
-*/
-
 async function deleteRole(roleId) {
+    requireValue(
+        roleId,
+        "Role ID is required."
+    );
+
     const sql = `
         DELETE FROM roles
         WHERE id = $1
-        RETURNING *
+        RETURNING
+            id,
+            role_name,
+            description,
+            created_at
     `;
 
-    const result = await query(sql, [roleId]);
+    const result = await query(
+        sql,
+        [roleId]
+    );
 
     return result.rows[0] || null;
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Assign Permission To Role
-|--------------------------------------------------------------------------
-*/
 
 async function assignPermission(
     roleId,
     permissionId
 ) {
+    requireValue(
+        roleId,
+        "Role ID is required."
+    );
+
+    requireValue(
+        permissionId,
+        "Permission ID is required."
+    );
+
     const sql = `
         INSERT INTO role_permissions (
             role_id,
             permission_id
         )
-        VALUES ($1, $2)
+        VALUES (
+            $1,
+            $2
+        )
         ON CONFLICT (
             role_id,
             permission_id
         )
         DO NOTHING
-        RETURNING *
+        RETURNING
+            role_id,
+            permission_id
     `;
 
-    const result = await query(sql, [
-        roleId,
-        permissionId
-    ]);
+    const result = await query(
+        sql,
+        [
+            roleId,
+            permissionId
+        ]
+    );
 
     return result.rows[0] || null;
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Remove Permission From Role
-|--------------------------------------------------------------------------
-*/
 
 async function removePermission(
     roleId,
     permissionId
 ) {
+    requireValue(
+        roleId,
+        "Role ID is required."
+    );
+
+    requireValue(
+        permissionId,
+        "Permission ID is required."
+    );
+
     const sql = `
         DELETE FROM role_permissions
         WHERE role_id = $1
           AND permission_id = $2
-        RETURNING *
+        RETURNING
+            role_id,
+            permission_id
     `;
 
-    const result = await query(sql, [
-        roleId,
-        permissionId
-    ]);
+    const result = await query(
+        sql,
+        [
+            roleId,
+            permissionId
+        ]
+    );
 
     return result.rows[0] || null;
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Get Role Permissions
-|--------------------------------------------------------------------------
-*/
-
 async function getRolePermissions(roleId) {
+    requireValue(
+        roleId,
+        "Role ID is required."
+    );
+
     const sql = `
         SELECT
             p.id,
             p.permission_name,
             p.description,
             p.created_at
-
         FROM permissions p
-
         INNER JOIN role_permissions rp
             ON rp.permission_id = p.id
-
         WHERE rp.role_id = $1
-
         ORDER BY
             p.permission_name ASC
     `;
 
-    const result = await query(sql, [roleId]);
+    const result = await query(
+        sql,
+        [roleId]
+    );
 
     return result.rows;
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Check Role Permission
-|--------------------------------------------------------------------------
-*/
 
 async function hasPermission(
     roleId,
     permissionName
 ) {
+    requireValue(
+        roleId,
+        "Role ID is required."
+    );
+
+    requireValue(
+        permissionName,
+        "Permission name is required."
+    );
+
     const sql = `
         SELECT EXISTS (
             SELECT 1
             FROM role_permissions rp
-
             INNER JOIN permissions p
                 ON p.id = rp.permission_id
-
             WHERE rp.role_id = $1
               AND LOWER(p.permission_name) = LOWER($2)
         ) AS has_permission
     `;
 
-    const result = await query(sql, [
-        roleId,
-        permissionName
-    ]);
+    const result = await query(
+        sql,
+        [
+            roleId,
+            normalizePermissionName(
+                permissionName
+            )
+        ]
+    );
 
-    return result.rows[0].has_permission;
+    return Boolean(
+        result.rows[0].has_permission
+    );
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Get Roles For User
-|--------------------------------------------------------------------------
-*/
-
 async function getUserRoles(userId) {
+    requireValue(
+        userId,
+        "User ID is required."
+    );
+
     const sql = `
         SELECT
             r.id,
             r.role_name,
             r.description,
             r.created_at
-
         FROM roles r
-
         INNER JOIN users u
             ON u.role_id = r.id
-
         WHERE u.id = $1
-
-        ORDER BY
-            r.role_name ASC
+        LIMIT 1
     `;
 
-    const result = await query(sql, [userId]);
+    const result = await query(
+        sql,
+        [userId]
+    );
 
     return result.rows;
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Get Role Users
-|--------------------------------------------------------------------------
-*/
 
 async function getRoleUsers(
     roleId,
     schoolId = null
 ) {
+    requireValue(
+        roleId,
+        "Role ID is required."
+    );
+
     let sql = `
         SELECT
             u.id,
@@ -359,18 +417,20 @@ async function getRoleUsers(
             u.middle_name,
             u.last_name,
             u.phone,
+            u.profile_photo_url,
             u.is_active,
             u.created_at,
             u.updated_at
-
         FROM users u
-
         WHERE u.role_id = $1
     `;
 
     const values = [roleId];
 
-    if (schoolId) {
+    if (
+        schoolId !== null &&
+        schoolId !== undefined
+    ) {
         values.push(schoolId);
 
         sql += `
@@ -380,20 +440,18 @@ async function getRoleUsers(
 
     sql += `
         ORDER BY
+            u.first_name ASC,
+            u.last_name ASC,
             u.username ASC
     `;
 
-    const result = await query(sql, values);
+    const result = await query(
+        sql,
+        values
+    );
 
     return result.rows;
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Get Role Summary
-|--------------------------------------------------------------------------
-*/
 
 async function getRoleSummary() {
     const sql = `
@@ -401,28 +459,21 @@ async function getRoleSummary() {
             r.id,
             r.role_name,
             r.description,
-
             COUNT(
                 DISTINCT u.id
             )::INTEGER AS user_count,
-
             COUNT(
                 DISTINCT rp.permission_id
             )::INTEGER AS permission_count
-
         FROM roles r
-
         LEFT JOIN users u
             ON u.role_id = r.id
-
         LEFT JOIN role_permissions rp
             ON rp.role_id = r.id
-
         GROUP BY
             r.id,
             r.role_name,
             r.description
-
         ORDER BY
             r.role_name ASC
     `;
@@ -432,17 +483,15 @@ async function getRoleSummary() {
     return result.rows;
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Role Exists
-|--------------------------------------------------------------------------
-*/
-
 async function roleExists(
     roleName,
     excludeRoleId = null
 ) {
+    requireValue(
+        roleName,
+        "Role name is required."
+    );
+
     let sql = `
         SELECT EXISTS (
             SELECT 1
@@ -450,9 +499,14 @@ async function roleExists(
             WHERE LOWER(role_name) = LOWER($1)
     `;
 
-    const values = [roleName];
+    const values = [
+        normalizeRoleName(roleName)
+    ];
 
-    if (excludeRoleId) {
+    if (
+        excludeRoleId !== null &&
+        excludeRoleId !== undefined
+    ) {
         values.push(excludeRoleId);
 
         sql += `
@@ -464,17 +518,15 @@ async function roleExists(
         ) AS exists
     `;
 
-    const result = await query(sql, values);
+    const result = await query(
+        sql,
+        values
+    );
 
-    return result.rows[0].exists;
+    return Boolean(
+        result.rows[0].exists
+    );
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Count Roles
-|--------------------------------------------------------------------------
-*/
 
 async function countRoles() {
     const sql = `
@@ -485,15 +537,10 @@ async function countRoles() {
 
     const result = await query(sql);
 
-    return Number(result.rows[0].count);
+    return Number(
+        result.rows[0].count
+    );
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| Export
-|--------------------------------------------------------------------------
-*/
 
 module.exports = {
     createRole,

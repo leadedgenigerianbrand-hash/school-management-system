@@ -1,15 +1,21 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    ```
     <title>Student Attendance | School Management System</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/responsive.css">
 
     <style>
         body {
@@ -124,11 +130,16 @@
             font-size: 12px;
             text-transform: uppercase;
             letter-spacing: .04em;
+            white-space: nowrap;
         }
 
         .attendance-table td {
             vertical-align: middle;
             font-size: 14px;
+        }
+
+        .attendance-table tbody tr:hover {
+            background: #f8fafc;
         }
 
         .status-badge {
@@ -142,19 +153,29 @@
             text-transform: capitalize;
         }
 
-        .status-active {
+        .status-present {
             background: #dcfce7;
             color: #166534;
         }
 
-        .status-inactive {
+        .status-absent {
             background: #fee2e2;
             color: #991b1b;
         }
 
-        .status-pending {
+        .status-late {
             background: #fef3c7;
             color: #92400e;
+        }
+
+        .status-excused {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+
+        .status-unknown {
+            background: #e5e7eb;
+            color: #374151;
         }
 
         #pageMessage:empty {
@@ -165,7 +186,32 @@
             display: none;
         }
 
+        .student-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #e5e7eb;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+        }
+
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: #64748b;
+        }
+
+        .empty-state-icon {
+            font-size: 42px;
+            margin-bottom: 12px;
+            opacity: .55;
+        }
+
         @media (max-width: 991.98px) {
+
             .app-sidebar {
                 transform: translateX(-100%);
                 transition: transform .25s ease;
@@ -193,6 +239,7 @@
         }
 
         @media (max-width: 575.98px) {
+
             .topbar {
                 padding: 12px 16px;
             }
@@ -200,30 +247,56 @@
             .page-content {
                 padding: 15px;
             }
+
+            .topbar h1 {
+                font-size: 16px;
+            }
+
+            .topbar small {
+                display: block;
+                max-width: 180px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
         }
     </style>
+    ```
+
 </head>
 
 <body>
 
+    ```
     <div id="sidebarOverlay"></div>
 
     <aside id="sidebar" class="app-sidebar">
 
         <div class="sidebar-brand">
+
             <div class="d-flex align-items-center gap-3">
+
                 <div class="sidebar-brand-icon">
                     <i class="bi bi-mortarboard-fill"></i>
                 </div>
 
                 <div>
-                    <div class="text-white fw-bold">School Management</div>
-                    <small class="text-secondary">Administration System</small>
+                    <div class="text-white fw-bold">
+                        School Management
+                    </div>
+
+                    <small class="text-secondary">
+                        Administration System
+                    </small>
                 </div>
+
             </div>
+
         </div>
 
-        <div class="sidebar-section">Main</div>
+        <div class="sidebar-section">
+            Main
+        </div>
 
         <a href="dashboard.html" class="sidebar-link">
             <i class="bi bi-grid-1x2-fill"></i>
@@ -245,7 +318,9 @@
             <span>Guardians</span>
         </a>
 
-        <div class="sidebar-section">Academic</div>
+        <div class="sidebar-section">
+            Academic
+        </div>
 
         <a href="classes.html" class="sidebar-link">
             <i class="bi bi-building"></i>
@@ -287,7 +362,9 @@
             <span>Results</span>
         </a>
 
-        <div class="sidebar-section">Finance & Records</div>
+        <div class="sidebar-section">
+            Finance & Records
+        </div>
 
         <a href="fees.html" class="sidebar-link">
             <i class="bi bi-cash-stack"></i>
@@ -304,7 +381,9 @@
             <span>Reports</span>
         </a>
 
-        <div class="sidebar-section">Administration</div>
+        <div class="sidebar-section">
+            Administration
+        </div>
 
         <a href="users.html" class="sidebar-link">
             <i class="bi bi-person-gear"></i>
@@ -333,39 +412,43 @@
 
     </aside>
 
-
     <div class="main-wrapper">
 
         <header class="topbar">
 
             <div class="d-flex align-items-center gap-3">
 
-                <button id="sidebarToggle" class="btn btn-light d-lg-none" type="button">
+                <button id="sidebarToggle" class="btn btn-light d-lg-none" type="button" aria-label="Open navigation">
                     <i class="bi bi-list fs-5"></i>
                 </button>
 
                 <div>
-                    <h1 class="h5 mb-0 fw-bold">Student Attendance</h1>
+
+                    <h1 class="h5 mb-0 fw-bold">
+                        Student Attendance
+                    </h1>
 
                     <small id="studentSubtitle" class="text-muted">
                         Loading student information...
                     </small>
+
                 </div>
 
             </div>
 
-            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="goBackToProfile()">
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="backToProfileButton">
+
                 <i class="bi bi-arrow-left me-1"></i>
                 Student Profile
+
             </button>
 
         </header>
 
-
         <main class="page-content">
 
-            <div id="pageMessage" class="alert alert-danger mb-4" role="alert"></div>
-
+            <div id="pageMessage" class="alert alert-danger mb-4" role="alert">
+            </div>
 
             <div class="row g-4 mb-4">
 
@@ -378,6 +461,7 @@
                             <div class="d-flex justify-content-between align-items-start">
 
                                 <div>
+
                                     <div class="text-muted small mb-2">
                                         Total Days
                                     </div>
@@ -385,6 +469,7 @@
                                     <div id="totalDays" class="fs-3 fw-bold">
                                         0
                                     </div>
+
                                 </div>
 
                                 <div class="stat-icon">
@@ -399,7 +484,6 @@
 
                 </div>
 
-
                 <div class="col-sm-6 col-xl-3">
 
                     <div class="card stat-card h-100">
@@ -409,6 +493,7 @@
                             <div class="d-flex justify-content-between align-items-start">
 
                                 <div>
+
                                     <div class="text-muted small mb-2">
                                         Present
                                     </div>
@@ -416,6 +501,7 @@
                                     <div id="presentDays" class="fs-3 fw-bold text-success">
                                         0
                                     </div>
+
                                 </div>
 
                                 <div class="stat-icon">
@@ -430,7 +516,6 @@
 
                 </div>
 
-
                 <div class="col-sm-6 col-xl-3">
 
                     <div class="card stat-card h-100">
@@ -440,6 +525,7 @@
                             <div class="d-flex justify-content-between align-items-start">
 
                                 <div>
+
                                     <div class="text-muted small mb-2">
                                         Absent
                                     </div>
@@ -447,6 +533,7 @@
                                     <div id="absentDays" class="fs-3 fw-bold text-danger">
                                         0
                                     </div>
+
                                 </div>
 
                                 <div class="stat-icon">
@@ -461,7 +548,6 @@
 
                 </div>
 
-
                 <div class="col-sm-6 col-xl-3">
 
                     <div class="card stat-card h-100">
@@ -471,6 +557,7 @@
                             <div class="d-flex justify-content-between align-items-start">
 
                                 <div>
+
                                     <div class="text-muted small mb-2">
                                         Attendance Rate
                                     </div>
@@ -478,6 +565,7 @@
                                     <div id="attendanceRate" class="fs-3 fw-bold">
                                         0%
                                     </div>
+
                                 </div>
 
                                 <div class="stat-icon">
@@ -494,7 +582,6 @@
 
             </div>
 
-
             <section class="card content-card">
 
                 <div class="card-body p-0">
@@ -502,6 +589,7 @@
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 p-4 border-bottom">
 
                         <div>
+
                             <h2 class="h5 fw-bold mb-1">
                                 Attendance Record
                             </h2>
@@ -509,15 +597,17 @@
                             <p class="text-muted small mb-0">
                                 Complete attendance history for this student.
                             </p>
+
                         </div>
 
                         <button type="button" class="btn btn-outline-secondary btn-sm" id="refreshButton">
+
                             <i class="bi bi-arrow-clockwise me-1"></i>
                             Refresh
+
                         </button>
 
                     </div>
-
 
                     <div class="table-responsive">
 
@@ -536,14 +626,18 @@
 
                             </thead>
 
-
                             <tbody id="attendanceTableBody">
 
                                 <tr>
 
                                     <td colspan="6" class="text-center py-5 text-muted">
-                                        <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+
+                                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"
+                                            aria-hidden="true">
+                                        </div>
+
                                         Loading attendance...
+
                                     </td>
 
                                 </tr>
@@ -562,475 +656,12 @@
 
     </div>
 
-
     <script src="../js/api.js"></script>
     <script src="../js/auth.js"></script>
+    <script src="../js/student-attendance.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script>
-        "use strict";
-
-        const studentId =
-            new URLSearchParams(window.location.search).get("id");
-
-        const attendanceTableBody =
-            document.getElementById("attendanceTableBody");
-
-        const studentSubtitle =
-            document.getElementById("studentSubtitle");
-
-        const pageMessage =
-            document.getElementById("pageMessage");
-
-
-        function escapeHtml(value) {
-
-            return String(value ?? "")
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-
-        }
-
-
-        function showMessage(message, type = "error") {
-
-            pageMessage.textContent = message;
-
-            pageMessage.className =
-                type === "success"
-                    ? "alert alert-success mb-4"
-                    : "alert alert-danger mb-4";
-
-        }
-
-
-        function formatDate(value) {
-
-            if (!value) {
-                return "—";
-            }
-
-            const date = new Date(value);
-
-            if (Number.isNaN(date.getTime())) {
-                return value;
-            }
-
-            return new Intl.DateTimeFormat(
-                "en-NG",
-                {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric"
-                }
-            ).format(date);
-
-        }
-
-
-        function getStatusClass(status) {
-
-            const value =
-                String(status || "").toLowerCase();
-
-            if (value === "present") {
-                return "status-badge status-active";
-            }
-
-            if (value === "absent") {
-                return "status-badge status-inactive";
-            }
-
-            return "status-badge status-pending";
-
-        }
-
-
-        async function loadStudent() {
-
-            if (!studentId) {
-
-                studentSubtitle.textContent =
-                    "Student ID was not provided.";
-
-                return;
-
-            }
-
-            try {
-
-                const response =
-                    await fetch(
-                        "/api/students/" +
-                        encodeURIComponent(studentId)
-                    );
-
-                if (!response.ok) {
-                    throw new Error(
-                        "Unable to load student information."
-                    );
-                }
-
-                const data =
-                    await response.json();
-
-                const student =
-                    data.student ||
-                    data.data ||
-                    data;
-
-                const name =
-                    student.name ||
-                    [
-                        student.first_name,
-                        student.middle_name,
-                        student.last_name
-                    ]
-                        .filter(Boolean)
-                        .join(" ");
-
-                studentSubtitle.textContent =
-                    name
-                        ? "Attendance record for " + name
-                        : "Student attendance record";
-
-            } catch (error) {
-
-                console.error(error);
-
-                studentSubtitle.textContent =
-                    "Student attendance record";
-
-            }
-
-        }
-
-
-        async function loadAttendance() {
-
-            if (!studentId) {
-
-                attendanceTableBody.innerHTML = `
-            <tr>
-                <td colspan="6" class="text-center py-5 text-muted">
-                    Student ID was not provided.
-                </td>
-            </tr>
-        `;
-
-                return;
-
-            }
-
-
-            attendanceTableBody.innerHTML = `
-        <tr>
-            <td colspan="6" class="text-center py-5 text-muted">
-                <div class="spinner-border spinner-border-sm text-primary me-2"></div>
-                Loading attendance...
-            </td>
-        </tr>
-    `;
-
-
-            try {
-
-                const response =
-                    await fetch(
-                        "/api/attendance/student/" +
-                        encodeURIComponent(studentId)
-                    );
-
-
-                if (!response.ok) {
-
-                    throw new Error(
-                        "Unable to load attendance."
-                    );
-
-                }
-
-
-                const data =
-                    await response.json();
-
-
-                const records =
-                    Array.isArray(data)
-                        ? data
-                        : (
-                            data.attendance ||
-                            data.data ||
-                            data.rows ||
-                            []
-                        );
-
-
-                renderAttendance(records);
-
-
-            } catch (error) {
-
-                console.error(
-                    "Attendance error:",
-                    error
-                );
-
-
-                attendanceTableBody.innerHTML = `
-            <tr>
-                <td colspan="6" class="text-center py-5 text-danger">
-                    <i class="bi bi-exclamation-circle me-2"></i>
-                    Unable to load attendance records.
-                </td>
-            </tr>
-        `;
-
-
-                showMessage(
-                    error.message ||
-                    "Unable to load attendance.",
-                    "error"
-                );
-
-            }
-
-        }
-
-
-        function renderAttendance(records) {
-
-            let present = 0;
-            let absent = 0;
-
-
-            records.forEach(record => {
-
-                const status =
-                    String(
-                        record.status || ""
-                    ).toLowerCase();
-
-                if (status === "present") {
-                    present++;
-                }
-
-                if (status === "absent") {
-                    absent++;
-                }
-
-            });
-
-
-            const total =
-                records.length;
-
-
-            const rate =
-                total > 0
-                    ? Math.round(
-                        (present / total) * 100
-                    )
-                    : 0;
-
-
-            document.getElementById(
-                "totalDays"
-            ).textContent = total;
-
-
-            document.getElementById(
-                "presentDays"
-            ).textContent = present;
-
-
-            document.getElementById(
-                "absentDays"
-            ).textContent = absent;
-
-
-            document.getElementById(
-                "attendanceRate"
-            ).textContent = rate + "%";
-
-
-            if (!records.length) {
-
-                attendanceTableBody.innerHTML = `
-            <tr>
-                <td colspan="6" class="text-center py-5 text-muted">
-                    <i class="bi bi-calendar-x fs-4 d-block mb-2"></i>
-                    No attendance records found.
-                </td>
-            </tr>
-        `;
-
-                return;
-
-            }
-
-
-            attendanceTableBody.innerHTML =
-                records.map(
-                    (record, index) => {
-
-                        const status =
-                            record.status ||
-                            "Unknown";
-
-
-                        return `
-                    <tr>
-
-                        <td class="fw-semibold">
-                            ${index + 1}
-                        </td>
-
-                        <td>
-                            ${escapeHtml(
-                            formatDate(
-                                record.date ||
-                                record.attendance_date ||
-                                record.attendanceDate
-                            )
-                        )}
-                        </td>
-
-                        <td>
-                            ${escapeHtml(
-                            record.session_name ||
-                            record.sessionName ||
-                            record.session ||
-                            "—"
-                        )}
-                        </td>
-
-                        <td>
-                            ${escapeHtml(
-                            record.term_name ||
-                            record.termName ||
-                            record.term ||
-                            "—"
-                        )}
-                        </td>
-
-                        <td>
-                            <span class="${getStatusClass(status)}">
-                                <i class="bi ${String(status).toLowerCase() === "present"
-                                ? "bi-check-circle-fill"
-                                : "bi-x-circle-fill"
-                            }"></i>
-                                ${escapeHtml(status)}
-                            </span>
-                        </td>
-
-                        <td>
-                            ${escapeHtml(
-                                record.remark ||
-                                record.remarks ||
-                                "—"
-                            )}
-                        </td>
-
-                    </tr>
-                `;
-
-                    }
-                )
-                    .join("");
-
-        }
-
-
-        function goBackToProfile() {
-
-            if (!studentId) {
-
-                window.location.href =
-                    "/pages/students.html";
-
-                return;
-
-            }
-
-            window.location.href =
-                "/pages/student-profile.html?id=" +
-                encodeURIComponent(studentId);
-
-        }
-
-
-        document
-            .getElementById("refreshButton")
-            .addEventListener(
-                "click",
-                loadAttendance
-            );
-
-
-        document.addEventListener(
-            "DOMContentLoaded",
-            async function () {
-
-                if (
-                    typeof protectPage ===
-                    "function"
-                ) {
-
-                    await protectPage();
-
-                }
-
-                await loadStudent();
-
-                await loadAttendance();
-
-            }
-        );
-
-
-        const sidebarToggle =
-            document.getElementById("sidebarToggle");
-
-        const sidebar =
-            document.getElementById("sidebar");
-
-        const sidebarOverlay =
-            document.getElementById("sidebarOverlay");
-
-
-        if (sidebarToggle) {
-
-            sidebarToggle.addEventListener(
-                "click",
-                function () {
-
-                    sidebar.classList.toggle("show");
-                    sidebarOverlay.classList.toggle("show");
-
-                }
-            );
-
-        }
-
-
-        if (sidebarOverlay) {
-
-            sidebarOverlay.addEventListener(
-                "click",
-                function () {
-
-                    sidebar.classList.remove("show");
-                    sidebarOverlay.classList.remove("show");
-
-                }
-            );
-
-        }
-    </script>
+    ```
 
 </body>
 

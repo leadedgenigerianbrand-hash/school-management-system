@@ -1,3 +1,5 @@
+"use strict";
+
 const {
     createClassArm,
     findClassArmById,
@@ -10,14 +12,33 @@ const {
 
 /*
 |--------------------------------------------------------------------------
-| Class Arm Controller
+| CLASS ARM CONTROLLER
 |--------------------------------------------------------------------------
 */
 
 
 /*
 |--------------------------------------------------------------------------
-| Create Class Arm
+| GET SCHOOL ID
+|--------------------------------------------------------------------------
+*/
+
+function getSchoolId(req) {
+
+    return (
+        req.user?.schoolId ||
+        req.user?.school_id ||
+        req.school?.id ||
+        req.schoolId ||
+        null
+    );
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| CREATE CLASS ARM
 |--------------------------------------------------------------------------
 | POST /api/class-arms
 |--------------------------------------------------------------------------
@@ -28,14 +49,29 @@ async function create(req, res, next) {
     try {
 
         const schoolId =
-            req.user.schoolId;
+            getSchoolId(req);
+
+
+        if (!schoolId) {
+
+            return res.status(401).json({
+
+                success: false,
+
+                message:
+                    "School information is missing from the authenticated user."
+
+            });
+
+        }
+
 
         const {
             classId,
             armName,
             armCode,
-            capacity,
-            classTeacherId,
+            description,
+            isActive,
             status
         } = req.body;
 
@@ -54,7 +90,10 @@ async function create(req, res, next) {
         }
 
 
-        if (!armName || !armName.trim()) {
+        if (
+            !armName ||
+            !String(armName).trim()
+        ) {
 
             return res.status(400).json({
 
@@ -68,6 +107,40 @@ async function create(req, res, next) {
         }
 
 
+        let activeValue = true;
+
+
+        if (isActive !== undefined) {
+
+            activeValue =
+                isActive;
+
+        } else if (status !== undefined) {
+
+            if (
+                typeof status === "boolean"
+            ) {
+
+                activeValue =
+                    status;
+
+            } else {
+
+                const normalizedStatus =
+                    String(status)
+                        .trim()
+                        .toLowerCase();
+
+                activeValue =
+                    normalizedStatus === "active" ||
+                    normalizedStatus === "true" ||
+                    normalizedStatus === "1";
+
+            }
+
+        }
+
+
         const classArm =
             await createClassArm({
 
@@ -76,25 +149,24 @@ async function create(req, res, next) {
                 classId,
 
                 armName:
-                    armName.trim(),
+                    String(armName).trim(),
 
                 armCode:
-                    armCode
-                        ? armCode.trim()
+                    armCode !== undefined &&
+                    armCode !== null &&
+                    String(armCode).trim()
+                        ? String(armCode).trim()
                         : null,
 
-                capacity:
-                    capacity !== undefined &&
-                    capacity !== null &&
-                    capacity !== ""
-                        ? Number(capacity)
+                description:
+                    description !== undefined &&
+                    description !== null &&
+                    String(description).trim()
+                        ? String(description).trim()
                         : null,
 
-                classTeacherId:
-                    classTeacherId || null,
-
-                status:
-                    status || "active"
+                isActive:
+                    activeValue
 
             });
 
@@ -110,7 +182,6 @@ async function create(req, res, next) {
                 classArm
 
         });
-
 
     } catch (error) {
 
@@ -128,7 +199,7 @@ async function create(req, res, next) {
 
 /*
 |--------------------------------------------------------------------------
-| Get Class Arm By ID
+| GET CLASS ARM BY ID
 |--------------------------------------------------------------------------
 | GET /api/class-arms/:id
 |--------------------------------------------------------------------------
@@ -139,10 +210,38 @@ async function getById(req, res, next) {
     try {
 
         const schoolId =
-            req.user.schoolId;
+            getSchoolId(req);
 
         const classArmId =
             req.params.id;
+
+
+        if (!schoolId) {
+
+            return res.status(401).json({
+
+                success: false,
+
+                message:
+                    "School information is missing from the authenticated user."
+
+            });
+
+        }
+
+
+        if (!classArmId) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Class arm ID is required."
+
+            });
+
+        }
 
 
         const classArm =
@@ -175,7 +274,6 @@ async function getById(req, res, next) {
 
         });
 
-
     } catch (error) {
 
         console.error(
@@ -192,7 +290,7 @@ async function getById(req, res, next) {
 
 /*
 |--------------------------------------------------------------------------
-| Get Class Arms
+| GET ALL CLASS ARMS
 |--------------------------------------------------------------------------
 | GET /api/class-arms
 |--------------------------------------------------------------------------
@@ -203,20 +301,56 @@ async function getAll(req, res, next) {
     try {
 
         const schoolId =
-            req.user.schoolId;
+            getSchoolId(req);
 
 
-        const {
+        if (!schoolId) {
 
-            classId = null,
+            return res.status(401).json({
 
-            status = null,
+                success: false,
 
-            limit = 100,
+                message:
+                    "School information is missing from the authenticated user."
 
-            offset = 0
+            });
 
-        } = req.query;
+        }
+
+
+        const classId =
+            req.query.classId || null;
+
+        const status =
+            req.query.status || null;
+
+
+        const requestedLimit =
+            Number(req.query.limit);
+
+        const requestedOffset =
+            Number(req.query.offset);
+
+
+        const safeLimit =
+            Number.isFinite(requestedLimit)
+                ? Math.min(
+                    Math.max(
+                        Math.floor(requestedLimit),
+                        1
+                    ),
+                    500
+                )
+                : 100;
+
+
+        const safeOffset =
+            Number.isFinite(requestedOffset)
+                ? Math.max(
+                    Math.floor(requestedOffset),
+                    0
+                )
+                : 0;
 
 
         const classArms =
@@ -229,16 +363,10 @@ async function getAll(req, res, next) {
                 status,
 
                 limit:
-                    Math.min(
-                        Number(limit) || 100,
-                        500
-                    ),
+                    safeLimit,
 
                 offset:
-                    Math.max(
-                        Number(offset) || 0,
-                        0
-                    )
+                    safeOffset
 
             });
 
@@ -254,7 +382,6 @@ async function getAll(req, res, next) {
                 classArms
 
         });
-
 
     } catch (error) {
 
@@ -272,7 +399,7 @@ async function getAll(req, res, next) {
 
 /*
 |--------------------------------------------------------------------------
-| Update Class Arm
+| UPDATE CLASS ARM
 |--------------------------------------------------------------------------
 | PUT /api/class-arms/:id
 |--------------------------------------------------------------------------
@@ -283,26 +410,47 @@ async function update(req, res, next) {
     try {
 
         const schoolId =
-            req.user.schoolId;
+            getSchoolId(req);
 
         const classArmId =
             req.params.id;
 
 
+        if (!schoolId) {
+
+            return res.status(401).json({
+
+                success: false,
+
+                message:
+                    "School information is missing from the authenticated user."
+
+            });
+
+        }
+
+
+        if (!classArmId) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Class arm ID is required."
+
+            });
+
+        }
+
+
         const {
-
             classId,
-
             armName,
-
             armCode,
-
-            capacity,
-
-            classTeacherId,
-
+            description,
+            isActive,
             status
-
         } = req.body;
 
 
@@ -311,8 +459,22 @@ async function update(req, res, next) {
 
         if (classId !== undefined) {
 
+            if (!classId) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Class ID cannot be empty."
+
+                });
+
+            }
+
+
             data.classId =
-                classId || null;
+                classId;
 
         }
 
@@ -321,7 +483,7 @@ async function update(req, res, next) {
 
             if (
                 !armName ||
-                !armName.trim()
+                !String(armName).trim()
             ) {
 
                 return res.status(400).json({
@@ -337,7 +499,7 @@ async function update(req, res, next) {
 
 
             data.armName =
-                armName.trim();
+                String(armName).trim();
 
         }
 
@@ -345,36 +507,78 @@ async function update(req, res, next) {
         if (armCode !== undefined) {
 
             data.armCode =
-                armCode
-                    ? armCode.trim()
+                armCode !== null &&
+                String(armCode).trim()
+                    ? String(armCode).trim()
                     : null;
 
         }
 
 
-        if (capacity !== undefined) {
+        if (description !== undefined) {
 
-            data.capacity =
-                capacity === null ||
-                capacity === ""
-                    ? null
-                    : Number(capacity);
-
-        }
-
-
-        if (classTeacherId !== undefined) {
-
-            data.classTeacherId =
-                classTeacherId || null;
+            data.description =
+                description !== null &&
+                String(description).trim()
+                    ? String(description).trim()
+                    : null;
 
         }
 
 
-        if (status !== undefined) {
+        if (isActive !== undefined) {
 
-            data.status =
-                status;
+            data.isActive =
+                isActive;
+
+        } else if (status !== undefined) {
+
+            if (
+                typeof status === "boolean"
+            ) {
+
+                data.isActive =
+                    status;
+
+            } else {
+
+                const normalizedStatus =
+                    String(status)
+                        .trim()
+                        .toLowerCase();
+
+                if (
+                    normalizedStatus === "active" ||
+                    normalizedStatus === "true" ||
+                    normalizedStatus === "1"
+                ) {
+
+                    data.isActive =
+                        true;
+
+                } else if (
+                    normalizedStatus === "inactive" ||
+                    normalizedStatus === "false" ||
+                    normalizedStatus === "0"
+                ) {
+
+                    data.isActive =
+                        false;
+
+                } else {
+
+                    return res.status(400).json({
+
+                        success: false,
+
+                        message:
+                            "Invalid status value."
+
+                    });
+
+                }
+
+            }
 
         }
 
@@ -429,7 +633,6 @@ async function update(req, res, next) {
 
         });
 
-
     } catch (error) {
 
         console.error(
@@ -446,7 +649,7 @@ async function update(req, res, next) {
 
 /*
 |--------------------------------------------------------------------------
-| Delete Class Arm
+| DELETE CLASS ARM
 |--------------------------------------------------------------------------
 | DELETE /api/class-arms/:id
 |--------------------------------------------------------------------------
@@ -457,10 +660,38 @@ async function remove(req, res, next) {
     try {
 
         const schoolId =
-            req.user.schoolId;
+            getSchoolId(req);
 
         const classArmId =
             req.params.id;
+
+
+        if (!schoolId) {
+
+            return res.status(401).json({
+
+                success: false,
+
+                message:
+                    "School information is missing from the authenticated user."
+
+            });
+
+        }
+
+
+        if (!classArmId) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Class arm ID is required."
+
+            });
+
+        }
 
 
         const deletedClassArm =
@@ -496,7 +727,6 @@ async function remove(req, res, next) {
 
         });
 
-
     } catch (error) {
 
         console.error(
@@ -513,9 +743,9 @@ async function remove(req, res, next) {
 
 /*
 |--------------------------------------------------------------------------
-| Search Class Arms
+| SEARCH CLASS ARMS
 |--------------------------------------------------------------------------
-| GET /api/class-arms/search?q=...
+| GET /api/class-arms/search?q=
 |--------------------------------------------------------------------------
 */
 
@@ -524,10 +754,27 @@ async function search(req, res, next) {
     try {
 
         const schoolId =
-            req.user.schoolId;
+            getSchoolId(req);
+
+
+        if (!schoolId) {
+
+            return res.status(401).json({
+
+                success: false,
+
+                message:
+                    "School information is missing from the authenticated user."
+
+            });
+
+        }
+
 
         const searchTerm =
-            (req.query.q || "").trim();
+            String(
+                req.query.q || ""
+            ).trim();
 
 
         if (!searchTerm) {
@@ -563,7 +810,6 @@ async function search(req, res, next) {
 
         });
 
-
     } catch (error) {
 
         console.error(
@@ -580,7 +826,7 @@ async function search(req, res, next) {
 
 /*
 |--------------------------------------------------------------------------
-| Export
+| EXPORT CONTROLLER
 |--------------------------------------------------------------------------
 */
 

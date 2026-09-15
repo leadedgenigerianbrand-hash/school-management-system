@@ -1,13 +1,33 @@
-/* =========================================================
-   SCHOOL MANAGEMENT SYSTEM
-   RESPONSIVE STYLES
-========================================================= */
+/*
+|--------------------------------------------------------------------------
+| SCHOOL MANAGEMENT SYSTEM
+| RESPONSIVE COMPATIBILITY STYLES
+|--------------------------------------------------------------------------
+|
+| This stylesheet provides responsive behavior for existing application
+| components and legacy-compatible class names.
+|
+| Primary layout ownership:
+| - bootstrap-system.css: application design system
+| - dashboard.css: dashboard and application layout
+| - forms.css: shared form layout
+| - login.css: login page
+| - style.css: global application styles
+|
+| This file should not contain authentication, authorization, API logic,
+| navigation logic, or page-specific business logic.
+|
+|--------------------------------------------------------------------------
+*/
+
+
+/*
+|--------------------------------------------------------------------------
+| TABLET / COMPACT DESKTOP
+|--------------------------------------------------------------------------
+*/
 
 @media (max-width: 1100px) {
-    :root {
-        --sidebar-width: 230px;
-    }
-
     .page-content {
         padding: 20px;
     }
@@ -15,65 +35,119 @@
     .top-header {
         padding: 10px 20px;
     }
+
+    .dashboard-grid,
+    .stats-grid {
+        gap: 16px;
+    }
 }
 
-/* =========================================================
-   TABLETS
-========================================================= */
 
-@media (max-width: 900px) {
-    :root {
-        --sidebar-width: 250px;
-    }
+/*
+|--------------------------------------------------------------------------
+| TABLETS
+|--------------------------------------------------------------------------
+*/
+
+@media (max-width: 991.98px) {
+    /*
+    |----------------------------------------------------------------------
+    | LEGACY SIDEBAR COMPATIBILITY
+    |----------------------------------------------------------------------
+    */
 
     .sidebar,
-    .sms-sidebar {
+    .sms-sidebar,
+    .dashboard-sidebar {
         transform: translateX(-100%);
     }
 
     .sidebar.open,
-    .sms-sidebar.open {
+    .sidebar.show,
+    .sidebar.active,
+    .sms-sidebar.open,
+    .sms-sidebar.show,
+    .sms-sidebar.active,
+    .dashboard-sidebar.open,
+    .dashboard-sidebar.show,
+    .dashboard-sidebar.active {
         transform: translateX(0);
     }
 
-    .main-content {
+
+    /*
+    |----------------------------------------------------------------------
+    | MAIN CONTENT
+    |----------------------------------------------------------------------
+    */
+
+    .main-content,
+    .sms-main,
+    .dashboard-main {
         width: 100%;
         margin-left: 0;
     }
 
+
+    /*
+    |----------------------------------------------------------------------
+    | LEGACY SIDEBAR OVERLAY
+    |----------------------------------------------------------------------
+    */
+
     .sidebar-overlay {
         position: fixed;
         inset: 0;
-        z-index: 999;
-        background: rgba(15, 23, 42, 0.5);
+
+        display: block;
+
+        background-color: rgba(15, 23, 42, 0.5);
+
+        z-index: 1040;
     }
 
     .sidebar-overlay[hidden] {
-        display: none;
+        display: none !important;
     }
+
+
+    /*
+    |----------------------------------------------------------------------
+    | GRID LAYOUTS
+    |----------------------------------------------------------------------
+    */
 
     .dashboard-grid,
     .stats-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .two-column,
-    .form-grid {
+    .two-column {
         grid-template-columns: 1fr;
+    }
+
+    .form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
-/* =========================================================
-   MOBILE
-========================================================= */
 
-@media (max-width: 650px) {
-    :root {
-        --header-height: 64px;
-    }
+/*
+|--------------------------------------------------------------------------
+| MOBILE
+|--------------------------------------------------------------------------
+*/
+
+@media (max-width: 767.98px) {
+    /*
+    |----------------------------------------------------------------------
+    | HEADER
+    |----------------------------------------------------------------------
+    */
 
     .top-header {
-        min-height: var(--header-height);
+        min-height: 64px;
+
         padding: 8px 14px;
     }
 
@@ -93,24 +167,64 @@
         gap: 7px;
     }
 
+
+    /*
+    |----------------------------------------------------------------------
+    | HEADER BUTTONS
+    |----------------------------------------------------------------------
+    */
+
     .header-button,
     .sidebar-toggle {
         width: 36px;
         height: 36px;
     }
 
+
+    /*
+    |----------------------------------------------------------------------
+    | PAGE CONTENT
+    |----------------------------------------------------------------------
+    */
+
     .page-content {
         padding: 14px;
     }
+
+
+    /*
+    |----------------------------------------------------------------------
+    | DASHBOARD GRIDS
+    |----------------------------------------------------------------------
+    */
 
     .dashboard-grid,
     .stats-grid {
         grid-template-columns: 1fr;
     }
 
+
+    /*
+    |----------------------------------------------------------------------
+    | FORM GRID
+    |----------------------------------------------------------------------
+    */
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    /*
+    |----------------------------------------------------------------------
+    | CARD HEADERS
+    |----------------------------------------------------------------------
+    */
+
     .card-header {
         flex-direction: column;
         align-items: flex-start;
+
         gap: 10px;
     }
 
@@ -118,10 +232,19 @@
         padding: 14px;
     }
 
+
+    /*
+    |----------------------------------------------------------------------
+    | BUTTON GROUPS
+    |----------------------------------------------------------------------
+    */
+
     .button-group {
         width: 100%;
+
         display: flex;
         flex-direction: column;
+
         gap: 8px;
     }
 
@@ -129,16 +252,34 @@
         width: 100%;
     }
 
+
+    /*
+    |----------------------------------------------------------------------
+    | TABLE CONTAINERS
+    |----------------------------------------------------------------------
+    */
+
     .table-container {
-        margin: 0 -14px;
         width: calc(100% + 28px);
+
+        margin-right: -14px;
+        margin-left: -14px;
+
         overflow-x: auto;
+
         -webkit-overflow-scrolling: touch;
     }
 
-    .table {
+    .table-container .table {
         min-width: 700px;
     }
+
+
+    /*
+    |----------------------------------------------------------------------
+    | MODALS
+    |----------------------------------------------------------------------
+    */
 
     .modal {
         padding: 10px;
@@ -147,20 +288,40 @@
     .modal-dialog {
         width: 100%;
         max-width: 100%;
+
         max-height: calc(100vh - 20px);
+        max-height: calc(100dvh - 20px);
+
         overflow-y: auto;
     }
+
+
+    /*
+    |----------------------------------------------------------------------
+    | FOOTER
+    |----------------------------------------------------------------------
+    */
 
     .main-footer {
         flex-direction: column;
         align-items: flex-start;
+
         padding: 14px;
+
         gap: 8px;
     }
+
+
+    /*
+    |----------------------------------------------------------------------
+    | SEARCH TOOLBAR
+    |----------------------------------------------------------------------
+    */
 
     .search-toolbar {
         flex-direction: column;
         align-items: stretch;
+
         gap: 10px;
     }
 
@@ -168,22 +329,39 @@
         width: 100%;
     }
 
+
+    /*
+    |----------------------------------------------------------------------
+    | PROFILE
+    |----------------------------------------------------------------------
+    */
+
     .profile-header {
         flex-direction: column;
         align-items: center;
+
         text-align: center;
     }
 
     .profile-actions {
         width: 100%;
+
         display: flex;
         flex-direction: column;
+
         gap: 8px;
     }
 
     .profile-actions .button {
         width: 100%;
     }
+
+
+    /*
+    |----------------------------------------------------------------------
+    | FORM ACTIONS
+    |----------------------------------------------------------------------
+    */
 
     .form-actions {
         flex-direction: column;
@@ -196,11 +374,66 @@
     }
 }
 
-/* =========================================================
-   VERY SMALL PHONES
-========================================================= */
 
-@media (max-width: 400px) {
+/*
+|--------------------------------------------------------------------------
+| SMALL MOBILE DEVICES
+|--------------------------------------------------------------------------
+*/
+
+@media (max-width: 575.98px) {
+    .page-content {
+        padding: 12px;
+    }
+
+    .top-header {
+        padding: 8px 12px;
+    }
+
+    .top-header h1 {
+        font-size: 16px;
+    }
+
+    .button {
+        min-height: 38px;
+
+        padding-right: 10px;
+        padding-left: 10px;
+
+        font-size: 13px;
+    }
+
+    .form-control {
+        min-height: 38px;
+
+        font-size: 13px;
+    }
+
+    .modal {
+        padding: 8px;
+    }
+
+    .modal-dialog {
+        max-height: calc(100vh - 16px);
+        max-height: calc(100dvh - 16px);
+    }
+
+    .table-container {
+        margin-right: -12px;
+        margin-left: -12px;
+
+        width: calc(100% + 24px);
+    }
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| VERY SMALL PHONES
+|--------------------------------------------------------------------------
+*/
+
+@media (max-width: 399.98px) {
     .page-content {
         padding: 10px;
     }
@@ -215,12 +448,16 @@
 
     .button {
         min-height: 36px;
-        padding: 0 10px;
+
+        padding-right: 10px;
+        padding-left: 10px;
+
         font-size: 12px;
     }
 
     .form-control {
         min-height: 38px;
+
         font-size: 13px;
     }
 
@@ -230,41 +467,78 @@
 
     .modal-dialog {
         max-height: calc(100vh - 10px);
+        max-height: calc(100dvh - 10px);
     }
 }
 
-/* =========================================================
-   PRINT
-========================================================= */
+
+/*
+|--------------------------------------------------------------------------
+| RESPONSIVE ACCESSIBILITY
+|--------------------------------------------------------------------------
+*/
+
+@media (prefers-reduced-motion: reduce) {
+
+    .sidebar,
+    .sms-sidebar,
+    .dashboard-sidebar,
+    .main-content,
+    .sms-main,
+    .dashboard-main {
+        transition: none;
+    }
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| PRINT
+|--------------------------------------------------------------------------
+*/
 
 @media print {
 
     .sidebar,
     .sms-sidebar,
+    .dashboard-sidebar,
     .top-header,
+    .dashboard-header,
+    .topbar,
     .main-footer,
     .sidebar-toggle,
     .header-button,
     .button,
-    .no-print {
+    .no-print,
+    .sidebar-overlay {
         display: none !important;
     }
 
-    .main-content {
-        width: 100%;
-        margin: 0;
+    .main-content,
+    .sms-main,
+    .dashboard-main {
+        width: 100% !important;
+        min-height: auto !important;
+
+        margin: 0 !important;
     }
 
-    .page-content {
-        padding: 0;
+    .page-content,
+    .dashboard-content {
+        padding: 0 !important;
     }
 
-    .card {
-        border: 0;
-        box-shadow: none;
+    .card,
+    .dashboard-card,
+    .stat-card {
+        border: 0 !important;
+
+        box-shadow: none !important;
+
+        break-inside: avoid;
     }
 
     body {
-        background: #ffffff !important;
+        background-color: #ffffff !important;
     }
 }

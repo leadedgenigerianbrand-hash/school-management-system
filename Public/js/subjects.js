@@ -1,1065 +1,1336 @@
-```javascript
 "use strict";
 
 (function () {
-    let subjects = [];
-    let editingSubjectId = null;
+const API_BASE = "/api";
+const SUBJECTS_API = `${API_BASE}/subjects`;
 
-    async function request(endpoint, options = {}) {
-        if (typeof window.apiRequest === "function") {
-            return window.apiRequest(endpoint, options);
+```
+const PAGE_SIZE = 10;
+
+let subjects = [];
+let filteredSubjects = [];
+let currentPage = 1;
+let subjectToDelete = null;
+let deleteModalInstance = null;
+
+const elements = {
+    tableBody: document.getElementById("subjectsTableBody"),
+    searchInput: document.getElementById("searchInput"),
+    compulsoryFilter: document.getElementById("compulsoryFilter"),
+    statusFilter: document.getElementById("statusFilter"),
+    refreshButton: document.getElementById("refreshButton"),
+    addSubjectButton: document.getElementById("addSubjectButton"),
+    previousButton: document.getElementById("previousButton"),
+    nextButton: document.getElementById("nextButton"),
+    pageNumber: document.getElementById("pageNumber"),
+    showingFrom: document.getElementById("showingFrom"),
+    showingTo: document.getElementById("showingTo"),
+    totalResults: document.getElementById("totalResults"),
+    pageMessage: document.getElementById("pageMessage"),
+    totalSubjects: document.getElementById("totalSubjects"),
+    activeSubjects: document.getElementById("activeSubjects"),
+    compulsorySubjects: document.getElementById("compulsorySubjects"),
+    optionalSubjects: document.getElementById("optionalSubjects"),
+    deleteModal: document.getElementById("deleteModal"),
+    deleteSubjectName: document.getElementById("deleteSubjectName"),
+    confirmDeleteButton: document.getElementById("confirmDeleteButton"),
+    closeDeleteModal: document.getElementById("closeDeleteModal"),
+    cancelDeleteButton: document.getElementById("cancelDeleteButton"),
+    sidebar: document.getElementById("sidebar"),
+    sidebarOverlay: document.getElementById("sidebarOverlay"),
+    sidebarToggle: document.getElementById("sidebarToggle"),
+    logoutButton: document.getElementById("logoutButton"),
+    userName: document.getElementById("userName")
+};
+
+function getToken() {
+    return (
+        localStorage.getItem("school_management_token") ||
+        sessionStorage.getItem("school_management_token") ||
+        localStorage.getItem("token") ||
+        sessionStorage.getItem("token") ||
+        localStorage.getItem("accessToken") ||
+        sessionStorage.getItem("accessToken") ||
+        ""
+    );
+}
+
+function buildHeaders(options = {}) {
+    const headers = {
+        Accept: "application/json",
+        ...(options.headers || {})
+    };
+
+    const token = getToken();
+
+    if (token) {
+        headers.Authorization = `Bearer ${token}`;
+    }
+
+    if (
+        options.body &&
+        !(options.body instanceof FormData) &&
+        !headers["Content-Type"] &&
+        !headers["content-type"]
+    ) {
+        headers["Content-Type"] = "application/json";
+    }
+
+    return headers;
+}
+
+async function apiRequest(endpoint, options = {}) {
+    let url = endpoint;
+
+    if (
+        !url.startsWith("http://") &&
+        !url.startsWith("https://")
+    ) {
+        if (!url.startsWith("/")) {
+            url = `/${url}`;
         }
 
-        let url = endpoint;
+        if (!url.startsWith("/api/")) {
+            url = `/api${url}`;
+        }
+    }
+
+    let response;
+
+    try {
+        response = await fetch(url, {
+            ...options,
+            headers: buildHeaders(options)
+        });
+    } catch (error) {
+        console.error("Subjects API connection error:", error);
+
+        throw new Error(
+            "Unable to connect to the server."
+        );
+    }
+
+    if (response.status === 401) {
+        clearAuthentication();
 
         if (
-            !url.startsWith("http://") &&
-            !url.startsWith("https://")
+            !window.location.pathname.endsWith(
+                "/login.html"
+            )
         ) {
-            if (!url.startsWith("/")) {
-                url = "/" + url;
-            }
-
-            if (!url.startsWith("/api/")) {
-                url = "/api" + url;
-            }
+            window.location.href = "/pages/login.html";
         }
 
-        const token =
-            localStorage.getItem("school_management_token") ||
-            sessionStorage.getItem("school_management_token") ||
-            localStorage.getItem("token") ||
-            sessionStorage.getItem("token") ||
-            localStorage.getItem("accessToken") ||
-            sessionStorage.getItem("accessToken") ||
-            "";
+        throw new Error(
+            "Your session has expired. Please log in again."
+        );
+    }
 
-        const headers = {
-            Accept: "application/json",
-            ...(options.headers || {})
-        };
+    if (response.status === 403) {
+        throw new Error(
+            "You do not have permission to perform this action."
+        );
+    }
 
-        if (token) {
-            headers.Authorization = `Bearer ${token}`;
+    const contentType =
+        response.headers.get("content-type") || "";
+
+    let data = null;
+
+    try {
+        if (contentType.includes("application/json")) {
+            data = await response.json();
+        } else {
+            data = await response.text();
         }
+    } catch {
+        data = null;
+    }
 
-        if (
-            options.body &&
-            !(options.body instanceof FormData) &&
-            !headers["Content-Type"] &&
-            !headers["content-type"]
-        ) {
-            headers["Content-Type"] = "application/json";
-        }
+    if (!response.ok) {
+        const message =
+            typeof data === "object" && data
+                ? data.message ||
+                  data.error ||
+                  "Request failed."
+                : data ||
+                  "Request failed.";
 
-        let response;
+        throw new Error(message);
+    }
 
-        try {
-            response = await fetch(url, {
-                ...options,
-                headers
-            });
-        } catch (error) {
-            console.error("Subjects API error:", error);
+    return data;
+}
 
-            throw new Error(
-                "Unable to connect to the server."
-            );
-        }
+function clearAuthentication() {
+    const keys = [
+        "school_management_token",
+        "school_management_user",
+        "token",
+        "accessToken",
+        "user"
+    ];
 
-        if (response.status === 401) {
-            if (
-                typeof window.clearApiAuthentication ===
-                "function"
-            ) {
-                window.clearApiAuthentication();
-            } else {
-                localStorage.removeItem(
-                    "school_management_token"
-                );
-                localStorage.removeItem(
-                    "school_management_user"
-                );
-                sessionStorage.removeItem(
-                    "school_management_token"
-                );
-                sessionStorage.removeItem(
-                    "school_management_user"
-                );
-            }
+    keys.forEach((key) => {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+    });
+}
 
-            if (
-                !window.location.pathname.endsWith(
-                    "/login.html"
-                )
-            ) {
-                window.location.href =
-                    "/pages/login.html";
-            }
-
-            throw new Error("Authentication required.");
-        }
-
-        if (response.status === 403) {
-            throw new Error(
-                "You do not have permission to perform this action."
-            );
-        }
-
-        const contentType =
-            response.headers.get("content-type") || "";
-
-        const data =
-            contentType.includes("application/json")
-                ? await response.json()
-                : await response.text();
-
-        if (!response.ok) {
-            throw new Error(
-                typeof data === "object"
-                    ? data?.message ||
-                      data?.error ||
-                      "Request failed."
-                    : data ||
-                      "Request failed."
-            );
-        }
-
+function extractArray(data) {
+    if (Array.isArray(data)) {
         return data;
     }
 
-    async function initialize() {
-        setupEvents();
-        await loadSubjects();
-        updateSummary();
+    if (Array.isArray(data?.subjects)) {
+        return data.subjects;
     }
 
-    function setupEvents() {
-        const form =
-            document.querySelector("#subjectForm") ||
-            document.querySelector(
-                "form[data-subject-form]"
-            );
-
-        if (form) {
-            form.addEventListener(
-                "submit",
-                handleSubmit
-            );
-        }
-
-        const search =
-            document.querySelector("#subjectSearch") ||
-            document.querySelector(
-                "[name='subject_search']"
-            );
-
-        if (search) {
-            search.addEventListener(
-                "input",
-                renderSubjects
-            );
-        }
-
-        document.addEventListener(
-            "click",
-            handleActionClick
-        );
+    if (Array.isArray(data?.data)) {
+        return data.data;
     }
 
-    async function loadSubjects() {
-        showLoading();
-
-        try {
-            const data =
-                await request("/subjects");
-
-            subjects =
-                Array.isArray(data)
-                    ? data
-                    : Array.isArray(data?.data)
-                        ? data.data
-                        : Array.isArray(data?.subjects)
-                            ? data.subjects
-                            : Array.isArray(data?.records)
-                                ? data.records
-                                : [];
-
-            renderSubjects();
-            updateSummary();
-
-        } catch (error) {
-            console.error(
-                "Unable to load subjects:",
-                error
-            );
-
-            subjects = [];
-
-            showError(
-                error.message ||
-                "Unable to load subjects."
-            );
-
-            updateSummary();
-        }
+    if (Array.isArray(data?.records)) {
+        return data.records;
     }
 
-    function renderSubjects() {
-        const container =
-            document.querySelector(
-                "#subjectsTableBody"
-            ) ||
-            document.querySelector(
-                "#subjectTableBody"
-            ) ||
-            document.querySelector(
-                "#subjects-table-body"
-            ) ||
-            document.querySelector(
-                "tbody[data-subjects-body]"
-            );
+    return [];
+}
 
-        if (!container) {
-            return;
-        }
+function getSubjectId(subject) {
+    return (
+        subject?.id ??
+        subject?.subjectId ??
+        subject?.subject_id ??
+        ""
+    );
+}
 
-        const search =
-            getValue(
-                "#subjectSearch",
-                "[name='subject_search']"
-            )
-                .trim()
-                .toLowerCase();
+function getSubjectName(subject) {
+    return (
+        subject?.subjectName ??
+        subject?.subject_name ??
+        subject?.name ??
+        ""
+    );
+}
 
-        let records = subjects;
+function getSubjectCode(subject) {
+    return (
+        subject?.subjectCode ??
+        subject?.subject_code ??
+        subject?.code ??
+        ""
+    );
+}
 
-        if (search) {
-            records = subjects.filter(
-                (subject) => {
-                    const name =
-                        String(
-                            subject.name ||
-                            subject.subject_name ||
-                            ""
-                        ).toLowerCase();
+function getDescription(subject) {
+    return subject?.description ?? "";
+}
 
-                    const code =
-                        String(
-                            subject.code ||
-                            subject.subject_code ||
-                            ""
-                        ).toLowerCase();
+function getIsCompulsory(subject) {
+    const value =
+        subject?.isCompulsory ??
+        subject?.is_compulsory ??
+        subject?.compulsory;
 
-                    const description =
-                        String(
-                            subject.description ||
-                            ""
-                        ).toLowerCase();
-
-                    const department =
-                        String(
-                            subject.department_name ||
-                            subject.department ||
-                            ""
-                        ).toLowerCase();
-
-                    const className =
-                        String(
-                            subject.class_name ||
-                            subject.class ||
-                            ""
-                        ).toLowerCase();
-
-                    return (
-                        name.includes(search) ||
-                        code.includes(search) ||
-                        description.includes(search) ||
-                        department.includes(search) ||
-                        className.includes(search)
-                    );
-                }
-            );
-        }
-
-        if (!records.length) {
-            container.innerHTML = `
-                <tr>
-                    <td colspan="8">
-                        <div class="students-empty">
-                            <div class="students-empty-icon">
-                                S
-                            </div>
-
-                            <h3>
-                                No subjects found
-                            </h3>
-
-                            <p>
-                                There are no subject records to display.
-                            </p>
-                        </div>
-                    </td>
-                </tr>
-            `;
-
-            return;
-        }
-
-        container.innerHTML =
-            records
-                .map(renderSubjectRow)
-                .join("");
+    if (typeof value === "boolean") {
+        return value;
     }
 
-    function renderSubjectRow(subject) {
-        const id =
-            subject.id ??
-            subject.subject_id ??
-            "";
-
-        const name =
-            subject.name ||
-            subject.subject_name ||
-            "-";
-
-        const code =
-            subject.code ||
-            subject.subject_code ||
-            "-";
-
-        const description =
-            subject.description ||
-            "-";
-
-        const department =
-            subject.department_name ||
-            subject.department ||
-            "-";
-
-        const className =
-            subject.class_name ||
-            subject.class ||
-            "-";
-
-        const status =
-            subject.status ||
-            "Active";
-
-        return `
-            <tr>
-                <td>
-                    <div class="student-name">
-                        <div class="student-avatar">
-                            ${escapeHtml(
-                                getInitials(name)
-                            )}
-                        </div>
-
-                        <div class="student-name-text">
-                            <strong>
-                                ${escapeHtml(name)}
-                            </strong>
-                        </div>
-                    </div>
-                </td>
-
-                <td>
-                    ${escapeHtml(code)}
-                </td>
-
-                <td>
-                    ${escapeHtml(description)}
-                </td>
-
-                <td>
-                    ${escapeHtml(department)}
-                </td>
-
-                <td>
-                    ${escapeHtml(className)}
-                </td>
-
-                <td>
-                    <span class="status-badge ${escapeAttribute(
-                        getStatusClass(status)
-                    )}">
-                        ${escapeHtml(status)}
-                    </span>
-                </td>
-
-                <td>
-                    ${formatDate(
-                        subject.created_at ||
-                        subject.createdAt
-                    )}
-                </td>
-
-                <td>
-                    <div class="student-actions">
-                        <button
-                            type="button"
-                            class="student-action-btn"
-                            data-action="edit-subject"
-                            data-id="${escapeAttribute(id)}"
-                            title="Edit"
-                        >
-                            ✎
-                        </button>
-
-                        <button
-                            type="button"
-                            class="student-action-btn delete"
-                            data-action="delete-subject"
-                            data-id="${escapeAttribute(id)}"
-                            title="Delete"
-                        >
-                            ×
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `;
+    if (typeof value === "number") {
+        return value === 1;
     }
 
-    async function handleSubmit(event) {
-        event.preventDefault();
-
-        const form =
-            event.currentTarget;
-
-        const data =
-            formToObject(form);
-
-        const name =
-            data.name ||
-            data.subject_name;
-
-        if (!name) {
-            notify(
-                "Please enter the subject name.",
-                "error"
-            );
-
-            return;
-        }
-
-        try {
-            if (editingSubjectId) {
-                await request(
-                    `/subjects/${encodeURIComponent(
-                        editingSubjectId
-                    )}`,
-                    {
-                        method: "PUT",
-                        body: JSON.stringify(data)
-                    }
-                );
-
-                notify(
-                    "Subject updated successfully.",
-                    "success"
-                );
-            } else {
-                await request(
-                    "/subjects",
-                    {
-                        method: "POST",
-                        body: JSON.stringify(data)
-                    }
-                );
-
-                notify(
-                    "Subject added successfully.",
-                    "success"
-                );
-            }
-
-            resetForm();
-
-            await loadSubjects();
-
-        } catch (error) {
-            console.error(
-                "Subject save failed:",
-                error
-            );
-
-            notify(
-                error.message ||
-                "Unable to save subject.",
-                "error"
-            );
-        }
-    }
-
-    function editSubject(id) {
-        const subject =
-            subjects.find(
-                (item) =>
-                    String(
-                        item.id ??
-                        item.subject_id
-                    ) === String(id)
-            );
-
-        if (!subject) {
-            notify(
-                "Subject record could not be found.",
-                "error"
-            );
-
-            return;
-        }
-
-        editingSubjectId = id;
-
-        setFormValue(
-            "#subjectName",
-            subject.name ||
-            subject.subject_name
-        );
-
-        setFormValue(
-            "#subjectCode",
-            subject.code ||
-            subject.subject_code
-        );
-
-        setFormValue(
-            "#description",
-            subject.description
-        );
-
-        setFormValue(
-            "#departmentId",
-            subject.department_id ||
-            subject.departmentId
-        );
-
-        setFormValue(
-            "#classId",
-            subject.class_id ||
-            subject.classId
-        );
-
-        setFormValue(
-            "#status",
-            subject.status ||
-            "Active"
-        );
-
-        updateFormMode(
-            "Update Subject"
-        );
-
-        scrollToForm();
-    }
-
-    async function deleteSubject(id) {
-        if (
-            !window.confirm(
-                "Are you sure you want to delete this subject?"
-            )
-        ) {
-            return;
-        }
-
-        try {
-            await request(
-                `/subjects/${encodeURIComponent(id)}`,
-                {
-                    method: "DELETE"
-                }
-            );
-
-            notify(
-                "Subject deleted successfully.",
-                "success"
-            );
-
-            await loadSubjects();
-
-        } catch (error) {
-            console.error(
-                "Subject deletion failed:",
-                error
-            );
-
-            notify(
-                error.message ||
-                "Unable to delete subject.",
-                "error"
-            );
-        }
-    }
-
-    async function handleActionClick(event) {
-        const button =
-            event.target.closest(
-                "[data-action]"
-            );
-
-        if (!button) {
-            return;
-        }
-
-        const action =
-            button.getAttribute(
-                "data-action"
-            );
-
-        const id =
-            button.getAttribute(
-                "data-id"
-            );
-
-        if (!id) {
-            return;
-        }
-
-        if (
-            action === "edit-subject"
-        ) {
-            editSubject(id);
-            return;
-        }
-
-        if (
-            action === "delete-subject"
-        ) {
-            await deleteSubject(id);
-        }
-    }
-
-    function resetForm() {
-        editingSubjectId = null;
-
-        const form =
-            document.querySelector(
-                "#subjectForm"
-            );
-
-        if (form) {
-            form.reset();
-        }
-
-        updateFormMode(
-            "Add Subject"
-        );
-    }
-
-    function updateFormMode(text) {
-        const form =
-            document.querySelector(
-                "#subjectForm"
-            );
-
-        if (!form) {
-            return;
-        }
-
-        const button =
-            form.querySelector(
-                "button[type='submit']"
-            );
-
-        if (button) {
-            button.textContent = text;
-        }
-    }
-
-    function updateSummary() {
-        const total =
-            subjects.length;
-
-        const active =
-            subjects.filter(
-                (subject) =>
-                    String(
-                        subject.status ||
-                        "Active"
-                    ).toLowerCase() ===
-                    "active"
-            ).length;
-
-        const inactive =
-            total - active;
-
-        setSummary(
-            [
-                "#totalSubjects",
-                "#total-subjects",
-                "[data-total-subjects]"
-            ],
-            total
-        );
-
-        setSummary(
-            [
-                "#activeSubjects",
-                "#active-subjects",
-                "[data-active-subjects]"
-            ],
-            active
-        );
-
-        setSummary(
-            [
-                "#inactiveSubjects",
-                "#inactive-subjects",
-                "[data-inactive-subjects]"
-            ],
-            inactive
-        );
-    }
-
-    function setSummary(
-        selectors,
-        value
-    ) {
-        for (const selector of selectors) {
-            const element =
-                document.querySelector(
-                    selector
-                );
-
-            if (element) {
-                element.textContent = value;
-                return;
-            }
-        }
-    }
-
-    function getInitials(name) {
-        if (
-            window.App &&
-            typeof window.App.getInitials ===
-            "function"
-        ) {
-            return window.App.getInitials(name);
-        }
-
-        return String(name)
+    if (typeof value === "string") {
+        const normalized = value
             .trim()
-            .split(/\s+/)
-            .filter(Boolean)
-            .slice(0, 2)
-            .map(
-                (word) =>
-                    word
-                        .charAt(0)
-                        .toUpperCase()
-            )
-            .join("");
-    }
-
-    function getStatusClass(status) {
-        const value =
-            String(status || "active")
-                .toLowerCase();
-
-        if (value === "active") {
-            return "active";
-        }
-
-        if (value === "inactive") {
-            return "inactive";
-        }
-
-        if (value === "suspended") {
-            return "warning";
-        }
-
-        return "";
-    }
-
-    function formatDate(value) {
-        if (!value) {
-            return "-";
-        }
-
-        const date =
-            new Date(value);
+            .toLowerCase();
 
         if (
-            Number.isNaN(
-                date.getTime()
-            )
+            normalized === "true" ||
+            normalized === "1" ||
+            normalized === "yes" ||
+            normalized === "compulsory"
         ) {
-            return escapeHtml(value);
+            return true;
         }
 
-        return date.toLocaleDateString(
-            "en-NG",
-            {
-                day: "2-digit",
-                month: "short",
-                year: "numeric"
-            }
-        );
+        if (
+            normalized === "false" ||
+            normalized === "0" ||
+            normalized === "no" ||
+            normalized === "optional"
+        ) {
+            return false;
+        }
     }
 
-    function formToObject(form) {
-        const formData =
-            new FormData(form);
+    return false;
+}
 
-        const data = {};
+function getIsActive(subject) {
+    const value =
+        subject?.isActive ??
+        subject?.is_active ??
+        subject?.active;
 
-        formData.forEach(
-            (value, key) => {
-                data[key] = value;
-            }
-        );
-
-        form.querySelectorAll(
-            'input[type="checkbox"]'
-        ).forEach(
-            (checkbox) => {
-                data[checkbox.name] =
-                    checkbox.checked;
-            }
-        );
-
-        return data;
+    if (typeof value === "boolean") {
+        return value;
     }
 
-    function getValue(...selectors) {
-        for (const selector of selectors) {
-            const element =
-                document.querySelector(
-                    selector
-                );
+    if (typeof value === "number") {
+        return value === 1;
+    }
 
-            if (element) {
-                return element.value || "";
-            }
+    if (typeof value === "string") {
+        const normalized = value
+            .trim()
+            .toLowerCase();
+
+        if (
+            normalized === "true" ||
+            normalized === "1" ||
+            normalized === "yes" ||
+            normalized === "active"
+        ) {
+            return true;
         }
 
-        return "";
+        if (
+            normalized === "false" ||
+            normalized === "0" ||
+            normalized === "no" ||
+            normalized === "inactive"
+        ) {
+            return false;
+        }
     }
 
-    function setFormValue(
-        selector,
-        value
-    ) {
-        const element =
-            document.querySelector(
-                selector
+    return true;
+}
+
+function getCreatedAt(subject) {
+    return (
+        subject?.createdAt ??
+        subject?.created_at ??
+        null
+    );
+}
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function escapeAttribute(value) {
+    return escapeHtml(value);
+}
+
+function showMessage(message, type = "success") {
+    if (!elements.pageMessage) {
+        return;
+    }
+
+    elements.pageMessage.textContent =
+        message;
+
+    elements.pageMessage.className =
+        "alert";
+
+    if (type === "error") {
+        elements.pageMessage.classList.add(
+            "alert-danger"
+        );
+    } else if (type === "warning") {
+        elements.pageMessage.classList.add(
+            "alert-warning"
+        );
+    } else {
+        elements.pageMessage.classList.add(
+            "alert-success"
+        );
+    }
+
+    elements.pageMessage.classList.remove(
+        "d-none"
+    );
+
+    window.clearTimeout(
+        showMessage.timeout
+    );
+
+    showMessage.timeout = window.setTimeout(
+        () => {
+            elements.pageMessage.classList.add(
+                "d-none"
             );
+        },
+        4000
+    );
+}
 
-        if (element) {
-            element.value =
-                value ?? "";
-        }
+function showLoading() {
+    if (!elements.tableBody) {
+        return;
     }
 
-    function scrollToForm() {
-        const form =
-            document.querySelector(
-                "#subjectForm"
-            );
+    elements.tableBody.innerHTML = `
+        <tr>
+            <td colspan="7" class="text-center text-muted py-5">
+                <div class="spinner-border spinner-border-sm me-2"></div>
+                Loading subjects...
+            </td>
+        </tr>
+    `;
+}
 
-        if (form) {
-            form.scrollIntoView({
-                behavior: "smooth",
-                block: "start"
-            });
-        }
+function showEmptyState(message = "No subjects found.") {
+    if (!elements.tableBody) {
+        return;
     }
 
-    function showLoading() {
-        const container =
-            getSubjectsTableBody();
+    elements.tableBody.innerHTML = `
+        <tr>
+            <td colspan="7" class="text-center text-muted py-5">
+                <i class="bi bi-book fs-2 d-block mb-2"></i>
+                ${escapeHtml(message)}
+            </td>
+        </tr>
+    `;
+}
 
-        if (!container) {
-            return;
-        }
+function showErrorState(message) {
+    if (!elements.tableBody) {
+        return;
+    }
 
-        container.innerHTML = `
-            <tr>
-                <td colspan="8">
-                    <div class="students-loading">
-                        <div class="students-loading-spinner"></div>
-                        <p>
-                            Loading subjects...
-                        </p>
-                    </div>
-                </td>
-            </tr>
+    elements.tableBody.innerHTML = `
+        <tr>
+            <td colspan="7" class="text-center text-muted py-5">
+                <i class="bi bi-exclamation-circle fs-2 d-block mb-2"></i>
+
+                <div>
+                    Unable to load subjects.
+                </div>
+
+                <div class="small mt-1">
+                    ${escapeHtml(message)}
+                </div>
+
+                <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm mt-3"
+                    id="subjectsRetryButton">
+
+                    <i class="bi bi-arrow-clockwise me-1"></i>
+                    Try Again
+
+                </button>
+            </td>
+        </tr>
+    `;
+
+    const retryButton =
+        document.getElementById(
+            "subjectsRetryButton"
+        );
+
+    if (retryButton) {
+        retryButton.addEventListener(
+            "click",
+            loadSubjects
+        );
+    }
+}
+
+function getStatusBadge(isActive) {
+    if (isActive) {
+        return `
+            <span class="badge rounded-pill bg-success-subtle text-success">
+                Active
+            </span>
         `;
     }
 
-    function showError(message) {
-        const container =
-            getSubjectsTableBody();
+    return `
+        <span class="badge rounded-pill bg-danger-subtle text-danger">
+            Inactive
+        </span>
+    `;
+}
 
-        if (!container) {
-            return;
-        }
-
-        container.innerHTML = `
-            <tr>
-                <td colspan="8">
-                    <div class="students-empty">
-                        <h3>
-                            Unable to load subjects
-                        </h3>
-
-                        <p>
-                            ${escapeHtml(message)}
-                        </p>
-                    </div>
-                </td>
-            </tr>
+function getCompulsoryBadge(isCompulsory) {
+    if (isCompulsory) {
+        return `
+            <span class="badge rounded-pill bg-primary-subtle text-primary">
+                Compulsory
+            </span>
         `;
     }
 
-    function getSubjectsTableBody() {
-        return (
-            document.querySelector(
-                "#subjectsTableBody"
-            ) ||
-            document.querySelector(
-                "#subjectTableBody"
-            ) ||
-            document.querySelector(
-                "#subjects-table-body"
-            ) ||
-            document.querySelector(
-                "tbody[data-subjects-body]"
-            )
-        );
+    return `
+        <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis">
+            Optional
+        </span>
+    `;
+}
+
+function formatDate(value) {
+    if (!value) {
+        return "—";
     }
 
-    function notify(
-        message,
-        type = "success"
-    ) {
-        if (
-            typeof window.showNotification ===
-            "function"
-        ) {
-            window.showNotification(
-                message,
-                type
-            );
+    const date = new Date(value);
 
-            return;
-        }
-
-        let container =
-            document.querySelector(
-                "#notification-container"
-            );
-
-        if (!container) {
-            container =
-                document.createElement(
-                    "div"
-                );
-
-            container.id =
-                "notification-container";
-
-            container.style.position =
-                "fixed";
-
-            container.style.top =
-                "20px";
-
-            container.style.right =
-                "20px";
-
-            container.style.zIndex =
-                "9999";
-
-            document.body.appendChild(
-                container
-            );
-        }
-
-        const notification =
-            document.createElement(
-                "div"
-            );
-
-        notification.className =
-            `alert alert-${type}`;
-
-        notification.textContent =
-            message;
-
-        notification.style.marginBottom =
-            "10px";
-
-        container.appendChild(
-            notification
-        );
-
-        setTimeout(
-            () => {
-                notification.remove();
-            },
-            4000
-        );
-    }
-
-    function escapeHtml(value) {
-        if (
-            value === null ||
-            value === undefined
-        ) {
-            return "";
-        }
-
-        return String(value)
-            .replace(
-                /&/g,
-                "&amp;"
-            )
-            .replace(
-                /</g,
-                "&lt;"
-            )
-            .replace(
-                />/g,
-                "&gt;"
-            )
-            .replace(
-                /"/g,
-                "&quot;"
-            )
-            .replace(
-                /'/g,
-                "&#039;"
-            );
-    }
-
-    function escapeAttribute(value) {
+    if (Number.isNaN(date.getTime())) {
         return escapeHtml(value);
     }
 
-    window.SubjectsPage = {
-        initialize,
-        loadSubjects,
-        renderSubjects,
-        editSubject,
-        deleteSubject,
-        resetForm
-    };
+    return date.toLocaleDateString(
+        "en-NG",
+        {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+        }
+    );
+}
+
+function renderSubjects() {
+    if (!elements.tableBody) {
+        return;
+    }
+
+    const total =
+        filteredSubjects.length;
+
+    const totalPages =
+        Math.max(
+            1,
+            Math.ceil(
+                total / PAGE_SIZE
+            )
+        );
+
+    if (currentPage > totalPages) {
+        currentPage = totalPages;
+    }
+
+    const start =
+        (currentPage - 1) *
+        PAGE_SIZE;
+
+    const end =
+        Math.min(
+            start + PAGE_SIZE,
+            total
+        );
+
+    const pageSubjects =
+        filteredSubjects.slice(
+            start,
+            end
+        );
+
+    if (pageSubjects.length === 0) {
+        showEmptyState();
+        updatePagination(
+            0,
+            0,
+            0,
+            1
+        );
+        return;
+    }
+
+    elements.tableBody.innerHTML =
+        pageSubjects
+            .map(
+                (subject, index) =>
+                    renderSubjectRow(
+                        subject,
+                        start + index + 1
+                    )
+            )
+            .join("");
+
+    updatePagination(
+        start + 1,
+        end,
+        total,
+        totalPages
+    );
+}
+
+function renderSubjectRow(subject, rowNumber) {
+    const id =
+        getSubjectId(subject);
+
+    const name =
+        getSubjectName(subject) ||
+        "—";
+
+    const code =
+        getSubjectCode(subject) ||
+        "—";
+
+    const description =
+        getDescription(subject) ||
+        "—";
+
+    const isCompulsory =
+        getIsCompulsory(subject);
+
+    const isActive =
+        getIsActive(subject);
+
+    return `
+        <tr>
+
+            <td>
+                ${rowNumber}
+            </td>
+
+            <td>
+                <span class="subject-code">
+                    ${escapeHtml(code)}
+                </span>
+            </td>
+
+            <td>
+                <span class="subject-name">
+                    ${escapeHtml(name)}
+                </span>
+            </td>
+
+            <td>
+                ${getCompulsoryBadge(
+                    isCompulsory
+                )}
+            </td>
+
+            <td>
+                <span
+                    class="description"
+                    title="${escapeAttribute(
+                        description
+                    )}">
+                    ${escapeHtml(
+                        description
+                    )}
+                </span>
+            </td>
+
+            <td>
+                ${getStatusBadge(
+                    isActive
+                )}
+            </td>
+
+            <td>
+                <div class="d-flex gap-1">
+
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-primary"
+                        data-action="edit"
+                        data-id="${escapeAttribute(
+                            id
+                        )}"
+                        title="Edit subject">
+
+                        <i class="bi bi-pencil"></i>
+
+                    </button>
+
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-danger"
+                        data-action="delete"
+                        data-id="${escapeAttribute(
+                            id
+                        )}"
+                        title="Delete subject">
+
+                        <i class="bi bi-trash3"></i>
+
+                    </button>
+
+                </div>
+            </td>
+
+        </tr>
+    `;
+}
+
+function filterSubjects() {
+    const search =
+        String(
+            elements.searchInput?.value ||
+            ""
+        )
+            .trim()
+            .toLowerCase();
+
+    const compulsoryFilter =
+        String(
+            elements.compulsoryFilter?.value ||
+            ""
+        );
+
+    const statusFilter =
+        String(
+            elements.statusFilter?.value ||
+            ""
+        );
+
+    filteredSubjects =
+        subjects.filter(
+            (subject) => {
+                const name =
+                    String(
+                        getSubjectName(
+                            subject
+                        )
+                    )
+                        .toLowerCase();
+
+                const code =
+                    String(
+                        getSubjectCode(
+                            subject
+                        )
+                    )
+                        .toLowerCase();
+
+                const description =
+                    String(
+                        getDescription(
+                            subject
+                        )
+                    )
+                        .toLowerCase();
+
+                const matchesSearch =
+                    !search ||
+                    name.includes(
+                        search
+                    ) ||
+                    code.includes(
+                        search
+                    ) ||
+                    description.includes(
+                        search
+                    );
+
+                const isCompulsory =
+                    getIsCompulsory(
+                        subject
+                    );
+
+                const isActive =
+                    getIsActive(
+                        subject
+                    );
+
+                const matchesCompulsory =
+                    compulsoryFilter === "" ||
+                    String(
+                        isCompulsory
+                    ) ===
+                        compulsoryFilter;
+
+                const matchesStatus =
+                    statusFilter === "" ||
+                    String(
+                        isActive
+                    ) ===
+                        statusFilter;
+
+                return (
+                    matchesSearch &&
+                    matchesCompulsory &&
+                    matchesStatus
+                );
+            }
+        );
+
+    currentPage = 1;
+
+    renderSubjects();
+}
+
+function updateStatistics() {
+    const total =
+        subjects.length;
+
+    const active =
+        subjects.filter(
+            (subject) =>
+                getIsActive(
+                    subject
+                )
+        ).length;
+
+    const compulsory =
+        subjects.filter(
+            (subject) =>
+                getIsCompulsory(
+                    subject
+                )
+        ).length;
+
+    const optional =
+        subjects.filter(
+            (subject) =>
+                !getIsCompulsory(
+                    subject
+                )
+        ).length;
+
+    if (elements.totalSubjects) {
+        elements.totalSubjects.textContent =
+            total;
+    }
+
+    if (elements.activeSubjects) {
+        elements.activeSubjects.textContent =
+            active;
+    }
+
+    if (elements.compulsorySubjects) {
+        elements.compulsorySubjects.textContent =
+            compulsory;
+    }
+
+    if (elements.optionalSubjects) {
+        elements.optionalSubjects.textContent =
+            optional;
+    }
+}
+
+function updatePagination(
+    from,
+    to,
+    total,
+    totalPages
+) {
+    if (elements.showingFrom) {
+        elements.showingFrom.textContent =
+            from;
+    }
+
+    if (elements.showingTo) {
+        elements.showingTo.textContent =
+            to;
+    }
+
+    if (elements.totalResults) {
+        elements.totalResults.textContent =
+            total;
+    }
+
+    if (elements.pageNumber) {
+        elements.pageNumber.textContent =
+            `Page ${currentPage} of ${totalPages}`;
+    }
+
+    if (elements.previousButton) {
+        elements.previousButton.disabled =
+            currentPage <= 1;
+    }
+
+    if (elements.nextButton) {
+        elements.nextButton.disabled =
+            currentPage >= totalPages;
+    }
+}
+
+async function loadSubjects() {
+    showLoading();
+
+    try {
+        const data =
+            await apiRequest(
+                SUBJECTS_API
+            );
+
+        subjects =
+            extractArray(data);
+
+        updateStatistics();
+
+        filterSubjects();
+
+    } catch (error) {
+        console.error(
+            "Load subjects error:",
+            error
+        );
+
+        subjects = [];
+        filteredSubjects = [];
+
+        updateStatistics();
+
+        showErrorState(
+            error.message ||
+            "Unable to load subjects."
+        );
+
+        updatePagination(
+            0,
+            0,
+            0,
+            1
+        );
+
+        showMessage(
+            error.message ||
+            "Unable to load subjects.",
+            "error"
+        );
+    }
+}
+
+function editSubject(id) {
+    if (!id) {
+        showMessage(
+            "Subject ID was not found.",
+            "error"
+        );
+
+        return;
+    }
+
+    window.location.href =
+        `/pages/subject-form.html?id=${encodeURIComponent(
+            id
+        )}`;
+}
+
+function openDeleteModal(id) {
+    const subject =
+        subjects.find(
+            (item) =>
+                String(
+                    getSubjectId(
+                        item
+                    )
+                ) ===
+                String(id)
+        );
+
+    if (!subject) {
+        showMessage(
+            "Subject record was not found.",
+            "error"
+        );
+
+        return;
+    }
+
+    subjectToDelete = id;
+
+    if (elements.deleteSubjectName) {
+        elements.deleteSubjectName.textContent =
+            getSubjectName(
+                subject
+            ) ||
+            "this subject";
+    }
+
+    if (!deleteModalInstance) {
+        if (
+            elements.deleteModal &&
+            typeof bootstrap !==
+                "undefined"
+        ) {
+            deleteModalInstance =
+                new bootstrap.Modal(
+                    elements.deleteModal
+                );
+        }
+    }
+
+    if (deleteModalInstance) {
+        deleteModalInstance.show();
+    }
+}
+
+function closeDeleteModal() {
+    subjectToDelete = null;
+
+    if (deleteModalInstance) {
+        deleteModalInstance.hide();
+    }
+}
+
+async function deleteSubject() {
+    if (!subjectToDelete) {
+        return;
+    }
+
+    const id =
+        subjectToDelete;
+
+    try {
+        if (elements.confirmDeleteButton) {
+            elements.confirmDeleteButton.disabled =
+                true;
+
+            elements.confirmDeleteButton.innerHTML =
+                `
+                <span class="spinner-border spinner-border-sm me-1"></span>
+                Deleting...
+                `;
+        }
+
+        await apiRequest(
+            `${SUBJECTS_API}/${encodeURIComponent(
+                id
+            )}`,
+            {
+                method: "DELETE"
+            }
+        );
+
+        closeDeleteModal();
+
+        showMessage(
+            "Subject deleted successfully.",
+            "success"
+        );
+
+        await loadSubjects();
+
+    } catch (error) {
+        console.error(
+            "Delete subject error:",
+            error
+        );
+
+        showMessage(
+            error.message ||
+            "Unable to delete subject.",
+            "error"
+        );
+
+    } finally {
+        if (elements.confirmDeleteButton) {
+            elements.confirmDeleteButton.disabled =
+                false;
+
+            elements.confirmDeleteButton.innerHTML =
+                `
+                <i class="bi bi-trash3 me-1"></i>
+                Delete Subject
+                `;
+        }
+    }
+}
+
+function handleTableClick(event) {
+    const button =
+        event.target.closest(
+            "[data-action]"
+        );
+
+    if (!button) {
+        return;
+    }
+
+    const action =
+        button.dataset.action;
+
+    const id =
+        button.dataset.id;
+
+    if (!id) {
+        return;
+    }
+
+    if (action === "edit") {
+        editSubject(id);
+        return;
+    }
+
+    if (action === "delete") {
+        openDeleteModal(id);
+    }
+}
+
+function goToPreviousPage() {
+    if (currentPage <= 1) {
+        return;
+    }
+
+    currentPage--;
+
+    renderSubjects();
+}
+
+function goToNextPage() {
+    const totalPages =
+        Math.max(
+            1,
+            Math.ceil(
+                filteredSubjects.length /
+                    PAGE_SIZE
+            )
+        );
+
+    if (currentPage >= totalPages) {
+        return;
+    }
+
+    currentPage++;
+
+    renderSubjects();
+}
+
+function openAddSubject() {
+    window.location.href =
+        "/pages/subject-form.html";
+}
+
+function setupSidebar() {
+    if (
+        elements.sidebarToggle &&
+        elements.sidebar &&
+        elements.sidebarOverlay
+    ) {
+        elements.sidebarToggle.addEventListener(
+            "click",
+            () => {
+                elements.sidebar.classList.toggle(
+                    "show"
+                );
+
+                elements.sidebarOverlay.classList.toggle(
+                    "show"
+                );
+            }
+        );
+
+        elements.sidebarOverlay.addEventListener(
+            "click",
+            closeSidebar
+        );
+    }
+}
+
+function closeSidebar() {
+    if (elements.sidebar) {
+        elements.sidebar.classList.remove(
+            "show"
+        );
+    }
+
+    if (elements.sidebarOverlay) {
+        elements.sidebarOverlay.classList.remove(
+            "show"
+        );
+    }
+}
+
+function setupLogout() {
+    if (!elements.logoutButton) {
+        return;
+    }
+
+    elements.logoutButton.addEventListener(
+        "click",
+        () => {
+            if (
+                typeof window.logout ===
+                "function"
+            ) {
+                window.logout();
+                return;
+            }
+
+            clearAuthentication();
+
+            window.location.href =
+                "/pages/login.html";
+        }
+    );
+}
+
+function loadStoredUser() {
+    if (!elements.userName) {
+        return;
+    }
+
+    try {
+        const rawUser =
+            localStorage.getItem(
+                "school_management_user"
+            ) ||
+            sessionStorage.getItem(
+                "school_management_user"
+            ) ||
+            localStorage.getItem(
+                "user"
+            ) ||
+            sessionStorage.getItem(
+                "user"
+            );
+
+        if (!rawUser) {
+            return;
+        }
+
+        const user =
+            JSON.parse(
+                rawUser
+            );
+
+        elements.userName.textContent =
+            user?.name ||
+            user?.full_name ||
+            user?.fullName ||
+            user?.username ||
+            "";
+    } catch {
+        elements.userName.textContent =
+            "";
+    }
+}
+
+function setupEvents() {
+    if (elements.searchInput) {
+        elements.searchInput.addEventListener(
+            "input",
+            filterSubjects
+        );
+    }
+
+    if (elements.compulsoryFilter) {
+        elements.compulsoryFilter.addEventListener(
+            "change",
+            filterSubjects
+        );
+    }
+
+    if (elements.statusFilter) {
+        elements.statusFilter.addEventListener(
+            "change",
+            filterSubjects
+        );
+    }
+
+    if (elements.refreshButton) {
+        elements.refreshButton.addEventListener(
+            "click",
+            loadSubjects
+        );
+    }
+
+    if (elements.addSubjectButton) {
+        elements.addSubjectButton.addEventListener(
+            "click",
+            openAddSubject
+        );
+    }
+
+    if (elements.previousButton) {
+        elements.previousButton.addEventListener(
+            "click",
+            goToPreviousPage
+        );
+    }
+
+    if (elements.nextButton) {
+        elements.nextButton.addEventListener(
+            "click",
+            goToNextPage
+        );
+    }
+
+    if (elements.tableBody) {
+        elements.tableBody.addEventListener(
+            "click",
+            handleTableClick
+        );
+    }
+
+    if (elements.confirmDeleteButton) {
+        elements.confirmDeleteButton.addEventListener(
+            "click",
+            deleteSubject
+        );
+    }
+
+    if (elements.closeDeleteModal) {
+        elements.closeDeleteModal.addEventListener(
+            "click",
+            closeDeleteModal
+        );
+    }
+
+    if (elements.cancelDeleteButton) {
+        elements.cancelDeleteButton.addEventListener(
+            "click",
+            closeDeleteModal
+        );
+    }
+
+    setupSidebar();
+    setupLogout();
+}
+
+async function initialize() {
+    loadStoredUser();
+
+    setupEvents();
 
     if (
-        document.readyState ===
-        "loading"
+        elements.deleteModal &&
+        typeof bootstrap !==
+            "undefined"
     ) {
-        document.addEventListener(
-            "DOMContentLoaded",
-            initialize,
-            { once: true }
-        );
-    } else {
-        initialize();
+        deleteModalInstance =
+            new bootstrap.Modal(
+                elements.deleteModal
+            );
     }
-})();
+
+    await loadSubjects();
+}
+
+window.SubjectsPage = {
+    initialize,
+    loadSubjects,
+    renderSubjects,
+    filterSubjects,
+    editSubject,
+    deleteSubject,
+    openDeleteModal,
+    closeDeleteModal,
+    openAddSubject
+};
+
+if (
+    document.readyState ===
+    "loading"
+) {
+    document.addEventListener(
+        "DOMContentLoaded",
+        initialize,
+        {
+            once: true
+        }
+    );
+} else {
+    initialize();
+}
 ```
+
+})();

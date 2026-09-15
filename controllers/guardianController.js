@@ -1,24 +1,48 @@
-const guardianModel = require("../models/guardianModel");
+"use strict";
 
+const guardianModel = require("../models/guardianModel");
 
 /*
 |--------------------------------------------------------------------------
 | GUARDIAN CONTROLLER
 |--------------------------------------------------------------------------
 |
-| Handles:
+| Handles HTTP/API operations for guardians and their relationships
+| with students.
 |
-| - Create guardian
-| - Get all guardians
-| - Get guardian by ID
-| - Get guardians by student
-| - Search guardians
-| - Update guardian
-| - Delete guardian
+| The controller is responsible for:
+|
+| - Request validation
+| - School context resolution
+| - Calling guardianModel database functions
+| - Returning API responses
+| - Passing unexpected errors to Express
 |
 |--------------------------------------------------------------------------
 */
 
+/*
+|--------------------------------------------------------------------------
+| RESOLVE SCHOOL ID
+|--------------------------------------------------------------------------
+|
+| Priority:
+|
+| 1. Authenticated user's school ID
+| 2. Explicit schoolId supplied by request body/query
+|
+|--------------------------------------------------------------------------
+*/
+
+function resolveSchoolId(req) {
+    return (
+        req.user?.schoolId ||
+        req.user?.school_id ||
+        req.body?.schoolId ||
+        req.query?.schoolId ||
+        null
+    );
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -29,148 +53,107 @@ const guardianModel = require("../models/guardianModel");
 */
 
 async function createGuardian(req, res, next) {
-
     try {
-
         const {
-            schoolId,
             firstName,
-            lastName,
             middleName,
+            lastName,
             relationship,
             phone,
+            alternativePhone,
             alternatePhone,
             email,
             address,
             occupation,
             employer,
-            studentId
-        } = req.body;
+            emergencyContact
+        } = req.body || {};
 
+        const schoolId = resolveSchoolId(req);
 
-        const finalSchoolId =
-            schoolId ||
-            req.user?.schoolId ||
-            req.user?.school_id;
-
-
-        if (!finalSchoolId) {
-
+        if (!schoolId) {
             return res.status(400).json({
-
                 success: false,
-
-                message:
-                    "School ID is required."
-
+                message: "School ID is required."
             });
-
         }
-
 
         if (
             !firstName ||
-            !String(firstName).trim()
+            typeof firstName !== "string" ||
+            !firstName.trim()
         ) {
-
             return res.status(400).json({
-
                 success: false,
-
-                message:
-                    "First name is required."
-
+                message: "First name is required."
             });
-
         }
-
 
         if (
             !lastName ||
-            !String(lastName).trim()
+            typeof lastName !== "string" ||
+            !lastName.trim()
         ) {
-
             return res.status(400).json({
-
                 success: false,
-
-                message:
-                    "Last name is required."
-
+                message: "Last name is required."
             });
-
         }
 
+        const guardian = await guardianModel.createGuardian({
+            schoolId,
 
-        const guardian =
-            await guardianModel.createGuardian({
+            firstName: firstName.trim(),
 
-                schoolId:
-                    finalSchoolId,
+            middleName:
+                typeof middleName === "string" &&
+                middleName.trim()
+                    ? middleName.trim()
+                    : null,
 
-                firstName:
-                    String(firstName).trim(),
+            lastName: lastName.trim(),
 
-                lastName:
-                    String(lastName).trim(),
+            relationship:
+                relationship || null,
 
-                middleName:
-                    middleName
-                        ? String(middleName).trim()
-                        : null,
+            phone:
+                phone || null,
 
-                relationship:
-                    relationship || null,
+            alternativePhone:
+                alternativePhone ||
+                alternatePhone ||
+                null,
 
-                phone:
-                    phone || null,
+            email:
+                email || null,
 
-                alternatePhone:
-                    alternatePhone || null,
+            address:
+                address || null,
 
-                email:
-                    email || null,
+            occupation:
+                occupation || null,
 
-                address:
-                    address || null,
+            employer:
+                employer || null,
 
-                occupation:
-                    occupation || null,
-
-                employer:
-                    employer || null,
-
-                studentId:
-                    studentId || null
-
-            });
-
-
-        return res.status(201).json({
-
-            success: true,
-
-            message:
-                "Guardian created successfully.",
-
-            data:
-                guardian
-
+            emergencyContact:
+                Boolean(emergencyContact)
         });
 
+        return res.status(201).json({
+            success: true,
+            message: "Guardian created successfully.",
+            data: guardian
+        });
     } catch (error) {
-
         console.error(
             "Create guardian error:",
             error
         );
 
         next(error);
-
     }
-
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -181,67 +164,55 @@ async function createGuardian(req, res, next) {
 */
 
 async function getGuardians(req, res, next) {
-
     try {
-
-        const schoolId =
-            req.query.schoolId ||
-            req.user?.schoolId ||
-            req.user?.school_id;
-
+        const schoolId = resolveSchoolId(req);
 
         if (!schoolId) {
-
             return res.status(400).json({
-
                 success: false,
-
-                message:
-                    "School ID is required."
-
+                message: "School ID is required."
             });
-
         }
 
+        const searchTerm = String(
+            req.query?.search ||
+            req.query?.q ||
+            ""
+        ).trim();
 
-        const guardians =
-            await guardianModel.findGuardians({
+        let guardians;
 
-                schoolId,
-
-                search:
-                    req.query.search ||
-                    req.query.q ||
-                    null
-
-            });
-
+        if (searchTerm) {
+            guardians =
+                await guardianModel.searchGuardians(
+                    searchTerm,
+                    schoolId
+                );
+        } else {
+            guardians =
+                await guardianModel.findGuardians({
+                    schoolId,
+                    limit:
+                        req.query?.limit || 100,
+                    offset:
+                        req.query?.offset || 0
+                });
+        }
 
         return res.status(200).json({
-
             success: true,
-
-            count:
-                guardians.length,
-
-            data:
-                guardians
-
+            count: guardians.length,
+            data: guardians
         });
-
     } catch (error) {
-
         console.error(
             "Get guardians error:",
             error
         );
 
         next(error);
-
     }
-
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -252,66 +223,53 @@ async function getGuardians(req, res, next) {
 */
 
 async function getGuardianById(req, res, next) {
-
     try {
-
         const {
             id
         } = req.params;
 
+        const schoolId = resolveSchoolId(req);
 
-        const schoolId =
-            req.query.schoolId ||
-            req.user?.schoolId ||
-            req.user?.school_id;
+        if (!schoolId) {
+            return res.status(400).json({
+                success: false,
+                message: "School ID is required."
+            });
+        }
 
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: "Guardian ID is required."
+            });
+        }
 
         const guardian =
             await guardianModel.findGuardianById(
-
                 id,
-
-                schoolId || null
-
+                schoolId
             );
 
-
         if (!guardian) {
-
             return res.status(404).json({
-
                 success: false,
-
-                message:
-                    "Guardian not found."
-
+                message: "Guardian not found."
             });
-
         }
 
-
         return res.status(200).json({
-
             success: true,
-
-            data:
-                guardian
-
+            data: guardian
         });
-
     } catch (error) {
-
         console.error(
             "Get guardian by ID error:",
             error
         );
 
         next(error);
-
     }
-
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -321,70 +279,52 @@ async function getGuardianById(req, res, next) {
 |--------------------------------------------------------------------------
 */
 
-async function getGuardiansByStudent(req, res, next) {
-
+async function getGuardiansByStudent(
+    req,
+    res,
+    next
+) {
     try {
-
         const {
             studentId
         } = req.params;
 
+        const schoolId = resolveSchoolId(req);
 
-        const schoolId =
-            req.query.schoolId ||
-            req.user?.schoolId ||
-            req.user?.school_id;
-
-
-        if (!studentId) {
-
+        if (!schoolId) {
             return res.status(400).json({
-
                 success: false,
-
-                message:
-                    "Student ID is required."
-
+                message: "School ID is required."
             });
-
         }
 
+        if (!studentId) {
+            return res.status(400).json({
+                success: false,
+                message: "Student ID is required."
+            });
+        }
 
         const guardians =
-            await guardianModel.findGuardiansByStudent(
-
+            await guardianModel.getStudentGuardians(
                 studentId,
-
-                schoolId || null
-
+                schoolId
             );
 
-
         return res.status(200).json({
-
             success: true,
-
-            count:
-                guardians.length,
-
-            data:
-                guardians
-
+            count: guardians.length,
+            data: guardians
         });
-
     } catch (error) {
-
         console.error(
             "Get guardians by student error:",
             error
         );
 
         next(error);
-
     }
-
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -394,87 +334,54 @@ async function getGuardiansByStudent(req, res, next) {
 |--------------------------------------------------------------------------
 */
 
-async function searchGuardians(req, res, next) {
-
+async function searchGuardians(
+    req,
+    res,
+    next
+) {
     try {
+        const searchTerm = String(
+            req.query?.q ||
+            req.query?.search ||
+            ""
+        ).trim();
 
-        const searchTerm =
-            String(
-                req.query.q ||
-                req.query.search ||
-                ""
-            ).trim();
-
-
-        const schoolId =
-            req.query.schoolId ||
-            req.user?.schoolId ||
-            req.user?.school_id;
-
+        const schoolId = resolveSchoolId(req);
 
         if (!schoolId) {
-
             return res.status(400).json({
-
                 success: false,
-
-                message:
-                    "School ID is required."
-
+                message: "School ID is required."
             });
-
         }
-
 
         if (!searchTerm) {
-
             return res.status(400).json({
-
                 success: false,
-
-                message:
-                    "Search term is required."
-
+                message: "Search term is required."
             });
-
         }
-
 
         const guardians =
             await guardianModel.searchGuardians(
-
                 searchTerm,
-
                 schoolId
-
             );
 
-
         return res.status(200).json({
-
             success: true,
-
-            count:
-                guardians.length,
-
-            data:
-                guardians
-
+            count: guardians.length,
+            data: guardians
         });
-
     } catch (error) {
-
         console.error(
             "Search guardians error:",
             error
         );
 
         next(error);
-
     }
-
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -485,147 +392,72 @@ async function searchGuardians(req, res, next) {
 */
 
 async function updateGuardian(req, res, next) {
-
     try {
-
         const {
             id
         } = req.params;
 
-
-        const schoolId =
-            req.body.schoolId ||
-            req.user?.schoolId ||
-            req.user?.school_id;
-
+        const schoolId = resolveSchoolId(req);
 
         if (!schoolId) {
-
             return res.status(400).json({
-
                 success: false,
-
-                message:
-                    "School ID is required."
-
+                message: "School ID is required."
             });
-
         }
 
-
-        const existing =
-            await guardianModel.findGuardianById(
-
-                id,
-
-                schoolId
-
-            );
-
-
-        if (!existing) {
-
-            return res.status(404).json({
-
+        if (!id) {
+            return res.status(400).json({
                 success: false,
-
-                message:
-                    "Guardian not found."
-
+                message: "Guardian ID is required."
             });
-
         }
-
 
         const data = {
-
-            firstName:
-                req.body.firstName,
-
-            lastName:
-                req.body.lastName,
-
-            middleName:
-                req.body.middleName,
-
-            relationship:
-                req.body.relationship,
-
-            phone:
-                req.body.phone,
-
-            alternatePhone:
-                req.body.alternatePhone,
-
-            email:
-                req.body.email,
-
-            address:
-                req.body.address,
-
-            occupation:
-                req.body.occupation,
-
-            employer:
-                req.body.employer,
-
-            studentId:
-                req.body.studentId
-
+            firstName: req.body?.firstName,
+            middleName: req.body?.middleName,
+            lastName: req.body?.lastName,
+            relationship: req.body?.relationship,
+            phone: req.body?.phone,
+            alternativePhone:
+                req.body?.alternativePhone ??
+                req.body?.alternatePhone,
+            email: req.body?.email,
+            address: req.body?.address,
+            occupation: req.body?.occupation,
+            employer: req.body?.employer,
+            emergencyContact:
+                req.body?.emergencyContact
         };
-
 
         const guardian =
             await guardianModel.updateGuardian(
-
                 id,
-
                 schoolId,
-
                 data
-
             );
 
-
         if (!guardian) {
-
             return res.status(404).json({
-
                 success: false,
-
-                message:
-                    "Guardian not found."
-
+                message: "Guardian not found."
             });
-
         }
 
-
         return res.status(200).json({
-
             success: true,
-
-            message:
-                "Guardian updated successfully.",
-
-            data:
-                guardian
-
+            message: "Guardian updated successfully.",
+            data: guardian
         });
-
     } catch (error) {
-
         console.error(
             "Update guardian error:",
             error
         );
 
         next(error);
-
     }
-
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -636,105 +468,373 @@ async function updateGuardian(req, res, next) {
 */
 
 async function deleteGuardian(req, res, next) {
-
     try {
-
         const {
             id
         } = req.params;
 
-
-        const schoolId =
-            req.query.schoolId ||
-            req.body.schoolId ||
-            req.user?.schoolId ||
-            req.user?.school_id;
-
+        const schoolId = resolveSchoolId(req);
 
         if (!schoolId) {
-
             return res.status(400).json({
-
                 success: false,
-
-                message:
-                    "School ID is required."
-
+                message: "School ID is required."
             });
-
         }
 
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: "Guardian ID is required."
+            });
+        }
 
         const guardian =
             await guardianModel.deleteGuardian(
-
                 id,
-
                 schoolId
-
             );
 
-
         if (!guardian) {
-
             return res.status(404).json({
-
                 success: false,
-
-                message:
-                    "Guardian not found."
-
+                message: "Guardian not found."
             });
-
         }
 
-
         return res.status(200).json({
-
             success: true,
-
-            message:
-                "Guardian deleted successfully.",
-
-            data:
-                guardian
-
+            message: "Guardian deleted successfully.",
+            data: guardian
         });
-
     } catch (error) {
-
         console.error(
             "Delete guardian error:",
             error
         );
 
         next(error);
-
     }
-
 }
-
 
 /*
 |--------------------------------------------------------------------------
-| EXPORT CONTROLLER FUNCTIONS
+| LINK GUARDIAN TO STUDENT
+|--------------------------------------------------------------------------
+|
+| This controller function is available for future dedicated relationship
+| routes. It is intentionally not required by the current guardianRoutes.js.
+|
+|--------------------------------------------------------------------------
+*/
+
+async function linkGuardianToStudent(
+    req,
+    res,
+    next
+) {
+    try {
+        const {
+            studentId,
+            guardianId,
+            isPrimary
+        } = req.body || {};
+
+        if (!studentId) {
+            return res.status(400).json({
+                success: false,
+                message: "Student ID is required."
+            });
+        }
+
+        if (!guardianId) {
+            return res.status(400).json({
+                success: false,
+                message: "Guardian ID is required."
+            });
+        }
+
+        const relationship =
+            await guardianModel.linkGuardianToStudent({
+                studentId,
+                guardianId,
+                isPrimary: Boolean(isPrimary)
+            });
+
+        return res.status(201).json({
+            success: true,
+            message:
+                "Guardian linked to student successfully.",
+            data: relationship
+        });
+    } catch (error) {
+        console.error(
+            "Link guardian to student error:",
+            error
+        );
+
+        next(error);
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| UNLINK GUARDIAN FROM STUDENT
+|--------------------------------------------------------------------------
+|
+| Available for future dedicated relationship routes.
+|
+|--------------------------------------------------------------------------
+*/
+
+async function unlinkGuardianFromStudent(
+    req,
+    res,
+    next
+) {
+    try {
+        const {
+            studentId,
+            guardianId
+        } = req.body || {};
+
+        if (!studentId) {
+            return res.status(400).json({
+                success: false,
+                message: "Student ID is required."
+            });
+        }
+
+        if (!guardianId) {
+            return res.status(400).json({
+                success: false,
+                message: "Guardian ID is required."
+            });
+        }
+
+        const relationship =
+            await guardianModel.unlinkGuardianFromStudent(
+                studentId,
+                guardianId
+            );
+
+        if (!relationship) {
+            return res.status(404).json({
+                success: false,
+                message:
+                    "Guardian-student relationship not found."
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message:
+                "Guardian unlinked from student successfully.",
+            data: relationship
+        });
+    } catch (error) {
+        console.error(
+            "Unlink guardian from student error:",
+            error
+        );
+
+        next(error);
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| GET GUARDIAN'S STUDENTS
+|--------------------------------------------------------------------------
+|
+| Available for future dedicated relationship routes.
+|
+|--------------------------------------------------------------------------
+*/
+
+async function getGuardianStudents(
+    req,
+    res,
+    next
+) {
+    try {
+        const {
+            guardianId
+        } = req.params;
+
+        const schoolId = resolveSchoolId(req);
+
+        if (!schoolId) {
+            return res.status(400).json({
+                success: false,
+                message: "School ID is required."
+            });
+        }
+
+        if (!guardianId) {
+            return res.status(400).json({
+                success: false,
+                message: "Guardian ID is required."
+            });
+        }
+
+        const students =
+            await guardianModel.getGuardianStudents(
+                guardianId,
+                schoolId
+            );
+
+        return res.status(200).json({
+            success: true,
+            count: students.length,
+            data: students
+        });
+    } catch (error) {
+        console.error(
+            "Get guardian students error:",
+            error
+        );
+
+        next(error);
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| SET PRIMARY GUARDIAN
+|--------------------------------------------------------------------------
+|
+| Available for future dedicated relationship routes.
+|
+|--------------------------------------------------------------------------
+*/
+
+async function setPrimaryGuardian(
+    req,
+    res,
+    next
+) {
+    try {
+        const {
+            studentId,
+            guardianId
+        } = req.body || {};
+
+        const schoolId = resolveSchoolId(req);
+
+        if (!schoolId) {
+            return res.status(400).json({
+                success: false,
+                message: "School ID is required."
+            });
+        }
+
+        if (!studentId) {
+            return res.status(400).json({
+                success: false,
+                message: "Student ID is required."
+            });
+        }
+
+        if (!guardianId) {
+            return res.status(400).json({
+                success: false,
+                message: "Guardian ID is required."
+            });
+        }
+
+        const relationship =
+            await guardianModel.setPrimaryGuardian(
+                studentId,
+                guardianId,
+                schoolId
+            );
+
+        if (!relationship) {
+            return res.status(404).json({
+                success: false,
+                message:
+                    "Guardian-student relationship not found."
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message:
+                "Primary guardian updated successfully.",
+            data: relationship
+        });
+    } catch (error) {
+        console.error(
+            "Set primary guardian error:",
+            error
+        );
+
+        next(error);
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| COUNT GUARDIANS
+|--------------------------------------------------------------------------
+|
+| Available for dashboard/statistics use.
+|
+|--------------------------------------------------------------------------
+*/
+
+async function countGuardians(
+    req,
+    res,
+    next
+) {
+    try {
+        const schoolId = resolveSchoolId(req);
+
+        if (!schoolId) {
+            return res.status(400).json({
+                success: false,
+                message: "School ID is required."
+            });
+        }
+
+        const count =
+            await guardianModel.countGuardians(
+                schoolId
+            );
+
+        return res.status(200).json({
+            success: true,
+            count
+        });
+    } catch (error) {
+        console.error(
+            "Count guardians error:",
+            error
+        );
+
+        next(error);
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| EXPORT
 |--------------------------------------------------------------------------
 */
 
 module.exports = {
-
     createGuardian,
-
     getGuardians,
-
     getGuardianById,
-
     getGuardiansByStudent,
-
     searchGuardians,
-
     updateGuardian,
-
-    deleteGuardian
-
+    deleteGuardian,
+    linkGuardianToStudent,
+    unlinkGuardianFromStudent,
+    getGuardianStudents,
+    setPrimaryGuardian,
+    countGuardians
 };

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Register your school with the School Management System.">
+    <meta name="theme-color" content="#0d6efd">
+
+    <title>Register School | School Management System</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="stylesheet" href="/css/style.css">
+
+    <link rel="stylesheet" href="/css/bootstrap-system.css">
+
+    <link rel="stylesheet" href="/css/forms.css">
+</head>
+
+<body class="bg-light">
+
+    <main class="min-vh-100 d-flex align-items-center py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-lg-9 col-xl-8">
+
+                    <div class="text-center mb-4">
+                        <div class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-circle"
+                            style="width: 64px; height: 64px;">
+                            <i class="bi bi-building fs-3"></i>
+                        </div>
+
+                        <h1 class="h3 fw-bold mt-3 mb-2">
+                            Register Your School
+                        </h1>
+
+                        <p class="text-muted mb-0">
+                            Create your school's registration profile to get started.
+                        </p>
+                    </div>
+
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-4 p-md-5">
+
+                            <form id="school-registration-form" novalidate>
+
+                                <section class="mb-4">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <i class="bi bi-building text-primary"></i>
+
+                                        <h2 class="h5 mb-0">
+                                            School Information
+                                        </h2>
+                                    </div>
+
+                                    <div class="row g-3">
+
+                                        <div class="col-12">
+                                            <label for="schoolName" class="form-label">
+                                                School Name
+                                                <span class="text-danger">*</span>
+                                            </label>
+
+                                            <input type="text" class="form-control" id="schoolName" name="schoolName"
+                                                maxlength="150" autocomplete="organization" required>
+
+                                            <div class="invalid-feedback">
+                                                Please enter the school name.
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="schoolEmail" class="form-label">
+                                                School Email
+                                                <span class="text-danger">*</span>
+                                            </label>
+
+                                            <input type="email" class="form-control" id="schoolEmail" name="schoolEmail"
+                                                maxlength="150" autocomplete="email" required>
+
+                                            <div class="invalid-feedback">
+                                                Please enter a valid school email address.
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="schoolPhone" class="form-label">
+                                                School Phone
+                                                <span class="text-danger">*</span>
+                                            </label>
+
+                                            <input type="tel" class="form-control" id="schoolPhone" name="schoolPhone"
+                                                maxlength="30" autocomplete="tel" required>
+
+                                            <div class="invalid-feedback">
+                                                Please enter the school's phone number.
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <label for="schoolAddress" class="form-label">
+                                                School Address
+                                                <span class="text-danger">*</span>
+                                            </label>
+
+                                            <textarea class="form-control" id="schoolAddress" name="schoolAddress"
+                                                rows="3" maxlength="300" autocomplete="street-address"
+                                                required></textarea>
+
+                                            <div class="invalid-feedback">
+                                                Please enter the school address.
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </section>
+
+                                <hr class="my-4">
+
+                                <section class="mb-4">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <i class="bi bi-person-badge text-primary"></i>
+
+                                        <h2 class="h5 mb-0">
+                                            Administrator Information
+                                        </h2>
+                                    </div>
+
+                                    <div class="row g-3">
+
+                                        <div class="col-md-6">
+                                            <label for="firstName" class="form-label">
+                                                First Name
+                                                <span class="text-danger">*</span>
+                                            </label>
+
+                                            <input type="text" class="form-control" id="firstName" name="firstName"
+                                                maxlength="100" autocomplete="given-name" required>
+
+                                            <div class="invalid-feedback">
+                                                Please enter the administrator's first name.
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="lastName" class="form-label">
+                                                Last Name
+                                                <span class="text-danger">*</span>
+                                            </label>
+
+                                            <input type="text" class="form-control" id="lastName" name="lastName"
+                                                maxlength="100" autocomplete="family-name" required>
+
+                                            <div class="invalid-feedback">
+                                                Please enter the administrator's last name.
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <label for="adminEmail" class="form-label">
+                                                Administrator Email
+                                                <span class="text-danger">*</span>
+                                            </label>
+
+                                            <input type="email" class="form-control" id="adminEmail" name="adminEmail"
+                                                maxlength="150" autocomplete="email" required>
+
+                                            <div class="invalid-feedback">
+                                                Please enter a valid administrator email address.
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="password" class="form-label">
+                                                Password
+                                                <span class="text-danger">*</span>
+                                            </label>
+
+                                            <div class="input-group">
+                                                <input type="password" class="form-control" id="password"
+                                                    name="password" minlength="8" maxlength="100"
+                                                    autocomplete="new-password" required>
+
+                                                <button type="button" class="btn btn-outline-secondary"
+                                                    id="togglePassword" aria-label="Show password">
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                            </div>
+
+                                            <div class="form-text">
+                                                Use at least 8 characters.
+                                            </div>
+
+                                            <div class="invalid-feedback">
+                                                Please enter a password of at least 8 characters.
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="confirmPassword" class="form-label">
+                                                Confirm Password
+                                                <span class="text-danger">*</span>
+                                            </label>
+
+                                            <div class="input-group">
+                                                <input type="password" class="form-control" id="confirmPassword"
+                                                    name="confirmPassword" minlength="8" maxlength="100"
+                                                    autocomplete="new-password" required>
+
+                                                <button type="button" class="btn btn-outline-secondary"
+                                                    id="toggleConfirmPassword" aria-label="Show confirmation password">
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                            </div>
+
+                                            <div class="invalid-feedback" id="confirmPasswordFeedback">
+                                                Passwords must match.
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </section>
+
+                                <div id="registration-message" class="alert d-none" role="alert"></div>
+
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary btn-lg" id="registerButton">
+                                        <i class="bi bi-check-circle me-2"></i>
+                                        Register School
+                                    </button>
+                                </div>
+
+                            </form>
+
+                            <div class="text-center mt-4">
+                                <span class="text-muted">
+                                    Already have an account?
+                                </span>
+
+                                <a href="/pages/login.html" class="text-decoration-none fw-semibold">
+                                    Sign in
+                                </a>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="text-center text-muted small mt-4">
+                        <p class="mb-1">
+                            School Management System
+                        </p>
+
+                        <p class="mb-0">
+                            Professional school administration platform
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        "use strict";
+
+        (function () {
+            const form = document.getElementById(
+                "school-registration-form"
+            );
+
+            const passwordInput = document.getElementById(
+                "password"
+            );
+
+            const confirmPasswordInput = document.getElementById(
+                "confirmPassword"
+            );
+
+            const togglePasswordButton = document.getElementById(
+                "togglePassword"
+            );
+
+            const toggleConfirmPasswordButton =
+                document.getElementById(
+                    "toggleConfirmPassword"
+                );
+
+            const registrationMessage =
+                document.getElementById(
+                    "registration-message"
+                );
+
+            const registerButton =
+                document.getElementById(
+                    "registerButton"
+                );
+
+            function togglePasswordVisibility(
+                input,
+                button
+            ) {
+                const icon = button.querySelector("i");
+
+                if (input.type === "password") {
+                    input.type = "text";
+                    button.setAttribute(
+                        "aria-label",
+                        "Hide password"
+                    );
+
+                    icon.classList.remove(
+                        "bi-eye"
+                    );
+
+                    icon.classList.add(
+                        "bi-eye-slash"
+                    );
+                } else {
+                    input.type = "password";
+                    button.setAttribute(
+                        "aria-label",
+                        "Show password"
+                    );
+
+                    icon.classList.remove(
+                        "bi-eye-slash"
+                    );
+
+                    icon.classList.add(
+                        "bi-eye"
+                    );
+                }
+            }
+
+            function showMessage(
+                message,
+                type
+            ) {
+                registrationMessage.textContent =
+                    message;
+
+                registrationMessage.className =
+                    `alert alert-${type}`;
+
+                registrationMessage.classList.remove(
+                    "d-none"
+                );
+            }
+
+            function clearMessage() {
+                registrationMessage.textContent = "";
+
+                registrationMessage.className =
+                    "alert d-none";
+            }
+
+            function validatePasswords() {
+                const password =
+                    passwordInput.value;
+
+                const confirmPassword =
+                    confirmPasswordInput.value;
+
+                if (
+                    confirmPassword &&
+                    password !== confirmPassword
+                ) {
+                    confirmPasswordInput.setCustomValidity(
+                        "Passwords do not match."
+                    );
+
+                    return false;
+                }
+
+                confirmPasswordInput.setCustomValidity(
+                    ""
+                );
+
+                return true;
+            }
+
+            togglePasswordButton.addEventListener(
+                "click",
+                function () {
+                    togglePasswordVisibility(
+                        passwordInput,
+                        togglePasswordButton
+                    );
+                }
+            );
+
+            toggleConfirmPasswordButton.addEventListener(
+                "click",
+                function () {
+                    togglePasswordVisibility(
+                        confirmPasswordInput,
+                        toggleConfirmPasswordButton
+                    );
+                }
+            );
+
+            passwordInput.addEventListener(
+                "input",
+                function () {
+                    validatePasswords();
+                }
+            );
+
+            confirmPasswordInput.addEventListener(
+                "input",
+                function () {
+                    validatePasswords();
+                }
+            );
+
+            form.addEventListener(
+                "submit",
+                function (event) {
+                    event.preventDefault();
+
+                    clearMessage();
+
+                    validatePasswords();
+
+                    if (!form.checkValidity()) {
+                        form.classList.add(
+                            "was-validated"
+                        );
+
+                        showMessage(
+                            "Please correct the highlighted fields before continuing.",
+                            "danger"
+                        );
+
+                        return;
+                    }
+
+                    registerButton.disabled = true;
+
+                    showMessage(
+                        "The registration form is ready. The school registration API has not yet been connected.",
+                        "info"
+                    );
+
+                    registerButton.disabled = false;
+                }
+            );
+        })();
+    </script>
+
+</body>
+
+</html>

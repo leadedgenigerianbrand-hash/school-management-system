@@ -1,17 +1,16 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    ```
+    <meta name="description" content="Users Management for School Management System">
     <title>Users Management | School Management System</title>
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-
+    <link href="../css/style.css" rel="stylesheet">
+    <link href="../css/bootstrap-system.css" rel="stylesheet">
+    <link href="../css/responsive.css" rel="stylesheet">
     <style>
         :root {
             --sidebar-width: 260px;
@@ -490,21 +489,14 @@
             }
         }
     </style>
-    ```
-
 </head>
 
 <body>
-
-    ```
-    <!-- SIDEBAR -->
     <aside id="sidebar" class="sidebar">
-
         <div class="sidebar-brand">
             <div class="brand-icon">
                 <i class="bi bi-mortarboard-fill"></i>
             </div>
-
             <div>
                 <div class="brand-title">School Management</div>
                 <div class="brand-subtitle">Administration Portal</div>
@@ -512,23 +504,19 @@
         </div>
 
         <div class="sidebar-section">Main</div>
-
         <nav class="sidebar-nav">
             <a href="dashboard.html">
                 <i class="bi bi-grid-1x2-fill"></i>
                 Dashboard
             </a>
-
             <a href="students.html">
                 <i class="bi bi-people-fill"></i>
                 Students
             </a>
-
             <a href="staff.html">
                 <i class="bi bi-person-badge-fill"></i>
                 Staff
             </a>
-
             <a href="guardians.html">
                 <i class="bi bi-person-hearts"></i>
                 Guardians
@@ -536,43 +524,35 @@
         </nav>
 
         <div class="sidebar-section">Academic</div>
-
         <nav class="sidebar-nav">
             <a href="classes.html">
                 <i class="bi bi-building"></i>
                 Classes
             </a>
-
             <a href="class-arms.html">
                 <i class="bi bi-diagram-3-fill"></i>
                 Class Arms
             </a>
-
             <a href="departments.html">
                 <i class="bi bi-diagram-2-fill"></i>
                 Departments
             </a>
-
             <a href="subjects.html">
                 <i class="bi bi-book-fill"></i>
                 Subjects
             </a>
-
             <a href="academic-sessions.html">
                 <i class="bi bi-calendar3"></i>
                 Academic Sessions
             </a>
-
             <a href="terms.html">
                 <i class="bi bi-calendar2-week"></i>
                 Terms
             </a>
-
             <a href="attendance.html">
                 <i class="bi bi-check2-square"></i>
                 Attendance
             </a>
-
             <a href="results.html">
                 <i class="bi bi-bar-chart-fill"></i>
                 Results
@@ -580,18 +560,15 @@
         </nav>
 
         <div class="sidebar-section">Finance & Records</div>
-
         <nav class="sidebar-nav">
             <a href="fees.html">
                 <i class="bi bi-wallet2"></i>
                 Fees
             </a>
-
             <a href="documents.html">
                 <i class="bi bi-folder-fill"></i>
                 Documents
             </a>
-
             <a href="reports.html">
                 <i class="bi bi-file-earmark-bar-graph-fill"></i>
                 Reports
@@ -599,180 +576,132 @@
         </nav>
 
         <div class="sidebar-section">Administration</div>
-
         <nav class="sidebar-nav">
             <a href="users.html" class="active">
                 <i class="bi bi-person-gear"></i>
                 Users
             </a>
-
             <a href="roles.html">
                 <i class="bi bi-shield-lock-fill"></i>
                 Roles
             </a>
-
             <a href="permissions.html">
                 <i class="bi bi-key-fill"></i>
                 Permissions
             </a>
-
             <a href="profile.html">
                 <i class="bi bi-person-circle"></i>
                 Profile
             </a>
-
             <a href="settings.html">
                 <i class="bi bi-gear-fill"></i>
                 Settings
             </a>
-
-            <a href="#" id="logoutButton">
+            <a href="#" data-action="logout">
                 <i class="bi bi-box-arrow-right"></i>
                 Logout
             </a>
         </nav>
-
     </aside>
 
     <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
-    <!-- MAIN -->
     <main class="main">
-
         <header class="topbar">
-
             <div class="d-flex align-items-center gap-3">
-
                 <button id="sidebarToggle" class="btn btn-light mobile-toggle" type="button" aria-label="Open menu">
                     <i class="bi bi-list fs-5"></i>
                 </button>
-
-                <div class="topbar-title">
-                    Users Management
-                </div>
-
+                <div class="topbar-title">Users Management</div>
             </div>
 
             <div class="topbar-user">
-                <span id="userName">Administrator</span>
-
+                <span data-user-name>Administrator</span>
                 <div class="user-avatar">
                     <i class="bi bi-person-fill"></i>
                 </div>
             </div>
-
         </header>
 
         <div class="content">
-
             <div class="page-header">
-
                 <div>
                     <h1>Users Management</h1>
-                    <p>Manage system users, accounts, roles and access.</p>
+                    <p>Manage system users, accounts and access within your school.</p>
                 </div>
 
-                <button class="btn btn-primary" onclick="openCreateModal()">
+                <button id="addUserButton" class="btn btn-primary" type="button">
                     <i class="bi bi-person-plus-fill me-1"></i>
                     Add User
                 </button>
-
             </div>
 
             <div id="message" class="alert d-none" role="alert"></div>
 
-            <!-- STATISTICS -->
             <div class="row g-3 mb-4">
-
                 <div class="col-12 col-sm-6 col-xl-3">
                     <div class="stat-card">
-
                         <div class="stat-icon bg-primary-subtle text-primary">
                             <i class="bi bi-people-fill"></i>
                         </div>
-
                         <div class="stat-label">Total Users</div>
                         <div id="totalUsers" class="stat-value">0</div>
-
                     </div>
                 </div>
 
                 <div class="col-12 col-sm-6 col-xl-3">
                     <div class="stat-card">
-
                         <div class="stat-icon bg-success-subtle text-success">
                             <i class="bi bi-person-check-fill"></i>
                         </div>
-
                         <div class="stat-label">Active Users</div>
                         <div id="activeUsers" class="stat-value">0</div>
-
                     </div>
                 </div>
 
                 <div class="col-12 col-sm-6 col-xl-3">
                     <div class="stat-card">
-
                         <div class="stat-icon bg-danger-subtle text-danger">
                             <i class="bi bi-person-x-fill"></i>
                         </div>
-
                         <div class="stat-label">Inactive Users</div>
                         <div id="inactiveUsers" class="stat-value">0</div>
-
                     </div>
                 </div>
 
                 <div class="col-12 col-sm-6 col-xl-3">
                     <div class="stat-card">
-
                         <div class="stat-icon bg-info-subtle text-info">
                             <i class="bi bi-display-fill"></i>
                         </div>
-
                         <div class="stat-label">Displayed</div>
                         <div id="displayedUsers" class="stat-value">0</div>
-
                     </div>
                 </div>
-
             </div>
 
-            <!-- USERS TABLE -->
             <div class="card bg-white">
-
                 <div class="toolbar">
-
                     <div class="row g-2 align-items-center">
-
                         <div class="col-12 col-md">
                             <div class="search-wrapper">
                                 <i class="bi bi-search"></i>
-
-                                <input type="text" id="searchInput" class="form-control"
-                                    placeholder="Search username, email, name or role..." oninput="filterUsers()">
+                                <input type="search" id="searchInput" class="form-control"
+                                    placeholder="Search username, email, name, phone or role..." autocomplete="off">
                             </div>
                         </div>
 
                         <div class="col-12 col-md-auto">
-
-                            <button class="btn btn-outline-secondary w-100" onclick="loadUsers()">
-
+                            <button id="refreshButton" class="btn btn-outline-secondary w-100" type="button">
                                 <i class="bi bi-arrow-clockwise me-1"></i>
                                 Refresh
-
                             </button>
-
                         </div>
-
                     </div>
-
                 </div>
 
                 <div class="table-responsive">
-
                     <table class="table">
-
                         <thead>
                             <tr>
                                 <th>#</th>
@@ -788,139 +717,79 @@
                         </thead>
 
                         <tbody id="usersTableBody">
-
                             <tr>
                                 <td colspan="9" class="loading">
                                     <div class="spinner-border spinner-border-sm text-primary me-2"></div>
                                     Loading users...
                                 </td>
                             </tr>
-
                         </tbody>
-
                     </table>
-
                 </div>
-
             </div>
-
         </div>
-
     </main>
 
-    <!-- USER MODAL -->
     <div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
-
         <div class="modal-dialog modal-dialog-centered modal-lg">
-
             <div class="modal-content">
-
                 <div class="modal-header">
-
-                    <h5 id="modalTitle" class="modal-title">
-                        Add User
-                    </h5>
-
-                    <button type="button" class="btn-close" onclick="closeModal()" aria-label="Close">
-                    </button>
-
+                    <h5 id="modalTitle" class="modal-title">Add User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
-                <form id="userForm" onsubmit="saveUser(event)">
-
+                <form id="userForm">
                     <div class="modal-body">
-
                         <input type="hidden" id="userId">
 
                         <div class="row g-3">
-
                             <div class="col-md-6">
-
-                                <label for="firstName" class="form-label">
-                                    First Name
-                                </label>
-
-                                <input type="text" id="firstName" class="form-control" required>
-
+                                <label for="firstName" class="form-label">First Name</label>
+                                <input type="text" id="firstName" class="form-control" maxlength="100" required>
                             </div>
 
                             <div class="col-md-6">
-
-                                <label for="lastName" class="form-label">
-                                    Last Name
-                                </label>
-
-                                <input type="text" id="lastName" class="form-control" required>
-
+                                <label for="lastName" class="form-label">Last Name</label>
+                                <input type="text" id="lastName" class="form-control" maxlength="100" required>
                             </div>
 
                             <div class="col-md-6">
-
-                                <label for="username" class="form-label">
-                                    Username
-                                </label>
-
-                                <input type="text" id="username" class="form-control" required>
-
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" id="username" class="form-control" maxlength="100" required>
                             </div>
 
                             <div class="col-md-6">
-
-                                <label for="email" class="form-label">
-                                    Email
-                                </label>
-
-                                <input type="email" id="email" class="form-control" required>
-
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" id="email" class="form-control" maxlength="255" required>
                             </div>
 
                             <div class="col-md-6">
-
-                                <label for="phone" class="form-label">
-                                    Phone
-                                </label>
-
-                                <input type="tel" id="phone" class="form-control" placeholder="08012345678">
-
+                                <label for="phone" class="form-label">Phone</label>
+                                <input type="tel" id="phone" class="form-control" maxlength="30"
+                                    placeholder="08012345678">
                             </div>
 
                             <div class="col-md-6">
-
-                                <label for="roleId" class="form-label">
-                                    Role
-                                </label>
-
+                                <label for="roleId" class="form-label">Role</label>
                                 <select id="roleId" class="form-select" required>
-
-                                    <option value="">
-                                        Select Role
-                                    </option>
-
+                                    <option value="">Select Role</option>
                                 </select>
-
                             </div>
 
                             <div class="col-12" id="passwordGroup">
-
-                                <label for="password" class="form-label">
-                                    Password
-                                </label>
-
-                                <input type="password" id="password" class="form-control" minlength="6">
-
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" id="password" class="form-control" minlength="8" maxlength="128"
+                                    autocomplete="new-password">
                                 <div class="password-note">
-                                    Password is required when creating a new user.
+                                    Password must contain at least 8 characters and is required when creating a new
+                                    user.
                                 </div>
-
                             </div>
-
                         </div>
-
                     </div>
 
                     <div class="modal-footer">
-
-                        <button type="button" class="btn btn-outline-secondary" onclick="closeModal()">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
                             Cancel
                         </button>
 
@@ -928,291 +797,247 @@
                             <i class="bi bi-check-lg me-1"></i>
                             Save User
                         </button>
-
                     </div>
-
                 </form>
-
             </div>
-
         </div>
-
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
     <script>
+        "use strict";
 
-        const API_URL = "/api/users";
-        const ROLES_API_URL = "/api/roles";
+        const API_URL = "/users";
+        const ROLES_API_URL = "/roles";
 
         let users = [];
         let roles = [];
         let editingUserId = null;
         let userModalInstance = null;
 
-
-        function getToken() {
-
-            return (
-                localStorage.getItem("school_management_token") ||
-                sessionStorage.getItem("school_management_token") ||
-                localStorage.getItem("token") ||
-                sessionStorage.getItem("token") ||
-                localStorage.getItem("authToken") ||
-                sessionStorage.getItem("authToken") ||
-                localStorage.getItem("accessToken") ||
-                sessionStorage.getItem("accessToken")
-            );
-
-        }
-
-
-        function getHeaders() {
-
-            const token = getToken();
-
-            const headers = {
-                "Content-Type": "application/json"
-            };
-
-            if (token) {
-                headers.Authorization = `Bearer ${token}`;
-            }
-
-            return headers;
-
-        }
-
-
         function showMessage(message, type = "success") {
-
             const element = document.getElementById("message");
 
+            if (!element) {
+                return;
+            }
+
             element.textContent = message;
-
             element.className =
-                `alert alert-${type === "error" ? "danger" : "success"}`;
+                type === "error"
+                    ? "alert alert-danger"
+                    : type === "info"
+                        ? "alert alert-info"
+                        : "alert alert-success";
 
-            setTimeout(() => {
+            window.clearTimeout(showMessage.timeout);
 
+            showMessage.timeout = window.setTimeout(function () {
                 element.className = "alert d-none";
-
             }, 4000);
-
         }
 
+        function normalizeUser(user) {
+            return {
+                id: user.id,
+                schoolId: user.schoolId ?? user.school_id ?? null,
+                roleId: user.roleId ?? user.role_id ?? null,
+                roleName: user.roleName ?? user.role_name ?? "No Role",
+                firstName: user.firstName ?? user.first_name ?? "",
+                middleName: user.middleName ?? user.middle_name ?? "",
+                lastName: user.lastName ?? user.last_name ?? "",
+                email: user.email ?? "",
+                phone: user.phone ?? "",
+                username: user.username ?? "",
+                profilePhotoUrl: user.profilePhotoUrl ?? user.profile_photo_url ?? null,
+                isActive: user.isActive ?? user.is_active ?? false,
+                lastLoginAt: user.lastLoginAt ?? user.last_login_at ?? null,
+                createdAt: user.createdAt ?? user.created_at ?? null,
+                updatedAt: user.updatedAt ?? user.updated_at ?? null
+            };
+        }
+
+        function normalizeRole(role) {
+            return {
+                id: role.id,
+                roleName: role.roleName ?? role.role_name ?? "Unnamed Role",
+                description: role.description ?? ""
+            };
+        }
 
         async function loadUsers() {
-
-            const tbody =
-                document.getElementById("usersTableBody");
+            const tbody = document.getElementById("usersTableBody");
 
             tbody.innerHTML = `
-            <tr>
-                <td colspan="9" class="loading">
-                    <div class="spinner-border spinner-border-sm text-primary me-2"></div>
-                    Loading users...
-                </td>
-            </tr>
-        `;
-
-            try {
-
-                const response = await fetch(
-                    API_URL,
-                    {
-                        method: "GET",
-                        headers: getHeaders()
-                    }
-                );
-
-                if (!response.ok) {
-
-                    if (response.status === 401 || response.status === 403) {
-                        clearAuthentication();
-                    }
-
-                    throw new Error(
-                        `Failed to load users (${response.status})`
-                    );
-
-                }
-
-                const result = await response.json();
-
-                users =
-                    Array.isArray(result)
-                        ? result
-                        : (
-                            result.data ||
-                            result.users ||
-                            []
-                        );
-
-                renderUsers();
-                updateStatistics();
-
-            } catch (error) {
-
-                console.error("Load users error:", error);
-
-                tbody.innerHTML = `
                 <tr>
-                    <td colspan="9" class="empty">
-                        Unable to load users.
+                    <td colspan="9" class="loading">
+                        <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                        Loading users...
                     </td>
                 </tr>
             `;
+
+            try {
+                const result = await apiGet(API_URL);
+
+                const data = Array.isArray(result)
+                    ? result
+                    : result?.data || result?.users || [];
+
+                users = data.map(normalizeUser);
+
+                renderUsers();
+                updateStatistics();
+            } catch (error) {
+                console.error("Load users error:", error);
+
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="empty">
+                            <i class="bi bi-exclamation-circle fs-3 d-block mb-2"></i>
+                            Unable to load users.
+                        </td>
+                    </tr>
+                `;
 
                 showMessage(
                     error.message || "Unable to load users.",
                     "error"
                 );
-
             }
-
         }
-
 
         async function loadRoles() {
-
             try {
+                const result = await apiGet(ROLES_API_URL);
 
-                const response = await fetch(
-                    ROLES_API_URL,
-                    {
-                        method: "GET",
-                        headers: getHeaders()
-                    }
-                );
+                const data = Array.isArray(result)
+                    ? result
+                    : result?.data || result?.roles || [];
 
-                if (!response.ok) {
-                    return;
-                }
-
-                const result = await response.json();
-
-                roles =
-                    Array.isArray(result)
-                        ? result
-                        : (
-                            result.data ||
-                            result.roles ||
-                            []
-                        );
+                roles = data.map(normalizeRole);
 
                 populateRoles();
-
             } catch (error) {
-
                 console.error("Load roles error:", error);
 
+                const select = document.getElementById("roleId");
+
+                if (select) {
+                    select.innerHTML = '<option value="">Unable to load roles</option>';
+                }
+
+                showMessage(
+                    error.message || "Unable to load roles.",
+                    "error"
+                );
             }
-
         }
-
 
         function populateRoles() {
+            const select = document.getElementById("roleId");
 
-            const select =
-                document.getElementById("roleId");
-
-            select.innerHTML = `
-            <option value="">Select Role</option>
-        `;
-
-            roles.forEach(role => {
-
-                const option =
-                    document.createElement("option");
-
-                option.value = role.id;
-
-                option.textContent =
-                    role.role_name ||
-                    role.name ||
-                    role.roleName ||
-                    `Role ${role.id}`;
-
-                select.appendChild(option);
-
-            });
-
-        }
-
-
-        function renderUsers(filteredUsers = null) {
-
-            const tbody =
-                document.getElementById("usersTableBody");
-
-            const list =
-                filteredUsers || users;
-
-            document.getElementById("displayedUsers").textContent =
-                list.length;
-
-            if (!list.length) {
-
-                tbody.innerHTML = `
-                <tr>
-                    <td colspan="9" class="empty">
-                        <i class="bi bi-people fs-3 d-block mb-2"></i>
-                        No users found.
-                    </td>
-                </tr>
-            `;
-
+            if (!select) {
                 return;
-
             }
 
-            tbody.innerHTML = list.map(
-                (user, index) => {
+            select.innerHTML = '<option value="">Select Role</option>';
 
-                    const firstName =
-                        user.first_name ||
-                        user.firstName ||
-                        "";
+            roles.forEach(function (role) {
+                const option = document.createElement("option");
 
-                    const lastName =
-                        user.last_name ||
-                        user.lastName ||
-                        "";
+                option.value = role.id;
+                option.textContent = role.roleName;
 
-                    const fullName =
-                        `${firstName} ${lastName}`.trim() ||
-                        "Unnamed User";
+                select.appendChild(option);
+            });
+        }
 
-                    const roleName =
-                        user.role_name ||
-                        user.roleName ||
-                        user.role ||
-                        "No Role";
+        function renderUsers(filteredUsers = null) {
+            const tbody = document.getElementById("usersTableBody");
+            const list = filteredUsers || users;
 
-                    const active =
-                        user.is_active === true ||
-                        user.is_active === "true" ||
-                        user.is_active === 1;
+            document.getElementById("displayedUsers").textContent = list.length;
 
-                    const lastLogin =
-                        formatDate(
-                            user.last_login_at ||
-                            user.lastLoginAt
-                        );
-
-                    const initials =
-                        getInitials(fullName);
-
-                    return `
+            if (!list.length) {
+                tbody.innerHTML = `
                     <tr>
+                        <td colspan="9" class="empty">
+                            <i class="bi bi-people fs-3 d-block mb-2"></i>
+                            No users found.
+                        </td>
+                    </tr>
+                `;
 
+                return;
+            }
+
+            tbody.innerHTML = list.map(function (user, index) {
+                const fullName =
+                    [
+                        user.firstName,
+                        user.middleName,
+                        user.lastName
+                    ]
+                        .filter(Boolean)
+                        .join(" ")
+                        .trim() || "Unnamed User";
+
+                const initials = getInitials(fullName);
+
+                const active =
+                    user.isActive === true ||
+                    user.isActive === "true" ||
+                    user.isActive === 1;
+
+                const statusClass =
+                    active
+                        ? "status-active"
+                        : "status-inactive";
+
+                const statusIcon =
+                    active
+                        ? "bi-check-circle-fill"
+                        : "bi-x-circle-fill";
+
+                const statusText =
+                    active
+                        ? "Active"
+                        : "Inactive";
+
+                const actionHtml =
+                    active
+                        ? `
+                            <button
+                                class="action-btn action-deactivate"
+                                type="button"
+                                data-action="deactivate-user"
+                                data-user-id="${escapeHtml(user.id)}"
+                            >
+                                <i class="bi bi-person-dash-fill me-1"></i>
+                                Deactivate
+                            </button>
+                        `
+                        : `
+                            <button
+                                class="action-btn action-activate"
+                                type="button"
+                                data-action="activate-user"
+                                data-user-id="${escapeHtml(user.id)}"
+                            >
+                                <i class="bi bi-person-check-fill me-1"></i>
+                                Activate
+                            </button>
+                        `;
+
+                return `
+                    <tr>
                         <td>${index + 1}</td>
 
                         <td>
                             <div class="user-cell">
-
                                 <div class="small-avatar">
                                     ${escapeHtml(initials)}
                                 </div>
@@ -1226,7 +1051,6 @@
                                         System User
                                     </div>
                                 </div>
-
                             </div>
                         </td>
 
@@ -1245,135 +1069,96 @@
                         <td>
                             <span class="role-badge">
                                 <i class="bi bi-shield-check me-1"></i>
-                                ${escapeHtml(roleName)}
+                                ${escapeHtml(user.roleName || "No Role")}
                             </span>
                         </td>
 
                         <td>
-                            <span class="status-badge ${active
-                            ? "status-active"
-                            : "status-inactive"
-                        }">
-                                <i class="bi ${active
-                            ? "bi-check-circle-fill"
-                            : "bi-x-circle-fill"
-                        }"></i>
-                                ${active ? "Active" : "Inactive"}
+                            <span class="status-badge ${statusClass}">
+                                <i class="bi ${statusIcon}"></i>
+                                ${statusText}
                             </span>
                         </td>
 
                         <td>
-                            ${lastLogin}
+                            ${escapeHtml(formatDate(user.lastLoginAt))}
                         </td>
 
                         <td>
-
                             <div class="text-nowrap">
-
                                 <button
                                     class="action-btn action-edit"
-                                    onclick="editUser('${escapeJs(user.id)}')">
+                                    type="button"
+                                    data-action="edit-user"
+                                    data-user-id="${escapeHtml(user.id)}"
+                                >
                                     <i class="bi bi-pencil-fill me-1"></i>
                                     Edit
                                 </button>
 
-                                ${active
-                            ? `
-                                            <button
-                                                class="action-btn action-deactivate"
-                                                onclick="changeUserStatus('${escapeJs(user.id)}', false)">
-                                                <i class="bi bi-person-dash-fill me-1"></i>
-                                                Deactivate
-                                            </button>
-                                        `
-                            : `
-                                            <button
-                                                class="action-btn action-activate"
-                                                onclick="changeUserStatus('${escapeJs(user.id)}', true)">
-                                                <i class="bi bi-person-check-fill me-1"></i>
-                                                Activate
-                                            </button>
-                                        `
-                        }
+                                ${actionHtml}
 
                                 <button
                                     class="action-btn action-delete"
-                                    onclick="deleteUser('${escapeJs(user.id)}')">
+                                    type="button"
+                                    data-action="delete-user"
+                                    data-user-id="${escapeHtml(user.id)}"
+                                >
                                     <i class="bi bi-trash-fill me-1"></i>
                                     Delete
                                 </button>
-
                             </div>
-
                         </td>
-
                     </tr>
                 `;
-
-                }
-            ).join("");
-
+            }).join("");
         }
 
-
         function filterUsers() {
+            const searchInput =
+                document.getElementById("searchInput");
 
             const search =
-                document
-                    .getElementById("searchInput")
-                    .value
+                String(searchInput?.value || "")
                     .toLowerCase()
                     .trim();
 
             if (!search) {
-
                 renderUsers();
-
                 return;
-
             }
 
             const filtered =
-                users.filter(user => {
-
+                users.filter(function (user) {
                     const values = [
-
                         user.username,
                         user.email,
-                        user.first_name,
-                        user.last_name,
                         user.firstName,
+                        user.middleName,
                         user.lastName,
                         user.phone,
-                        user.role_name,
-                        user.roleName,
-                        user.role
-
+                        user.roleName
                     ];
 
-                    return values.some(
-                        value =>
-                            String(value || "")
-                                .toLowerCase()
-                                .includes(search)
-                    );
-
+                    return values.some(function (value) {
+                        return String(value || "")
+                            .toLowerCase()
+                            .includes(search);
+                    });
                 });
 
             renderUsers(filtered);
-
         }
 
-
         function updateStatistics() {
-
             const active =
-                users.filter(
-                    user =>
-                        user.is_active === true ||
-                        user.is_active === "true" ||
-                        user.is_active === 1
-                ).length;
+                users.filter(function (user) {
+                    return (
+                        user.isActive === true ||
+                        user.isActive === "true" ||
+                        user.isActive === 1
+                    );
+                }).length;
 
             document.getElementById("totalUsers").textContent =
                 users.length;
@@ -1386,12 +1171,9 @@
 
             document.getElementById("displayedUsers").textContent =
                 users.length;
-
         }
 
-
         function openCreateModal() {
-
             editingUserId = null;
 
             document.getElementById("modalTitle").textContent =
@@ -1401,34 +1183,30 @@
 
             document.getElementById("userId").value = "";
 
-            document.getElementById("password").required = true;
+            document.getElementById("username").disabled = false;
+
+            document.getElementById("roleId").disabled = false;
+            document.getElementById("roleId").required = true;
 
             document.getElementById("passwordGroup").style.display =
                 "block";
 
-            showModal();
+            document.getElementById("password").required = true;
 
+            document.getElementById("password").value = "";
+
+            showModal();
         }
 
-
         function editUser(userId) {
-
             const user =
-                users.find(
-                    item =>
-                        String(item.id) ===
-                        String(userId)
-                );
+                users.find(function (item) {
+                    return String(item.id) === String(userId);
+                });
 
             if (!user) {
-
-                showMessage(
-                    "User not found.",
-                    "error"
-                );
-
+                showMessage("User not found.", "error");
                 return;
-
             }
 
             editingUserId = userId;
@@ -1440,46 +1218,44 @@
                 user.id;
 
             document.getElementById("firstName").value =
-                user.first_name ||
-                user.firstName ||
-                "";
+                user.firstName;
 
             document.getElementById("lastName").value =
-                user.last_name ||
-                user.lastName ||
-                "";
+                user.lastName;
 
             document.getElementById("username").value =
-                user.username ||
-                "";
+                user.username;
+
+            document.getElementById("username").disabled =
+                true;
 
             document.getElementById("email").value =
-                user.email ||
-                "";
+                user.email;
 
             document.getElementById("phone").value =
-                user.phone ||
-                "";
+                user.phone;
 
             document.getElementById("roleId").value =
-                user.role_id ||
-                user.roleId ||
-                "";
+                user.roleId || "";
+
+            document.getElementById("roleId").disabled =
+                true;
+
+            document.getElementById("roleId").required =
+                false;
 
             document.getElementById("password").value = "";
 
-            document.getElementById("password").required = false;
+            document.getElementById("password").required =
+                false;
 
             document.getElementById("passwordGroup").style.display =
                 "none";
 
             showModal();
-
         }
 
-
         async function saveUser(event) {
-
             event.preventDefault();
 
             const firstName =
@@ -1506,80 +1282,70 @@
             const saveButton =
                 document.getElementById("saveButton");
 
+            if (!firstName || !lastName || !username || !email) {
+                showMessage(
+                    "Please complete all required user fields.",
+                    "error"
+                );
+
+                return;
+            }
+
+            if (!editingUserId && !roleId) {
+                showMessage(
+                    "Please select a role.",
+                    "error"
+                );
+
+                return;
+            }
+
+            if (!editingUserId && password.length < 8) {
+                showMessage(
+                    "Password must be at least 8 characters.",
+                    "error"
+                );
+
+                return;
+            }
+
             const payload = {
                 firstName,
                 lastName,
                 username,
                 email,
-                phone: phone || null,
-                roleId
+                phone: phone || null
             };
 
             if (!editingUserId) {
-
-                if (!password) {
-
-                    showMessage(
-                        "Password is required when creating a user.",
-                        "error"
-                    );
-
-                    return;
-
-                }
-
+                payload.roleId = roleId;
                 payload.password = password;
-
             }
 
             saveButton.disabled = true;
+
             saveButton.innerHTML = `
-            <span class="spinner-border spinner-border-sm me-1"></span>
-            Saving...
-        `;
+                <span class="spinner-border spinner-border-sm me-1"></span>
+                Saving...
+            `;
 
             try {
-
-                const url =
-                    editingUserId
-                        ? `${API_URL}/${editingUserId}`
-                        : API_URL;
-
-                const method =
-                    editingUserId
-                        ? "PUT"
-                        : "POST";
-
-                const response =
-                    await fetch(
-                        url,
-                        {
-                            method,
-                            headers: getHeaders(),
-                            body: JSON.stringify(payload)
-                        }
-                    );
-
                 const result =
-                    await response
-                        .json()
-                        .catch(() => ({}));
+                    editingUserId
+                        ? await apiPut(
+                            `${API_URL}/${encodeURIComponent(editingUserId)}`,
+                            payload
+                        )
+                        : await apiPost(
+                            API_URL,
+                            payload
+                        );
 
-                if (!response.ok) {
-
-                    if (
-                        response.status === 401 ||
-                        response.status === 403
-                    ) {
-                        clearAuthentication();
-                    }
-
+                if (!result || result.success !== true) {
                     throw new Error(
-                        result.message ||
-                        result.error ||
+                        result?.message ||
                         "Unable to save user."
                     );
-
                 }
 
                 showMessage(
@@ -1591,35 +1357,34 @@
                 closeModal();
 
                 await loadUsers();
-
             } catch (error) {
-
-                console.error(
-                    "Save user error:",
-                    error
-                );
+                console.error("Save user error:", error);
 
                 showMessage(
                     error.message ||
                     "Unable to save user.",
                     "error"
                 );
-
             } finally {
-
                 saveButton.disabled = false;
 
                 saveButton.innerHTML = `
-                <i class="bi bi-check-lg me-1"></i>
-                Save User
-            `;
-
+                    <i class="bi bi-check-lg me-1"></i>
+                    Save User
+                `;
             }
-
         }
 
-
         async function changeUserStatus(userId, activate) {
+            const user =
+                users.find(function (item) {
+                    return String(item.id) === String(userId);
+                });
+
+            if (!user) {
+                showMessage("User not found.", "error");
+                return;
+            }
 
             const action =
                 activate
@@ -1627,8 +1392,8 @@
                     : "deactivate";
 
             const confirmed =
-                confirm(
-                    `Are you sure you want to ${action} this user?`
+                window.confirm(
+                    `Are you sure you want to ${action} ${user.username || "this user"}?`
                 );
 
             if (!confirmed) {
@@ -1636,45 +1401,26 @@
             }
 
             try {
-
-                const response =
-                    await fetch(
-                        `${API_URL}/${userId}/${action}`,
-                        {
-                            method: "PATCH",
-                            headers: getHeaders()
-                        }
+                const result =
+                    await apiPatch(
+                        `${API_URL}/${encodeURIComponent(userId)}/${action}`
                     );
 
-                const result =
-                    await response
-                        .json()
-                        .catch(() => ({}));
-
-                if (!response.ok) {
-
-                    if (
-                        response.status === 401 ||
-                        response.status === 403
-                    ) {
-                        clearAuthentication();
-                    }
-
+                if (!result || result.success !== true) {
                     throw new Error(
-                        result.message ||
+                        result?.message ||
                         `Unable to ${action} user.`
                     );
-
                 }
 
                 showMessage(
-                    `User ${action}d successfully.`
+                    activate
+                        ? "User activated successfully."
+                        : "User deactivated successfully."
                 );
 
                 await loadUsers();
-
             } catch (error) {
-
                 console.error(
                     "Change user status error:",
                     error
@@ -1685,28 +1431,23 @@
                     `Unable to ${action} user.`,
                     "error"
                 );
-
             }
-
         }
 
-
         async function deleteUser(userId) {
-
             const user =
-                users.find(
-                    item =>
-                        String(item.id) ===
-                        String(userId)
-                );
+                users.find(function (item) {
+                    return String(item.id) === String(userId);
+                });
 
-            const username =
-                user?.username ||
-                "this user";
+            if (!user) {
+                showMessage("User not found.", "error");
+                return;
+            }
 
             const confirmed =
-                confirm(
-                    `Are you sure you want to permanently delete ${username}?`
+                window.confirm(
+                    `Are you sure you want to permanently delete ${user.username || "this user"}?`
                 );
 
             if (!confirmed) {
@@ -1714,35 +1455,16 @@
             }
 
             try {
-
-                const response =
-                    await fetch(
-                        `${API_URL}/${userId}`,
-                        {
-                            method: "DELETE",
-                            headers: getHeaders()
-                        }
+                const result =
+                    await apiDelete(
+                        `${API_URL}/${encodeURIComponent(userId)}`
                     );
 
-                const result =
-                    await response
-                        .json()
-                        .catch(() => ({}));
-
-                if (!response.ok) {
-
-                    if (
-                        response.status === 401 ||
-                        response.status === 403
-                    ) {
-                        clearAuthentication();
-                    }
-
+                if (!result || result.success !== true) {
                     throw new Error(
-                        result.message ||
+                        result?.message ||
                         "Unable to delete user."
                     );
-
                 }
 
                 showMessage(
@@ -1750,9 +1472,7 @@
                 );
 
                 await loadUsers();
-
             } catch (error) {
-
                 console.error(
                     "Delete user error:",
                     error
@@ -1763,16 +1483,16 @@
                     "Unable to delete user.",
                     "error"
                 );
-
             }
-
         }
 
-
         function showModal() {
-
             const modalElement =
                 document.getElementById("userModal");
+
+            if (!modalElement) {
+                return;
+            }
 
             userModalInstance =
                 bootstrap.Modal.getOrCreateInstance(
@@ -1780,39 +1500,21 @@
                 );
 
             userModalInstance.show();
-
         }
 
-
         function closeModal() {
-
-            const modalElement =
-                document.getElementById("userModal");
-
             if (userModalInstance) {
-
                 userModalInstance.hide();
-
-            } else {
-
-                const instance =
-                    bootstrap.Modal.getInstance(
-                        modalElement
-                    );
-
-                if (instance) {
-                    instance.hide();
-                }
-
             }
 
             editingUserId = null;
 
+            document.getElementById("username").disabled = false;
+            document.getElementById("roleId").disabled = false;
+            document.getElementById("roleId").required = true;
         }
 
-
         function formatDate(value) {
-
             if (!value) {
                 return "-";
             }
@@ -1830,12 +1532,9 @@
                     timeStyle: "short"
                 }
             );
-
         }
 
-
         function getInitials(name) {
-
             const parts =
                 String(name || "")
                     .trim()
@@ -1847,73 +1546,27 @@
             }
 
             if (parts.length === 1) {
-                return parts[0].substring(0, 2).toUpperCase();
+                return parts[0]
+                    .substring(0, 2)
+                    .toUpperCase();
             }
 
             return (
                 parts[0].charAt(0) +
                 parts[parts.length - 1].charAt(0)
             ).toUpperCase();
-
         }
 
-
         function escapeHtml(value) {
-
-            return String(value || "")
+            return String(value ?? "")
                 .replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
-
         }
-
-
-        function escapeJs(value) {
-
-            return String(value ?? "")
-                .replace(/\\/g, "\\\\")
-                .replace(/'/g, "\\'")
-                .replace(/"/g, "&quot;")
-                .replace(/\r/g, "\\r")
-                .replace(/\n/g, "\\n");
-
-        }
-
-
-        function clearAuthentication() {
-
-            const keys = [
-                "school_management_token",
-                "school_management_user",
-                "token",
-                "authToken",
-                "accessToken",
-                "user"
-            ];
-
-            keys.forEach(key => {
-
-                localStorage.removeItem(key);
-                sessionStorage.removeItem(key);
-
-            });
-
-        }
-
-
-        function logout() {
-
-            clearAuthentication();
-
-            window.location.href = "login.html";
-
-        }
-
 
         function initializeSidebar() {
-
             const sidebar =
                 document.getElementById("sidebar");
 
@@ -1929,143 +1582,134 @@
 
             toggle.addEventListener(
                 "click",
-                () => {
-
+                function () {
                     sidebar.classList.toggle("show");
                     overlay.classList.toggle("show");
-
                 }
             );
 
             overlay.addEventListener(
                 "click",
-                () => {
-
+                function () {
                     sidebar.classList.remove("show");
                     overlay.classList.remove("show");
-
                 }
             );
 
             sidebar
                 .querySelectorAll("a")
-                .forEach(link => {
-
+                .forEach(function (link) {
                     link.addEventListener(
                         "click",
-                        () => {
-
-                            if (
-                                window.innerWidth <= 991
-                            ) {
-
+                        function () {
+                            if (window.innerWidth <= 991) {
                                 sidebar.classList.remove("show");
                                 overlay.classList.remove("show");
-
                             }
-
                         }
                     );
-
                 });
-
         }
 
-
-        function initializeUserDisplay() {
-
-            try {
-
-                const stored =
-                    localStorage.getItem(
-                        "school_management_user"
-                    );
-
-                if (!stored) {
-                    return;
-                }
-
-                const user =
-                    JSON.parse(stored);
-
-                const name =
-                    [
-                        user.first_name ||
-                        user.firstName ||
-                        "",
-                        user.last_name ||
-                        user.lastName ||
-                        ""
-                    ]
-                        .join(" ")
-                        .trim() ||
-                    user.username ||
-                    "Administrator";
-
-                document.getElementById(
-                    "userName"
-                ).textContent = name;
-
-            } catch (error) {
-
-                console.warn(
-                    "Unable to load stored user:",
-                    error
+        function initializeEvents() {
+            document
+                .getElementById("addUserButton")
+                .addEventListener(
+                    "click",
+                    openCreateModal
                 );
 
-            }
+            document
+                .getElementById("refreshButton")
+                .addEventListener(
+                    "click",
+                    async function () {
+                        await loadRoles();
+                        await loadUsers();
+                    }
+                );
 
+            document
+                .getElementById("searchInput")
+                .addEventListener(
+                    "input",
+                    filterUsers
+                );
+
+            document
+                .getElementById("userForm")
+                .addEventListener(
+                    "submit",
+                    saveUser
+                );
+
+            document
+                .getElementById("usersTableBody")
+                .addEventListener(
+                    "click",
+                    async function (event) {
+                        const button =
+                            event.target.closest(
+                                "button[data-action]"
+                            );
+
+                        if (!button) {
+                            return;
+                        }
+
+                        const action =
+                            button.dataset.action;
+
+                        const userId =
+                            button.dataset.userId;
+
+                        if (
+                            action === "edit-user"
+                        ) {
+                            editUser(userId);
+                            return;
+                        }
+
+                        if (
+                            action === "activate-user"
+                        ) {
+                            await changeUserStatus(
+                                userId,
+                                true
+                            );
+                            return;
+                        }
+
+                        if (
+                            action === "deactivate-user"
+                        ) {
+                            await changeUserStatus(
+                                userId,
+                                false
+                            );
+                            return;
+                        }
+
+                        if (
+                            action === "delete-user"
+                        ) {
+                            await deleteUser(userId);
+                        }
+                    }
+                );
         }
-
-
-        document.addEventListener(
-            "keydown",
-            event => {
-
-                if (event.key === "Escape") {
-                    closeModal();
-                }
-
-            }
-        );
-
 
         document.addEventListener(
             "DOMContentLoaded",
-            async () => {
-
+            async function () {
                 initializeSidebar();
-                initializeUserDisplay();
-
-                const logoutButton =
-                    document.getElementById(
-                        "logoutButton"
-                    );
-
-                if (logoutButton) {
-
-                    logoutButton.addEventListener(
-                        "click",
-                        event => {
-
-                            event.preventDefault();
-
-                            logout();
-
-                        }
-                    );
-
-                }
+                initializeEvents();
 
                 await loadRoles();
                 await loadUsers();
-
             }
         );
-
     </script>
-
-
 </body>
 
 </html>

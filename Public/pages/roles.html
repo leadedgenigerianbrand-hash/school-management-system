@@ -4,11 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="School Management System role and access control management">
     <title>Roles | School Management System</title>
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-
+    <link href="../css/style.css" rel="stylesheet">
+    <link href="../css/bootstrap-system.css" rel="stylesheet">
+    <link href="../css/responsive.css" rel="stylesheet">
     <style>
         body {
             background: #f5f7fb;
@@ -30,7 +32,7 @@
 
         .sidebar-brand {
             padding: 22px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .sidebar-brand-icon {
@@ -42,6 +44,7 @@
             align-items: center;
             justify-content: center;
             font-size: 20px;
+            flex-shrink: 0;
         }
 
         .sidebar-section {
@@ -50,7 +53,7 @@
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: .08em;
+            letter-spacing: 0.08em;
         }
 
         .sidebar .nav-link {
@@ -59,6 +62,8 @@
             margin: 2px 10px;
             padding: 10px 12px;
             font-size: 14px;
+            display: flex;
+            align-items: center;
         }
 
         .sidebar .nav-link:hover,
@@ -74,6 +79,7 @@
         .sidebar .nav-link i {
             width: 22px;
             margin-right: 8px;
+            flex-shrink: 0;
         }
 
         .main-wrapper {
@@ -107,15 +113,15 @@
 
         .card {
             border: 1px solid #e5e7eb;
-            box-shadow: 0 2px 8px rgba(15, 23, 42, .03);
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
         }
 
-        .toolbar-card {
+        .toolbar-card,
+        .table-card {
             border-radius: 12px;
         }
 
         .table-card {
-            border-radius: 12px;
             overflow: hidden;
         }
 
@@ -124,7 +130,7 @@
             color: #374151;
             font-size: 12px;
             text-transform: uppercase;
-            letter-spacing: .04em;
+            letter-spacing: 0.04em;
             white-space: nowrap;
         }
 
@@ -143,6 +149,7 @@
         }
 
         .status-badge {
+            display: inline-block;
             font-size: 11px;
             font-weight: 700;
             padding: 6px 10px;
@@ -170,10 +177,11 @@
         }
 
         .permissions-list {
-            max-height: 360px;
+            max-height: 420px;
             overflow-y: auto;
             border: 1px solid #e5e7eb;
             border-radius: 10px;
+            background: #fff;
         }
 
         .permission-item {
@@ -216,10 +224,14 @@
             display: none;
         }
 
+        .message-area {
+            min-height: 0;
+        }
+
         @media (max-width: 991.98px) {
             .sidebar {
                 transform: translateX(-100%);
-                transition: transform .25s ease;
+                transition: transform 0.25s ease;
             }
 
             .sidebar.show {
@@ -238,7 +250,7 @@
                 display: block;
                 position: fixed;
                 inset: 0;
-                background: rgba(0, 0, 0, .45);
+                background: rgba(0, 0, 0, 0.45);
                 z-index: 1030;
             }
 
@@ -263,12 +275,19 @@
             .user-label {
                 display: none;
             }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .action-buttons .btn {
+                width: 100%;
+            }
         }
     </style>
 </head>
 
 <body>
-
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <aside class="sidebar" id="sidebar">
@@ -285,93 +304,112 @@
         </div>
 
         <nav class="py-2">
-
             <div class="sidebar-section">Main</div>
 
             <a class="nav-link" href="dashboard.html">
-                <i class="bi bi-speedometer2"></i> Dashboard
+                <i class="bi bi-speedometer2"></i>
+                Dashboard
             </a>
 
             <a class="nav-link" href="students.html">
-                <i class="bi bi-people"></i> Students
+                <i class="bi bi-people"></i>
+                Students
             </a>
 
             <a class="nav-link" href="staff.html">
-                <i class="bi bi-person-badge"></i> Staff
+                <i class="bi bi-person-badge"></i>
+                Staff
             </a>
 
             <a class="nav-link" href="guardians.html">
-                <i class="bi bi-person-heart"></i> Guardians
+                <i class="bi bi-person-heart"></i>
+                Guardians
             </a>
 
             <div class="sidebar-section">Academic</div>
 
             <a class="nav-link" href="classes.html">
-                <i class="bi bi-building"></i> Classes
+                <i class="bi bi-building"></i>
+                Classes
             </a>
 
             <a class="nav-link" href="class-arms.html">
-                <i class="bi bi-diagram-3"></i> Class Arms
+                <i class="bi bi-diagram-3"></i>
+                Class Arms
             </a>
 
             <a class="nav-link" href="departments.html">
-                <i class="bi bi-diagram-2"></i> Departments
+                <i class="bi bi-diagram-2"></i>
+                Departments
             </a>
 
             <a class="nav-link" href="subjects.html">
-                <i class="bi bi-book"></i> Subjects
+                <i class="bi bi-book"></i>
+                Subjects
             </a>
 
             <a class="nav-link" href="academic-sessions.html">
-                <i class="bi bi-calendar3"></i> Sessions
+                <i class="bi bi-calendar3"></i>
+                Sessions
             </a>
 
             <a class="nav-link" href="terms.html">
-                <i class="bi bi-calendar-week"></i> Terms
+                <i class="bi bi-calendar-week"></i>
+                Terms
             </a>
 
             <a class="nav-link" href="attendance.html">
-                <i class="bi bi-check2-square"></i> Attendance
+                <i class="bi bi-check2-square"></i>
+                Attendance
             </a>
 
             <a class="nav-link" href="results.html">
-                <i class="bi bi-bar-chart"></i> Results
+                <i class="bi bi-bar-chart"></i>
+                Results
             </a>
 
             <div class="sidebar-section">Finance & Records</div>
 
             <a class="nav-link" href="fees.html">
-                <i class="bi bi-cash-stack"></i> Fees
+                <i class="bi bi-cash-stack"></i>
+                Fees
             </a>
 
             <a class="nav-link" href="documents.html">
-                <i class="bi bi-folder2-open"></i> Documents
+                <i class="bi bi-folder2-open"></i>
+                Documents
             </a>
 
             <a class="nav-link" href="reports.html">
-                <i class="bi bi-file-earmark-bar-graph"></i> Reports
+                <i class="bi bi-file-earmark-bar-graph"></i>
+                Reports
             </a>
 
             <div class="sidebar-section">Administration</div>
 
             <a class="nav-link" href="users.html">
-                <i class="bi bi-person-gear"></i> Users
+                <i class="bi bi-person-gear"></i>
+                Users
             </a>
 
             <a class="nav-link active" href="roles.html">
-                <i class="bi bi-shield-lock"></i> Roles
+                <i class="bi bi-shield-lock"></i>
+                Roles
             </a>
 
             <a class="nav-link" href="permissions.html">
-                <i class="bi bi-key"></i> Permissions
+                <i class="bi bi-key"></i>
+                Permissions
             </a>
 
             <a class="nav-link" href="profile.html">
-                <i class="bi bi-person-circle"></i> Profile
+                <i class="bi bi-person-circle"></i>
+                Profile
             </a>
 
             <a class="nav-link" href="settings.html">
-                <i class="bi bi-gear"></i> Settings
+                <i class="bi bi-gear"></i>
+                Settings
             </a>
 
             <div class="px-3 pt-3 pb-4">
@@ -380,12 +418,10 @@
                     Sign Out
                 </button>
             </div>
-
         </nav>
     </aside>
 
     <div class="main-wrapper">
-
         <header class="topbar">
             <div class="d-flex align-items-center gap-3">
                 <button type="button" class="btn btn-light mobile-toggle" id="sidebarToggle"
@@ -403,14 +439,13 @@
 
             <div class="d-flex align-items-center gap-2">
                 <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
-                    style="width:38px;height:38px;">
+                    style="width:38px;height:38px;" aria-hidden="true">
                     <i class="bi bi-person"></i>
                 </div>
             </div>
         </header>
 
         <main class="page-content">
-
             <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
                 <div>
                     <h1 class="page-title h3">Roles</h1>
@@ -419,13 +454,13 @@
                     </p>
                 </div>
 
-                <button type="button" class="btn btn-primary" onclick="openCreateModal()">
+                <button type="button" class="btn btn-primary" id="addRoleButton" data-action="add-role">
                     <i class="bi bi-plus-lg me-2"></i>
                     Add Role
                 </button>
             </div>
 
-            <div id="message" class="alert d-none" role="alert"></div>
+            <div id="message" class="alert d-none message-area" role="alert" aria-live="polite"></div>
 
             <section class="card toolbar-card mb-4">
                 <div class="card-body">
@@ -435,13 +470,15 @@
                                 <span class="input-group-text bg-white">
                                     <i class="bi bi-search text-secondary"></i>
                                 </span>
-                                <input type="text" id="searchInput" class="form-control" placeholder="Search roles..."
-                                    oninput="filterRoles()">
+
+                                <input type="search" id="searchInput" class="form-control" placeholder="Search roles..."
+                                    autocomplete="off">
                             </div>
                         </div>
 
                         <div class="col-auto">
-                            <button type="button" class="btn btn-outline-secondary" onclick="loadRoles()">
+                            <button type="button" class="btn btn-outline-secondary" id="refreshRolesButton"
+                                data-action="refresh-roles">
                                 <i class="bi bi-arrow-clockwise me-2"></i>
                                 Refresh
                             </button>
@@ -451,7 +488,6 @@
             </section>
 
             <section class="card table-card">
-
                 <div class="card-header bg-white py-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -483,43 +519,41 @@
                         <tbody id="rolesTable">
                             <tr>
                                 <td colspan="6" class="loading">
-                                    <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"
+                                        aria-hidden="true"></div>
                                     Loading roles...
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-
             </section>
-
         </main>
     </div>
 
-    <!-- CREATE / EDIT ROLE MODAL -->
-    <div class="modal fade" id="roleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="roleModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg">
-
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalTitle">Add Role</h5>
+                    <h5 class="modal-title" id="modalTitle">
+                        Add Role
+                    </h5>
 
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
-                <form id="roleForm" onsubmit="saveRole(event)">
-
+                <form id="roleForm">
                     <div class="modal-body">
-
                         <input type="hidden" id="roleId">
 
                         <div class="mb-3">
                             <label for="roleName" class="form-label fw-semibold">
-                                Role Name <span class="text-danger">*</span>
+                                Role Name
+                                <span class="text-danger">*</span>
                             </label>
 
                             <input type="text" id="roleName" class="form-control" placeholder="Example: Administrator"
-                                required>
+                                maxlength="100" autocomplete="off" required>
                         </div>
 
                         <div class="mb-3">
@@ -527,7 +561,7 @@
                                 Description
                             </label>
 
-                            <textarea id="roleDescription" class="form-control" rows="4"
+                            <textarea id="roleDescription" class="form-control" rows="4" maxlength="500"
                                 placeholder="Describe the responsibility of this role."></textarea>
                         </div>
 
@@ -541,30 +575,26 @@
                                 <option value="inactive">Inactive</option>
                             </select>
                         </div>
-
                     </div>
 
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" onclick="closeRoleModal()">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">
                             Cancel
                         </button>
 
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary" id="saveRoleButton">
                             <i class="bi bi-check-lg me-2"></i>
                             Save Role
                         </button>
                     </div>
-
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- ROLE PERMISSIONS MODAL -->
-    <div class="modal fade" id="permissionsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="permissionsModal" tabindex="-1" aria-labelledby="permissionsTitle" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 shadow-lg">
-
                 <div class="modal-header">
                     <h5 class="modal-title" id="permissionsTitle">
                         Role Permissions
@@ -574,7 +604,6 @@
                 </div>
 
                 <div class="modal-body">
-
                     <div class="modal-note mb-3">
                         <i class="bi bi-info-circle me-2"></i>
                         Select the permissions that should be available to this role.
@@ -582,909 +611,31 @@
 
                     <div id="permissionsList" class="permissions-list">
                         <div class="loading">
-                            <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                            <div class="spinner-border spinner-border-sm text-primary me-2" role="status"
+                                aria-hidden="true"></div>
                             Loading permissions...
                         </div>
                     </div>
-
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light" onclick="closePermissionsModal()">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">
                         Cancel
                     </button>
 
-                    <button type="button" class="btn btn-primary" onclick="saveRolePermissions()">
+                    <button type="button" class="btn btn-primary" id="saveRolePermissionsButton">
                         <i class="bi bi-shield-check me-2"></i>
                         Save Permissions
                     </button>
                 </div>
-
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script>
-        const API_URL = "/api/roles";
-        const PERMISSIONS_API_URL = "/api/permissions";
-
-        let roles = [];
-        let allPermissions = [];
-        let selectedRoleId = null;
-
-        let roleModalInstance;
-        let permissionsModalInstance;
-
-        function getAuthHeaders() {
-            const token =
-                localStorage.getItem("school_management_token") ||
-                sessionStorage.getItem("school_management_token") ||
-                localStorage.getItem("token") ||
-                localStorage.getItem("accessToken") ||
-                sessionStorage.getItem("token") ||
-                sessionStorage.getItem("accessToken");
-
-            const headers = {
-                "Content-Type": "application/json"
-            };
-
-            if (token) {
-                headers.Authorization = `Bearer ${token}`;
-            }
-
-            return headers;
-        }
-
-        function showMessage(message, type = "success") {
-            const element = document.getElementById("message");
-
-            element.textContent = message;
-            element.className = `alert alert-${type === "error" ? "danger" : type} d-block`;
-
-            setTimeout(() => {
-                element.className = "alert d-none";
-                element.textContent = "";
-            }, 4000);
-        }
-
-        function parseResponse(response) {
-            return response.text().then(text => {
-                try {
-                    return text ? JSON.parse(text) : {};
-                } catch {
-                    return {
-                        message: "The server returned an invalid response."
-                    };
-                }
-            });
-        }
-
-        async function loadRoles() {
-            const table = document.getElementById("rolesTable");
-
-            table.innerHTML = `
-                <tr>
-                    <td colspan="6" class="loading">
-                        <div class="spinner-border spinner-border-sm text-primary me-2"></div>
-                        Loading roles...
-                    </td>
-                </tr>
-            `;
-
-            try {
-                const response = await fetch(API_URL, {
-                    method: "GET",
-                    headers: getAuthHeaders()
-                });
-
-                const result = await parseResponse(response);
-
-                if (!response.ok) {
-                    throw new Error(
-                        result.message || "Unable to load roles."
-                    );
-                }
-
-                roles = Array.isArray(result.data)
-                    ? result.data
-                    : [];
-
-                renderRoles();
-
-            } catch (error) {
-                console.error("Load roles error:", error);
-
-                table.innerHTML = `
-                    <tr>
-                        <td colspan="6" class="empty">
-                            <i class="bi bi-exclamation-circle fs-3 d-block mb-2"></i>
-                            Unable to load roles.
-                        </td>
-                    </tr>
-                `;
-
-                showMessage(
-                    error.message || "Unable to load roles.",
-                    "error"
-                );
-            }
-        }
-
-        function renderRoles(list = roles) {
-            const table = document.getElementById("rolesTable");
-            const count = document.getElementById("roleCount");
-
-            count.textContent =
-                `${list.length} role${list.length === 1 ? "" : "s"}`;
-
-            if (!list.length) {
-                table.innerHTML = `
-                    <tr>
-                        <td colspan="6" class="empty">
-                            <i class="bi bi-shield-x fs-3 d-block mb-2"></i>
-                            No roles found.
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            table.innerHTML = list.map(role => {
-                const id = role.id ?? "";
-
-                const roleName = escapeHtml(
-                    role.name ||
-                    role.role_name ||
-                    ""
-                );
-
-                const description = escapeHtml(
-                    role.description || "-"
-                );
-
-                const status = String(
-                    role.status || "active"
-                ).toLowerCase();
-
-                const statusClass =
-                    status === "active"
-                        ? "status-active"
-                        : "status-inactive";
-
-                const created = role.created_at
-                    ? formatDate(role.created_at)
-                    : "-";
-
-                return `
-                    <tr>
-                        <td>
-                            <span class="text-secondary">
-                                ${escapeHtml(String(id))}
-                            </span>
-                        </td>
-
-                        <td>
-                            <span class="role-name">
-                                ${roleName}
-                            </span>
-                        </td>
-
-                        <td>
-                            <span class="description">
-                                ${description}
-                            </span>
-                        </td>
-
-                        <td>
-                            <span class="status-badge ${statusClass}">
-                                ${escapeHtml(status)}
-                            </span>
-                        </td>
-
-                        <td>
-                            ${escapeHtml(created)}
-                        </td>
-
-                        <td>
-                            <div class="action-buttons">
-
-                                <button
-                                    type="button"
-                                    class="btn btn-sm btn-outline-primary"
-                                    onclick="managePermissions('${escapeJs(String(id))}', '${escapeJs(roleName)}')"
-                                >
-                                    <i class="bi bi-key me-1"></i>
-                                    Permissions
-                                </button>
-
-                                <button
-                                    type="button"
-                                    class="btn btn-sm btn-outline-warning"
-                                    onclick="editRole('${escapeJs(String(id))}')"
-                                >
-                                    <i class="bi bi-pencil me-1"></i>
-                                    Edit
-                                </button>
-
-                                <button
-                                    type="button"
-                                    class="btn btn-sm btn-outline-danger"
-                                    onclick="deleteRole('${escapeJs(String(id))}')"
-                                >
-                                    <i class="bi bi-trash me-1"></i>
-                                    Delete
-                                </button>
-
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join("");
-        }
-
-        function filterRoles() {
-            const term = document
-                .getElementById("searchInput")
-                .value
-                .trim()
-                .toLowerCase();
-
-            if (!term) {
-                renderRoles();
-                return;
-            }
-
-            const filtered = roles.filter(role => {
-                return (
-                    String(
-                        role.name ||
-                        role.role_name ||
-                        ""
-                    ).toLowerCase().includes(term) ||
-
-                    String(
-                        role.description || ""
-                    ).toLowerCase().includes(term) ||
-
-                    String(
-                        role.status || ""
-                    ).toLowerCase().includes(term)
-                );
-            });
-
-            renderRoles(filtered);
-        }
-
-        function openCreateModal() {
-            document.getElementById("roleForm").reset();
-            document.getElementById("roleId").value = "";
-            document.getElementById("roleStatus").value = "active";
-            document.getElementById("modalTitle").textContent = "Add Role";
-
-            if (!roleModalInstance) {
-                roleModalInstance = new bootstrap.Modal(
-                    document.getElementById("roleModal")
-                );
-            }
-
-            roleModalInstance.show();
-        }
-
-        function closeRoleModal() {
-            if (!roleModalInstance) {
-                roleModalInstance = bootstrap.Modal.getInstance(
-                    document.getElementById("roleModal")
-                );
-            }
-
-            if (roleModalInstance) {
-                roleModalInstance.hide();
-            }
-        }
-
-        async function editRole(id) {
-            try {
-                const response = await fetch(
-                    `${API_URL}/${encodeURIComponent(id)}`,
-                    {
-                        method: "GET",
-                        headers: getAuthHeaders()
-                    }
-                );
-
-                const result = await parseResponse(response);
-
-                if (!response.ok) {
-                    throw new Error(
-                        result.message || "Unable to load role."
-                    );
-                }
-
-                const role = result.data;
-
-                document.getElementById("roleId").value =
-                    role.id;
-
-                document.getElementById("roleName").value =
-                    role.name ||
-                    role.role_name ||
-                    "";
-
-                document.getElementById("roleDescription").value =
-                    role.description ||
-                    "";
-
-                document.getElementById("roleStatus").value =
-                    role.status ||
-                    "active";
-
-                document.getElementById("modalTitle").textContent =
-                    "Edit Role";
-
-                if (!roleModalInstance) {
-                    roleModalInstance = new bootstrap.Modal(
-                        document.getElementById("roleModal")
-                    );
-                }
-
-                roleModalInstance.show();
-
-            } catch (error) {
-                console.error("Edit role error:", error);
-
-                showMessage(
-                    error.message || "Unable to load role.",
-                    "error"
-                );
-            }
-        }
-
-        async function saveRole(event) {
-            event.preventDefault();
-
-            const id = document.getElementById("roleId").value;
-
-            const name = document
-                .getElementById("roleName")
-                .value
-                .trim();
-
-            const description = document
-                .getElementById("roleDescription")
-                .value
-                .trim();
-
-            const status = document
-                .getElementById("roleStatus")
-                .value;
-
-            if (!name) {
-                showMessage(
-                    "Role name is required.",
-                    "error"
-                );
-                return;
-            }
-
-            const payload = {
-                name,
-                description: description || null,
-                status
-            };
-
-            try {
-                const method = id ? "PUT" : "POST";
-
-                const url = id
-                    ? `${API_URL}/${encodeURIComponent(id)}`
-                    : API_URL;
-
-                const response = await fetch(url, {
-                    method,
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify(payload)
-                });
-
-                const result = await parseResponse(response);
-
-                if (!response.ok) {
-                    throw new Error(
-                        result.message ||
-                        "Unable to save role."
-                    );
-                }
-
-                closeRoleModal();
-
-                showMessage(
-                    id
-                        ? "Role updated successfully."
-                        : "Role created successfully.",
-                    "success"
-                );
-
-                await loadRoles();
-
-            } catch (error) {
-                console.error("Save role error:", error);
-
-                showMessage(
-                    error.message ||
-                    "Unable to save role.",
-                    "error"
-                );
-            }
-        }
-
-        async function deleteRole(id) {
-            const role = roles.find(
-                item =>
-                    String(item.id) === String(id)
-            );
-
-            const name = role
-                ? (
-                    role.name ||
-                    role.role_name
-                )
-                : "this role";
-
-            const confirmed = window.confirm(
-                `Are you sure you want to delete "${name}"?`
-            );
-
-            if (!confirmed) {
-                return;
-            }
-
-            try {
-                const response = await fetch(
-                    `${API_URL}/${encodeURIComponent(id)}`,
-                    {
-                        method: "DELETE",
-                        headers: getAuthHeaders()
-                    }
-                );
-
-                const result = await parseResponse(response);
-
-                if (!response.ok) {
-                    throw new Error(
-                        result.message ||
-                        "Unable to delete role."
-                    );
-                }
-
-                showMessage(
-                    "Role deleted successfully.",
-                    "success"
-                );
-
-                await loadRoles();
-
-            } catch (error) {
-                console.error("Delete role error:", error);
-
-                showMessage(
-                    error.message ||
-                    "Unable to delete role.",
-                    "error"
-                );
-            }
-        }
-
-        async function managePermissions(roleId, roleName) {
-            selectedRoleId = roleId;
-
-            document.getElementById("permissionsTitle").textContent =
-                `Permissions — ${roleName}`;
-
-            document.getElementById("permissionsList").innerHTML = `
-                <div class="loading">
-                    <div class="spinner-border spinner-border-sm text-primary me-2"></div>
-                    Loading permissions...
-                </div>
-            `;
-
-            if (!permissionsModalInstance) {
-                permissionsModalInstance = new bootstrap.Modal(
-                    document.getElementById("permissionsModal")
-                );
-            }
-
-            permissionsModalInstance.show();
-
-            try {
-                const [
-                    permissionsResponse,
-                    rolePermissionsResponse
-                ] = await Promise.all([
-                    fetch(
-                        PERMISSIONS_API_URL,
-                        {
-                            method: "GET",
-                            headers: getAuthHeaders()
-                        }
-                    ),
-                    fetch(
-                        `${API_URL}/${encodeURIComponent(roleId)}/permissions`,
-                        {
-                            method: "GET",
-                            headers: getAuthHeaders()
-                        }
-                    )
-                ]);
-
-                const permissionsResult =
-                    await parseResponse(permissionsResponse);
-
-                const rolePermissionsResult =
-                    await parseResponse(rolePermissionsResponse);
-
-                if (!permissionsResponse.ok) {
-                    throw new Error(
-                        permissionsResult.message ||
-                        "Unable to load permissions."
-                    );
-                }
-
-                allPermissions =
-                    Array.isArray(permissionsResult.data)
-                        ? permissionsResult.data
-                        : [];
-
-                const assigned =
-                    Array.isArray(rolePermissionsResult.data)
-                        ? rolePermissionsResult.data
-                        : [];
-
-                const assignedIds = new Set(
-                    assigned.map(permission =>
-                        String(
-                            permission.id ||
-                            permission.permission_id
-                        )
-                    )
-                );
-
-                renderPermissionCheckboxes(assignedIds);
-
-            } catch (error) {
-                console.error(
-                    "Load role permissions error:",
-                    error
-                );
-
-                try {
-                    const response = await fetch(
-                        PERMISSIONS_API_URL,
-                        {
-                            method: "GET",
-                            headers: getAuthHeaders()
-                        }
-                    );
-
-                    const result = await parseResponse(response);
-
-                    allPermissions =
-                        Array.isArray(result.data)
-                            ? result.data
-                            : [];
-
-                    renderPermissionCheckboxes(new Set());
-
-                } catch (fallbackError) {
-                    document.getElementById(
-                        "permissionsList"
-                    ).innerHTML = `
-                        <div class="empty">
-                            <i class="bi bi-exclamation-circle fs-3 d-block mb-2"></i>
-                            Unable to load permissions.
-                        </div>
-                    `;
-
-                    showMessage(
-                        error.message ||
-                        "Unable to load role permissions.",
-                        "error"
-                    );
-                }
-            }
-        }
-
-        function renderPermissionCheckboxes(assignedIds) {
-            const container =
-                document.getElementById("permissionsList");
-
-            if (!allPermissions.length) {
-                container.innerHTML = `
-                    <div class="empty">
-                        <i class="bi bi-key fs-3 d-block mb-2"></i>
-                        No permissions available.
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML =
-                allPermissions.map(permission => {
-                    const id = permission.id;
-
-                    const name =
-                        permission.name ||
-                        permission.permission_name ||
-                        "";
-
-                    const module =
-                        permission.module ||
-                        "";
-
-                    const checked =
-                        assignedIds.has(String(id))
-                            ? "checked"
-                            : "";
-
-                    return `
-                        <div class="permission-item">
-                            <div class="form-check">
-                                <input
-                                    class="form-check-input"
-                                    type="checkbox"
-                                    id="permission-${escapeHtml(String(id))}"
-                                    value="${escapeHtml(String(id))}"
-                                    ${checked}
-                                >
-
-                                <label
-                                    class="form-check-label"
-                                    for="permission-${escapeHtml(String(id))}"
-                                >
-                                    <span class="fw-semibold">
-                                        ${escapeHtml(name)}
-                                    </span>
-
-                                    ${module
-                            ? `
-                                                <span class="permission-module">
-                                                    ${escapeHtml(module)}
-                                                </span>
-                                            `
-                            : ""
-                        }
-                                </label>
-                            </div>
-                        </div>
-                    `;
-                }).join("");
-        }
-
-        async function saveRolePermissions() {
-            if (!selectedRoleId) {
-                showMessage(
-                    "No role selected.",
-                    "error"
-                );
-                return;
-            }
-
-            const checked = Array.from(
-                document.querySelectorAll(
-                    "#permissionsList input[type='checkbox']:checked"
-                )
-            );
-
-            try {
-                const permissionIds = checked.map(
-                    checkbox => checkbox.value
-                );
-
-                let response = await fetch(
-                    `${API_URL}/${encodeURIComponent(selectedRoleId)}/permissions`,
-                    {
-                        method: "PUT",
-                        headers: getAuthHeaders(),
-                        body: JSON.stringify({
-                            permissionIds
-                        })
-                    }
-                );
-
-                if (!response.ok) {
-                    const currentResponse = await fetch(
-                        `${API_URL}/${encodeURIComponent(selectedRoleId)}/permissions`,
-                        {
-                            method: "GET",
-                            headers: getAuthHeaders()
-                        }
-                    );
-
-                    const currentResult =
-                        await parseResponse(currentResponse);
-
-                    const current =
-                        Array.isArray(currentResult.data)
-                            ? currentResult.data
-                            : [];
-
-                    const currentIds = new Set(
-                        current.map(permission =>
-                            String(
-                                permission.id ||
-                                permission.permission_id
-                            )
-                        )
-                    );
-
-                    const selectedIds = new Set(
-                        permissionIds.map(String)
-                    );
-
-                    for (const permissionId of selectedIds) {
-                        if (!currentIds.has(permissionId)) {
-                            await fetch(
-                                `${PERMISSIONS_API_URL}/role/${encodeURIComponent(selectedRoleId)}`,
-                                {
-                                    method: "POST",
-                                    headers: getAuthHeaders(),
-                                    body: JSON.stringify({
-                                        permissionId
-                                    })
-                                }
-                            );
-                        }
-                    }
-
-                    for (const permissionId of currentIds) {
-                        if (!selectedIds.has(permissionId)) {
-                            await fetch(
-                                `${PERMISSIONS_API_URL}/role/${encodeURIComponent(selectedRoleId)}/${encodeURIComponent(permissionId)}`,
-                                {
-                                    method: "DELETE",
-                                    headers: getAuthHeaders()
-                                }
-                            );
-                        }
-                    }
-                }
-
-                showMessage(
-                    "Role permissions updated successfully.",
-                    "success"
-                );
-
-                closePermissionsModal();
-
-            } catch (error) {
-                console.error(
-                    "Save role permissions error:",
-                    error
-                );
-
-                showMessage(
-                    error.message ||
-                    "Unable to update role permissions.",
-                    "error"
-                );
-            }
-        }
-
-        function closePermissionsModal() {
-            if (!permissionsModalInstance) {
-                permissionsModalInstance = bootstrap.Modal.getInstance(
-                    document.getElementById("permissionsModal")
-                );
-            }
-
-            if (permissionsModalInstance) {
-                permissionsModalInstance.hide();
-            }
-
-            selectedRoleId = null;
-        }
-
-        function formatDate(value) {
-            const date = new Date(value);
-
-            if (Number.isNaN(date.getTime())) {
-                return "-";
-            }
-
-            return date.toLocaleDateString(
-                "en-NG",
-                {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric"
-                }
-            );
-        }
-
-        function escapeHtml(value) {
-            return String(value)
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
-
-        function escapeJs(value) {
-            return String(value)
-                .replace(/\\/g, "\\\\")
-                .replace(/'/g, "\\'");
-        }
-
-        document.addEventListener("DOMContentLoaded", function () {
-            loadRoles();
-
-            const sidebar =
-                document.getElementById("sidebar");
-
-            const sidebarToggle =
-                document.getElementById("sidebarToggle");
-
-            const sidebarOverlay =
-                document.getElementById("sidebarOverlay");
-
-            function closeSidebar() {
-                sidebar.classList.remove("show");
-                sidebarOverlay.classList.remove("show");
-            }
-
-            sidebarToggle?.addEventListener(
-                "click",
-                function () {
-                    sidebar.classList.toggle("show");
-                    sidebarOverlay.classList.toggle(
-                        "show"
-                    );
-                }
-            );
-
-            sidebarOverlay?.addEventListener(
-                "click",
-                closeSidebar
-            );
-
-            document
-                .querySelectorAll(".sidebar .nav-link")
-                .forEach(link => {
-                    link.addEventListener(
-                        "click",
-                        closeSidebar
-                    );
-                });
-
-            document
-                .getElementById("logoutButton")
-                ?.addEventListener(
-                    "click",
-                    function () {
-                        localStorage.removeItem(
-                            "school_management_token"
-                        );
-                        localStorage.removeItem(
-                            "school_management_user"
-                        );
-                        localStorage.removeItem("token");
-                        localStorage.removeItem("accessToken");
-
-                        sessionStorage.removeItem(
-                            "school_management_token"
-                        );
-                        sessionStorage.removeItem("school_management_user");
-                        sessionStorage.removeItem("token");
-                        sessionStorage.removeItem("accessToken");
-
-                        window.location.href =
-                            "login.html";
-                    }
-                );
-        });
-    </script>
-
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/roles.js"></script>
 </body>
 
 </html>

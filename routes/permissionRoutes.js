@@ -1,4 +1,16 @@
+"use strict";
+
 const express = require("express");
+
+const router = express.Router();
+
+const authenticate =
+    require("../middleware/authMiddleware");
+
+const {
+    requirePermission,
+    requireSchoolContext
+} = require("../middleware/roleMiddleware");
 
 const {
     createPermission,
@@ -13,221 +25,120 @@ const {
     getPermissionRoles,
     checkPermissionExists,
     countPermissions,
-    getPermissionSummary
+    getPermissionSummary,
+    getPermissionUsage
 } = require("../controllers/permissionController");
-
-const authMiddleware = require("../middleware/authMiddleware");
-
-const router = express.Router();
-
-/*
-|--------------------------------------------------------------------------
-| PERMISSION ROUTES
-|--------------------------------------------------------------------------
-| Base URL: /api/permissions
-|--------------------------------------------------------------------------
-*/
-
-
-/*
-|--------------------------------------------------------------------------
-| GET PERMISSION SUMMARY
-|--------------------------------------------------------------------------
-| GET /api/permissions/summary
-|--------------------------------------------------------------------------
-*/
 
 router.get(
     "/summary",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
+    requirePermission("permissions.view"),
     getPermissionSummary
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| GET PERMISSION COUNT
-|--------------------------------------------------------------------------
-| GET /api/permissions/count
-|--------------------------------------------------------------------------
-*/
-
 router.get(
     "/count",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
+    requirePermission("permissions.view"),
     countPermissions
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| GET PERMISSION MODULES
-|--------------------------------------------------------------------------
-| GET /api/permissions/modules
-|--------------------------------------------------------------------------
-*/
-
 router.get(
     "/modules",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
+    requirePermission("permissions.view"),
     getPermissionModules
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| GET PERMISSIONS BY MODULE
-|--------------------------------------------------------------------------
-| GET /api/permissions/module/:module
-|--------------------------------------------------------------------------
-*/
-
 router.get(
     "/module/:module",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
+    requirePermission("permissions.view"),
     getPermissionsByModule
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| SEARCH PERMISSIONS
-|--------------------------------------------------------------------------
-| GET /api/permissions/search?q=
-|--------------------------------------------------------------------------
-*/
-
 router.get(
     "/search",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
+    requirePermission("permissions.view"),
     searchPermissions
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| CHECK PERMISSION EXISTS
-|--------------------------------------------------------------------------
-| GET /api/permissions/check/:permissionName
-|--------------------------------------------------------------------------
-*/
-
 router.get(
     "/check/:permissionName",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
+    requirePermission("permissions.view"),
     checkPermissionExists
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| GET PERMISSION BY NAME
-|--------------------------------------------------------------------------
-| GET /api/permissions/name/:name
-|--------------------------------------------------------------------------
-*/
-
 router.get(
     "/name/:name",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
+    requirePermission("permissions.view"),
     getPermissionByName
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| GET PERMISSION ROLES
-|--------------------------------------------------------------------------
-| GET /api/permissions/:id/roles
-|--------------------------------------------------------------------------
-*/
-
 router.get(
     "/:id/roles",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
+    requirePermission("permissions.view"),
     getPermissionRoles
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| GET ALL PERMISSIONS
-|--------------------------------------------------------------------------
-| GET /api/permissions
-|--------------------------------------------------------------------------
-*/
+router.get(
+    "/:id/usage",
+    authenticate,
+    requireSchoolContext,
+    requirePermission("permissions.view"),
+    getPermissionUsage
+);
 
 router.get(
     "/",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
+    requirePermission("permissions.view"),
     getPermissions
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| GET PERMISSION BY ID
-|--------------------------------------------------------------------------
-| GET /api/permissions/:id
-|--------------------------------------------------------------------------
-*/
-
 router.get(
     "/:id",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
+    requirePermission("permissions.view"),
     getPermissionById
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| CREATE PERMISSION
-|--------------------------------------------------------------------------
-| POST /api/permissions
-|--------------------------------------------------------------------------
-*/
-
 router.post(
     "/",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
+    requirePermission("permissions.create"),
     createPermission
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| UPDATE PERMISSION
-|--------------------------------------------------------------------------
-| PUT /api/permissions/:id
-|--------------------------------------------------------------------------
-*/
-
 router.put(
     "/:id",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
+    requirePermission("permissions.update"),
     updatePermission
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| DELETE PERMISSION
-|--------------------------------------------------------------------------
-| DELETE /api/permissions/:id
-|--------------------------------------------------------------------------
-*/
-
 router.delete(
     "/:id",
-    authMiddleware,
+    authenticate,
+    requireSchoolContext,
+    requirePermission("permissions.delete"),
     deletePermission
 );
-
-
-/*
-|--------------------------------------------------------------------------
-| EXPORT ROUTER
-|--------------------------------------------------------------------------
-*/
 
 module.exports = router;

@@ -2,11 +2,47 @@
 
 const { query } = require("../config/database");
 
+function requireValue(value, message) {
+    if (
+        value === undefined ||
+        value === null ||
+        String(value).trim() === ""
+    ) {
+        const error = new Error(message);
+        error.statusCode = 400;
+        throw error;
+    }
+}
+
+function normalizeEmail(email) {
+    if (
+        email === undefined ||
+        email === null ||
+        String(email).trim() === ""
+    ) {
+        return null;
+    }
+
+    return String(email)
+        .trim()
+        .toLowerCase();
+}
+
+function normalizeUsername(username) {
+    return String(username)
+        .trim();
+}
+
+function normalizeName(value) {
+    return String(value)
+        .trim();
+}
+
 async function createUser({
     schoolId,
     roleId,
     username,
-    email,
+    email = null,
     passwordHash,
     firstName,
     middleName = null,
@@ -15,12 +51,41 @@ async function createUser({
     profilePhotoUrl = null,
     isActive = true
 }) {
-    if (!schoolId) throw new Error("School ID is required.");
-    if (!roleId) throw new Error("Role ID is required.");
-    if (!username || !username.trim()) throw new Error("Username is required.");
-    if (!passwordHash) throw new Error("Password hash is required.");
-    if (!firstName || !firstName.trim()) throw new Error("First name is required.");
-    if (!lastName || !lastName.trim()) throw new Error("Last name is required.");
+    requireValue(
+        schoolId,
+        "School ID is required."
+    );
+
+    requireValue(
+        roleId,
+        "Role ID is required."
+    );
+
+    requireValue(
+        username,
+        "Username is required."
+    );
+
+    requireValue(
+        passwordHash,
+        "Password hash is required."
+    );
+
+    requireValue(
+        firstName,
+        "First name is required."
+    );
+
+    requireValue(
+        lastName,
+        "Last name is required."
+    );
+
+    const normalizedUsername =
+        normalizeUsername(username);
+
+    const normalizedEmail =
+        normalizeEmail(email);
 
     const sql = `
         INSERT INTO users (
@@ -37,8 +102,17 @@ async function createUser({
             is_active
         )
         VALUES (
-            $1, $2, $3, $4, $5,
-            $6, $7, $8, $9, $10, $11
+            $1,
+            $2,
+            $3,
+            $4,
+            $5,
+            $6,
+            $7,
+            $8,
+            $9,
+            $10,
+            $11
         )
         RETURNING
             id,
@@ -57,24 +131,38 @@ async function createUser({
             updated_at
     `;
 
-    const result = await query(sql, [
-        schoolId,
-        roleId,
-        firstName.trim(),
-        middleName ? middleName.trim() : null,
-        lastName.trim(),
-        email ? email.trim().toLowerCase() : null,
-        phone || null,
-        username.trim(),
-        passwordHash,
-        profilePhotoUrl || null,
-        isActive
-    ]);
+    const result = await query(
+        sql,
+        [
+            schoolId,
+            roleId,
+            normalizeName(firstName),
+            middleName
+                ? normalizeName(middleName)
+                : null,
+            normalizeName(lastName),
+            normalizedEmail,
+            phone
+                ? String(phone).trim()
+                : null,
+            normalizedUsername,
+            passwordHash,
+            profilePhotoUrl
+                ? String(profilePhotoUrl).trim()
+                : null,
+            Boolean(isActive)
+        ]
+    );
 
     return result.rows[0] || null;
 }
 
 async function findUserById(userId) {
+    requireValue(
+        userId,
+        "User ID is required."
+    );
+
     const sql = `
         SELECT
             u.id,
@@ -96,17 +184,28 @@ async function findUserById(userId) {
             s.school_code,
             s.status AS school_status
         FROM users u
-        LEFT JOIN roles r ON r.id = u.role_id
-        LEFT JOIN schools s ON s.id = u.school_id
+        LEFT JOIN roles r
+            ON r.id = u.role_id
+        LEFT JOIN schools s
+            ON s.id = u.school_id
         WHERE u.id = $1
         LIMIT 1
     `;
 
-    const result = await query(sql, [userId]);
+    const result = await query(
+        sql,
+        [userId]
+    );
+
     return result.rows[0] || null;
 }
 
 async function findUserByUsername(username) {
+    requireValue(
+        username,
+        "Username is required."
+    );
+
     const sql = `
         SELECT
             u.id,
@@ -128,17 +227,31 @@ async function findUserByUsername(username) {
             s.school_code,
             s.status AS school_status
         FROM users u
-        LEFT JOIN roles r ON r.id = u.role_id
-        LEFT JOIN schools s ON s.id = u.school_id
+        LEFT JOIN roles r
+            ON r.id = u.role_id
+        LEFT JOIN schools s
+            ON s.id = u.school_id
         WHERE LOWER(u.username) = LOWER($1)
         LIMIT 1
     `;
 
-    const result = await query(sql, [username]);
+    const result = await query(
+        sql,
+        [normalizeUsername(username)]
+    );
+
     return result.rows[0] || null;
 }
 
 async function findUserByEmail(email) {
+    requireValue(
+        email,
+        "Email is required."
+    );
+
+    const normalizedEmail =
+        normalizeEmail(email);
+
     const sql = `
         SELECT
             u.id,
@@ -160,17 +273,33 @@ async function findUserByEmail(email) {
             s.school_code,
             s.status AS school_status
         FROM users u
-        LEFT JOIN roles r ON r.id = u.role_id
-        LEFT JOIN schools s ON s.id = u.school_id
+        LEFT JOIN roles r
+            ON r.id = u.role_id
+        LEFT JOIN schools s
+            ON s.id = u.school_id
         WHERE LOWER(u.email) = LOWER($1)
         LIMIT 1
     `;
 
-    const result = await query(sql, [email]);
+    const result = await query(
+        sql,
+        [normalizedEmail]
+    );
+
     return result.rows[0] || null;
 }
 
 async function findUserForLogin(identifier) {
+    requireValue(
+        identifier,
+        "Username or email is required."
+    );
+
+    const normalizedIdentifier =
+        String(identifier)
+            .trim()
+            .toLowerCase();
+
     const sql = `
         SELECT
             u.id,
@@ -193,19 +322,30 @@ async function findUserForLogin(identifier) {
             s.school_code,
             s.status AS school_status
         FROM users u
-        LEFT JOIN roles r ON r.id = u.role_id
-        LEFT JOIN schools s ON s.id = u.school_id
+        LEFT JOIN roles r
+            ON r.id = u.role_id
+        LEFT JOIN schools s
+            ON s.id = u.school_id
         WHERE
-            LOWER(u.username) = LOWER($1)
-            OR LOWER(u.email) = LOWER($1)
+            LOWER(u.username) = $1
+            OR LOWER(u.email) = $1
         LIMIT 1
     `;
 
-    const result = await query(sql, [identifier]);
+    const result = await query(
+        sql,
+        [normalizedIdentifier]
+    );
+
     return result.rows[0] || null;
 }
 
 async function updateLastLogin(userId) {
+    requireValue(
+        userId,
+        "User ID is required."
+    );
+
     const sql = `
         UPDATE users
         SET
@@ -218,11 +358,28 @@ async function updateLastLogin(userId) {
             updated_at
     `;
 
-    const result = await query(sql, [userId]);
+    const result = await query(
+        sql,
+        [userId]
+    );
+
     return result.rows[0] || null;
 }
 
-async function updatePassword(userId, passwordHash) {
+async function updatePassword(
+    userId,
+    passwordHash
+) {
+    requireValue(
+        userId,
+        "User ID is required."
+    );
+
+    requireValue(
+        passwordHash,
+        "Password hash is required."
+    );
+
     const sql = `
         UPDATE users
         SET
@@ -234,11 +391,23 @@ async function updatePassword(userId, passwordHash) {
             updated_at
     `;
 
-    const result = await query(sql, [passwordHash, userId]);
+    const result = await query(
+        sql,
+        [
+            passwordHash,
+            userId
+        ]
+    );
+
     return result.rows[0] || null;
 }
 
 async function activateUser(userId) {
+    requireValue(
+        userId,
+        "User ID is required."
+    );
+
     const sql = `
         UPDATE users
         SET
@@ -253,11 +422,20 @@ async function activateUser(userId) {
             updated_at
     `;
 
-    const result = await query(sql, [userId]);
+    const result = await query(
+        sql,
+        [userId]
+    );
+
     return result.rows[0] || null;
 }
 
 async function deactivateUser(userId) {
+    requireValue(
+        userId,
+        "User ID is required."
+    );
+
     const sql = `
         UPDATE users
         SET
@@ -272,30 +450,79 @@ async function deactivateUser(userId) {
             updated_at
     `;
 
-    const result = await query(sql, [userId]);
+    const result = await query(
+        sql,
+        [userId]
+    );
+
     return result.rows[0] || null;
 }
 
 async function updateUserProfile(
     userId,
     {
-        firstName,
+        firstName = null,
         middleName = null,
-        lastName,
-        email,
-        phone,
-        profilePhotoUrl
+        lastName = null,
+        email = null,
+        phone = null,
+        profilePhotoUrl = null
     }
 ) {
+    requireValue(
+        userId,
+        "User ID is required."
+    );
+
+    const normalizedFirstName =
+        firstName === null ||
+        firstName === undefined
+            ? null
+            : normalizeName(firstName);
+
+    const normalizedMiddleName =
+        middleName === null ||
+        middleName === undefined ||
+        String(middleName).trim() === ""
+            ? null
+            : normalizeName(middleName);
+
+    const normalizedLastName =
+        lastName === null ||
+        lastName === undefined
+            ? null
+            : normalizeName(lastName);
+
+    const normalizedEmail =
+        normalizeEmail(email);
+
+    const normalizedPhone =
+        phone === null ||
+        phone === undefined ||
+        String(phone).trim() === ""
+            ? null
+            : String(phone).trim();
+
+    const normalizedPhotoUrl =
+        profilePhotoUrl === null ||
+        profilePhotoUrl === undefined ||
+        String(profilePhotoUrl).trim() === ""
+            ? null
+            : String(profilePhotoUrl).trim();
+
     const sql = `
         UPDATE users
         SET
-            first_name = COALESCE($1, first_name),
+            first_name =
+                COALESCE($1, first_name),
             middle_name = $2,
-            last_name = COALESCE($3, last_name),
-            email = COALESCE($4, email),
+            last_name =
+                COALESCE($3, last_name),
+            email =
+                COALESCE($4, email),
             phone = $5,
-            profile_photo_url = COALESCE($6, profile_photo_url),
+            profile_photo_url =
+                COALESCE($6, profile_photo_url),
             updated_at = CURRENT_TIMESTAMP
         WHERE id = $7
         RETURNING
@@ -315,20 +542,28 @@ async function updateUserProfile(
             updated_at
     `;
 
-    const result = await query(sql, [
-        firstName || null,
-        middleName,
-        lastName || null,
-        email ? email.trim().toLowerCase() : null,
-        phone || null,
-        profilePhotoUrl || null,
-        userId
-    ]);
+    const result = await query(
+        sql,
+        [
+            normalizedFirstName,
+            normalizedMiddleName,
+            normalizedLastName,
+            normalizedEmail,
+            normalizedPhone,
+            normalizedPhotoUrl,
+            userId
+        ]
+    );
 
     return result.rows[0] || null;
 }
 
 async function findUsersBySchool(schoolId) {
+    requireValue(
+        schoolId,
+        "School ID is required."
+    );
+
     const sql = `
         SELECT
             u.id,
@@ -347,7 +582,8 @@ async function findUsersBySchool(schoolId) {
             u.updated_at,
             r.role_name
         FROM users u
-        LEFT JOIN roles r ON r.id = u.role_id
+        LEFT JOIN roles r
+            ON r.id = u.role_id
         WHERE u.school_id = $1
         ORDER BY
             u.first_name ASC,
@@ -355,7 +591,11 @@ async function findUsersBySchool(schoolId) {
             u.username ASC
     `;
 
-    const result = await query(sql, [schoolId]);
+    const result = await query(
+        sql,
+        [schoolId]
+    );
+
     return result.rows;
 }
 
@@ -364,29 +604,57 @@ async function usernameExists(
     excludeUserId = null,
     schoolId = null
 ) {
+    requireValue(
+        username,
+        "Username is required."
+    );
+
     let sql = `
         SELECT EXISTS (
             SELECT 1
             FROM users
-            WHERE LOWER(username) = LOWER($1)
+            WHERE LOWER(username) =
+                LOWER($1)
     `;
 
-    const values = [username];
+    const values = [
+        normalizeUsername(username)
+    ];
 
-    if (schoolId) {
+    if (
+        schoolId !== null &&
+        schoolId !== undefined
+    ) {
         values.push(schoolId);
-        sql += ` AND school_id = $${values.length}`;
+
+        sql += `
+            AND school_id = $${values.length}
+        `;
     }
 
-    if (excludeUserId) {
+    if (
+        excludeUserId !== null &&
+        excludeUserId !== undefined
+    ) {
         values.push(excludeUserId);
-        sql += ` AND id <> $${values.length}`;
+
+        sql += `
+            AND id <> $${values.length}
+        `;
     }
 
-    sql += ` ) AS exists`;
+    sql += `
+        ) AS exists
+    `;
 
-    const result = await query(sql, values);
-    return result.rows[0].exists;
+    const result = await query(
+        sql,
+        values
+    );
+
+    return Boolean(
+        result.rows[0].exists
+    );
 }
 
 async function emailExists(
@@ -394,32 +662,68 @@ async function emailExists(
     excludeUserId = null,
     schoolId = null
 ) {
+    requireValue(
+        email,
+        "Email is required."
+    );
+
+    const normalizedEmail =
+        normalizeEmail(email);
+
     let sql = `
         SELECT EXISTS (
             SELECT 1
             FROM users
-            WHERE LOWER(email) = LOWER($1)
+            WHERE LOWER(email) =
+                LOWER($1)
     `;
 
-    const values = [email];
+    const values = [
+        normalizedEmail
+    ];
 
-    if (schoolId) {
+    if (
+        schoolId !== null &&
+        schoolId !== undefined
+    ) {
         values.push(schoolId);
-        sql += ` AND school_id = $${values.length}`;
+
+        sql += `
+            AND school_id = $${values.length}
+        `;
     }
 
-    if (excludeUserId) {
+    if (
+        excludeUserId !== null &&
+        excludeUserId !== undefined
+    ) {
         values.push(excludeUserId);
-        sql += ` AND id <> $${values.length}`;
+
+        sql += `
+            AND id <> $${values.length}
+        `;
     }
 
-    sql += ` ) AS exists`;
+    sql += `
+        ) AS exists
+    `;
 
-    const result = await query(sql, values);
-    return result.rows[0].exists;
+    const result = await query(
+        sql,
+        values
+    );
+
+    return Boolean(
+        result.rows[0].exists
+    );
 }
 
 async function deleteUser(userId) {
+    requireValue(
+        userId,
+        "User ID is required."
+    );
+
     const sql = `
         DELETE FROM users
         WHERE id = $1
@@ -430,7 +734,11 @@ async function deleteUser(userId) {
             email
     `;
 
-    const result = await query(sql, [userId]);
+    const result = await query(
+        sql,
+        [userId]
+    );
+
     return result.rows[0] || null;
 }
 

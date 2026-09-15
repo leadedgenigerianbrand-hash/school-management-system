@@ -2,49 +2,91 @@
 
 const schoolModel = require("../models/schoolModel");
 
+function getSchoolId(req) {
+    const schoolId =
+        req.params?.id;
 
-/*
-|--------------------------------------------------------------------------
-| SCHOOL CONTROLLER
-|--------------------------------------------------------------------------
-|
-| Handles:
-|
-| - Get all schools
-| - Get school by ID
-| - Create school
-| - Update school
-| - Delete school
-| - School statistics
-| - School dashboard
-|
-|--------------------------------------------------------------------------
-*/
+    if (
+        schoolId === undefined ||
+        schoolId === null ||
+        schoolId === ""
+    ) {
+        const error = new Error(
+            "School ID is required."
+        );
 
+        error.statusCode = 400;
 
-/*
-|--------------------------------------------------------------------------
-| GET ALL SCHOOLS
-|--------------------------------------------------------------------------
-|
-| GET /api/schools
-|
-| Optional:
-|
-| ?status=Active
-| ?state=Lagos
-| ?schoolType=Secondary School
-| ?search=Leadedge
-| ?limit=100
-| ?offset=0
-|
-|--------------------------------------------------------------------------
-*/
+        throw error;
+    }
 
-async function getAllSchools(req, res, next) {
+    if (
+        !Number.isInteger(
+            Number(schoolId)
+        ) ||
+        Number(schoolId) <= 0
+    ) {
+        const error = new Error(
+            "Invalid school ID."
+        );
 
+        error.statusCode = 400;
+
+        throw error;
+    }
+
+    return Number(schoolId);
+}
+
+function handleDatabaseError(
+    error,
+    next,
+    fallbackMessage
+) {
+    console.error(
+        fallbackMessage,
+        error
+    );
+
+    if (
+        error?.code === "23505"
+    ) {
+        return next(
+            Object.assign(
+                new Error(
+                    "School code already exists."
+                ),
+                {
+                    statusCode: 409
+                }
+            )
+        );
+    }
+
+    if (
+        error?.code === "23503"
+    ) {
+        return next(
+            Object.assign(
+                new Error(
+                    "This school cannot be changed or deleted because related records exist."
+                ),
+                {
+                    statusCode: 409
+                }
+            )
+        );
+    }
+
+    return next(error);
+}
+
+async function getAllSchools(
+    req,
+    res,
+    next
+) {
     try {
-
         const {
             status,
             state,
@@ -54,569 +96,504 @@ async function getAllSchools(req, res, next) {
             search
         } = req.query;
 
-
         let schools;
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | SEARCH
-        |--------------------------------------------------------------------------
-        */
 
         if (
             search &&
             String(search).trim()
         ) {
-
             schools =
                 await schoolModel.searchSchools(
                     String(search).trim()
                 );
-
         } else {
-
             schools =
                 await schoolModel.findSchools({
-
                     status:
-                        status || null,
-
+                        status
+                            ? String(status).trim()
+                            : null,
                     state:
-                        state || null,
-
+                        state
+                            ? String(state).trim()
+                            : null,
                     schoolType:
-                        schoolType || null,
-
+                        schoolType
+                            ? String(schoolType).trim()
+                            : null,
                     limit:
                         limit !== undefined
                             ? Number(limit)
                             : 100,
-
                     offset:
                         offset !== undefined
                             ? Number(offset)
                             : 0
-
                 });
-
         }
-
 
         return res.status(200).json({
-
             success: true,
-
-            count:
-                schools.length,
-
-            data:
-                schools
-
+            count: schools.length,
+            data: schools
         });
-
     } catch (error) {
-
-        console.error(
-            "Get all schools error:",
-            error
+        return handleDatabaseError(
+            error,
+            next,
+            "Get all schools error:"
         );
-
-        next(error);
-
     }
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| GET SCHOOL BY ID
-|--------------------------------------------------------------------------
-*/
-
-async function getSchoolById(req, res, next) {
-
+async function getSchoolById(
+    req,
+    res,
+    next
+) {
     try {
-
-        const {
-            id
-        } = req.params;
-
-
-        if (!id) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
-        }
-
+        const schoolId =
+            getSchoolId(req);
 
         const school =
             await schoolModel.findSchoolById(
-                id
+                schoolId
             );
-
 
         if (!school) {
-
-            return res.status(404).json({
-
-                success: false,
-
-                message:
-                    "School not found."
-
-            });
-
-        }
-
-
-        return res.status(200).json({
-
-            success: true,
-
-            data:
-                school
-
-        });
-
-    } catch (error) {
-
-        console.error(
-            "Get school by ID error:",
-            error
-        );
-
-        next(error);
-
-    }
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| CREATE SCHOOL
-|--------------------------------------------------------------------------
-*/
-
-async function createSchool(req, res, next) {
-
-    try {
-
-        const school =
-            await schoolModel.createSchool(
-                req.body
+            const error = new Error(
+                "School not found."
             );
 
+            error.statusCode = 404;
 
-        return res.status(201).json({
-
-            success: true,
-
-            message:
-                "School created successfully.",
-
-            data:
-                school
-
-        });
-
-    } catch (error) {
-
-        console.error(
-            "Create school error:",
-            error
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | DUPLICATE SCHOOL CODE
-        |--------------------------------------------------------------------------
-        */
-
-        if (error.code === "23505") {
-
-            return res.status(409).json({
-
-                success: false,
-
-                message:
-                    "School code already exists."
-
-            });
-
+            return next(error);
         }
 
-
-        next(error);
-
+        return res.status(200).json({
+            success: true,
+            data: school
+        });
+    } catch (error) {
+        return handleDatabaseError(
+            error,
+            next,
+            "Get school by ID error:"
+        );
     }
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| UPDATE SCHOOL
-|--------------------------------------------------------------------------
-*/
-
-async function updateSchool(req, res, next) {
-
+async function createSchool(
+    req,
+    res,
+    next
+) {
     try {
+        const body =
+            req.body || {};
 
-        const {
-            id
-        } = req.params;
+        const schoolCode =
+            body.schoolCode ??
+            body.school_code;
 
+        const schoolName =
+            body.schoolName ??
+            body.school_name;
 
-        if (!id) {
+        if (
+            !schoolCode ||
+            !String(schoolCode).trim()
+        ) {
+            const error = new Error(
+                "School code is required."
+            );
 
-            return res.status(400).json({
+            error.statusCode = 400;
 
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
+            return next(error);
         }
 
+        if (
+            !schoolName ||
+            !String(schoolName).trim()
+        ) {
+            const error = new Error(
+                "School name is required."
+            );
+
+            error.statusCode = 400;
+
+            return next(error);
+        }
+
+        const school =
+            await schoolModel.createSchool({
+                schoolCode:
+                    String(schoolCode).trim(),
+                schoolName:
+                    String(schoolName).trim(),
+                registrationNumber:
+                    body.registrationNumber ??
+                    body.registration_number ??
+                    null,
+                address:
+                    body.address ?? null,
+                city:
+                    body.city ?? null,
+                state:
+                    body.state ?? null,
+                country:
+                    body.country ??
+                    "Nigeria",
+                phone:
+                    body.phone ?? null,
+                email:
+                    body.email ?? null,
+                website:
+                    body.website ?? null,
+                logoUrl:
+                    body.logoUrl ??
+                    body.logo_url ??
+                    null,
+                motto:
+                    body.motto ?? null,
+                principalName:
+                    body.principalName ??
+                    body.principal_name ??
+                    null,
+                schoolType:
+                    body.schoolType ??
+                    body.school_type ??
+                    "Secondary School",
+                status:
+                    body.status ??
+                    "Active"
+            });
+
+        return res.status(201).json({
+            success: true,
+            message:
+                "School created successfully.",
+            data: school
+        });
+    } catch (error) {
+        return handleDatabaseError(
+            error,
+            next,
+            "Create school error:"
+        );
+    }
+}
+
+async function updateSchool(
+    req,
+    res,
+    next
+) {
+    try {
+        const schoolId =
+            getSchoolId(req);
+
+        const body =
+            req.body || {};
+
+        const data = {};
+
+        const fieldMap = {
+            schoolCode: "schoolCode",
+            school_code: "schoolCode",
+            schoolName: "schoolName",
+            school_name: "schoolName",
+            registrationNumber:
+                "registrationNumber",
+            registration_number:
+                "registrationNumber",
+            address: "address",
+            city: "city",
+            state: "state",
+            country: "country",
+            phone: "phone",
+            email: "email",
+            website: "website",
+            logoUrl: "logoUrl",
+            logo_url: "logoUrl",
+            motto: "motto",
+            principalName:
+                "principalName",
+            principal_name:
+                "principalName",
+            schoolType:
+                "schoolType",
+            school_type:
+                "schoolType",
+            status: "status"
+        };
+
+        for (
+            const [inputKey, modelKey]
+            of Object.entries(fieldMap)
+        ) {
+            if (
+                body[inputKey] !== undefined &&
+                data[modelKey] === undefined
+            ) {
+                data[modelKey] =
+                    body[inputKey];
+            }
+        }
+
+        if (
+            Object.keys(data).length === 0
+        ) {
+            const error = new Error(
+                "No school information supplied for update."
+            );
+
+            error.statusCode = 400;
+
+            return next(error);
+        }
 
         const school =
             await schoolModel.updateSchool(
-
-                id,
-
-                req.body
-
+                schoolId,
+                data
             );
 
-
         if (!school) {
+            const error = new Error(
+                "School not found."
+            );
 
-            return res.status(404).json({
+            error.statusCode = 404;
 
-                success: false,
-
-                message:
-                    "School not found."
-
-            });
-
+            return next(error);
         }
-
 
         return res.status(200).json({
-
             success: true,
-
             message:
                 "School updated successfully.",
-
-            data:
-                school
-
+            data: school
         });
-
     } catch (error) {
-
-        console.error(
-            "Update school error:",
-            error
+        return handleDatabaseError(
+            error,
+            next,
+            "Update school error:"
         );
-
-
-        if (error.code === "23505") {
-
-            return res.status(409).json({
-
-                success: false,
-
-                message:
-                    "School code already exists."
-
-            });
-
-        }
-
-
-        next(error);
-
     }
-
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| DELETE SCHOOL
-|--------------------------------------------------------------------------
-*/
-
-async function deleteSchool(req, res, next) {
-
+async function deleteSchool(
+    req,
+    res,
+    next
+) {
     try {
-
-        const {
-            id
-        } = req.params;
-
-
-        if (!id) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
-        }
-
+        const schoolId =
+            getSchoolId(req);
 
         const school =
             await schoolModel.deleteSchool(
-                id
+                schoolId
             );
 
-
         if (!school) {
+            const error = new Error(
+                "School not found."
+            );
 
-            return res.status(404).json({
+            error.statusCode = 404;
 
-                success: false,
-
-                message:
-                    "School not found."
-
-            });
-
+            return next(error);
         }
 
-
         return res.status(200).json({
-
             success: true,
-
             message:
                 "School deleted successfully.",
-
-            data:
-                school
-
+            data: school
         });
-
     } catch (error) {
-
-        console.error(
-            "Delete school error:",
-            error
+        return handleDatabaseError(
+            error,
+            next,
+            "Delete school error:"
         );
-
-        next(error);
-
     }
-
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| SCHOOL STATISTICS
-|--------------------------------------------------------------------------
-*/
 
 async function getSchoolStatistics(
     req,
     res,
     next
 ) {
-
     try {
-
-        const {
-            id
-        } = req.params;
-
-
-        if (!id) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
-        }
-
+        const schoolId =
+            getSchoolId(req);
 
         const school =
             await schoolModel.findSchoolById(
-                id
+                schoolId
             );
 
-
         if (!school) {
+            const error = new Error(
+                "School not found."
+            );
 
-            return res.status(404).json({
+            error.statusCode = 404;
 
-                success: false,
-
-                message:
-                    "School not found."
-
-            });
-
+            return next(error);
         }
-
 
         const statistics =
             await schoolModel.getSchoolStatistics(
-                id
+                schoolId
             );
 
-
         return res.status(200).json({
-
             success: true,
-
-            data:
-                statistics
-
+            data: statistics
         });
-
     } catch (error) {
-
-        console.error(
-            "Get school statistics error:",
-            error
+        return handleDatabaseError(
+            error,
+            next,
+            "Get school statistics error:"
         );
-
-        next(error);
-
     }
-
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| SCHOOL DASHBOARD
-|--------------------------------------------------------------------------
-*/
 
 async function getSchoolDashboard(
     req,
     res,
     next
 ) {
-
     try {
-
-        const {
-            id
-        } = req.params;
-
-
-        if (!id) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "School ID is required."
-
-            });
-
-        }
-
+        const schoolId =
+            getSchoolId(req);
 
         const school =
             await schoolModel.findSchoolById(
-                id
+                schoolId
             );
 
-
         if (!school) {
+            const error = new Error(
+                "School not found."
+            );
 
-            return res.status(404).json({
+            error.statusCode = 404;
 
-                success: false,
-
-                message:
-                    "School not found."
-
-            });
-
+            return next(error);
         }
-
 
         const dashboard =
             await schoolModel.getSchoolDashboard(
-                id
+                schoolId
             );
 
-
         return res.status(200).json({
-
             success: true,
-
-            data:
-                dashboard
-
+            data: dashboard
         });
-
     } catch (error) {
-
-        console.error(
-            "Get school dashboard error:",
-            error
+        return handleDatabaseError(
+            error,
+            next,
+            "Get school dashboard error:"
         );
-
-        next(error);
-
     }
-
 }
 
+async function checkSchoolCode(
+    req,
+    res,
+    next
+) {
+    try {
+        const schoolCode =
+            req.query?.schoolCode ??
+            req.query?.school_code;
 
-/*
-|--------------------------------------------------------------------------
-| EXPORT
-|--------------------------------------------------------------------------
-*/
+        if (
+            !schoolCode ||
+            !String(schoolCode).trim()
+        ) {
+            const error = new Error(
+                "School code is required."
+            );
+
+            error.statusCode = 400;
+
+            return next(error);
+        }
+
+        const excludeSchoolId =
+            req.query?.excludeSchoolId ??
+            req.query?.exclude_school_id ??
+            null;
+
+        const exists =
+            await schoolModel.schoolCodeExists(
+                String(schoolCode).trim(),
+                excludeSchoolId
+            );
+
+        return res.status(200).json({
+            success: true,
+            exists
+        });
+    } catch (error) {
+        return handleDatabaseError(
+            error,
+            next,
+            "Check school code error:"
+        );
+    }
+}
+
+async function getSchoolCount(
+    req,
+    res,
+    next
+) {
+    try {
+        const status =
+            req.query?.status
+                ? String(
+                    req.query.status
+                ).trim()
+                : null;
+
+        const count =
+            await schoolModel.countSchools(
+                status
+            );
+
+        return res.status(200).json({
+            success: true,
+            count
+        });
+    } catch (error) {
+        return handleDatabaseError(
+            error,
+            next,
+            "Get school count error:"
+        );
+    }
+}
 
 module.exports = {
-
     getAllSchools,
-
     getSchoolById,
-
     createSchool,
-
     updateSchool,
-
     deleteSchool,
-
     getSchoolStatistics,
-
-    getSchoolDashboard
-
+    getSchoolDashboard,
+    checkSchoolCode,
+    getSchoolCount
 };

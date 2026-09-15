@@ -1,569 +1,470 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    ```
     <title>Results Management | School Management System</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
         :root {
-            --sidebar-width: 260px;
-            --primary: #2563eb;
-            --page-bg: #f5f7fb;
-            --border: #e5e7eb;
-            --muted: #6b7280;
-        }
-
-        * {
-            box-sizing: border-box;
+            --primary-color: #1f4e79;
+            --page-background: #f5f7fb;
+            --border-color: #e1e6eb;
+            --muted-color: #6c757d;
+            --success-color: #198754;
+            --danger-color: #dc3545;
         }
 
         body {
             margin: 0;
-            background: var(--page-bg);
-            color: #1f2937;
-            font-family: Inter, Arial, Helvetica, sans-serif;
+            background: var(--page-background);
+            color: #212529;
+            font-family: Arial, Helvetica, sans-serif;
         }
 
         .sidebar {
+            width: 250px;
+            min-height: 100vh;
+            background: #212529;
             position: fixed;
-            inset: 0 auto 0 0;
-            width: var(--sidebar-width);
-            background: #111827;
-            color: #fff;
-            z-index: 1040;
+            left: 0;
+            top: 0;
+            bottom: 0;
             overflow-y: auto;
+            z-index: 1040;
         }
 
-        .sidebar-brand {
-            padding: 22px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, .08);
-        }
-
-        .brand-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 10px;
-            background: var(--primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 21px;
-        }
-
-        .sidebar-brand small {
-            color: #9ca3af;
-        }
-
-        .sidebar-section {
-            padding: 18px 12px 6px;
-            color: #6b7280;
-            font-size: 10px;
+        .sidebar .brand {
+            padding: 20px;
+            color: #ffffff;
+            font-size: 20px;
             font-weight: 700;
-            letter-spacing: .08em;
-            text-transform: uppercase;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .sidebar .nav-link {
-            color: #d1d5db;
-            border-radius: 8px;
-            padding: 10px 13px;
-            margin: 2px 8px;
-            display: flex;
-            align-items: center;
-            gap: 11px;
-            font-size: 13px;
+        .sidebar a {
+            display: block;
+            color: #ced4da;
+            padding: 11px 20px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background-color 0.15s ease, color 0.15s ease;
         }
 
-        .sidebar .nav-link i {
-            width: 20px;
-            text-align: center;
-            font-size: 16px;
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: #343a40;
+            color: #ffffff;
         }
 
-        .sidebar .nav-link:hover,
-        .sidebar .nav-link.active {
-            color: #fff;
-            background: rgba(37, 99, 235, .9);
-        }
-
-        .main-wrapper {
-            margin-left: var(--sidebar-width);
+        .main-content {
+            margin-left: 250px;
             min-height: 100vh;
         }
 
         .topbar {
-            height: 70px;
-            background: #fff;
-            border-bottom: 1px solid var(--border);
-            padding: 0 28px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 25px;
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        .mobile-toggle {
-            display: none;
-        }
-
-        .user-avatar {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: #dbeafe;
-            color: var(--primary);
-            display: flex;
             align-items: center;
-            justify-content: center;
-            font-weight: 700;
+            gap: 20px;
         }
 
         .page-content {
-            padding: 28px;
-        }
-
-        .page-heading h1 {
-            font-size: 25px;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-
-        .page-heading p {
-            color: var(--muted);
-            margin: 0;
-            font-size: 14px;
-        }
-
-        .card {
-            border: 1px solid var(--border);
-            box-shadow: 0 2px 8px rgba(15, 23, 42, .03);
+            padding: 25px;
         }
 
         .stat-card {
-            border-radius: 12px;
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
             height: 100%;
         }
 
-        .stat-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
-            background: #eff6ff;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-
         .stat-label {
-            color: var(--muted);
-            font-size: 13px;
-            font-weight: 500;
-        }
-
-        .stat-value {
-            font-size: 25px;
-            font-weight: 700;
-        }
-
-        .content-card {
-            border-radius: 12px;
-            overflow: hidden;
-        }
-
-        .toolbar {
-            padding: 20px;
-            border-bottom: 1px solid var(--border);
-            background: #fff;
-        }
-
-        .form-control,
-        .form-select {
-            min-height: 42px;
-            border-color: #d1d5db;
+            color: var(--muted-color);
             font-size: 14px;
         }
 
-        .form-control:focus,
-        .form-select:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 .2rem rgba(37, 99, 235, .12);
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-top: 5px;
         }
 
-        .table-responsive {
-            width: 100%;
+        .content-card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
         }
 
-        #resultsTableBody {
-            background: #fff;
+        .result-table input,
+        .result-table select {
+            min-width: 90px;
         }
 
-        .results-table {
-            min-width: 1250px;
-            margin-bottom: 0;
+        .result-table .subject-select {
+            min-width: 190px;
         }
 
-        .results-table th {
-            background: #f9fafb;
-            color: #374151;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: .04em;
-            white-space: nowrap;
+        .student-summary {
+            background: #f8f9fa;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
         }
 
-        .results-table td {
+        .student-summary strong {
+            display: block;
             font-size: 13px;
-            vertical-align: middle;
-            white-space: nowrap;
+            color: var(--muted-color);
+            margin-bottom: 3px;
         }
 
-        .results-table tbody tr:hover {
-            background: #f9fafb;
+        .student-summary span {
+            font-weight: 600;
         }
 
-        .empty-message {
+        #resultModal .modal-content {
+            height: calc(100vh - 2rem);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #resultModal .modal-header,
+        #resultModal .modal-footer {
+            flex-shrink: 0;
+        }
+
+        #resultModal .modal-body {
+            overflow-y: auto;
+            overflow-x: hidden;
+            flex: 1 1 auto;
+        }
+
+        #resultModal .modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #resultModal .modal-body::-webkit-scrollbar-thumb {
+            background: #adb5bd;
+            border-radius: 10px;
+        }
+
+        .score-input {
             text-align: center;
-            padding: 45px 20px !important;
-            color: var(--muted);
+            font-weight: 600;
         }
 
-        .grade {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 34px;
-            padding: 5px 9px;
-            border-radius: 20px;
-            font-size: 11px;
+        .calculated-field {
+            background: #f8f9fa;
+            text-align: center;
             font-weight: 700;
         }
 
-        .grade-pass {
-            background: #dcfce7;
-            color: #166534;
+        .remove-row {
+            white-space: nowrap;
         }
 
-        .grade-fail {
-            background: #fee2e2;
-            color: #991b1b;
+        .empty-result-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--muted-color);
         }
 
-        .grade-neutral {
-            background: #f3f4f6;
-            color: #374151;
+        .result-status-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 9px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
         }
 
-        .modal-content {
-            border: 0;
-            border-radius: 14px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, .2);
+        .result-status-published {
+            background: #d1e7dd;
+            color: #0f5132;
         }
 
-        .modal-header,
-        .modal-footer {
-            border-color: var(--border);
+        .result-status-draft {
+            background: #fff3cd;
+            color: #664d03;
         }
 
-        .form-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: #374151;
+        .result-status-failed {
+            background: #f8d7da;
+            color: #842029;
         }
 
-        .form-group input:read-only {
-            background: #f3f4f6;
+        .result-status-passed {
+            background: #d1e7dd;
+            color: #0f5132;
         }
 
-        #sidebarOverlay {
+        .result-status-unknown {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .validation-message {
             display: none;
         }
 
-        @media (max-width: 991.98px) {
+        .table-loading {
+            text-align: center;
+            padding: 45px 20px !important;
+            color: var(--muted-color);
+        }
 
+        .page-description {
+            color: var(--muted-color);
+            margin-bottom: 0;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            font-size: 0.88rem;
+        }
+
+        .modal-section-title {
+            font-weight: 700;
+            color: #343a40;
+        }
+
+        @media (max-width: 991px) {
             .sidebar {
                 transform: translateX(-100%);
-                transition: transform .25s ease;
+                transition: transform 0.2s ease;
             }
 
             .sidebar.show {
                 transform: translateX(0);
             }
 
-            .main-wrapper {
+            .main-content {
                 margin-left: 0;
-            }
-
-            .mobile-toggle {
-                display: inline-flex;
-            }
-
-            #sidebarOverlay.show {
-                display: block;
-                position: fixed;
-                inset: 0;
-                background: rgba(0, 0, 0, .45);
-                z-index: 1030;
-            }
-
-            .topbar {
-                padding: 0 18px;
-            }
-
-            .page-content {
-                padding: 20px;
             }
         }
 
-        @media (max-width: 575.98px) {
-
-            .page-content {
-                padding: 16px;
-            }
-
+        @media (max-width: 767px) {
             .topbar {
-                height: 62px;
-            }
-
-            .page-heading h1 {
-                font-size: 22px;
-            }
-        }
-
-        @media print {
-
-            .sidebar,
-            .topbar,
-            .toolbar,
-            .no-print,
-            .modal {
-                display: none !important;
-            }
-
-            .main-wrapper {
-                margin-left: 0;
+                padding: 12px 15px;
             }
 
             .page-content {
-                padding: 0;
+                padding: 15px;
             }
 
-            .content-card {
-                border: 0;
-                box-shadow: none;
+            #resultModal .modal-dialog {
+                margin: 0;
+                max-width: none;
             }
 
-            body {
-                background: #fff;
+            #resultModal .modal-content {
+                height: 100vh;
+                border-radius: 0;
+            }
+
+            .result-table {
+                font-size: 13px;
+            }
+
+            .stat-value {
+                font-size: 24px;
             }
         }
     </style>
+    ```
+
 </head>
 
 <body>
 
-    <div id="sidebarOverlay"></div>
+    <div class="sidebar" id="sidebar">
 
-    <aside class="sidebar" id="sidebar">
-
-        <div class="sidebar-brand">
-            <div class="d-flex align-items-center gap-3">
-                <div class="brand-icon">
-                    <i class="bi bi-mortarboard-fill"></i>
-                </div>
-
-                <div>
-                    <div class="fw-bold">School Management</div>
-                    <small>Administration System</small>
-                </div>
-            </div>
+        ```
+        <div class="brand">
+            School Management
         </div>
 
-        <nav class="py-2">
+        <a href="/pages/dashboard.html">
+            <i class="bi bi-speedometer2 me-2"></i>
+            Dashboard
+        </a>
 
-            <div class="sidebar-section">Main</div>
+        <a href="/pages/students.html">
+            <i class="bi bi-people me-2"></i>
+            Students
+        </a>
 
-            <a class="nav-link" href="dashboard.html">
-                <i class="bi bi-grid-1x2-fill"></i>
-                Dashboard
-            </a>
+        <a href="/pages/staff.html">
+            <i class="bi bi-person-badge me-2"></i>
+            Staff
+        </a>
 
-            <a class="nav-link" href="students.html">
-                <i class="bi bi-people-fill"></i>
-                Students
-            </a>
+        <a href="/pages/guardians.html">
+            <i class="bi bi-person-hearts me-2"></i>
+            Guardians
+        </a>
 
-            <a class="nav-link" href="staff.html">
-                <i class="bi bi-person-badge-fill"></i>
-                Staff
-            </a>
+        <a href="/pages/classes.html">
+            <i class="bi bi-building me-2"></i>
+            Classes
+        </a>
 
-            <a class="nav-link" href="guardians.html">
-                <i class="bi bi-person-hearts"></i>
-                Guardians
-            </a>
+        <a href="/pages/class-arms.html">
+            <i class="bi bi-diagram-3 me-2"></i>
+            Class Arms
+        </a>
 
-            <div class="sidebar-section">Academic</div>
+        <a href="/pages/departments.html">
+            <i class="bi bi-diagram-2 me-2"></i>
+            Departments
+        </a>
 
-            <a class="nav-link" href="classes.html">
-                <i class="bi bi-building"></i>
-                Classes
-            </a>
+        <a href="/pages/subjects.html">
+            <i class="bi bi-book me-2"></i>
+            Subjects
+        </a>
 
-            <a class="nav-link" href="class-arms.html">
-                <i class="bi bi-diagram-3-fill"></i>
-                Class Arms
-            </a>
+        <a href="/pages/academic-sessions.html">
+            <i class="bi bi-calendar3 me-2"></i>
+            Academic Sessions
+        </a>
 
-            <a class="nav-link" href="departments.html">
-                <i class="bi bi-diagram-2-fill"></i>
-                Departments
-            </a>
+        <a href="/pages/terms.html">
+            <i class="bi bi-calendar-range me-2"></i>
+            Terms
+        </a>
 
-            <a class="nav-link" href="subjects.html">
-                <i class="bi bi-book-fill"></i>
-                Subjects
-            </a>
+        <a href="/pages/attendance.html">
+            <i class="bi bi-calendar-check me-2"></i>
+            Attendance
+        </a>
 
-            <a class="nav-link" href="academic-sessions.html">
-                <i class="bi bi-calendar3"></i>
-                Sessions
-            </a>
+        <a href="/pages/results.html" class="active">
+            <i class="bi bi-award me-2"></i>
+            Results
+        </a>
 
-            <a class="nav-link" href="terms.html">
-                <i class="bi bi-calendar2-week-fill"></i>
-                Terms
-            </a>
+        <a href="/pages/result-settings.html">
+            <i class="bi bi-sliders me-2"></i>
+            Result Settings
+        </a>
 
-            <a class="nav-link" href="attendance.html">
-                <i class="bi bi-calendar-check-fill"></i>
-                Attendance
-            </a>
+        <a href="/pages/fees.html">
+            <i class="bi bi-cash-stack me-2"></i>
+            Fees
+        </a>
 
-            <a class="nav-link active" href="results.html">
-                <i class="bi bi-journal-check"></i>
-                Results
-            </a>
+        <a href="/pages/documents.html">
+            <i class="bi bi-file-earmark-text me-2"></i>
+            Documents
+        </a>
 
-            <div class="sidebar-section">Finance & Records</div>
+        <a href="/pages/reports.html">
+            <i class="bi bi-bar-chart me-2"></i>
+            Reports
+        </a>
 
-            <a class="nav-link" href="fees.html">
-                <i class="bi bi-cash-stack"></i>
-                Fees
-            </a>
+        <a href="/pages/users.html">
+            <i class="bi bi-person-gear me-2"></i>
+            Users
+        </a>
 
-            <a class="nav-link" href="documents.html">
-                <i class="bi bi-folder-fill"></i>
-                Documents
-            </a>
+        <a href="/pages/roles.html">
+            <i class="bi bi-shield-lock me-2"></i>
+            Roles
+        </a>
 
-            <a class="nav-link" href="reports.html">
-                <i class="bi bi-bar-chart-fill"></i>
-                Reports
-            </a>
+        <a href="/pages/permissions.html">
+            <i class="bi bi-key me-2"></i>
+            Permissions
+        </a>
 
-            <div class="sidebar-section">Administration</div>
+        <a href="/pages/profile.html">
+            <i class="bi bi-person-circle me-2"></i>
+            Profile
+        </a>
 
-            <a class="nav-link" href="users.html">
-                <i class="bi bi-person-gear"></i>
-                Users
-            </a>
+        <a href="/pages/settings.html">
+            <i class="bi bi-gear me-2"></i>
+            Settings
+        </a>
+        ```
 
-            <a class="nav-link" href="roles.html">
-                <i class="bi bi-shield-lock-fill"></i>
-                Roles
-            </a>
+    </div>
 
-            <a class="nav-link" href="permissions.html">
-                <i class="bi bi-key-fill"></i>
-                Permissions
-            </a>
+    <div class="main-content">
 
-            <a class="nav-link" href="profile.html">
-                <i class="bi bi-person-circle"></i>
-                Profile
-            </a>
-
-            <a class="nav-link" href="settings.html">
-                <i class="bi bi-gear-fill"></i>
-                Settings
-            </a>
-
-        </nav>
-
-    </aside>
-
-    <div class="main-wrapper">
-
-        <header class="topbar">
+        ```
+        <div class="topbar">
 
             <div class="d-flex align-items-center gap-3">
 
-                <button type="button" class="btn btn-light mobile-toggle" id="sidebarToggle">
-
-                    <i class="bi bi-list fs-5"></i>
-
+                <button class="btn btn-outline-secondary d-lg-none" id="sidebarToggle" type="button"
+                    aria-label="Open navigation">
+                    <i class="bi bi-list"></i>
                 </button>
 
-                <span class="fw-semibold d-none d-md-block">
-                    Results Management
-                </span>
+                <div>
+                    <h4 class="mb-0">
+                        Results Management
+                    </h4>
+
+                    <small class="text-muted">
+                        Enter, review and manage student academic results
+                    </small>
+                </div>
 
             </div>
 
             <div class="d-flex align-items-center gap-3">
 
-                <div class="user-avatar">
-                    <i class="bi bi-person-fill"></i>
-                </div>
+                <span id="currentUser" class="text-muted"></span>
 
-                <div class="d-none d-sm-block">
-                    <div class="fw-semibold small" id="userName">
-                        Administrator
-                    </div>
-
-                    <div class="text-muted" style="font-size:11px;">
-                        School Administrator
-                    </div>
-                </div>
-
-                <button type="button" class="btn btn-outline-secondary btn-sm" id="logoutButton">
-
+                <button type="button" class="btn btn-outline-danger btn-sm" id="logoutButton">
                     <i class="bi bi-box-arrow-right me-1"></i>
                     Logout
-
                 </button>
 
             </div>
 
-        </header>
+        </div>
 
         <main class="page-content">
 
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+            <div id="resultsMessageContainer" class="mb-3"></div>
 
-                <div class="page-heading">
-                    <h1>Results Management</h1>
-                    <p>
-                        Enter, manage and review student academic results.
+            <div class="d-flex justify-content-between align-items-center mb-4 gap-3 flex-wrap">
+
+                <div>
+                    <h5 class="mb-1">
+                        Student Results
+                    </h5>
+
+                    <p class="page-description">
+                        Enter and manage subject results for students.
                     </p>
                 </div>
 
-                <button type="button" class="btn btn-primary no-print" id="addResultButton">
-
+                <button type="button" class="btn btn-primary" id="addResultButton">
                     <i class="bi bi-plus-lg me-1"></i>
-                    Add Result
-
+                    Enter Student Result
                 </button>
 
             </div>
@@ -572,194 +473,120 @@
 
                 <div class="col-12 col-sm-6 col-xl-3">
 
-                    <div class="card stat-card">
-                        <div class="card-body p-4">
+                    <div class="stat-card">
 
-                            <div class="d-flex justify-content-between align-items-start">
-
-                                <div>
-                                    <div class="stat-label mb-2">
-                                        Total Results
-                                    </div>
-
-                                    <div class="stat-value" id="totalResults">
-                                        0
-                                    </div>
-                                </div>
-
-                                <div class="stat-icon">
-                                    <i class="bi bi-journal-text"></i>
-                                </div>
-
-                            </div>
-
+                        <div class="stat-label">
+                            Total Results
                         </div>
+
+                        <div class="stat-value" id="totalResults">
+                            0
+                        </div>
+
                     </div>
 
                 </div>
 
                 <div class="col-12 col-sm-6 col-xl-3">
 
-                    <div class="card stat-card">
-                        <div class="card-body p-4">
+                    <div class="stat-card">
 
-                            <div class="d-flex justify-content-between align-items-start">
-
-                                <div>
-                                    <div class="stat-label mb-2">
-                                        Passed
-                                    </div>
-
-                                    <div class="stat-value text-success" id="passedResults">
-                                        0
-                                    </div>
-                                </div>
-
-                                <div class="stat-icon text-success bg-success-subtle">
-                                    <i class="bi bi-check-circle-fill"></i>
-                                </div>
-
-                            </div>
-
+                        <div class="stat-label">
+                            Passed
                         </div>
+
+                        <div class="stat-value text-success" id="passedResults">
+                            0
+                        </div>
+
                     </div>
 
                 </div>
 
                 <div class="col-12 col-sm-6 col-xl-3">
 
-                    <div class="card stat-card">
-                        <div class="card-body p-4">
+                    <div class="stat-card">
 
-                            <div class="d-flex justify-content-between align-items-start">
-
-                                <div>
-                                    <div class="stat-label mb-2">
-                                        Failed
-                                    </div>
-
-                                    <div class="stat-value text-danger" id="failedResults">
-                                        0
-                                    </div>
-                                </div>
-
-                                <div class="stat-icon text-danger bg-danger-subtle">
-                                    <i class="bi bi-x-circle-fill"></i>
-                                </div>
-
-                            </div>
-
+                        <div class="stat-label">
+                            Failed
                         </div>
+
+                        <div class="stat-value text-danger" id="failedResults">
+                            0
+                        </div>
+
                     </div>
 
                 </div>
 
                 <div class="col-12 col-sm-6 col-xl-3">
 
-                    <div class="card stat-card">
-                        <div class="card-body p-4">
+                    <div class="stat-card">
 
-                            <div class="d-flex justify-content-between align-items-start">
-
-                                <div>
-                                    <div class="stat-label mb-2">
-                                        Average Score
-                                    </div>
-
-                                    <div class="stat-value" id="averageScore">
-                                        0%
-                                    </div>
-                                </div>
-
-                                <div class="stat-icon">
-                                    <i class="bi bi-graph-up-arrow"></i>
-                                </div>
-
-                            </div>
-
+                        <div class="stat-label">
+                            Average Score
                         </div>
+
+                        <div class="stat-value" id="averageScore">
+                            0.00
+                        </div>
+
                     </div>
 
                 </div>
 
             </div>
 
-            <section class="card content-card">
+            <div class="content-card mb-4">
 
-                <div class="toolbar">
+                <div class="card-body">
 
                     <div class="row g-3 align-items-end">
 
                         <div class="col-12 col-lg-5">
 
-                            <label class="form-label" for="searchInput">
-                                Search Results
+                            <label for="searchInput" class="form-label filter-label">
+                                Search Student / Admission Number
                             </label>
 
-                            <div class="input-group">
-
-                                <span class="input-group-text bg-white">
-                                    <i class="bi bi-search"></i>
-                                </span>
-
-                                <input type="search" id="searchInput" class="form-control"
-                                    placeholder="Search student, admission number or subject...">
-
-                            </div>
-
-                        </div>
-
-                        <div class="col-12 col-md-4 col-lg-2">
-
-                            <label class="form-label" for="sessionFilter">
-                                Academic Session
-                            </label>
-
-                            <select id="sessionFilter" class="form-select">
-
-                                <option value="">
-                                    All Sessions
-                                </option>
-
-                            </select>
-
-                        </div>
-
-                        <div class="col-12 col-md-4 col-lg-2">
-
-                            <label class="form-label" for="termFilter">
-                                Term
-                            </label>
-
-                            <select id="termFilter" class="form-select">
-
-                                <option value="">
-                                    All Terms
-                                </option>
-
-                                <option value="First Term">
-                                    First Term
-                                </option>
-
-                                <option value="Second Term">
-                                    Second Term
-                                </option>
-
-                                <option value="Third Term">
-                                    Third Term
-                                </option>
-
-                            </select>
+                            <input type="text" id="searchInput" class="form-control"
+                                placeholder="Search student name or admission number..." autocomplete="off">
 
                         </div>
 
                         <div class="col-12 col-md-4 col-lg-3">
 
-                            <button type="button" class="btn btn-outline-secondary w-100" id="refreshButton">
+                            <label for="sessionFilter" class="form-label filter-label">
+                                Academic Session
+                            </label>
 
+                            <select id="sessionFilter" class="form-select">
+                                <option value="">
+                                    All Sessions
+                                </option>
+                            </select>
+
+                        </div>
+
+                        <div class="col-12 col-md-4 col-lg-2">
+
+                            <label for="termFilter" class="form-label filter-label">
+                                Term
+                            </label>
+
+                            <select id="termFilter" class="form-select">
+                                <option value="">
+                                    All Terms
+                                </option>
+                            </select>
+
+                        </div>
+
+                        <div class="col-12 col-md-4 col-lg-2">
+
+                            <button type="button" class="btn btn-outline-secondary w-100" id="refreshButton">
                                 <i class="bi bi-arrow-clockwise me-1"></i>
                                 Refresh
-
                             </button>
 
                         </div>
@@ -768,25 +595,27 @@
 
                 </div>
 
+            </div>
+
+            <div class="content-card">
+
                 <div class="table-responsive">
 
-                    <table class="table table-hover results-table">
+                    <table class="table table-hover align-middle mb-0">
 
-                        <thead>
+                        <thead class="table-light">
 
                             <tr>
-                                <th>Student</th>
                                 <th>Admission No.</th>
+                                <th>Student</th>
                                 <th>Class</th>
                                 <th>Subject</th>
                                 <th>Session</th>
                                 <th>Term</th>
-                                <th>CA</th>
-                                <th>Exam</th>
                                 <th>Total</th>
                                 <th>Grade</th>
-                                <th>Remark</th>
-                                <th>Actions</th>
+                                <th>Status</th>
+                                <th>Action</th>
                             </tr>
 
                         </thead>
@@ -794,11 +623,10 @@
                         <tbody id="resultsTableBody">
 
                             <tr>
-                                <td colspan="12" class="empty-message">
+                                <td colspan="10" class="table-loading">
+                                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
 
-                                    <div class="spinner-border spinner-border-sm text-primary me-2"></div>
                                     Loading results...
-
                                 </td>
                             </tr>
 
@@ -808,276 +636,345 @@
 
                 </div>
 
-            </section>
+            </div>
 
         </main>
+        ```
 
     </div>
 
-    <div class="modal fade" id="resultModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="resultModal" tabindex="-1" aria-labelledby="resultModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
 
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-
+            ```
             <div class="modal-content">
 
                 <div class="modal-header">
 
                     <div>
-                        <h2 id="resultModalTitle" class="modal-title fs-5 fw-bold">
-                            Add Result
-                        </h2>
 
-                        <div class="text-muted small">
-                            Enter the student's assessment details.
-                        </div>
+                        <h5 class="modal-title" id="resultModalTitle">
+                            Enter Student Result
+                        </h5>
+
+                        <small class="text-muted">
+                            Enter all subjects for one student before saving.
+                        </small>
+
                     </div>
 
-                    <button type="button" class="btn-close" id="closeResultModal" aria-label="Close">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+                </div>
+
+                <div class="modal-body">
+
+                    <form id="resultForm">
+
+                        <input type="hidden" id="resultId">
+
+                        <div class="content-card mb-4">
+
+                            <div class="card-body">
+
+                                <div class="modal-section-title mb-3">
+                                    Student & Academic Information
+                                </div>
+
+                                <div class="row g-3">
+
+                                    <div class="col-12 col-lg-5">
+
+                                        <label for="admissionNumber" class="form-label">
+                                            Admission Number
+                                        </label>
+
+                                        <div class="input-group">
+
+                                            <input type="text" id="admissionNumber" class="form-control"
+                                                placeholder="Enter admission number" autocomplete="off" required>
+
+                                            <button type="button" class="btn btn-primary" id="findStudentButton">
+                                                <i class="bi bi-search me-1"></i>
+                                                Find
+                                            </button>
+
+                                        </div>
+
+                                        <div class="form-text" id="studentSearchMessage">
+                                            Enter the student's admission number.
+                                        </div>
+
+                                    </div>
+
+                                    <div class="col-12 col-lg-7">
+
+                                        <div class="student-summary" id="studentSummary" style="display: none;">
+
+                                            <div class="row g-3">
+
+                                                <div class="col-12 col-md-4">
+
+                                                    <strong>
+                                                        Student
+                                                    </strong>
+
+                                                    <span id="studentName">
+                                                        -
+                                                    </span>
+
+                                                </div>
+
+                                                <div class="col-12 col-md-4">
+
+                                                    <strong>
+                                                        Admission No.
+                                                    </strong>
+
+                                                    <span id="displayAdmissionNumber">
+                                                        -
+                                                    </span>
+
+                                                </div>
+
+                                                <div class="col-12 col-md-4">
+
+                                                    <strong>
+                                                        Class
+                                                    </strong>
+
+                                                    <span id="studentClass">
+                                                        -
+                                                    </span>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+
+                                        <label for="sessionId" class="form-label">
+                                            Academic Session
+                                        </label>
+
+                                        <select id="sessionId" class="form-select" required>
+                                            <option value="">
+                                                Select academic session
+                                            </option>
+                                        </select>
+
+                                    </div>
+
+                                    <div class="col-12 col-md-6">
+
+                                        <label for="termId" class="form-label">
+                                            Term
+                                        </label>
+
+                                        <select id="termId" class="form-select" required>
+                                            <option value="">
+                                                Select term
+                                            </option>
+                                        </select>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="content-card mb-4">
+
+                            <div class="card-body p-0">
+
+                                <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+
+                                    <div class="modal-section-title">
+                                        Subject Results
+                                    </div>
+
+                                    <button type="button" class="btn btn-success btn-sm" id="addSubjectButton">
+                                        <i class="bi bi-plus-lg me-1"></i>
+                                        Add Subject
+                                    </button>
+
+                                </div>
+
+                                <div class="table-responsive">
+
+                                    <table class="table table-bordered result-table mb-0">
+
+                                        <thead class="table-light">
+
+                                            <tr>
+
+                                                <th style="width: 25%;">
+                                                    Subject
+                                                </th>
+
+                                                <th style="width: 12%;">
+                                                    CA
+                                                </th>
+
+                                                <th style="width: 12%;">
+                                                    Exam
+                                                </th>
+
+                                                <th style="width: 12%;">
+                                                    Total
+                                                </th>
+
+                                                <th style="width: 12%;">
+                                                    Grade
+                                                </th>
+
+                                                <th style="width: 17%;">
+                                                    Remark
+                                                </th>
+
+                                                <th style="width: 10%;">
+                                                    Action
+                                                </th>
+
+                                            </tr>
+
+                                        </thead>
+
+                                        <tbody id="subjectResultsBody"></tbody>
+
+                                    </table>
+
+                                </div>
+
+                                <div id="noSubjectMessage" class="empty-result-message">
+                                    Click
+                                    <strong>Add Subject</strong>
+                                    to begin entering this student's subjects.
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="content-card mb-4">
+
+                            <div class="card-body">
+
+                                <div class="modal-section-title mb-3">
+                                    Result Summary
+                                </div>
+
+                                <div class="row g-3">
+
+                                    <div class="col-12 col-md-3">
+
+                                        <label for="subjectCount" class="form-label">
+                                            Number of Subjects
+                                        </label>
+
+                                        <input type="text" id="subjectCount" class="form-control calculated-field"
+                                            value="0" readonly>
+
+                                    </div>
+
+                                    <div class="col-12 col-md-3">
+
+                                        <label for="overallTotal" class="form-label">
+                                            Overall Total
+                                        </label>
+
+                                        <input type="text" id="overallTotal" class="form-control calculated-field"
+                                            value="0" readonly>
+
+                                    </div>
+
+                                    <div class="col-12 col-md-3">
+
+                                        <label for="overallAverage" class="form-label">
+                                            Average
+                                        </label>
+
+                                        <input type="text" id="overallAverage" class="form-control calculated-field"
+                                            value="0.00" readonly>
+
+                                    </div>
+
+                                    <div class="col-12 col-md-3">
+
+                                        <label for="overallStatus" class="form-label">
+                                            Result Status
+                                        </label>
+
+                                        <input type="text" id="overallStatus" class="form-control calculated-field"
+                                            value="-" readonly>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="content-card">
+
+                            <div class="card-body">
+
+                                <div class="modal-section-title mb-3">
+                                    Teacher's General Comment
+                                </div>
+
+                                <label for="teacherComment" class="form-label">
+                                    Comment for this student
+                                </label>
+
+                                <textarea id="teacherComment" class="form-control" rows="4" maxlength="2000"
+                                    placeholder="Enter the teacher's general comment for this student's result..."></textarea>
+
+                            </div>
+
+                        </div>
+
+                        <div id="resultValidationMessage" class="alert alert-danger validation-message mt-4"
+                            role="alert"></div>
+
+                    </form>
+
+                </div>
+
+                <div class="modal-footer">
+
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+
+                    <button type="button" class="btn btn-primary" id="saveCompleteResultButton">
+                        <i class="bi bi-check-lg me-1"></i>
+                        Save Complete Result
                     </button>
 
                 </div>
 
-                <form id="resultForm">
-
-                    <div class="modal-body">
-
-                        <input type="hidden" id="resultId">
-
-                        <div class="row g-3">
-
-                            <div class="col-12 col-md-6">
-
-                                <label class="form-label" for="studentId">
-                                    Student ID
-                                </label>
-
-                                <input type="number" id="studentId" class="form-control" required>
-
-                            </div>
-
-                            <div class="col-12 col-md-6">
-
-                                <label class="form-label" for="subjectId">
-                                    Subject ID
-                                </label>
-
-                                <input type="number" id="subjectId" class="form-control" required>
-
-                            </div>
-
-                            <div class="col-12 col-md-6">
-
-                                <label class="form-label" for="classId">
-                                    Class ID
-                                </label>
-
-                                <input type="number" id="classId" class="form-control">
-
-                            </div>
-
-                            <div class="col-12 col-md-6">
-
-                                <label class="form-label" for="sessionId">
-                                    Academic Session ID
-                                </label>
-
-                                <input type="number" id="sessionId" class="form-control" required>
-
-                            </div>
-
-                            <div class="col-12 col-md-6">
-
-                                <label class="form-label" for="termId">
-                                    Term ID
-                                </label>
-
-                                <input type="number" id="termId" class="form-control" required>
-
-                            </div>
-
-                            <div class="col-12 col-md-6">
-
-                                <label class="form-label" for="caScore">
-                                    Continuous Assessment
-                                </label>
-
-                                <input type="number" id="caScore" class="form-control" min="0" max="40" step="0.01"
-                                    value="0">
-
-                                <div class="form-text">
-                                    Maximum: 40 marks
-                                </div>
-
-                            </div>
-
-                            <div class="col-12 col-md-6">
-
-                                <label class="form-label" for="examScore">
-                                    Examination Score
-                                </label>
-
-                                <input type="number" id="examScore" class="form-control" min="0" max="60" step="0.01"
-                                    value="0">
-
-                                <div class="form-text">
-                                    Maximum: 60 marks
-                                </div>
-
-                            </div>
-
-                            <div class="col-12 col-md-6">
-
-                                <label class="form-label" for="totalScore">
-                                    Total Score
-                                </label>
-
-                                <input type="number" id="totalScore" class="form-control" readonly>
-
-                            </div>
-
-                            <div class="col-12 col-md-6">
-
-                                <label class="form-label" for="grade">
-                                    Grade
-                                </label>
-
-                                <input type="text" id="grade" class="form-control" readonly>
-
-                            </div>
-
-                            <div class="col-12 col-md-6">
-
-                                <label class="form-label" for="remark">
-                                    Remark
-                                </label>
-
-                                <input type="text" id="remark" class="form-control" readonly>
-
-                            </div>
-
-                            <div class="col-12">
-
-                                <label class="form-label" for="teacherComment">
-                                    Teacher Comment
-                                </label>
-
-                                <textarea id="teacherComment" class="form-control" rows="4"
-                                    placeholder="Optional teacher comment"></textarea>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <div class="modal-footer">
-
-                        <button type="button" class="btn btn-secondary" id="cancelResultButton">
-                            Cancel
-                        </button>
-
-                        <button type="submit" class="btn btn-primary">
-
-                            <i class="bi bi-check-lg me-1"></i>
-                            Save Result
-
-                        </button>
-
-                    </div>
-
-                </form>
-
             </div>
 
         </div>
+        ```
 
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
+    <script src="/js/api.js"></script>
 
-            const sidebar =
-                document.getElementById("sidebar");
+    <script src="/js/auth.js"></script>
 
-            const sidebarToggle =
-                document.getElementById("sidebarToggle");
-
-            const sidebarOverlay =
-                document.getElementById("sidebarOverlay");
-
-            function closeSidebar() {
-                sidebar?.classList.remove("show");
-                sidebarOverlay?.classList.remove("show");
-            }
-
-            sidebarToggle?.addEventListener("click", () => {
-                sidebar?.classList.toggle("show");
-                sidebarOverlay?.classList.toggle("show");
-            });
-
-            sidebarOverlay?.addEventListener(
-                "click",
-                closeSidebar
-            );
-
-            document
-                .querySelectorAll(".sidebar .nav-link")
-                .forEach(link => {
-                    link.addEventListener(
-                        "click",
-                        closeSidebar
-                    );
-                });
-
-            const logoutButton =
-                document.getElementById("logoutButton");
-
-            logoutButton?.addEventListener("click", () => {
-
-                [
-                    "school_management_token",
-                    "school_management_user",
-                    "token",
-                    "authToken",
-                    "accessToken"
-                ].forEach(key => {
-                    localStorage.removeItem(key);
-                    sessionStorage.removeItem(key);
-                });
-
-                window.location.href = "login.html";
-            });
-
-            try {
-
-                const storedUser =
-                    JSON.parse(
-                        localStorage.getItem(
-                            "school_management_user"
-                        ) || "{}"
-                    );
-
-                const userName =
-                    storedUser?.name ||
-                    storedUser?.username ||
-                    storedUser?.firstName;
-
-                if (userName) {
-                    document.getElementById(
-                        "userName"
-                    ).textContent = userName;
-                }
-
-            } catch {
-                // Ignore malformed stored user data.
-            }
-
-        });
-    </script>
-
-    <script src="../js/results.js"></script>
+    <script src="/js/results.js"></script>
 
 </body>
 

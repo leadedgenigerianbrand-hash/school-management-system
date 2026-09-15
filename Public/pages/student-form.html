@@ -1,1202 +1,574 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    ```
     <title>Student Form | School Management System</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
-    <style>
-        body {
-            background: #f5f7fb;
-            color: #1f2937;
-        }
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    <link rel="stylesheet" href="../css/forms.css">
+    <link rel="stylesheet" href="../css/students.css">
+    ```
 
-        .app-sidebar {
-            width: 260px;
-            min-height: 100vh;
-            background: #172033;
-            position: fixed;
-            inset: 0 auto 0 0;
-            z-index: 1040;
-            overflow-y: auto;
-        }
-
-        .sidebar-brand {
-            padding: 22px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, .08);
-        }
-
-        .sidebar-brand-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 10px;
-            background: #2563eb;
-            color: #fff;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 21px;
-        }
-
-        .sidebar-section {
-            padding: 18px 15px 5px;
-            color: #7f8ba3;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .08em;
-        }
-
-        .sidebar-link {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin: 2px 10px;
-            padding: 10px 12px;
-            border-radius: 8px;
-            color: #c7cfdd;
-            text-decoration: none;
-            font-size: 14px;
-        }
-
-        .sidebar-link:hover,
-        .sidebar-link.active {
-            background: #2563eb;
-            color: #fff;
-        }
-
-        .sidebar-link i {
-            width: 20px;
-            font-size: 16px;
-        }
-
-        .main-wrapper {
-            margin-left: 260px;
-            min-height: 100vh;
-        }
-
-        .topbar {
-            min-height: 70px;
-            background: #fff;
-            border-bottom: 1px solid #e5e7eb;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 28px;
-            position: sticky;
-            top: 0;
-            z-index: 1030;
-        }
-
-        .page-content {
-            padding: 28px;
-            max-width: 1400px;
-            margin: auto;
-        }
-
-        .form-card {
-            border: 0;
-            box-shadow: 0 3px 15px rgba(15, 23, 42, .05);
-        }
-
-        .section-title {
-            font-size: 17px;
-            font-weight: 700;
-        }
-
-        .section-icon {
-            width: 38px;
-            height: 38px;
-            border-radius: 9px;
-            background: #eff6ff;
-            color: #2563eb;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .form-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: #374151;
-        }
-
-        .required {
-            color: #dc2626;
-        }
-
-        .form-control,
-        .form-select {
-            min-height: 44px;
-            border-color: #d1d5db;
-        }
-
-        .form-control:focus,
-        .form-select:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 .2rem rgba(37, 99, 235, .12);
-        }
-
-        textarea.form-control {
-            min-height: 110px;
-            resize: vertical;
-        }
-
-        .form-text {
-            font-size: 11px;
-        }
-
-        .photo-preview {
-            width: 140px;
-            height: 140px;
-            border-radius: 12px;
-            border: 1px dashed #cbd5e1;
-            background: #f8fafc;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            color: #64748b;
-            font-size: 12px;
-            text-align: center;
-        }
-
-        .photo-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        #pageMessage:empty {
-            display: none;
-        }
-
-        #sidebarOverlay {
-            display: none;
-        }
-
-        @media (max-width: 991.98px) {
-            .app-sidebar {
-                transform: translateX(-100%);
-                transition: transform .25s ease;
-            }
-
-            .app-sidebar.show {
-                transform: translateX(0);
-            }
-
-            .main-wrapper {
-                margin-left: 0;
-            }
-
-            #sidebarOverlay.show {
-                display: block;
-                position: fixed;
-                inset: 0;
-                background: rgba(0, 0, 0, .45);
-                z-index: 1035;
-            }
-
-            .page-content {
-                padding: 20px;
-            }
-        }
-
-        @media (max-width: 575.98px) {
-            .topbar {
-                padding: 12px 16px;
-            }
-
-            .page-content {
-                padding: 15px;
-            }
-        }
-    </style>
 </head>
 
 <body>
 
-    <div id="sidebarOverlay"></div>
+    ```
+    <div class="sms-layout">
 
-    <aside id="sidebar" class="app-sidebar">
+        <aside class="sms-sidebar">
 
-        <div class="sidebar-brand">
-            <div class="d-flex align-items-center gap-3">
-                <div class="sidebar-brand-icon">
-                    <i class="bi bi-mortarboard-fill"></i>
-                </div>
-
-                <div>
-                    <div class="text-white fw-bold">School Management</div>
-                    <small class="text-secondary">Administration System</small>
-                </div>
-            </div>
-        </div>
-
-        <div class="sidebar-section">Main</div>
-
-        <a href="dashboard.html" class="sidebar-link">
-            <i class="bi bi-grid-1x2-fill"></i>
-            <span>Dashboard</span>
-        </a>
-
-        <a href="students.html" class="sidebar-link active">
-            <i class="bi bi-people-fill"></i>
-            <span>Students</span>
-        </a>
-
-        <a href="staff.html" class="sidebar-link">
-            <i class="bi bi-person-badge-fill"></i>
-            <span>Staff</span>
-        </a>
-
-        <a href="guardians.html" class="sidebar-link">
-            <i class="bi bi-person-hearts"></i>
-            <span>Guardians</span>
-        </a>
-
-        <div class="sidebar-section">Academic</div>
-
-        <a href="classes.html" class="sidebar-link">
-            <i class="bi bi-building"></i>
-            <span>Classes</span>
-        </a>
-
-        <a href="class-arms.html" class="sidebar-link">
-            <i class="bi bi-diagram-3-fill"></i>
-            <span>Class Arms</span>
-        </a>
-
-        <a href="departments.html" class="sidebar-link">
-            <i class="bi bi-diagram-2-fill"></i>
-            <span>Departments</span>
-        </a>
-
-        <a href="subjects.html" class="sidebar-link">
-            <i class="bi bi-book-fill"></i>
-            <span>Subjects</span>
-        </a>
-
-        <a href="academic-sessions.html" class="sidebar-link">
-            <i class="bi bi-calendar3"></i>
-            <span>Sessions</span>
-        </a>
-
-        <a href="terms.html" class="sidebar-link">
-            <i class="bi bi-calendar-event"></i>
-            <span>Terms</span>
-        </a>
-
-        <a href="attendance.html" class="sidebar-link">
-            <i class="bi bi-calendar-check-fill"></i>
-            <span>Attendance</span>
-        </a>
-
-        <a href="results.html" class="sidebar-link">
-            <i class="bi bi-bar-chart-fill"></i>
-            <span>Results</span>
-        </a>
-
-        <div class="sidebar-section">Finance & Records</div>
-
-        <a href="fees.html" class="sidebar-link">
-            <i class="bi bi-cash-stack"></i>
-            <span>Fees</span>
-        </a>
-
-        <a href="documents.html" class="sidebar-link">
-            <i class="bi bi-folder-fill"></i>
-            <span>Documents</span>
-        </a>
-
-        <a href="reports.html" class="sidebar-link">
-            <i class="bi bi-file-earmark-bar-graph-fill"></i>
-            <span>Reports</span>
-        </a>
-
-        <div class="sidebar-section">Administration</div>
-
-        <a href="users.html" class="sidebar-link">
-            <i class="bi bi-person-gear"></i>
-            <span>Users</span>
-        </a>
-
-        <a href="roles.html" class="sidebar-link">
-            <i class="bi bi-shield-lock-fill"></i>
-            <span>Roles</span>
-        </a>
-
-        <a href="permissions.html" class="sidebar-link">
-            <i class="bi bi-key-fill"></i>
-            <span>Permissions</span>
-        </a>
-
-        <a href="profile.html" class="sidebar-link">
-            <i class="bi bi-person-circle"></i>
-            <span>My Profile</span>
-        </a>
-
-        <a href="settings.html" class="sidebar-link">
-            <i class="bi bi-gear-fill"></i>
-            <span>Settings</span>
-        </a>
-
-    </aside>
-
-    <div class="main-wrapper">
-
-        <header class="topbar">
-
-            <div class="d-flex align-items-center gap-3">
-
-                <button id="sidebarToggle" class="btn btn-light d-lg-none" type="button">
-                    <i class="bi bi-list fs-5"></i>
-                </button>
-
-                <div>
-                    <h1 id="pageTitle" class="h5 mb-0 fw-bold">Add Student</h1>
-
-                    <small id="pageDescription" class="text-muted">
-                        Register a new student in the school management system.
-                    </small>
-                </div>
-
+            <div class="sidebar-brand">
+                <div class="brand-title">School Management</div>
+                <div class="brand-subtitle">Leadedge Model College</div>
             </div>
 
-            <a href="/pages/students.html" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>
-                Back to Students
-            </a>
+            <nav class="sidebar-nav">
 
-        </header>
+                <a href="../index.html" class="sidebar-link">
+                    <span>Dashboard</span>
+                </a>
 
-        <main class="page-content">
+                <a href="students.html" class="sidebar-link active">
+                    <span>Students</span>
+                </a>
 
-            <div id="pageMessage" class="alert mb-4" role="alert"></div>
+                <a href="staff.html" class="sidebar-link">
+                    <span>Staff</span>
+                </a>
 
-            <form id="studentForm" enctype="multipart/form-data">
+                <a href="guardians.html" class="sidebar-link">
+                    <span>Guardians</span>
+                </a>
 
-                <section class="card form-card mb-4">
-                    <div class="card-body p-4">
+                <a href="classes.html" class="sidebar-link">
+                    <span>Classes</span>
+                </a>
 
-                        <div class="d-flex align-items-center gap-3 mb-4">
-                            <div class="section-icon">
-                                <i class="bi bi-person-fill"></i>
-                            </div>
+                <a href="class-arms.html" class="sidebar-link">
+                    <span>Class Arms</span>
+                </a>
 
-                            <div>
-                                <h2 class="section-title mb-1">Basic Information</h2>
-                                <p class="text-muted small mb-0">
-                                    Personal details and identification information.
-                                </p>
-                            </div>
-                        </div>
+                <a href="departments.html" class="sidebar-link">
+                    <span>Departments</span>
+                </a>
 
-                        <div class="row g-4">
+                <a href="subjects.html" class="sidebar-link">
+                    <span>Subjects</span>
+                </a>
 
-                            <div class="col-md-4">
-                                <label for="admission_number" class="form-label">
-                                    Admission Number <span class="required">*</span>
-                                </label>
+                <a href="academic-levels.html" class="sidebar-link">
+                    <span>Academic Levels</span>
+                </a>
 
-                                <input type="text" id="admission_number" name="admission_number" class="form-control"
-                                    placeholder="e.g. LMC001" required>
-                            </div>
+                <a href="academic-sessions.html" class="sidebar-link">
+                    <span>Academic Sessions</span>
+                </a>
 
-                            <div class="col-md-4">
-                                <label for="first_name" class="form-label">
-                                    First Name <span class="required">*</span>
-                                </label>
+                <a href="terms.html" class="sidebar-link">
+                    <span>Terms</span>
+                </a>
 
-                                <input type="text" id="first_name" name="first_name" class="form-control"
-                                    placeholder="First name" required>
-                            </div>
+                <a href="attendance.html" class="sidebar-link">
+                    <span>Attendance</span>
+                </a>
 
-                            <div class="col-md-4">
-                                <label for="middle_name" class="form-label">
-                                    Middle Name
-                                </label>
+                <a href="results.html" class="sidebar-link">
+                    <span>Results</span>
+                </a>
 
-                                <input type="text" id="middle_name" name="middle_name" class="form-control"
-                                    placeholder="Middle name">
-                            </div>
+                <a href="fees.html" class="sidebar-link">
+                    <span>Fees</span>
+                </a>
 
-                            <div class="col-md-4">
-                                <label for="last_name" class="form-label">
-                                    Last Name <span class="required">*</span>
-                                </label>
+                <a href="documents.html" class="sidebar-link">
+                    <span>Documents</span>
+                </a>
 
-                                <input type="text" id="last_name" name="last_name" class="form-control"
-                                    placeholder="Last name" required>
-                            </div>
+                <a href="reports.html" class="sidebar-link">
+                    <span>Reports</span>
+                </a>
 
-                            <div class="col-md-4">
-                                <label for="gender" class="form-label">
-                                    Gender <span class="required">*</span>
-                                </label>
+                <a href="users.html" class="sidebar-link">
+                    <span>Users</span>
+                </a>
 
-                                <select id="gender" name="gender" class="form-select" required>
-                                    <option value="">Select gender</option>
-                                    <option value="Male">Male</option>
-                                    <option value="Female">Female</option>
-                                </select>
-                            </div>
+                <a href="roles.html" class="sidebar-link">
+                    <span>Roles</span>
+                </a>
 
-                            <div class="col-md-4">
-                                <label for="date_of_birth" class="form-label">
-                                    Date of Birth
-                                </label>
+                <a href="permissions.html" class="sidebar-link">
+                    <span>Permissions</span>
+                </a>
 
-                                <input type="date" id="date_of_birth" name="date_of_birth" class="form-control">
-                            </div>
+                <a href="profile.html" class="sidebar-link">
+                    <span>Profile</span>
+                </a>
 
-                            <div class="col-md-4">
-                                <label for="nationality" class="form-label">
-                                    Nationality
-                                </label>
+                <a href="settings.html" class="sidebar-link">
+                    <span>Settings</span>
+                </a>
 
-                                <input type="text" id="nationality" name="nationality" class="form-control"
-                                    value="Nigerian">
-                            </div>
+            </nav>
 
-                            <div class="col-md-4">
-                                <label for="state_of_origin" class="form-label">
-                                    State of Origin
-                                </label>
+        </aside>
 
-                                <input type="text" id="state_of_origin" name="state_of_origin" class="form-control"
-                                    placeholder="e.g. Lagos">
-                            </div>
+        <main class="sms-main">
 
-                            <div class="col-md-4">
-                                <label for="local_government" class="form-label">
-                                    Local Government
-                                </label>
+            <header class="topbar">
 
-                                <input type="text" id="local_government" name="local_government" class="form-control"
-                                    placeholder="e.g. Alimosho">
-                            </div>
+                <div>
+                    <button type="button" id="mobileSidebarBtn" class="btn btn-outline-secondary d-lg-none"
+                        aria-label="Open navigation menu">
+                        ☰
+                    </button>
+                </div>
 
-                        </div>
+                <div class="topbar-title">
+                    Student Management
+                </div>
+
+                <div class="topbar-user">
+                    <span id="loggedInUser">User</span>
+                </div>
+
+            </header>
+
+            <div class="form-page">
+
+                <div class="page-header">
+
+                    <div>
+                        <h1 id="pageTitle">
+                            Add Student
+                        </h1>
+
+                        <p id="pageDescription">
+                            Register a student and assign the student to the appropriate academic class.
+                        </p>
                     </div>
-                </section>
 
-                <section class="card form-card mb-4">
-                    <div class="card-body p-4">
+                    <a href="students.html" class="btn btn-outline-secondary">
+                        ← Back to Students
+                    </a>
 
-                        <div class="d-flex align-items-center gap-3 mb-4">
-                            <div class="section-icon">
-                                <i class="bi bi-mortarboard-fill"></i>
-                            </div>
+                </div>
 
-                            <div>
-                                <h2 class="section-title mb-1">
-                                    Academic Information
-                                </h2>
+                <div id="alertArea" aria-live="polite" aria-atomic="true"></div>
 
-                                <p class="text-muted small mb-0">
-                                    Class placement, session and student status.
-                                </p>
-                            </div>
+                <form id="studentForm" novalidate enctype="multipart/form-data">
+
+                    <div class="form-card">
+
+                        <div class="form-card-header">
+                            Basic Information
                         </div>
 
-                        <div class="row g-4">
+                        <div class="form-card-body">
 
-                            <div class="col-md-4">
-                                <label for="academic_level" class="form-label">
-                                    Academic Level
-                                </label>
+                            <div class="row g-3">
 
-                                <select id="academic_level" name="academic_level" class="form-select">
-                                    <option value="">Select level</option>
-                                    <option value="JSS">JSS</option>
-                                    <option value="SSS">SSS</option>
-                                </select>
-                            </div>
+                                <div class="col-md-4">
 
-                            <div class="col-md-4">
-                                <label for="class_name" class="form-label">
-                                    Class
-                                </label>
+                                    <label for="admission_number" class="form-label required">
+                                        Admission Number
+                                    </label>
 
-                                <select id="class_name" name="class_name" class="form-select">
-                                    <option value="">Select class</option>
-                                    <option value="JSS1">JSS1</option>
-                                    <option value="JSS2">JSS2</option>
-                                    <option value="JSS3">JSS3</option>
-                                    <option value="SS1">SS1</option>
-                                    <option value="SS2">SS2</option>
-                                    <option value="SS3">SS3</option>
-                                </select>
-                            </div>
+                                    <input type="text" class="form-control" id="admission_number"
+                                        name="admission_number" autocomplete="off" required>
 
-                            <div class="col-md-4">
-                                <label for="class_arm" class="form-label">
-                                    Class Arm
-                                </label>
-
-                                <input type="text" id="class_arm" name="class_arm" class="form-control"
-                                    placeholder="e.g. A">
-
-                                <div class="form-text">
-                                    Example: A, B, C or Gold, Silver.
                                 </div>
-                            </div>
 
-                            <div class="col-md-4">
-                                <label for="academic_session" class="form-label">
-                                    Academic Session
-                                </label>
+                                <div class="col-md-4">
 
-                                <input type="text" id="academic_session" name="academic_session" class="form-control"
-                                    placeholder="e.g. 2026/2027">
-                            </div>
+                                    <label for="first_name" class="form-label required">
+                                        First Name
+                                    </label>
 
-                            <div class="col-md-4">
-                                <label for="status" class="form-label">
-                                    Student Status
-                                </label>
+                                    <input type="text" class="form-control" id="first_name" name="first_name"
+                                        autocomplete="given-name" required>
 
-                                <select id="status" name="status" class="form-select">
-                                    <option value="Active">Active</option>
-                                    <option value="Inactive">Inactive</option>
-                                    <option value="Graduated">Graduated</option>
-                                    <option value="Withdrawn">Withdrawn</option>
-                                    <option value="Transferred">Transferred</option>
-                                </select>
+                                </div>
+
+                                <div class="col-md-4">
+
+                                    <label for="middle_name" class="form-label">
+                                        Middle Name
+                                    </label>
+
+                                    <input type="text" class="form-control" id="middle_name" name="middle_name"
+                                        autocomplete="additional-name">
+
+                                </div>
+
+                                <div class="col-md-4">
+
+                                    <label for="last_name" class="form-label required">
+                                        Last Name
+                                    </label>
+
+                                    <input type="text" class="form-control" id="last_name" name="last_name"
+                                        autocomplete="family-name" required>
+
+                                </div>
+
+                                <div class="col-md-4">
+
+                                    <label for="gender" class="form-label">
+                                        Gender
+                                    </label>
+
+                                    <select class="form-select" id="gender" name="gender">
+
+                                        <option value="">
+                                            Select gender
+                                        </option>
+
+                                        <option value="Male">
+                                            Male
+                                        </option>
+
+                                        <option value="Female">
+                                            Female
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+                                <div class="col-md-4">
+
+                                    <label for="date_of_birth" class="form-label">
+                                        Date of Birth
+                                    </label>
+
+                                    <input type="date" class="form-control" id="date_of_birth" name="date_of_birth">
+
+                                </div>
+
+                                <div class="col-md-4">
+
+                                    <label for="nationality" class="form-label">
+                                        Nationality
+                                    </label>
+
+                                    <input type="text" class="form-control" id="nationality" name="nationality"
+                                        value="Nigerian" autocomplete="country-name">
+
+                                </div>
+
+                                <div class="col-md-4">
+
+                                    <label for="state_of_origin" class="form-label">
+                                        State of Origin
+                                    </label>
+
+                                    <input type="text" class="form-control" id="state_of_origin" name="state_of_origin">
+
+                                </div>
+
+                                <div class="col-md-4">
+
+                                    <label for="local_government" class="form-label">
+                                        Local Government Area
+                                    </label>
+
+                                    <input type="text" class="form-control" id="local_government"
+                                        name="local_government">
+
+                                </div>
+
                             </div>
 
                         </div>
+
                     </div>
-                </section>
 
-                <section class="card form-card mb-4">
-                    <div class="card-body p-4">
+                    <div class="form-card">
 
-                        <div class="d-flex align-items-center gap-3 mb-4">
-                            <div class="section-icon">
-                                <i class="bi bi-telephone-fill"></i>
-                            </div>
-
-                            <div>
-                                <h2 class="section-title mb-1">
-                                    Contact Information
-                                </h2>
-
-                                <p class="text-muted small mb-0">
-                                    Student contact and residential information.
-                                </p>
-                            </div>
+                        <div class="form-card-header">
+                            Academic Information
                         </div>
 
-                        <div class="row g-4">
+                        <div class="form-card-body">
 
-                            <div class="col-md-6">
-                                <label for="email" class="form-label">
-                                    Email Address
-                                </label>
-
-                                <input type="email" id="email" name="email" class="form-control"
-                                    placeholder="student@example.com">
+                            <div class="academic-note">
+                                Select academic information from the records already created for this school.
+                                Classes and class arms are configurable by the school.
                             </div>
 
-                            <div class="col-md-6">
-                                <label for="phone" class="form-label">
-                                    Phone Number
-                                </label>
+                            <div class="row g-3">
 
-                                <input type="tel" id="phone" name="phone" class="form-control"
-                                    placeholder="080XXXXXXXX">
-                            </div>
+                                <div class="col-md-4">
 
-                            <div class="col-12">
-                                <label for="address" class="form-label">
-                                    Residential Address
-                                </label>
+                                    <label for="academic_level" class="form-label required">
+                                        Academic Level
+                                    </label>
 
-                                <textarea id="address" name="address" class="form-control"
-                                    placeholder="Enter student's residential address"></textarea>
+                                    <select class="form-select" id="academic_level" name="academic_level" required>
+
+                                        <option value="">
+                                            Loading academic levels...
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+                                <div class="col-md-4">
+
+                                    <label for="academic_session" class="form-label required">
+                                        Academic Session
+                                    </label>
+
+                                    <select class="form-select" id="academic_session" name="academic_session" required>
+
+                                        <option value="">
+                                            Loading academic sessions...
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+                                <div class="col-md-4">
+
+                                    <label for="class_name" class="form-label required">
+                                        Class
+                                    </label>
+
+                                    <select class="form-select" id="class_name" name="class_name" required disabled>
+
+                                        <option value="">
+                                            Select academic level first
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+                                <div class="col-md-4">
+
+                                    <label for="class_arm" class="form-label">
+                                        Class Arm
+                                    </label>
+
+                                    <select class="form-select" id="class_arm" name="class_arm" disabled>
+
+                                        <option value="">
+                                            Select class first
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+                                <div class="col-md-4">
+
+                                    <label for="department" class="form-label">
+                                        Department
+                                    </label>
+
+                                    <select class="form-select" id="department" name="department">
+
+                                        <option value="">
+                                            Loading departments...
+                                        </option>
+
+                                    </select>
+
+                                    <small class="text-muted">
+                                        Mainly applicable to SSS students.
+                                    </small>
+
+                                </div>
+
+                                <div class="col-md-4">
+
+                                    <label for="admission_date" class="form-label">
+                                        Admission Date
+                                    </label>
+
+                                    <input type="date" class="form-control" id="admission_date" name="admission_date">
+
+                                </div>
+
+                                <div class="col-md-4">
+
+                                    <label for="status" class="form-label required">
+                                        Student Status
+                                    </label>
+
+                                    <select class="form-select" id="status" name="status" required>
+
+                                        <option value="Active">
+                                            Active
+                                        </option>
+
+                                        <option value="Inactive">
+                                            Inactive
+                                        </option>
+
+                                        <option value="Graduated">
+                                            Graduated
+                                        </option>
+
+                                        <option value="Withdrawn">
+                                            Withdrawn
+                                        </option>
+
+                                        <option value="Transferred">
+                                            Transferred
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
                             </div>
 
                         </div>
+
                     </div>
-                </section>
 
-                <section class="card form-card mb-4">
-                    <div class="card-body p-4">
+                    <div class="form-card">
 
-                        <div class="d-flex align-items-center gap-3 mb-4">
-                            <div class="section-icon">
-                                <i class="bi bi-camera-fill"></i>
-                            </div>
-
-                            <div>
-                                <h2 class="section-title mb-1">
-                                    Student Photograph
-                                </h2>
-
-                                <p class="text-muted small mb-0">
-                                    Upload a clear photograph of the student.
-                                </p>
-                            </div>
+                        <div class="form-card-header">
+                            Contact Information
                         </div>
 
-                        <div class="row g-4 align-items-center">
+                        <div class="form-card-body">
 
-                            <div class="col-auto">
-                                <div id="photoPreview" class="photo-preview">
+                            <div class="row g-3">
+
+                                <div class="col-md-6">
+
+                                    <label for="email" class="form-label">
+                                        Email Address
+                                    </label>
+
+                                    <input type="email" class="form-control" id="email" name="email"
+                                        autocomplete="email">
+
+                                </div>
+
+                                <div class="col-md-6">
+
+                                    <label for="phone" class="form-label">
+                                        Phone Number
+                                    </label>
+
+                                    <input type="tel" class="form-control" id="phone" name="phone" autocomplete="tel">
+
+                                </div>
+
+                                <div class="col-12">
+
+                                    <label for="address" class="form-label">
+                                        Address
+                                    </label>
+
+                                    <textarea class="form-control" id="address" name="address" rows="3"
+                                        autocomplete="street-address"></textarea>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="form-card">
+
+                        <div class="form-card-header">
+                            Student Photograph
+                        </div>
+
+                        <div class="form-card-body">
+
+                            <div class="photo-preview" id="photoPreview">
+
+                                <span>
                                     No photo selected
-                                </div>
+                                </span>
+
                             </div>
 
-                            <div class="col-md-6">
-                                <label for="photo" class="form-label">
-                                    Student Photo
-                                </label>
+                            <input type="file" class="form-control" id="photo" name="photo"
+                                accept="image/jpeg,image/png,image/webp,image/gif">
 
-                                <input type="file" id="photo" name="photo" class="form-control"
-                                    accept="image/jpeg,image/png,image/webp">
-
-                                <div class="form-text">
-                                    JPG, PNG or WEBP. Maximum 5MB.
-                                </div>
-                            </div>
+                            <small class="text-muted">
+                                Maximum file size: 5MB.
+                            </small>
 
                         </div>
+
                     </div>
-                </section>
 
-                <section class="card form-card mb-4">
-                    <div class="card-body p-4">
+                    <div class="form-card">
 
-                        <div class="d-flex align-items-center gap-3 mb-4">
-                            <div class="section-icon">
-                                <i class="bi bi-journal-text"></i>
-                            </div>
-
-                            <div>
-                                <h2 class="section-title mb-1">
-                                    Additional Information
-                                </h2>
-
-                                <p class="text-muted small mb-0">
-                                    Optional notes about the student.
-                                </p>
-                            </div>
+                        <div class="form-card-header">
+                            Additional Information
                         </div>
 
-                        <label for="notes" class="form-label">
-                            Notes
-                        </label>
+                        <div class="form-card-body">
 
-                        <textarea id="notes" name="notes" class="form-control"
-                            placeholder="Additional information about the student"></textarea>
+                            <label for="notes" class="form-label">
+                                Notes
+                            </label>
+
+                            <textarea class="form-control" id="notes" name="notes" rows="5"
+                                placeholder="Additional information about the student..."></textarea>
+
+                        </div>
 
                     </div>
-                </section>
 
-                <section class="card form-card">
-                    <div class="card-body p-4">
+                    <div class="form-card">
 
-                        <div class="d-flex justify-content-end gap-2 flex-wrap">
+                        <div class="form-actions">
 
-                            <button type="button" class="btn btn-outline-secondary" id="cancelButton">
-                                <i class="bi bi-x-circle me-1"></i>
+                            <a href="students.html" class="btn btn-outline-secondary">
                                 Cancel
-                            </button>
+                            </a>
 
-                            <button type="reset" class="btn btn-outline-secondary" id="resetButton">
-                                <i class="bi bi-arrow-counterclockwise me-1"></i>
+                            <button type="reset" class="btn btn-outline-warning" id="resetBtn">
                                 Reset
                             </button>
 
-                            <button type="submit" class="btn btn-primary" id="saveStudentButton">
-                                <i class="bi bi-check-circle me-1"></i>
+                            <button type="submit" class="btn btn-primary" id="saveStudentBtn">
                                 Save Student
                             </button>
 
                         </div>
 
                     </div>
-                </section>
 
-            </form>
+                </form>
+
+            </div>
 
         </main>
+
     </div>
 
-    <script src="../js/api.js"></script>
-    <script src="../js/auth.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script>
-        "use strict";
-
-        const STUDENT_API = "/api/students";
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const studentId = urlParams.get("id");
-
-        const form = document.getElementById("studentForm");
-        const pageTitle = document.getElementById("pageTitle");
-        const pageDescription = document.getElementById("pageDescription");
-        const messageElement = document.getElementById("pageMessage");
-        const saveButton = document.getElementById("saveStudentButton");
-        const photoInput = document.getElementById("photo");
-        const photoPreview = document.getElementById("photoPreview");
-
-        function getAuthToken() {
-
-            const keys = [
-                "school_management_token",
-                "accessToken",
-                "token"
-            ];
-
-            for (const key of keys) {
-
-                const localValue = localStorage.getItem(key);
-
-                if (localValue) {
-                    return localValue;
-                }
-
-                const sessionValue = sessionStorage.getItem(key);
-
-                if (sessionValue) {
-                    return sessionValue;
-                }
-            }
-
-            return "";
-        }
-
-        function showMessage(message, type) {
-
-            messageElement.textContent = message;
-
-            messageElement.className =
-                type === "success"
-                    ? "alert alert-success mb-4"
-                    : "alert alert-danger mb-4";
-        }
-
-        function parseResponse(response) {
-
-            return response.text().then(text => {
-
-                if (!text) {
-                    return {};
-                }
-
-                try {
-                    return JSON.parse(text);
-                } catch {
-                    return {
-                        message: text
-                    };
-                }
-            });
-        }
-
-        function normalizeStatus(status) {
-
-            if (!status) {
-                return "Active";
-            }
-
-            const value =
-                String(status).trim().toLowerCase();
-
-            const statuses = {
-                active: "Active",
-                inactive: "Inactive",
-                graduated: "Graduated",
-                withdrawn: "Withdrawn",
-                transferred: "Transferred"
-            };
-
-            return statuses[value] || "Active";
-        }
-
-        function mapFormDataToBackend(formData) {
-
-            const backendData = new FormData();
-
-            const mappings = {
-
-                admission_number: "admissionNumber",
-                first_name: "firstName",
-                middle_name: "middleName",
-                last_name: "lastName",
-                gender: "gender",
-                date_of_birth: "dateOfBirth",
-                phone: "phone",
-                email: "email",
-                address: "address",
-                state_of_origin: "stateOfOrigin",
-                local_government: "lga",
-                nationality: "nationality",
-                religion: "religion",
-                blood_group: "bloodGroup",
-                genotype: "genotype",
-                admission_date: "admissionDate",
-                status: "status"
-            };
-
-            for (const [frontendName, backendName] of Object.entries(mappings)) {
-
-                const value = formData.get(frontendName);
-
-                if (value !== null && value !== "") {
-                    backendData.append(backendName, value);
-                }
-            }
-
-            const photo = formData.get("photo");
-
-            if (photo && photo instanceof File && photo.size > 0) {
-                backendData.append("photo", photo);
-            }
-
-            return backendData;
-        }
-
-        async function loadStudent() {
-
-            const token = getAuthToken();
-
-            if (!token) {
-                throw new Error("Authentication required. Please log in again.");
-            }
-
-            const response = await fetch(
-                `${STUDENT_API}/${encodeURIComponent(studentId)}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                }
-            );
-
-            const data = await parseResponse(response);
-
-            if (!response.ok) {
-                throw new Error(
-                    data.message ||
-                    data.error ||
-                    "Unable to load student."
-                );
-            }
-
-            const student = data.data || data.student || data;
-
-            const fields = {
-                admission_number: student.admission_number || student.admissionNumber,
-                first_name: student.first_name || student.firstName,
-                middle_name: student.middle_name || student.middleName,
-                last_name: student.last_name || student.lastName,
-                gender: student.gender,
-                date_of_birth: student.date_of_birth || student.dateOfBirth,
-                nationality: student.nationality,
-                state_of_origin: student.state_of_origin || student.stateOfOrigin,
-                local_government: student.lga || student.local_government || student.localGovernment,
-                email: student.email,
-                phone: student.phone,
-                address: student.address,
-                status: normalizeStatus(student.status)
-            };
-
-            for (const [id, value] of Object.entries(fields)) {
-
-                const element = document.getElementById(id);
-
-                if (element && value !== undefined && value !== null) {
-                    element.value = value;
-                }
-            }
-
-            const photoUrl =
-                student.photo_url ||
-                student.photoUrl ||
-                student.photo;
-
-            if (photoUrl) {
-
-                photoPreview.innerHTML = `
-            <img src="${photoUrl}" alt="Student photo">
-        `;
-            }
-        }
-
-        document.addEventListener("DOMContentLoaded", async function () {
-
-            try {
-
-                if (typeof protectPage === "function") {
-                    await protectPage();
-                }
-
-                if (studentId) {
-
-                    pageTitle.textContent = "Edit Student";
-
-                    pageDescription.textContent =
-                        "Update the student's information.";
-
-                    saveButton.innerHTML =
-                        '<i class="bi bi-check-circle me-1"></i> Update Student';
-
-                    await loadStudent();
-                }
-
-            } catch (error) {
-
-                console.error("Student page error:", error);
-
-                showMessage(
-                    error.message || "Unable to load student.",
-                    "error"
-                );
-            }
-        });
-
-        form.addEventListener("submit", async function (event) {
-
-            event.preventDefault();
-
-            if (!form.checkValidity()) {
-
-                form.reportValidity();
-
-                return;
-            }
-
-            const originalButton = saveButton.innerHTML;
-
-            try {
-
-                saveButton.disabled = true;
-
-                saveButton.innerHTML =
-                    studentId
-                        ? '<span class="spinner-border spinner-border-sm me-2"></span>Updating...'
-                        : '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
-
-                const token = getAuthToken();
-
-                if (!token) {
-                    throw new Error(
-                        "Authentication required. Please log in again."
-                    );
-                }
-
-                const originalFormData = new FormData(form);
-
-                const backendFormData =
-                    mapFormDataToBackend(originalFormData);
-
-                const admissionNumber =
-                    backendFormData.get("admissionNumber");
-
-                if (!admissionNumber) {
-                    throw new Error("Admission number is required.");
-                }
-
-                const response = await fetch(
-                    studentId
-                        ? `${STUDENT_API}/${encodeURIComponent(studentId)}`
-                        : STUDENT_API,
-                    {
-                        method: studentId ? "PUT" : "POST",
-
-                        headers: {
-                            Authorization: `Bearer ${token}`
-                        },
-
-                        body: backendFormData
-                    }
-                );
-
-                const result =
-                    await parseResponse(response);
-
-                console.log(
-                    "Student save response:",
-                    response.status,
-                    result
-                );
-
-                if (response.status === 401 || response.status === 403) {
-
-                    throw new Error(
-                        "Your login session is no longer valid. Please log in again."
-                    );
-                }
-
-                if (!response.ok) {
-
-                    throw new Error(
-                        result.message ||
-                        result.error ||
-                        "Unable to save student."
-                    );
-                }
-
-                showMessage(
-                    studentId
-                        ? "Student updated successfully."
-                        : "Student created successfully.",
-                    "success"
-                );
-
-                setTimeout(function () {
-
-                    if (studentId) {
-
-                        window.location.href =
-                            `/pages/student-profile.html?id=${encodeURIComponent(studentId)}`;
-
-                    } else {
-
-                        window.location.href =
-                            "/pages/students.html";
-                    }
-
-                }, 700);
-
-            } catch (error) {
-
-                console.error(
-                    "Save student error:",
-                    error
-                );
-
-                showMessage(
-                    error.message ||
-                    "Unable to save student.",
-                    "error"
-                );
-
-            } finally {
-
-                saveButton.disabled = false;
-
-                saveButton.innerHTML =
-                    originalButton;
-            }
-        });
-
-        photoInput.addEventListener("change", function () {
-
-            const file = photoInput.files[0];
-
-            if (!file) {
-
-                photoPreview.innerHTML =
-                    "No photo selected";
-
-                return;
-            }
-
-            if (!file.type.startsWith("image/")) {
-
-                photoInput.value = "";
-
-                photoPreview.innerHTML =
-                    "No photo selected";
-
-                showMessage(
-                    "Please select a valid image file.",
-                    "error"
-                );
-
-                return;
-            }
-
-            if (file.size > 5 * 1024 * 1024) {
-
-                photoInput.value = "";
-
-                photoPreview.innerHTML =
-                    "No photo selected";
-
-                showMessage(
-                    "Student photo must not exceed 5MB.",
-                    "error"
-                );
-
-                return;
-            }
-
-            const reader = new FileReader();
-
-            reader.onload = function (event) {
-
-                photoPreview.innerHTML = `
-            <img
-                src="${event.target.result}"
-                alt="Student photo preview"
-            >
-        `;
-            };
-
-            reader.readAsDataURL(file);
-        });
-
-        document
-            .getElementById("cancelButton")
-            .addEventListener("click", function () {
-
-                window.location.href =
-                    "/pages/students.html";
-            });
-
-        document
-            .getElementById("resetButton")
-            .addEventListener("click", function () {
-
-                setTimeout(function () {
-
-                    photoPreview.innerHTML =
-                        "No photo selected";
-
-                }, 0);
-            });
-
-        const sidebarToggle =
-            document.getElementById("sidebarToggle");
-
-        const sidebar =
-            document.getElementById("sidebar");
-
-        const sidebarOverlay =
-            document.getElementById("sidebarOverlay");
-
-        if (sidebarToggle) {
-
-            sidebarToggle.addEventListener("click", function () {
-
-                sidebar.classList.toggle("show");
-
-                sidebarOverlay.classList.toggle("show");
-            });
-        }
-
-        if (sidebarOverlay) {
-
-            sidebarOverlay.addEventListener("click", function () {
-
-                sidebar.classList.remove("show");
-
-                sidebarOverlay.classList.remove("show");
-            });
-        }
-    </script>
+    <script src="../js/app.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/student-form.js"></script>
+    ```
 
 </body>
 

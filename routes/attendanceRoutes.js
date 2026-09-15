@@ -1,3 +1,5 @@
+"use strict";
+
 const express = require("express");
 
 const {
@@ -25,220 +27,253 @@ const router = express.Router();
 |--------------------------------------------------------------------------
 | ATTENDANCE ROUTES
 |--------------------------------------------------------------------------
-| Base URL: /api/attendance
+|
+| Base URL:
+| /api/attendance
+|
+| Authentication:
+| All Attendance routes require an authenticated user.
+|
 |--------------------------------------------------------------------------
 */
 
+/*
+|--------------------------------------------------------------------------
+| AUTHENTICATION
+|--------------------------------------------------------------------------
+|
+| Apply authentication once to the entire Attendance router.
+|
+| This ensures that every Attendance endpoint is protected.
+|
+|--------------------------------------------------------------------------
+*/
+
+router.use(authMiddleware);
 
 /*
 |--------------------------------------------------------------------------
-| GET ATTENDANCE STATISTICS
+| ATTENDANCE STATISTICS
 |--------------------------------------------------------------------------
+|
 | GET /api/attendance/statistics
+|
+| Returns school-level attendance statistics.
+|
 |--------------------------------------------------------------------------
 */
 
 router.get(
     "/statistics",
-    authMiddleware,
     getAttendanceStatistics
 );
 
-
 /*
 |--------------------------------------------------------------------------
-| GET SCHOOL ATTENDANCE SUMMARY
+| SCHOOL ATTENDANCE SUMMARY
 |--------------------------------------------------------------------------
+|
 | GET /api/attendance/summary
+|
+| Returns the school's attendance summary.
+|
 |--------------------------------------------------------------------------
 */
 
 router.get(
     "/summary",
-    authMiddleware,
     getSchoolAttendanceSummary
 );
-
 
 /*
 |--------------------------------------------------------------------------
 | SEARCH ATTENDANCE
 |--------------------------------------------------------------------------
-| GET /api/attendance/search?q=
+|
+| GET /api/attendance/search
+|
+| Compatibility/search endpoint handled by the Attendance controller.
+|
 |--------------------------------------------------------------------------
 */
 
 router.get(
     "/search",
-    authMiddleware,
     searchAttendance
 );
 
-
 /*
 |--------------------------------------------------------------------------
-| GET STUDENT ATTENDANCE SUMMARY
+| STUDENT ATTENDANCE SUMMARY
 |--------------------------------------------------------------------------
+|
 | GET /api/attendance/student/:studentId/summary
+|
 |--------------------------------------------------------------------------
 */
 
 router.get(
     "/student/:studentId/summary",
-    authMiddleware,
     getStudentAttendanceSummary
 );
 
-
 /*
 |--------------------------------------------------------------------------
-| GET STUDENT ATTENDANCE
+| STUDENT ATTENDANCE
 |--------------------------------------------------------------------------
+|
 | GET /api/attendance/student/:studentId
+|
 |--------------------------------------------------------------------------
 */
 
 router.get(
     "/student/:studentId",
-    authMiddleware,
     getStudentAttendance
 );
 
-
 /*
 |--------------------------------------------------------------------------
-| GET CLASS ATTENDANCE SUMMARY
+| CLASS ATTENDANCE SUMMARY
 |--------------------------------------------------------------------------
+|
 | GET /api/attendance/class/:classId/summary
+|
 |--------------------------------------------------------------------------
 */
 
 router.get(
     "/class/:classId/summary",
-    authMiddleware,
     getClassAttendanceSummary
 );
 
-
 /*
 |--------------------------------------------------------------------------
-| GET CLASS ATTENDANCE
+| CLASS ATTENDANCE
 |--------------------------------------------------------------------------
+|
 | GET /api/attendance/class/:classId
+|
 |--------------------------------------------------------------------------
 */
 
 router.get(
     "/class/:classId",
-    authMiddleware,
     getClassAttendance
 );
 
-
 /*
 |--------------------------------------------------------------------------
-| GET ATTENDANCE BY DATE
+| ATTENDANCE BY DATE
 |--------------------------------------------------------------------------
-| GET /api/attendance/date/:date
+|
+| GET /api/attendance/date?date=YYYY-MM-DD
+|
+| The date is supplied through the query string because the finalized
+| Attendance controller reads the selected date from req.query.
+|
 |--------------------------------------------------------------------------
 */
 
 router.get(
-    "/date/:date",
-    authMiddleware,
+    "/date",
     getAttendanceByDate
 );
-
-
-/*
-|--------------------------------------------------------------------------
-| GET ATTENDANCE BY ID
-|--------------------------------------------------------------------------
-| GET /api/attendance/:id
-|--------------------------------------------------------------------------
-*/
-
-router.get(
-    "/:id",
-    authMiddleware,
-    getAttendanceById
-);
-
 
 /*
 |--------------------------------------------------------------------------
 | GET ALL ATTENDANCE
 |--------------------------------------------------------------------------
+|
 | GET /api/attendance
+|
+| The controller determines the appropriate attendance query from
+| the supplied request parameters.
+|
 |--------------------------------------------------------------------------
 */
 
 router.get(
     "/",
-    authMiddleware,
     getAttendance
 );
 
-
 /*
 |--------------------------------------------------------------------------
-| CREATE ATTENDANCE
+| CREATE SINGLE ATTENDANCE
 |--------------------------------------------------------------------------
+|
 | POST /api/attendance
+|
 |--------------------------------------------------------------------------
 */
 
 router.post(
     "/",
-    authMiddleware,
     createAttendance
 );
-
 
 /*
 |--------------------------------------------------------------------------
 | CREATE BULK ATTENDANCE
 |--------------------------------------------------------------------------
+|
 | POST /api/attendance/bulk
+|
 |--------------------------------------------------------------------------
 */
 
 router.post(
     "/bulk",
-    authMiddleware,
     createBulkAttendance
 );
 
+/*
+|--------------------------------------------------------------------------
+| GET ATTENDANCE BY ID
+|--------------------------------------------------------------------------
+|
+| GET /api/attendance/:id
+|
+| This parameter route is deliberately placed after all specific routes.
+|
+|--------------------------------------------------------------------------
+*/
+
+router.get(
+    "/:id",
+    getAttendanceById
+);
 
 /*
 |--------------------------------------------------------------------------
 | UPDATE ATTENDANCE
 |--------------------------------------------------------------------------
+|
 | PUT /api/attendance/:id
+|
 |--------------------------------------------------------------------------
 */
 
 router.put(
     "/:id",
-    authMiddleware,
     updateAttendance
 );
-
 
 /*
 |--------------------------------------------------------------------------
 | DELETE ATTENDANCE
 |--------------------------------------------------------------------------
+|
 | DELETE /api/attendance/:id
+|
 |--------------------------------------------------------------------------
 */
 
 router.delete(
     "/:id",
-    authMiddleware,
     deleteAttendance
 );
-
 
 /*
 |--------------------------------------------------------------------------

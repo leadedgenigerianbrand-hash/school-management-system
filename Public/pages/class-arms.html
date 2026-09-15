@@ -6,6 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    ```
     <title>Class Arms | School Management System</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -150,6 +151,18 @@
             color: #6b7280;
         }
 
+        .action-buttons {
+            white-space: nowrap;
+        }
+
+        .action-buttons .btn {
+            margin-right: 4px;
+        }
+
+        .action-buttons .btn:last-child {
+            margin-right: 0;
+        }
+
         @media (max-width: 767.98px) {
             .page-container {
                 padding: 20px 15px;
@@ -162,16 +175,21 @@
             .page-header .btn {
                 width: 100%;
             }
+
+            .table {
+                min-width: 900px;
+            }
         }
     </style>
+    ```
 
 </head>
 
 <body>
 
+    ```
     <div class="page-container">
 
-        <!-- PAGE HEADER -->
         <div class="page-header d-flex justify-content-between align-items-center gap-3 flex-wrap mb-4">
 
             <div class="page-title">
@@ -179,6 +197,7 @@
                     <span class="text-primary fs-4">
                         <i class="bi bi-diagram-3-fill"></i>
                     </span>
+
                     <h1 class="h3 mb-0">Class Arms</h1>
                 </div>
 
@@ -194,27 +213,32 @@
 
         </div>
 
-        <!-- ALERT -->
         <div id="alertMessage" class="alert d-none" role="alert"></div>
 
-        <!-- STATISTICS -->
         <div class="row g-3 mb-4">
 
             <div class="col-12 col-md-6 col-xl-3">
                 <div class="card stat-card">
                     <div class="card-body p-4">
+
                         <div class="d-flex justify-content-between align-items-center">
+
                             <div>
                                 <div class="text-secondary small fw-semibold mb-2">
                                     Total Class Arms
                                 </div>
-                                <div class="fs-3 fw-bold" id="totalClassArms">0</div>
+
+                                <div class="fs-3 fw-bold" id="totalClassArms">
+                                    0
+                                </div>
                             </div>
 
                             <div class="stat-icon bg-primary-subtle text-primary">
                                 <i class="bi bi-diagram-3"></i>
                             </div>
+
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -222,18 +246,25 @@
             <div class="col-12 col-md-6 col-xl-3">
                 <div class="card stat-card">
                     <div class="card-body p-4">
+
                         <div class="d-flex justify-content-between align-items-center">
+
                             <div>
                                 <div class="text-secondary small fw-semibold mb-2">
                                     Active Class Arms
                                 </div>
-                                <div class="fs-3 fw-bold" id="activeClassArms">0</div>
+
+                                <div class="fs-3 fw-bold" id="activeClassArms">
+                                    0
+                                </div>
                             </div>
 
                             <div class="stat-icon bg-success-subtle text-success">
                                 <i class="bi bi-check-circle"></i>
                             </div>
+
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -241,18 +272,25 @@
             <div class="col-12 col-md-6 col-xl-3">
                 <div class="card stat-card">
                     <div class="card-body p-4">
+
                         <div class="d-flex justify-content-between align-items-center">
+
                             <div>
                                 <div class="text-secondary small fw-semibold mb-2">
                                     Inactive Class Arms
                                 </div>
-                                <div class="fs-3 fw-bold" id="inactiveClassArms">0</div>
+
+                                <div class="fs-3 fw-bold" id="inactiveClassArms">
+                                    0
+                                </div>
                             </div>
 
                             <div class="stat-icon bg-danger-subtle text-danger">
                                 <i class="bi bi-pause-circle"></i>
                             </div>
+
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -260,66 +298,86 @@
             <div class="col-12 col-md-6 col-xl-3">
                 <div class="card stat-card">
                     <div class="card-body p-4">
+
                         <div class="d-flex justify-content-between align-items-center">
+
                             <div>
                                 <div class="text-secondary small fw-semibold mb-2">
                                     Students Assigned
                                 </div>
-                                <div class="fs-3 fw-bold" id="studentsAssigned">0</div>
+
+                                <div class="fs-3 fw-bold" id="studentsAssigned">
+                                    0
+                                </div>
                             </div>
 
                             <div class="stat-icon bg-info-subtle text-info">
                                 <i class="bi bi-people"></i>
                             </div>
+
                         </div>
+
                     </div>
                 </div>
             </div>
 
         </div>
 
-        <!-- TOOLBAR -->
         <div class="card toolbar-card mb-4">
+
             <div class="card-body p-3 p-md-4">
 
                 <div class="row g-3 align-items-center">
 
                     <div class="col-12 col-lg-6">
+
                         <div class="input-group">
+
                             <span class="input-group-text bg-white">
                                 <i class="bi bi-search"></i>
                             </span>
 
                             <input type="search" id="searchInput" class="form-control"
                                 placeholder="Search class arms..." autocomplete="off">
+
                         </div>
+
                     </div>
 
                     <div class="col-12 col-md-6 col-lg-3">
+
                         <select id="classFilter" class="form-select">
                             <option value="">All Classes</option>
                         </select>
+
                     </div>
 
                     <div class="col-12 col-md-6 col-lg-3">
+
                         <select id="statusFilter" class="form-select">
                             <option value="">All Statuses</option>
                             <option value="active">Active</option>
                             <option value="inactive">Inactive</option>
                         </select>
+
                     </div>
 
                 </div>
 
             </div>
+
         </div>
 
-        <!-- CLASS ARMS TABLE -->
         <div class="card table-card">
 
             <div id="loadingState" class="loading">
-                <div class="spinner-border text-primary mb-3" role="status"></div>
-                <div>Loading class arms...</div>
+
+                <div class="spinner-border text-primary mb-3" role="status" aria-hidden="true"></div>
+
+                <div>
+                    Loading class arms...
+                </div>
+
             </div>
 
             <div class="table-responsive">
@@ -327,6 +385,7 @@
                 <table id="classArmsTable" class="table table-hover align-middle mb-0" style="display: none;">
 
                     <thead>
+
                         <tr>
                             <th class="ps-4">Class</th>
                             <th>Arm</th>
@@ -336,6 +395,7 @@
                             <th>Status</th>
                             <th class="pe-4">Actions</th>
                         </tr>
+
                     </thead>
 
                     <tbody id="classArmsTableBody"></tbody>
@@ -350,7 +410,9 @@
                     <i class="bi bi-diagram-3"></i>
                 </div>
 
-                <h5 class="fw-bold text-dark">No Class Arms Found</h5>
+                <h5 class="fw-bold text-dark">
+                    No Class Arms Found
+                </h5>
 
                 <p class="mb-0">
                     Create a class arm to get started.
@@ -360,20 +422,18 @@
 
         </div>
 
-
     </div>
 
-    <!-- ADD / EDIT CLASS ARM MODAL -->
-
     <div class="modal fade" id="classArmModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
 
+        <div class="modal-dialog modal-dialog-centered modal-lg">
 
             <div class="modal-content">
 
                 <div class="modal-header px-4 py-3">
 
                     <div>
+
                         <h5 class="modal-title fw-bold mb-1" id="modalTitle">
                             Add Class Arm
                         </h5>
@@ -381,6 +441,7 @@
                         <small class="text-secondary">
                             Configure the class arm details below.
                         </small>
+
                     </div>
 
                     <button type="button" class="btn-close" id="closeModalBtn" data-bs-dismiss="modal"
@@ -392,26 +453,36 @@
 
                     <div class="modal-body p-4">
 
+                        <div id="formAlertMessage" class="alert d-none" role="alert"></div>
+
                         <div class="row g-3">
 
                             <div class="col-12">
+
                                 <label for="classId" class="form-label">
-                                    Class <span class="text-danger">*</span>
+                                    Class
+                                    <span class="text-danger">*</span>
                                 </label>
 
                                 <select id="classId" name="classId" class="form-select" required>
-                                    <option value="">Select Class</option>
+
+                                    <option value="">
+                                        Loading classes...
+                                    </option>
+
                                 </select>
+
                             </div>
 
                             <div class="col-12 col-md-6">
 
                                 <label for="armName" class="form-label">
-                                    Arm Name <span class="text-danger">*</span>
+                                    Arm Name
+                                    <span class="text-danger">*</span>
                                 </label>
 
                                 <input type="text" id="armName" name="armName" class="form-control" placeholder="e.g. A"
-                                    required>
+                                    maxlength="100" required>
 
                             </div>
 
@@ -422,7 +493,7 @@
                                 </label>
 
                                 <input type="text" id="armCode" name="armCode" class="form-control"
-                                    placeholder="e.g. JSS1-A">
+                                    placeholder="e.g. JSS1-A" maxlength="50">
 
                             </div>
 
@@ -444,8 +515,15 @@
                                 </label>
 
                                 <select id="armStatus" name="status" class="form-select">
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
+
+                                    <option value="active">
+                                        Active
+                                    </option>
+
+                                    <option value="inactive">
+                                        Inactive
+                                    </option>
+
                                 </select>
 
                             </div>
@@ -457,7 +535,7 @@
                                 </label>
 
                                 <textarea id="description" name="description" class="form-control" rows="4"
-                                    placeholder="Optional description..."></textarea>
+                                    maxlength="1000" placeholder="Optional description..."></textarea>
 
                             </div>
 
@@ -472,8 +550,10 @@
                         </button>
 
                         <button type="submit" class="btn btn-primary px-4" id="saveClassArmBtn">
+
                             <i class="bi bi-check2-circle me-2"></i>
                             Save Class Arm
+
                         </button>
 
                     </div>
@@ -493,6 +573,7 @@
     <script src="../js/auth.js"></script>
 
     <script src="../js/class-arms.js"></script>
+    ```
 
 </body>
 

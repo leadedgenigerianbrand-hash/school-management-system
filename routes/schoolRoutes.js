@@ -15,35 +15,6 @@ const {
     requireSchoolContext
 } = require("../middleware/roleMiddleware");
 
-
-/*
-|--------------------------------------------------------------------------
-| SCHOOL ROUTES
-|--------------------------------------------------------------------------
-|
-| Base route:
-|
-| /api/schools
-|
-|--------------------------------------------------------------------------
-*/
-
-
-/*
-|--------------------------------------------------------------------------
-| GET ALL SCHOOLS
-|--------------------------------------------------------------------------
-|
-| GET /api/schools
-|
-| Optional query parameters:
-|
-| ?status=Active
-| ?search=Leadedge
-|
-|--------------------------------------------------------------------------
-*/
-
 router.get(
     "/",
     authenticate,
@@ -51,38 +22,19 @@ router.get(
     schoolController.getAllSchools
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| GET SCHOOL BY ID
-|--------------------------------------------------------------------------
-|
-| GET /api/schools/:id
-|
-|--------------------------------------------------------------------------
-*/
-
 router.get(
-    "/:id",
+    "/count",
     authenticate,
-    requireSchoolContext,
-    schoolController.getSchoolById
+    administratorOnly,
+    schoolController.getSchoolCount
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| GET SCHOOL STATISTICS
-|--------------------------------------------------------------------------
-|
-| GET /api/schools/:id/statistics
-|
-| IMPORTANT:
-| This route must appear before any future generic /:id handling
-| if additional parameter-based routes are introduced.
-|
-|--------------------------------------------------------------------------
-*/
+router.get(
+    "/check-code",
+    authenticate,
+    administratorOnly,
+    schoolController.checkSchoolCode
+);
 
 router.get(
     "/:id/statistics",
@@ -91,17 +43,6 @@ router.get(
     schoolController.getSchoolStatistics
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| GET SCHOOL DASHBOARD
-|--------------------------------------------------------------------------
-|
-| GET /api/schools/:id/dashboard
-|
-|--------------------------------------------------------------------------
-*/
-
 router.get(
     "/:id/dashboard",
     authenticate,
@@ -109,16 +50,12 @@ router.get(
     schoolController.getSchoolDashboard
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| CREATE SCHOOL
-|--------------------------------------------------------------------------
-|
-| POST /api/schools
-|
-|--------------------------------------------------------------------------
-*/
+router.get(
+    "/:id",
+    authenticate,
+    requireSchoolContext,
+    schoolController.getSchoolById
+);
 
 router.post(
     "/",
@@ -126,17 +63,6 @@ router.post(
     administratorOnly,
     schoolController.createSchool
 );
-
-
-/*
-|--------------------------------------------------------------------------
-| UPDATE SCHOOL
-|--------------------------------------------------------------------------
-|
-| PUT /api/schools/:id
-|
-|--------------------------------------------------------------------------
-*/
 
 router.put(
     "/:id",
@@ -146,17 +72,6 @@ router.put(
     schoolController.updateSchool
 );
 
-
-/*
-|--------------------------------------------------------------------------
-| DELETE SCHOOL
-|--------------------------------------------------------------------------
-|
-| DELETE /api/schools/:id
-|
-|--------------------------------------------------------------------------
-*/
-
 router.delete(
     "/:id",
     authenticate,
@@ -164,12 +79,5 @@ router.delete(
     requireSchoolContext,
     schoolController.deleteSchool
 );
-
-
-/*
-|--------------------------------------------------------------------------
-| EXPORT
-|--------------------------------------------------------------------------
-*/
 
 module.exports = router;

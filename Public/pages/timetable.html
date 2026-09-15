@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    ```
+    <title>Timetable | School Management System</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/style.css">
+
+    <style>
+        .timetable-page {
+            padding-bottom: 40px;
+        }
+
+        .page-header {
+            margin-bottom: 24px;
+        }
+
+        .page-header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .page-title {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .page-subtitle {
+            margin: 6px 0 0;
+            color: #6c757d;
+        }
+
+        .page-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .timetable-card {
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            background: #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            margin-bottom: 20px;
+        }
+
+        .timetable-card-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .timetable-card-header h5 {
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .timetable-card-body {
+            padding: 20px;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .filter-actions {
+            display: flex;
+            align-items: end;
+            gap: 10px;
+        }
+
+        .stat-card {
+            height: 100%;
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            background: #ffffff;
+            padding: 18px;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+
+        .timetable-table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .timetable-table {
+            width: 100%;
+            min-width: 1050px;
+            border-collapse: collapse;
+        }
+
+        .timetable-table th,
+        .timetable-table td {
+            border: 1px solid #dee2e6;
+            padding: 12px;
+            vertical-align: top;
+        }
+
+        .timetable-table th {
+            background: #f8f9fa;
+            font-weight: 700;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .timetable-table td {
+            min-width: 145px;
+            height: 90px;
+        }
+
+        .time-cell {
+            width: 130px;
+            min-width: 130px !important;
+            background: #f8f9fa;
+            font-weight: 600;
+            text-align: center;
+            vertical-align: middle !important;
+        }
+
+        .timetable-entry {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #ffffff;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .timetable-entry:last-child {
+            margin-bottom: 0;
+        }
+
+        .timetable-entry:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .entry-subject {
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .entry-class {
+            font-size: 13px;
+            color: #495057;
+        }
+
+        .entry-teacher {
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .entry-room {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .empty-timetable {
+            padding: 60px 20px;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .empty-timetable i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .modal-header {
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .modal-footer {
+            border-top: 1px solid #dee2e6;
+        }
+
+        .required-label::after {
+            content: " *";
+            color: #dc3545;
+        }
+
+        .form-help {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+
+        .conflict-message {
+            display: none;
+            margin-top: 15px;
+        }
+
+        .message-container {
+            margin-bottom: 20px;
+        }
+
+        .loading-container {
+            display: none;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .selected-entry-info {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .selected-entry-info strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        @media (max-width: 1200px) {
+            .filter-grid {
+                grid-template-columns: repeat(2, minmax(180px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-title {
+                font-size: 24px;
+            }
+
+            .page-actions {
+                width: 100%;
+            }
+
+            .page-actions .btn {
+                flex: 1;
+            }
+        }
+
+        @media print {
+
+            .sidebar,
+            .topbar,
+            .page-actions,
+            .filters-section,
+            .timetable-card-header .btn,
+            .modal,
+            #messageContainer,
+            .no-print {
+                display: none !important;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+                width: 100% !important;
+            }
+
+            .timetable-card {
+                border: none;
+                box-shadow: none;
+            }
+
+            .timetable-card-body {
+                padding: 0;
+            }
+
+            .timetable-table {
+                min-width: 0;
+            }
+        }
+    </style>
+    ```
+
+</head>
+
+<body>
+
+    ```
+    <div class="app-layout">
+
+        <aside class="sidebar" id="sidebar">
+
+            <div class="sidebar-header">
+                <a href="/pages/dashboard.html" class="sidebar-brand">
+                    <span class="brand-icon">
+                        <i class="bi bi-mortarboard-fill"></i>
+                    </span>
+                    <span>School Management</span>
+                </a>
+            </div>
+
+            <nav class="sidebar-nav">
+
+                <a href="/pages/dashboard.html" class="sidebar-link">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Dashboard</span>
+                </a>
+
+                <a href="/pages/students.html" class="sidebar-link">
+                    <i class="bi bi-people"></i>
+                    <span>Students</span>
+                </a>
+
+                <a href="/pages/staff.html" class="sidebar-link">
+                    <i class="bi bi-person-badge"></i>
+                    <span>Staff</span>
+                </a>
+
+                <a href="/pages/guardians.html" class="sidebar-link">
+                    <i class="bi bi-person-hearts"></i>
+                    <span>Guardians</span>
+                </a>
+
+                <a href="/pages/classes.html" class="sidebar-link">
+                    <i class="bi bi-diagram-3"></i>
+                    <span>Classes</span>
+                </a>
+
+                <a href="/pages/class-arms.html" class="sidebar-link">
+                    <i class="bi bi-grid-3x3-gap"></i>
+                    <span>Class Arms</span>
+                </a>
+
+                <a href="/pages/departments.html" class="sidebar-link">
+                    <i class="bi bi-building"></i>
+                    <span>Departments</span>
+                </a>
+
+                <a href="/pages/subjects.html" class="sidebar-link">
+                    <i class="bi bi-book"></i>
+                    <span>Subjects</span>
+                </a>
+
+                <a href="/pages/academic-levels.html" class="sidebar-link">
+                    <i class="bi bi-layers"></i>
+                    <span>Academic Levels</span>
+                </a>
+
+                <a href="/pages/academic-sessions.html" class="sidebar-link">
+                    <i class="bi bi-calendar3"></i>
+                    <span>Academic Sessions</span>
+                </a>
+
+                <a href="/pages/terms.html" class="sidebar-link">
+                    <i class="bi bi-calendar-week"></i>
+                    <span>Terms</span>
+                </a>
+
+                <a href="/pages/attendance.html" class="sidebar-link">
+                    <i class="bi bi-calendar-check"></i>
+                    <span>Attendance</span>
+                </a>
+
+                <a href="/pages/results.html" class="sidebar-link">
+                    <i class="bi bi-bar-chart"></i>
+                    <span>Results</span>
+                </a>
+
+                <a href="/pages/fees.html" class="sidebar-link">
+                    <i class="bi bi-cash-stack"></i>
+                    <span>Fees &amp; Payments</span>
+                </a>
+
+                <a href="/pages/timetable.html" class="sidebar-link active">
+                    <i class="bi bi-table"></i>
+                    <span>Timetable</span>
+                </a>
+
+                <a href="/pages/documents.html" class="sidebar-link">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <span>Documents</span>
+                </a>
+
+                <a href="/pages/reports.html" class="sidebar-link">
+                    <i class="bi bi-file-earmark-bar-graph"></i>
+                    <span>Reports</span>
+                </a>
+
+                <a href="/pages/users.html" class="sidebar-link">
+                    <i class="bi bi-person-gear"></i>
+                    <span>Users</span>
+                </a>
+
+                <a href="/pages/roles.html" class="sidebar-link">
+                    <i class="bi bi-shield-lock"></i>
+                    <span>Roles</span>
+                </a>
+
+                <a href="/pages/permissions.html" class="sidebar-link">
+                    <i class="bi bi-key"></i>
+                    <span>Permissions</span>
+                </a>
+
+                <a href="/pages/my-profile.html" class="sidebar-link">
+                    <i class="bi bi-person-circle"></i>
+                    <span>My Profile</span>
+                </a>
+
+                <a href="/pages/settings.html" class="sidebar-link">
+                    <i class="bi bi-gear"></i>
+                    <span>Settings</span>
+                </a>
+
+            </nav>
+        </aside>
+
+        <main class="main-content">
+
+            <header class="topbar">
+
+                <button type="button" class="btn btn-link sidebar-toggle" id="sidebarToggle"
+                    aria-label="Toggle sidebar">
+                    <i class="bi bi-list"></i>
+                </button>
+
+                <div class="topbar-right">
+                    <span id="userName">User</span>
+
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="logoutButton">
+                        <i class="bi bi-box-arrow-right"></i>
+                        Logout
+                    </button>
+                </div>
+
+            </header>
+
+            <div class="container-fluid timetable-page py-4">
+
+                <div class="page-header">
+
+                    <div class="page-header-content">
+
+                        <div>
+                            <h1 class="page-title">School Timetable</h1>
+                            <p class="page-subtitle">
+                                Manage class schedules, subjects, teachers and periods.
+                            </p>
+                        </div>
+
+                        <div class="page-actions">
+
+                            <button type="button" class="btn btn-outline-secondary" id="printTimetableButton">
+                                <i class="bi bi-printer"></i>
+                                Print
+                            </button>
+
+                            <button type="button" class="btn btn-outline-primary" id="refreshTimetableButton">
+                                <i class="bi bi-arrow-clockwise"></i>
+                                Refresh
+                            </button>
+
+                            <button type="button" class="btn btn-primary" id="addTimetableButton">
+                                <i class="bi bi-plus-lg"></i>
+                                Add Timetable Entry
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div id="messageContainer" class="message-container" aria-live="polite"></div>
+
+                <div id="loadingContainer" class="loading-container">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+
+                    <p class="mt-3 mb-0">
+                        Loading timetable...
+                    </p>
+                </div>
+
+                <div class="row g-3 mb-4">
+
+                    <div class="col-md-6 col-xl-3">
+                        <div class="stat-card">
+                            <div class="stat-label">
+                                Total Entries
+                            </div>
+
+                            <div class="stat-value" id="totalTimetableEntries">
+                                0
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-3">
+                        <div class="stat-card">
+                            <div class="stat-label">
+                                Classes
+                            </div>
+
+                            <div class="stat-value" id="totalTimetableClasses">
+                                0
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-3">
+                        <div class="stat-card">
+                            <div class="stat-label">
+                                Subjects
+                            </div>
+
+                            <div class="stat-value" id="totalTimetableSubjects">
+                                0
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xl-3">
+                        <div class="stat-card">
+                            <div class="stat-label">
+                                Teachers
+                            </div>
+
+                            <div class="stat-value" id="totalTimetableTeachers">
+                                0
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <section class="timetable-card filters-section">
+
+                    <div class="timetable-card-header">
+
+                        <h5>
+                            <i class="bi bi-funnel"></i>
+                            Timetable Filters
+                        </h5>
+
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="clearFiltersButton">
+                            Clear Filters
+                        </button>
+
+                    </div>
+
+                    <div class="timetable-card-body">
+
+                        <div class="filter-grid">
+
+                            <div>
+                                <label for="academicSessionFilter" class="form-label">
+                                    Academic Session
+                                </label>
+
+                                <select id="academicSessionFilter" class="form-select">
+                                    <option value="">
+                                        All Sessions
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="classFilter" class="form-label">
+                                    Class
+                                </label>
+
+                                <select id="classFilter" class="form-select">
+                                    <option value="">
+                                        All Classes
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="classArmFilter" class="form-label">
+                                    Class Arm
+                                </label>
+
+                                <select id="classArmFilter" class="form-select">
+                                    <option value="">
+                                        All Class Arms
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="teacherFilter" class="form-label">
+                                    Teacher
+                                </label>
+
+                                <select id="teacherFilter" class="form-select">
+                                    <option value="">
+                                        All Teachers
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="subjectFilter" class="form-label">
+                                    Subject
+                                </label>
+
+                                <select id="subjectFilter" class="form-select">
+                                    <option value="">
+                                        All Subjects
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="dayFilter" class="form-label">
+                                    Day
+                                </label>
+
+                                <select id="dayFilter" class="form-select">
+                                    <option value="">All Days</option>
+                                    <option value="Monday">Monday</option>
+                                    <option value="Tuesday">Tuesday</option>
+                                    <option value="Wednesday">Wednesday</option>
+                                    <option value="Thursday">Thursday</option>
+                                    <option value="Friday">Friday</option>
+                                    <option value="Saturday">Saturday</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="searchTimetable" class="form-label">
+                                    Search
+                                </label>
+
+                                <input type="search" id="searchTimetable" class="form-control"
+                                    placeholder="Search subject, teacher or room">
+                            </div>
+
+                            <div class="filter-actions">
+
+                                <button type="button" class="btn btn-primary w-100" id="applyFiltersButton">
+                                    <i class="bi bi-search"></i>
+                                    Apply Filters
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+                <section class="timetable-card">
+
+                    <div class="timetable-card-header">
+
+                        <div>
+                            <h5>
+                                Weekly Timetable
+                            </h5>
+
+                            <small id="timetablePeriodLabel" class="text-muted">
+                                All timetable entries
+                            </small>
+                        </div>
+
+                    </div>
+
+                    <div class="timetable-card-body p-0">
+
+                        <div id="emptyTimetableContainer" class="empty-timetable">
+                            <i class="bi bi-calendar3"></i>
+
+                            <h5>No timetable entries</h5>
+
+                            <p class="mb-3">
+                                No timetable entries match the selected filters.
+                            </p>
+
+                            <button type="button" class="btn btn-primary" id="emptyAddTimetableButton">
+                                <i class="bi bi-plus-lg"></i>
+                                Add Timetable Entry
+                            </button>
+                        </div>
+
+                        <div id="timetableTableContainer" class="timetable-table-wrapper d-none">
+
+                            <table class="timetable-table">
+
+                                <thead>
+                                    <tr>
+                                        <th class="time-cell">
+                                            Time
+                                        </th>
+
+                                        <th>
+                                            Monday
+                                        </th>
+
+                                        <th>
+                                            Tuesday
+                                        </th>
+
+                                        <th>
+                                            Wednesday
+                                        </th>
+
+                                        <th>
+                                            Thursday
+                                        </th>
+
+                                        <th>
+                                            Friday
+                                        </th>
+
+                                        <th>
+                                            Saturday
+                                        </th>
+                                    </tr>
+                                </thead>
+
+                                <tbody id="timetableTableBody">
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <div class="modal fade" id="timetableModal" tabindex="-1" aria-labelledby="timetableModalLabel" aria-hidden="true">
+
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+
+            <div class="modal-content">
+
+                <div class="modal-header">
+
+                    <h5 class="modal-title" id="timetableModalLabel">
+                        Add Timetable Entry
+                    </h5>
+
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+                </div>
+
+                <form id="timetableForm">
+
+                    <div class="modal-body">
+
+                        <input type="hidden" id="timetableId" name="timetableId">
+
+                        <div id="selectedEntryInfo" class="selected-entry-info">
+                            <strong id="selectedEntryTitle"></strong>
+                            <span id="selectedEntryDescription"></span>
+                        </div>
+
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+
+                                <label for="academicSessionId" class="form-label required-label">
+                                    Academic Session
+                                </label>
+
+                                <select id="academicSessionId" name="academicSessionId" class="form-select" required>
+                                    <option value="">
+                                        Select academic session
+                                    </option>
+                                </select>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <label for="classId" class="form-label required-label">
+                                    Class
+                                </label>
+
+                                <select id="classId" name="classId" class="form-select" required>
+                                    <option value="">
+                                        Select class
+                                    </option>
+                                </select>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <label for="classArmId" class="form-label required-label">
+                                    Class Arm
+                                </label>
+
+                                <select id="classArmId" name="classArmId" class="form-select" required>
+                                    <option value="">
+                                        Select class arm
+                                    </option>
+                                </select>
+
+                                <div class="form-help">
+                                    Select the specific arm receiving this timetable period.
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <label for="subjectId" class="form-label required-label">
+                                    Subject
+                                </label>
+
+                                <select id="subjectId" name="subjectId" class="form-select" required>
+                                    <option value="">
+                                        Select subject
+                                    </option>
+                                </select>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <label for="teacherId" class="form-label required-label">
+                                    Teacher
+                                </label>
+
+                                <select id="teacherId" name="teacherId" class="form-select" required>
+                                    <option value="">
+                                        Select teacher
+                                    </option>
+                                </select>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <label for="dayOfWeek" class="form-label required-label">
+                                    Day of Week
+                                </label>
+
+                                <select id="dayOfWeek" name="dayOfWeek" class="form-select" required>
+                                    <option value="">
+                                        Select day
+                                    </option>
+                                    <option value="Monday">Monday</option>
+                                    <option value="Tuesday">Tuesday</option>
+                                    <option value="Wednesday">Wednesday</option>
+                                    <option value="Thursday">Thursday</option>
+                                    <option value="Friday">Friday</option>
+                                    <option value="Saturday">Saturday</option>
+                                </select>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <label for="startTime" class="form-label required-label">
+                                    Start Time
+                                </label>
+
+                                <input type="time" id="startTime" name="startTime" class="form-control" required>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <label for="endTime" class="form-label required-label">
+                                    End Time
+                                </label>
+
+                                <input type="time" id="endTime" name="endTime" class="form-control" required>
+
+                            </div>
+
+                            <div class="col-12">
+
+                                <label for="room" class="form-label">
+                                    Classroom / Venue
+                                </label>
+
+                                <input type="text" id="room" name="room" class="form-control" maxlength="100"
+                                    placeholder="Example: JSS 1A Classroom">
+
+                            </div>
+
+                        </div>
+
+                        <div id="conflictMessage" class="alert alert-danger conflict-message" role="alert"></div>
+
+                        <div id="formMessage" class="mt-3" aria-live="polite"></div>
+
+                    </div>
+
+                    <div class="modal-footer">
+
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+
+                        <button type="button" class="btn btn-outline-danger d-none" id="deleteTimetableButton">
+                            <i class="bi bi-trash"></i>
+                            Delete
+                        </button>
+
+                        <button type="submit" class="btn btn-primary" id="saveTimetableButton">
+                            <i class="bi bi-check-lg"></i>
+                            Save Timetable Entry
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="../js/timetable.js"></script>
+    ```
+
+</body>
+
+</html>

@@ -1,49 +1,133 @@
 const studentModel = require("../models/studentModel");
 
-/*
-|--------------------------------------------------------------------------
-| Student Controller
-|--------------------------------------------------------------------------
-|
-| Connects HTTP requests to the existing student model.
-|
-| Authentication is handled by authMiddleware.
-| The authenticated user's schoolId is used to enforce school isolation.
-|
-|--------------------------------------------------------------------------
-*/
-
-
-/*
-|--------------------------------------------------------------------------
-| Helper: Get School ID
-|--------------------------------------------------------------------------
-*/
-
 function getSchoolId(req) {
+    return (
+        req.user?.schoolId ||
+        req.user?.school_id ||
+        req.school?.id ||
+        req.schoolId ||
+        null
+    );
+}
 
-    const schoolId = req.user?.schoolId;
+/*
+|--------------------------------------------------------------------------
+| GET ALL STUDENTS
+|--------------------------------------------------------------------------
+*/
 
-    if (!schoolId) {
-        throw new Error(
-            "Authenticated user's school ID is missing."
-        );
+async function getStudents(req, res, next) {
+    try {
+        const schoolId = getSchoolId(req);
+
+        const {
+            status,
+            gender,
+            limit = 100,
+            offset = 0
+        } = req.query;
+
+        const students = await studentModel.findStudents({
+            schoolId,
+            status,
+            gender,
+            limit: Number(limit),
+            offset: Number(offset)
+        });
+
+        return res.json({
+            success: true,
+            data: students
+        });
+    } catch (error) {
+        next(error);
     }
-
-    return schoolId;
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| Create Student
+| GET STUDENT BY ID
+|--------------------------------------------------------------------------
+*/
+
+async function getStudentById(req, res, next) {
+    try {
+        const schoolId = getSchoolId(req);
+        const { id } = req.params;
+
+        const student =
+            await studentModel.findStudentById(
+                id,
+                schoolId
+            );
+
+        if (!student) {
+            return res.status(404).json({
+                success: false,
+                message: "Student not found."
+            });
+        }
+
+        return res.json({
+            success: true,
+            data: student
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| GET STUDENT BY ADMISSION NUMBER
+|--------------------------------------------------------------------------
+*/
+
+async function getStudentByAdmissionNumber(
+    req,
+    res,
+    next
+) {
+    try {
+        const schoolId = getSchoolId(req);
+
+        const {
+            admissionNumber
+        } = req.params;
+
+        const student =
+            await studentModel.findStudentByAdmissionNumber(
+                admissionNumber,
+                schoolId
+            );
+
+        if (!student) {
+            return res.status(404).json({
+                success: false,
+                message: "Student not found."
+            });
+        }
+
+        return res.json({
+            success: true,
+            data: student
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| CREATE STUDENT
 |--------------------------------------------------------------------------
 */
 
 async function createStudent(req, res, next) {
-
     try {
-
         const schoolId = getSchoolId(req);
 
         const {
@@ -66,634 +150,250 @@ async function createStudent(req, res, next) {
             status
         } = req.body;
 
-
-        /*
-        |----------------------------------------------------------------------
-        | Check admission number
-        |----------------------------------------------------------------------
-        */
-
-        const exists =
-            await studentModel.admissionNumberExists(
-                admissionNumber,
-                schoolId
-            );
-
-
-        if (exists) {
-
-            return res.status(409).json({
-
-                success: false,
-
-                message:
-                    "Admission number already exists."
-
-            });
-        }
-
-
-        /*
-        |----------------------------------------------------------------------
-        | Create student
-        |----------------------------------------------------------------------
-        */
+        const photoUrl =
+            req.file
+                ? `/uploads/students/${req.file.filename}`
+                : null;
 
         const student =
             await studentModel.createStudent({
-
                 schoolId,
-
                 admissionNumber,
-
                 firstName,
-
                 middleName,
-
                 lastName,
-
                 gender,
-
                 dateOfBirth,
-
                 phone,
-
                 email,
-
                 address,
-
                 stateOfOrigin,
-
                 lga,
-
                 nationality,
-
                 religion,
-
                 bloodGroup,
-
                 genotype,
-
+                photoUrl,
                 admissionDate,
-
                 status
-
             });
-
 
         return res.status(201).json({
-
             success: true,
-
-            message:
-                "Student created successfully.",
-
+            message: "Student created successfully.",
             data: student
-
         });
-
-
     } catch (error) {
-
         next(error);
-
     }
-
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| Get All Students
-|--------------------------------------------------------------------------
-*/
-
-async function getStudents(req, res, next) {
-
-    try {
-
-        const schoolId = getSchoolId(req);
-
-
-        const {
-            status,
-            gender,
-            limit = 100,
-            offset = 0
-        } = req.query;
-
-
-        const students =
-            await studentModel.findStudents({
-
-                schoolId,
-
-                status:
-                    status || null,
-
-                gender:
-                    gender || null,
-
-                limit:
-                    Math.min(
-                        Number(limit) || 100,
-                        500
-                    ),
-
-                offset:
-                    Math.max(
-                        Number(offset) || 0,
-                        0
-                    )
-
-            });
-
-
-        const total =
-            await studentModel.countStudents(
-                schoolId,
-                status || null
-            );
-
-
-        return res.json({
-
-            success: true,
-
-            data: students,
-
-            pagination: {
-
-                total,
-
-                limit:
-                    Number(limit) || 100,
-
-                offset:
-                    Number(offset) || 0,
-
-                returned:
-                    students.length
-
-            }
-
-        });
-
-
-    } catch (error) {
-
-        next(error);
-
-    }
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Get Student By ID
-|--------------------------------------------------------------------------
-*/
-
-async function getStudentById(req, res, next) {
-
-    try {
-
-        const schoolId = getSchoolId(req);
-
-        const {
-            id
-        } = req.params;
-
-
-        const student =
-            await studentModel.findStudentById(
-                id,
-                schoolId
-            );
-
-
-        if (!student) {
-
-            return res.status(404).json({
-
-                success: false,
-
-                message:
-                    "Student not found."
-
-            });
-
-        }
-
-
-        return res.json({
-
-            success: true,
-
-            data: student
-
-        });
-
-
-    } catch (error) {
-
-        next(error);
-
-    }
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Get Full Student Profile
-|--------------------------------------------------------------------------
-*/
-
-async function getStudentProfile(req, res, next) {
-
-    try {
-
-        const schoolId = getSchoolId(req);
-
-        const {
-            id
-        } = req.params;
-
-
-        const student =
-            await studentModel.getStudentProfile(
-                id,
-                schoolId
-            );
-
-
-        if (!student) {
-
-            return res.status(404).json({
-
-                success: false,
-
-                message:
-                    "Student profile not found."
-
-            });
-
-        }
-
-
-        const enrollment =
-            await studentModel.getStudentEnrollment(
-                id,
-                schoolId
-            );
-
-
-        const guardians =
-            await studentModel.getStudentGuardians(
-                id,
-                schoolId
-            );
-
-
-        const documents =
-            await studentModel.getStudentDocuments(
-                id,
-                schoolId
-            );
-
-
-        return res.json({
-
-            success: true,
-
-            data: {
-
-                student,
-
-                enrollment,
-
-                guardians,
-
-                documents
-
-            }
-
-        });
-
-
-    } catch (error) {
-
-        next(error);
-
-    }
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Search Students
-|--------------------------------------------------------------------------
-*/
-
-async function searchStudents(req, res, next) {
-
-    try {
-
-        const schoolId = getSchoolId(req);
-
-        const searchTerm =
-            String(
-                req.query.q || ""
-            ).trim();
-
-
-        if (!searchTerm) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Search term is required."
-
-            });
-
-        }
-
-
-        const students =
-            await studentModel.searchStudents(
-                searchTerm,
-                schoolId
-            );
-
-
-        return res.json({
-
-            success: true,
-
-            data: students,
-
-            count:
-                students.length
-
-        });
-
-
-    } catch (error) {
-
-        next(error);
-
-    }
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Search Student By Name
-|--------------------------------------------------------------------------
-*/
-
-async function searchStudentByName(req, res, next) {
-
-    try {
-
-        const schoolId = getSchoolId(req);
-
-        const name =
-            String(
-                req.query.name || ""
-            ).trim();
-
-
-        if (!name) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Student name is required."
-
-            });
-
-        }
-
-
-        const students =
-            await studentModel.searchStudentByName(
-                name,
-                schoolId
-            );
-
-
-        return res.json({
-
-            success: true,
-
-            data: students,
-
-            count:
-                students.length
-
-        });
-
-
-    } catch (error) {
-
-        next(error);
-
-    }
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Get Student By Admission Number
-|--------------------------------------------------------------------------
-*/
-
-async function getStudentByAdmissionNumber(
-    req,
-    res,
-    next
-) {
-
-    try {
-
-        const schoolId = getSchoolId(req);
-
-        const {
-            admissionNumber
-        } = req.params;
-
-
-        const student =
-            await studentModel.findStudentByAdmissionNumber(
-                admissionNumber,
-                schoolId
-            );
-
-
-        if (!student) {
-
-            return res.status(404).json({
-
-                success: false,
-
-                message:
-                    "Student not found."
-
-            });
-
-        }
-
-
-        return res.json({
-
-            success: true,
-
-            data: student
-
-        });
-
-
-    } catch (error) {
-
-        next(error);
-
-    }
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Update Student
+| UPDATE STUDENT
 |--------------------------------------------------------------------------
 */
 
 async function updateStudent(req, res, next) {
-
     try {
-
         const schoolId = getSchoolId(req);
+        const { id } = req.params;
 
         const {
-            id
-        } = req.params;
+            admissionNumber,
+            firstName,
+            middleName,
+            lastName,
+            gender,
+            dateOfBirth,
+            phone,
+            email,
+            address,
+            stateOfOrigin,
+            lga,
+            nationality,
+            religion,
+            bloodGroup,
+            genotype,
+            admissionDate,
+            status
+        } = req.body;
 
+        const updateData = {
+            firstName,
+            middleName,
+            lastName,
+            gender,
+            dateOfBirth,
+            phone,
+            email,
+            address,
+            stateOfOrigin,
+            lga,
+            nationality,
+            religion,
+            bloodGroup,
+            genotype,
+            admissionDate,
+            status
+        };
+
+        /*
+        |----------------------------------------------------------------------
+        | Admission number is intentionally not updated through the
+        | generic update model because the model protects its allowed fields.
+        |----------------------------------------------------------------------
+        */
+
+        if (req.file) {
+            updateData.photoUrl =
+                `/uploads/students/${req.file.filename}`;
+        }
 
         const student =
             await studentModel.updateStudent(
                 id,
                 schoolId,
-                req.body
+                updateData
             );
 
-
         if (!student) {
-
             return res.status(404).json({
-
                 success: false,
-
-                message:
-                    "Student not found."
-
+                message: "Student not found."
             });
-
         }
 
-
         return res.json({
-
             success: true,
-
-            message:
-                "Student updated successfully.",
-
+            message: "Student updated successfully.",
             data: student
-
         });
-
-
     } catch (error) {
-
         next(error);
-
     }
-
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| Delete Student
+| DELETE STUDENT
 |--------------------------------------------------------------------------
 */
 
 async function deleteStudent(req, res, next) {
-
     try {
-
         const schoolId = getSchoolId(req);
+        const { id } = req.params;
 
-        const {
-            id
-        } = req.params;
-
-
-        const student =
+        const deleted =
             await studentModel.deleteStudent(
                 id,
                 schoolId
             );
 
-
-        if (!student) {
-
+        if (!deleted) {
             return res.status(404).json({
-
                 success: false,
-
-                message:
-                    "Student not found."
-
+                message: "Student not found."
             });
-
         }
 
-
         return res.json({
-
             success: true,
-
-            message:
-                "Student deleted successfully.",
-
-            data: student
-
+            message: "Student deleted successfully."
         });
-
-
     } catch (error) {
-
         next(error);
-
     }
-
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| Get Student Statistics
+| SEARCH STUDENTS
+|--------------------------------------------------------------------------
+*/
+
+async function searchStudents(req, res, next) {
+    try {
+        const schoolId = getSchoolId(req);
+
+        const searchTerm =
+            req.query.q ||
+            req.query.search ||
+            "";
+
+        if (!searchTerm.trim()) {
+            return res.json({
+                success: true,
+                data: []
+            });
+        }
+
+        const students =
+            await studentModel.searchStudents(
+                searchTerm.trim(),
+                schoolId
+            );
+
+        return res.json({
+            success: true,
+            data: students
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| SEARCH STUDENT BY NAME
+|--------------------------------------------------------------------------
+*/
+
+async function searchStudentByName(
+    req,
+    res,
+    next
+) {
+    try {
+        const schoolId = getSchoolId(req);
+
+        const name =
+            req.query.name ||
+            req.query.q ||
+            req.query.search ||
+            "";
+
+        if (!name.trim()) {
+            return res.json({
+                success: true,
+                data: []
+            });
+        }
+
+        const students =
+            await studentModel.searchStudentByName(
+                name.trim(),
+                schoolId
+            );
+
+        return res.json({
+            success: true,
+            data: students
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| GET STUDENT STATISTICS
 |--------------------------------------------------------------------------
 */
 
@@ -702,56 +402,47 @@ async function getStudentStatistics(
     res,
     next
 ) {
-
     try {
-
         const schoolId = getSchoolId(req);
-
 
         const statistics =
             await studentModel.getStudentStatistics(
                 schoolId
             );
 
-
         return res.json({
-
             success: true,
-
             data: statistics
-
         });
-
-
     } catch (error) {
-
         next(error);
-
     }
-
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| Get Student Enrollment
+| GET FULL STUDENT PROFILE
 |--------------------------------------------------------------------------
 */
 
-async function getStudentEnrollment(
-    req,
-    res,
-    next
-) {
-
+async function getStudentProfile(req, res, next) {
     try {
-
         const schoolId = getSchoolId(req);
+        const { id } = req.params;
 
-        const {
-            id
-        } = req.params;
+        const student =
+            await studentModel.getStudentProfile(
+                id,
+                schoolId
+            );
 
+        if (!student) {
+            return res.status(404).json({
+                success: false,
+                message: "Student not found."
+            });
+        }
 
         const enrollment =
             await studentModel.getStudentEnrollment(
@@ -759,139 +450,147 @@ async function getStudentEnrollment(
                 schoolId
             );
 
-
-        if (!enrollment) {
-
-            return res.status(404).json({
-
-                success: false,
-
-                message:
-                    "Student enrollment not found."
-
-            });
-
-        }
-
-
         return res.json({
-
             success: true,
-
-            data: enrollment
-
+            data: {
+                student,
+                enrollment
+            }
         });
-
-
     } catch (error) {
-
         next(error);
-
     }
-
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| Enroll Student
+| GET STUDENT ENROLLMENT
 |--------------------------------------------------------------------------
+|
+| Optional:
+|
+| /students/:id/enrollment?academicSessionId=SESSION_ID
+|
+*/
+
+async function getStudentEnrollment(
+    req,
+    res,
+    next
+) {
+    try {
+        const schoolId = getSchoolId(req);
+        const { id } = req.params;
+
+        const academicSessionId =
+            req.query.academicSessionId ||
+            req.query.sessionId ||
+            null;
+
+        const enrollment =
+            await studentModel.getStudentEnrollment(
+                id,
+                schoolId,
+                academicSessionId
+            );
+
+        if (!enrollment) {
+            return res.status(404).json({
+                success: false,
+                message: "Student enrollment not found."
+            });
+        }
+
+        return res.json({
+            success: true,
+            data: enrollment
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| ENROLL STUDENT
+|--------------------------------------------------------------------------
+|
+| Student
+|    ↓
+| Academic Session
+|    ↓
+| Class
+|    ↓
+| Class Arm
+|    ↓
+| Department
+|
+| Term is NOT part of enrollment.
+|
 */
 
 async function enrollStudent(req, res, next) {
-
     try {
-
         const schoolId = getSchoolId(req);
-
-        const {
-            id
-        } = req.params;
-
+        const { id } = req.params;
 
         const {
             classId,
             classArmId,
+            departmentId,
             sessionId,
-            termId,
+            academicSessionId,
             enrollmentDate,
-            status
+            status,
+            admissionStatus,
+            exitDate
         } = req.body;
-
 
         const enrollment =
             await studentModel.enrollStudent({
-
                 schoolId,
-
                 studentId: id,
-
                 classId,
-
                 classArmId,
-
+                departmentId,
                 sessionId,
-
-                termId,
-
+                academicSessionId,
                 enrollmentDate,
-
-                status
-
+                status,
+                admissionStatus,
+                exitDate
             });
 
-
         return res.status(201).json({
-
             success: true,
-
-            message:
-                "Student enrolled successfully.",
-
+            message: "Student enrolled successfully.",
             data: enrollment
-
         });
-
-
     } catch (error) {
-
         next(error);
-
     }
-
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| Export Controller
+| EXPORT CONTROLLER
 |--------------------------------------------------------------------------
 */
 
 module.exports = {
-
-    createStudent,
-
     getStudents,
-
     getStudentById,
-
-    getStudentProfile,
-
-    searchStudents,
-
-    searchStudentByName,
-
     getStudentByAdmissionNumber,
-
+    createStudent,
     updateStudent,
-
     deleteStudent,
-
+    searchStudents,
+    searchStudentByName,
     getStudentStatistics,
-
+    getStudentProfile,
     getStudentEnrollment,
-
     enrollStudent
-
 };

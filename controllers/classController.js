@@ -1,3 +1,5 @@
+"use strict";
+
 const {
     createClass,
     findClassById,
@@ -31,20 +33,14 @@ async function create(req, res, next) {
             req.user?.schoolId ||
             req.user?.school_id;
 
-
         if (!schoolId) {
 
             return res.status(400).json({
-
                 success: false,
-
-                message:
-                    "School ID is required."
-
+                message: "School ID is required."
             });
 
         }
-
 
         const {
             className,
@@ -54,48 +50,52 @@ async function create(req, res, next) {
             status
         } = req.body;
 
-
         if (
             !className ||
             !String(className).trim()
         ) {
 
             return res.status(400).json({
-
                 success: false,
-
-                message:
-                    "Class name is required."
-
+                message: "Class name is required."
             });
 
         }
 
+        const newClass = await createClass({
 
-        const newClass =
-            await createClass({
+            schoolId,
 
-                schoolId,
+            className:
+                String(className).trim(),
 
-                className:
-                    String(className).trim(),
+            classCode:
+                classCode !== undefined &&
+                classCode !== null &&
+                String(classCode).trim()
+                    ? String(classCode).trim()
+                    : null,
 
-                classCode:
-                    classCode
-                        ? String(classCode).trim()
-                        : null,
+            levelId:
+                levelId !== undefined &&
+                levelId !== null &&
+                levelId !== ""
+                    ? levelId
+                    : null,
 
-                levelId:
-                    levelId || null,
+            description:
+                description !== undefined &&
+                description !== null &&
+                String(description).trim()
+                    ? String(description).trim()
+                    : null,
 
-                description:
-                    description || null,
+            status:
+                status
+                    ? String(status).trim()
+                    : "active"
 
-                status:
-                    status || "active"
-
-            });
-
+        });
 
         return res.status(201).json({
 
@@ -139,24 +139,26 @@ async function getById(req, res, next) {
             req.user?.schoolId ||
             req.user?.school_id;
 
-
         if (!schoolId) {
 
             return res.status(400).json({
-
                 success: false,
-
-                message:
-                    "School ID is required."
-
+                message: "School ID is required."
             });
 
         }
 
-
         const classId =
             req.params.id;
 
+        if (!classId) {
+
+            return res.status(400).json({
+                success: false,
+                message: "Class ID is required."
+            });
+
+        }
 
         const schoolClass =
             await findClassById(
@@ -164,20 +166,14 @@ async function getById(req, res, next) {
                 schoolId
             );
 
-
         if (!schoolClass) {
 
             return res.status(404).json({
-
                 success: false,
-
-                message:
-                    "Class not found."
-
+                message: "Class not found."
             });
 
         }
-
 
         return res.status(200).json({
 
@@ -218,45 +214,45 @@ async function getAll(req, res, next) {
             req.user?.schoolId ||
             req.user?.school_id;
 
-
         if (!schoolId) {
 
             return res.status(400).json({
-
                 success: false,
-
-                message:
-                    "School ID is required."
-
+                message: "School ID is required."
             });
 
         }
 
-
         const levelId =
             req.query.levelId || null;
-
 
         const status =
             req.query.status || null;
 
+        const requestedLimit =
+            Number(req.query.limit);
+
+        const requestedOffset =
+            Number(req.query.offset);
 
         const limit =
-            Math.min(
-                Math.max(
-                    Number(req.query.limit) || 100,
-                    1
-                ),
-                500
-            );
-
+            Number.isFinite(requestedLimit)
+                ? Math.min(
+                    Math.max(
+                        Math.floor(requestedLimit),
+                        1
+                    ),
+                    500
+                )
+                : 100;
 
         const offset =
-            Math.max(
-                Number(req.query.offset) || 0,
-                0
-            );
-
+            Number.isFinite(requestedOffset)
+                ? Math.max(
+                    Math.floor(requestedOffset),
+                    0
+                )
+                : 0;
 
         const classes =
             await findClasses({
@@ -272,7 +268,6 @@ async function getAll(req, res, next) {
                 offset
 
             });
-
 
         return res.status(200).json({
 
@@ -316,24 +311,26 @@ async function update(req, res, next) {
             req.user?.schoolId ||
             req.user?.school_id;
 
-
         if (!schoolId) {
 
             return res.status(400).json({
-
                 success: false,
-
-                message:
-                    "School ID is required."
-
+                message: "School ID is required."
             });
 
         }
 
-
         const classId =
             req.params.id;
 
+        if (!classId) {
+
+            return res.status(400).json({
+                success: false,
+                message: "Class ID is required."
+            });
+
+        }
 
         const {
             className,
@@ -342,7 +339,6 @@ async function update(req, res, next) {
             description,
             status
         } = req.body;
-
 
         const data = {};
 
@@ -355,16 +351,11 @@ async function update(req, res, next) {
             ) {
 
                 return res.status(400).json({
-
                     success: false,
-
-                    message:
-                        "Class name cannot be empty."
-
+                    message: "Class name cannot be empty."
                 });
 
             }
-
 
             data.className =
                 String(className).trim();
@@ -375,7 +366,8 @@ async function update(req, res, next) {
         if (classCode !== undefined) {
 
             data.classCode =
-                classCode
+                classCode !== null &&
+                String(classCode).trim()
                     ? String(classCode).trim()
                     : null;
 
@@ -385,7 +377,10 @@ async function update(req, res, next) {
         if (levelId !== undefined) {
 
             data.levelId =
-                levelId || null;
+                levelId !== null &&
+                levelId !== ""
+                    ? levelId
+                    : null;
 
         }
 
@@ -393,15 +388,30 @@ async function update(req, res, next) {
         if (description !== undefined) {
 
             data.description =
-                description || null;
+                description !== null &&
+                String(description).trim()
+                    ? String(description).trim()
+                    : null;
 
         }
 
 
         if (status !== undefined) {
 
+            if (
+                status === null ||
+                !String(status).trim()
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Status cannot be empty."
+                });
+
+            }
+
             data.status =
-                status;
+                String(status).trim();
 
         }
 
@@ -411,12 +421,9 @@ async function update(req, res, next) {
         ) {
 
             return res.status(400).json({
-
                 success: false,
-
                 message:
                     "No valid fields supplied for update."
-
             });
 
         }
@@ -424,25 +431,17 @@ async function update(req, res, next) {
 
         const updatedClass =
             await updateClass(
-
                 classId,
-
                 schoolId,
-
                 data
-
             );
 
 
         if (!updatedClass) {
 
             return res.status(404).json({
-
                 success: false,
-
-                message:
-                    "Class not found."
-
+                message: "Class not found."
             });
 
         }
@@ -490,44 +489,39 @@ async function remove(req, res, next) {
             req.user?.schoolId ||
             req.user?.school_id;
 
-
         if (!schoolId) {
 
             return res.status(400).json({
-
                 success: false,
-
-                message:
-                    "School ID is required."
-
+                message: "School ID is required."
             });
 
         }
 
-
         const classId =
             req.params.id;
 
+        if (!classId) {
+
+            return res.status(400).json({
+                success: false,
+                message: "Class ID is required."
+            });
+
+        }
 
         const deletedClass =
             await deleteClass(
-
                 classId,
-
                 schoolId
-
             );
 
 
         if (!deletedClass) {
 
             return res.status(404).json({
-
                 success: false,
-
-                message:
-                    "Class not found."
-
+                message: "Class not found."
             });
 
         }
@@ -575,20 +569,14 @@ async function search(req, res, next) {
             req.user?.schoolId ||
             req.user?.school_id;
 
-
         if (!schoolId) {
 
             return res.status(400).json({
-
                 success: false,
-
-                message:
-                    "School ID is required."
-
+                message: "School ID is required."
             });
 
         }
-
 
         const searchTerm =
             String(
@@ -599,12 +587,8 @@ async function search(req, res, next) {
         if (!searchTerm) {
 
             return res.status(400).json({
-
                 success: false,
-
-                message:
-                    "Search term is required."
-
+                message: "Search term is required."
             });
 
         }
@@ -612,11 +596,8 @@ async function search(req, res, next) {
 
         const classes =
             await searchClasses(
-
                 searchTerm,
-
                 schoolId
-
             );
 
 

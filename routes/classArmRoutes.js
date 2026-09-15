@@ -1,3 +1,5 @@
+"use strict";
+
 const express = require("express");
 
 const router = express.Router();
@@ -22,7 +24,7 @@ const authenticate =
 if (typeof authenticate !== "function") {
 
     throw new TypeError(
-        "authenticate must be a function in middleware/authMiddleware.js"
+        "Authentication middleware is not exported correctly from middleware/authMiddleware.js"
     );
 
 }
@@ -39,9 +41,19 @@ const roleMiddleware =
 
 
 const requireRole =
+    roleMiddleware &&
     typeof roleMiddleware.requireRole === "function"
         ? roleMiddleware.requireRole
         : null;
+
+
+if (!requireRole) {
+
+    throw new TypeError(
+        "Role middleware is not exported correctly from middleware/roleMiddleware.js"
+    );
+
+}
 
 
 /*
@@ -54,23 +66,14 @@ const classArmController =
     require("../controllers/classArmController");
 
 
-const create =
-    classArmController.create;
-
-const getAll =
-    classArmController.getAll;
-
-const getById =
-    classArmController.getById;
-
-const update =
-    classArmController.update;
-
-const remove =
-    classArmController.remove;
-
-const search =
-    classArmController.search;
+const {
+    create,
+    getAll,
+    getById,
+    update,
+    remove,
+    search
+} = classArmController;
 
 
 /*
@@ -79,56 +82,35 @@ const search =
 |--------------------------------------------------------------------------
 */
 
-if (typeof create !== "function") {
+const controllerFunctions = {
 
-    throw new TypeError(
-        "classArmController.create is not a function."
-    );
+    create,
 
-}
+    getAll,
 
+    getById,
 
-if (typeof getAll !== "function") {
+    update,
 
-    throw new TypeError(
-        "classArmController.getAll is not a function."
-    );
+    remove,
 
-}
+    search
 
-
-if (typeof getById !== "function") {
-
-    throw new TypeError(
-        "classArmController.getById is not a function."
-    );
-
-}
+};
 
 
-if (typeof update !== "function") {
+for (
+    const [name, handler]
+    of Object.entries(controllerFunctions)
+) {
 
-    throw new TypeError(
-        "classArmController.update is not a function."
-    );
+    if (typeof handler !== "function") {
 
-}
+        throw new TypeError(
+            `Class arm controller "${name}" is not exported as a function.`
+        );
 
-
-if (typeof remove !== "function") {
-
-    throw new TypeError(
-        "classArmController.remove is not a function."
-    );
-
-}
-
-
-if (typeof search !== "function") {
-
-    throw new TypeError(
-        "classArmController.search is not a function."
-    );
+    }
 
 }
 
@@ -204,27 +186,17 @@ router.get(
 |
 | POST /api/class-arms
 |
+| Administrator only.
+|
 |--------------------------------------------------------------------------
 */
 
-if (requireRole) {
-
-    router.post(
-        "/",
-        authenticate,
-        requireRole("Administrator"),
-        create
-    );
-
-} else {
-
-    router.post(
-        "/",
-        authenticate,
-        create
-    );
-
-}
+router.post(
+    "/",
+    authenticate,
+    requireRole("Administrator"),
+    create
+);
 
 
 /*
@@ -234,27 +206,17 @@ if (requireRole) {
 |
 | PUT /api/class-arms/:id
 |
+| Administrator only.
+|
 |--------------------------------------------------------------------------
 */
 
-if (requireRole) {
-
-    router.put(
-        "/:id",
-        authenticate,
-        requireRole("Administrator"),
-        update
-    );
-
-} else {
-
-    router.put(
-        "/:id",
-        authenticate,
-        update
-    );
-
-}
+router.put(
+    "/:id",
+    authenticate,
+    requireRole("Administrator"),
+    update
+);
 
 
 /*
@@ -264,27 +226,17 @@ if (requireRole) {
 |
 | DELETE /api/class-arms/:id
 |
+| Administrator only.
+|
 |--------------------------------------------------------------------------
 */
 
-if (requireRole) {
-
-    router.delete(
-        "/:id",
-        authenticate,
-        requireRole("Administrator"),
-        remove
-    );
-
-} else {
-
-    router.delete(
-        "/:id",
-        authenticate,
-        remove
-    );
-
-}
+router.delete(
+    "/:id",
+    authenticate,
+    requireRole("Administrator"),
+    remove
+);
 
 
 /*

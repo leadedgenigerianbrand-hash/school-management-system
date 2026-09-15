@@ -2,22 +2,47 @@
 ===============================================================================
  SCHOOL MANAGEMENT SYSTEM
  PostgreSQL Database Schema
- Version: 1.0.0
+ Version: 2.0.0
 
  Designed for Nigerian Secondary Schools
 
- Academic structure supports:
-    JSS 1 - JSS 3
-    SS 1 - SS 3
+ FINAL DATABASE FOUNDATION
 
- BUT schools can rename/customize:
+ Supports:
+
+    Schools
+    Users
+    Roles
+    Permissions
+    Academic Sessions
+    Terms
+    Academic Levels
     Classes
-    Class arms/streams
+    Class Arms / Streams
     Departments
-    Sections
     Subjects
+    Students
+    Student Enrollments
+    Student / Guardian Relationships
+    Student Results
+    Result Settings
+    Fees
+    Student Fee Accounts
+    Payments
+    Uniform Items
+    Uniform Purchases
+    Attendance
+    Student Documents
+    Staff
+    Timetable
+    Notifications
+    Announcements
+    Audit Logs
+
+ Academic structure is configurable.
 
  Examples:
+
     JSS 1 A
     JSS 1 B
     JSS 1 Rose
@@ -27,6 +52,14 @@
     SS 1 Commercial
 
  The system is NOT hard-coded to these examples.
+
+ IMPORTANT:
+
+ This file is the master baseline schema.
+
+ After this schema is locked, future structural database changes should be
+ introduced through migration files rather than repeatedly redesigning this
+ schema.
 ===============================================================================
 */
 
@@ -209,14 +242,6 @@ CREATE TABLE IF NOT EXISTS users (
 ===============================================================================
  7. ACADEMIC LEVELS
 ===============================================================================
-
- Examples:
-
- JSS
- SS
-
- A school can add other levels if required.
-===============================================================================
 */
 
 CREATE TABLE IF NOT EXISTS academic_levels (
@@ -245,26 +270,6 @@ CREATE TABLE IF NOT EXISTS academic_levels (
 /*
 ===============================================================================
  8. CLASSES
-
- Examples:
-
- JSS 1
- JSS 2
- JSS 3
- SS 1
- SS 2
- SS 3
-
- Schools can rename these.
-
- Example:
-
- Basic 7
- Basic 8
- Basic 9
- Year 10
- Year 11
- Year 12
 ===============================================================================
 */
 
@@ -300,22 +305,6 @@ CREATE TABLE IF NOT EXISTS classes (
 /*
 ===============================================================================
  9. CLASS ARMS / STREAMS
-
- Examples:
-
- A
- B
- C
- Rose
- Yellow
- Pink
- Science
- Arts
- Commercial
- Blue
- Green
-
- Completely configurable per school.
 ===============================================================================
 */
 
@@ -348,17 +337,7 @@ CREATE TABLE IF NOT EXISTS class_arms (
 
 /*
 ===============================================================================
- 10. DEPARTMENTS / SPECIALIZATIONS
-
- Examples:
-
- Science
- Arts
- Commercial
- Humanities
- Technology
-
- Schools can create their own names.
+ 10. DEPARTMENTS
 ===============================================================================
 */
 
@@ -386,12 +365,6 @@ CREATE TABLE IF NOT EXISTS departments (
 /*
 ===============================================================================
  11. ACADEMIC SESSIONS
-===============================================================================
-
- Examples:
-
- 2025/2026
- 2026/2027
 ===============================================================================
 */
 
@@ -421,15 +394,6 @@ CREATE TABLE IF NOT EXISTS academic_sessions (
 /*
 ===============================================================================
  12. TERMS
-===============================================================================
-
- Nigerian standard:
-
- First Term
- Second Term
- Third Term
-
- But schools can customize the names.
 ===============================================================================
 */
 
@@ -582,21 +546,7 @@ CREATE TABLE IF NOT EXISTS students (
 
 /*
 ===============================================================================
- 15. STUDENT ACADEMIC PLACEMENT
-
- This records where the student currently belongs.
-
- Example:
-
- Student
-   ↓
- 2026/2027
-   ↓
- SS 1
-   ↓
- Science
-
- A student's history is preserved when they move to another class.
+ 15. STUDENT ENROLLMENTS
 ===============================================================================
 */
 
@@ -708,8 +658,6 @@ CREATE TABLE IF NOT EXISTS subjects (
 /*
 ===============================================================================
  18. CLASS SUBJECTS
-
- Determines which subjects belong to which class.
 ===============================================================================
 */
 
@@ -735,11 +683,6 @@ CREATE TABLE IF NOT EXISTS class_subjects (
 /*
 ===============================================================================
  19. STUDENT RESULTS
-===============================================================================
-
- Stores CA, Exam, Total, Grade and other academic information.
-
- CA and exam structures can later be configured by each school.
 ===============================================================================
 */
 
@@ -909,7 +852,9 @@ CREATE TABLE IF NOT EXISTS student_fees (
 
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE(student_id, fee_structure_id)
 );
 
 
@@ -1057,6 +1002,10 @@ CREATE TABLE IF NOT EXISTS attendance (
         REFERENCES classes(id)
         ON DELETE SET NULL,
 
+    class_arm_id UUID
+        REFERENCES class_arms(id)
+        ON DELETE SET NULL,
+
     attendance_date DATE NOT NULL,
 
     status VARCHAR(30) NOT NULL
@@ -1174,17 +1123,134 @@ CREATE TABLE IF NOT EXISTS staff (
 
 /*
 ===============================================================================
- 29. AUDIT LOGS
+ 29. TIMETABLE
 ===============================================================================
+*/
 
- Keeps a history of important actions.
+CREATE TABLE IF NOT EXISTS timetable_entries (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
- Example:
+    school_id UUID NOT NULL
+        REFERENCES schools(id)
+        ON DELETE CASCADE,
 
- Administrator edited student
- Account Officer recorded payment
- Examination Officer changed result
- Data Officer updated student profile
+    academic_session_id UUID NOT NULL
+        REFERENCES academic_sessions(id),
+
+    term_id UUID
+        REFERENCES terms(id)
+        ON DELETE SET NULL,
+
+    class_id UUID NOT NULL
+        REFERENCES classes(id)
+        ON DELETE CASCADE,
+
+    class_arm_id UUID
+        REFERENCES class_arms(id)
+        ON DELETE SET NULL,
+
+    subject_id UUID NOT NULL
+        REFERENCES subjects(id)
+        ON DELETE CASCADE,
+
+    teacher_id UUID
+        REFERENCES staff(id)
+        ON DELETE SET NULL,
+
+    day_of_week INTEGER NOT NULL
+        CHECK(day_of_week BETWEEN 1 AND 7),
+
+    start_time TIME NOT NULL,
+
+    end_time TIME NOT NULL,
+
+    room VARCHAR(100),
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CHECK(end_time > start_time)
+);
+
+
+/*
+===============================================================================
+ 30. NOTIFICATIONS
+===============================================================================
+*/
+
+CREATE TABLE IF NOT EXISTS notifications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    school_id UUID NOT NULL
+        REFERENCES schools(id)
+        ON DELETE CASCADE,
+
+    user_id UUID
+        REFERENCES users(id)
+        ON DELETE CASCADE,
+
+    title VARCHAR(255) NOT NULL,
+
+    message TEXT NOT NULL,
+
+    notification_type VARCHAR(50),
+
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+
+    read_at TIMESTAMP,
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+
+/*
+===============================================================================
+ 31. ANNOUNCEMENTS
+===============================================================================
+*/
+
+CREATE TABLE IF NOT EXISTS announcements (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    school_id UUID NOT NULL
+        REFERENCES schools(id)
+        ON DELETE CASCADE,
+
+    title VARCHAR(255) NOT NULL,
+
+    content TEXT NOT NULL,
+
+    target_role VARCHAR(100),
+
+    target_class_id UUID
+        REFERENCES classes(id)
+        ON DELETE SET NULL,
+
+    target_class_arm_id UUID
+        REFERENCES class_arms(id)
+        ON DELETE SET NULL,
+
+    published_by UUID
+        REFERENCES users(id)
+        ON DELETE SET NULL,
+
+    is_published BOOLEAN NOT NULL DEFAULT FALSE,
+
+    published_at TIMESTAMP,
+
+    expires_at TIMESTAMP,
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+
+/*
+===============================================================================
+ 32. AUDIT LOGS
 ===============================================================================
 */
 
@@ -1219,7 +1285,54 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 
 /*
 ===============================================================================
- 30. INDEXES
+ 33. INDEXES — SCHOOLS / USERS
+===============================================================================
+*/
+
+CREATE INDEX IF NOT EXISTS idx_users_school
+ON users(school_id);
+
+CREATE INDEX IF NOT EXISTS idx_users_role
+ON users(role_id);
+
+CREATE INDEX IF NOT EXISTS idx_users_active
+ON users(is_active);
+
+
+/*
+===============================================================================
+ 34. INDEXES — ACADEMIC STRUCTURE
+===============================================================================
+*/
+
+CREATE INDEX IF NOT EXISTS idx_academic_levels_school
+ON academic_levels(school_id);
+
+CREATE INDEX IF NOT EXISTS idx_classes_school
+ON classes(school_id);
+
+CREATE INDEX IF NOT EXISTS idx_classes_level
+ON classes(academic_level_id);
+
+CREATE INDEX IF NOT EXISTS idx_class_arms_school
+ON class_arms(school_id);
+
+CREATE INDEX IF NOT EXISTS idx_class_arms_class
+ON class_arms(class_id);
+
+CREATE INDEX IF NOT EXISTS idx_departments_school
+ON departments(school_id);
+
+CREATE INDEX IF NOT EXISTS idx_sessions_school
+ON academic_sessions(school_id);
+
+CREATE INDEX IF NOT EXISTS idx_terms_school
+ON terms(school_id);
+
+
+/*
+===============================================================================
+ 35. INDEXES — STUDENTS
 ===============================================================================
 */
 
@@ -1235,8 +1348,21 @@ ON students(last_name, first_name);
 CREATE INDEX IF NOT EXISTS idx_students_status
 ON students(status);
 
+CREATE INDEX IF NOT EXISTS idx_students_email
+ON students(email);
+
+
+/*
+===============================================================================
+ 36. INDEXES — ENROLLMENTS
+===============================================================================
+*/
+
 CREATE INDEX IF NOT EXISTS idx_enrollments_student
 ON student_enrollments(student_id);
+
+CREATE INDEX IF NOT EXISTS idx_enrollments_school
+ON student_enrollments(school_id);
 
 CREATE INDEX IF NOT EXISTS idx_enrollments_session
 ON student_enrollments(academic_session_id);
@@ -1244,26 +1370,221 @@ ON student_enrollments(academic_session_id);
 CREATE INDEX IF NOT EXISTS idx_enrollments_class
 ON student_enrollments(class_id);
 
+CREATE INDEX IF NOT EXISTS idx_enrollments_arm
+ON student_enrollments(class_arm_id);
+
+
+/*
+===============================================================================
+ 37. INDEXES — GUARDIANS
+===============================================================================
+*/
+
+CREATE INDEX IF NOT EXISTS idx_guardians_school
+ON guardians(school_id);
+
+CREATE INDEX IF NOT EXISTS idx_student_guardians_student
+ON student_guardians(student_id);
+
+CREATE INDEX IF NOT EXISTS idx_student_guardians_guardian
+ON student_guardians(guardian_id);
+
+
+/*
+===============================================================================
+ 38. INDEXES — SUBJECTS
+===============================================================================
+*/
+
+CREATE INDEX IF NOT EXISTS idx_subjects_school
+ON subjects(school_id);
+
+CREATE INDEX IF NOT EXISTS idx_class_subjects_class
+ON class_subjects(class_id);
+
+CREATE INDEX IF NOT EXISTS idx_class_subjects_subject
+ON class_subjects(subject_id);
+
+
+/*
+===============================================================================
+ 39. INDEXES — RESULTS
+===============================================================================
+*/
+
 CREATE INDEX IF NOT EXISTS idx_results_student
 ON results(student_id);
+
+CREATE INDEX IF NOT EXISTS idx_results_school
+ON results(school_id);
 
 CREATE INDEX IF NOT EXISTS idx_results_session_term
 ON results(academic_session_id, term_id);
 
+CREATE INDEX IF NOT EXISTS idx_results_class
+ON results(class_id);
+
+CREATE INDEX IF NOT EXISTS idx_results_subject
+ON results(subject_id);
+
+CREATE INDEX IF NOT EXISTS idx_result_settings_school
+ON result_settings(school_id);
+
+
+/*
+===============================================================================
+ 40. INDEXES — FEES / PAYMENTS
+===============================================================================
+*/
+
+CREATE INDEX IF NOT EXISTS idx_fee_structures_school
+ON fee_structures(school_id);
+
+CREATE INDEX IF NOT EXISTS idx_fee_structures_session
+ON fee_structures(academic_session_id);
+
+CREATE INDEX IF NOT EXISTS idx_student_fees_student
+ON student_fees(student_id);
+
+CREATE INDEX IF NOT EXISTS idx_student_fees_school
+ON student_fees(school_id);
+
 CREATE INDEX IF NOT EXISTS idx_payments_student
 ON payments(student_id);
+
+CREATE INDEX IF NOT EXISTS idx_payments_school
+ON payments(school_id);
 
 CREATE INDEX IF NOT EXISTS idx_payments_date
 ON payments(payment_date);
 
+
+/*
+===============================================================================
+ 41. INDEXES — UNIFORMS
+===============================================================================
+*/
+
+CREATE INDEX IF NOT EXISTS idx_uniform_items_school
+ON uniform_items(school_id);
+
+CREATE INDEX IF NOT EXISTS idx_uniform_purchases_student
+ON uniform_purchases(student_id);
+
+CREATE INDEX IF NOT EXISTS idx_uniform_purchases_school
+ON uniform_purchases(school_id);
+
+
+/*
+===============================================================================
+ 42. INDEXES — ATTENDANCE
+===============================================================================
+*/
+
 CREATE INDEX IF NOT EXISTS idx_attendance_student
 ON attendance(student_id);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_school
+ON attendance(school_id);
 
 CREATE INDEX IF NOT EXISTS idx_attendance_date
 ON attendance(attendance_date);
 
+CREATE INDEX IF NOT EXISTS idx_attendance_session_term
+ON attendance(academic_session_id, term_id);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_class
+ON attendance(class_id);
+
+
+/*
+===============================================================================
+ 43. INDEXES — DOCUMENTS
+===============================================================================
+*/
+
 CREATE INDEX IF NOT EXISTS idx_documents_student
 ON student_documents(student_id);
+
+CREATE INDEX IF NOT EXISTS idx_documents_school
+ON student_documents(school_id);
+
+
+/*
+===============================================================================
+ 44. INDEXES — STAFF
+===============================================================================
+*/
+
+CREATE INDEX IF NOT EXISTS idx_staff_school
+ON staff(school_id);
+
+CREATE INDEX IF NOT EXISTS idx_staff_user
+ON staff(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_staff_status
+ON staff(status);
+
+
+/*
+===============================================================================
+ 45. INDEXES — TIMETABLE
+===============================================================================
+*/
+
+CREATE INDEX IF NOT EXISTS idx_timetable_school
+ON timetable_entries(school_id);
+
+CREATE INDEX IF NOT EXISTS idx_timetable_class
+ON timetable_entries(class_id);
+
+CREATE INDEX IF NOT EXISTS idx_timetable_arm
+ON timetable_entries(class_arm_id);
+
+CREATE INDEX IF NOT EXISTS idx_timetable_teacher
+ON timetable_entries(teacher_id);
+
+CREATE INDEX IF NOT EXISTS idx_timetable_session
+ON timetable_entries(academic_session_id);
+
+
+/*
+===============================================================================
+ 46. INDEXES — NOTIFICATIONS
+===============================================================================
+*/
+
+CREATE INDEX IF NOT EXISTS idx_notifications_school
+ON notifications(school_id);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user
+ON notifications(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_read
+ON notifications(user_id, is_read);
+
+
+/*
+===============================================================================
+ 47. INDEXES — ANNOUNCEMENTS
+===============================================================================
+*/
+
+CREATE INDEX IF NOT EXISTS idx_announcements_school
+ON announcements(school_id);
+
+CREATE INDEX IF NOT EXISTS idx_announcements_published
+ON announcements(is_published);
+
+CREATE INDEX IF NOT EXISTS idx_announcements_class
+ON announcements(target_class_id);
+
+
+/*
+===============================================================================
+ 48. INDEXES — AUDIT
+===============================================================================
+*/
 
 CREATE INDEX IF NOT EXISTS idx_audit_school
 ON audit_logs(school_id);
@@ -1271,9 +1592,137 @@ ON audit_logs(school_id);
 CREATE INDEX IF NOT EXISTS idx_audit_user
 ON audit_logs(user_id);
 
+CREATE INDEX IF NOT EXISTS idx_audit_created
+ON audit_logs(created_at);
+
+CREATE INDEX IF NOT EXISTS idx_audit_table_record
+ON audit_logs(table_name, record_id);
+
 
 /*
 ===============================================================================
- END OF SCHEMA
+ 49. UPDATED_AT FUNCTION
+===============================================================================
+*/
+
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$;
+
+
+/*
+===============================================================================
+ 50. UPDATED_AT TRIGGERS
+===============================================================================
+*/
+
+DROP TRIGGER IF EXISTS trg_schools_updated_at
+ON schools;
+
+CREATE TRIGGER trg_schools_updated_at
+BEFORE UPDATE ON schools
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+
+DROP TRIGGER IF EXISTS trg_users_updated_at
+ON users;
+
+CREATE TRIGGER trg_users_updated_at
+BEFORE UPDATE ON users
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+
+DROP TRIGGER IF EXISTS trg_classes_updated_at
+ON classes;
+
+CREATE TRIGGER trg_classes_updated_at
+BEFORE UPDATE ON classes
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+
+DROP TRIGGER IF EXISTS trg_class_arms_updated_at
+ON class_arms;
+
+CREATE TRIGGER trg_class_arms_updated_at
+BEFORE UPDATE ON class_arms
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+
+DROP TRIGGER IF EXISTS trg_guardians_updated_at
+ON guardians;
+
+CREATE TRIGGER trg_guardians_updated_at
+BEFORE UPDATE ON guardians
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+
+DROP TRIGGER IF EXISTS trg_students_updated_at
+ON students;
+
+CREATE TRIGGER trg_students_updated_at
+BEFORE UPDATE ON students
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+
+DROP TRIGGER IF EXISTS trg_results_updated_at
+ON results;
+
+CREATE TRIGGER trg_results_updated_at
+BEFORE UPDATE ON results
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+
+DROP TRIGGER IF EXISTS trg_student_fees_updated_at
+ON student_fees;
+
+CREATE TRIGGER trg_student_fees_updated_at
+BEFORE UPDATE ON student_fees
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+
+DROP TRIGGER IF EXISTS trg_staff_updated_at
+ON staff;
+
+CREATE TRIGGER trg_staff_updated_at
+BEFORE UPDATE ON staff
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+
+DROP TRIGGER IF EXISTS trg_timetable_updated_at
+ON timetable_entries;
+
+CREATE TRIGGER trg_timetable_updated_at
+BEFORE UPDATE ON timetable_entries
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+
+DROP TRIGGER IF EXISTS trg_announcements_updated_at
+ON announcements;
+
+CREATE TRIGGER trg_announcements_updated_at
+BEFORE UPDATE ON announcements
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+
+/*
+===============================================================================
+ END OF MASTER SCHEMA
 ===============================================================================
 */

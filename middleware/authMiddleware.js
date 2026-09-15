@@ -2,132 +2,62 @@
 
 const jwt = require("jsonwebtoken");
 
-
 function getJwtSecret() {
-
     const secret = process.env.JWT_SECRET;
 
     if (!secret) {
-
-        throw new Error(
-            "JWT_SECRET is not configured in .env"
-        );
-
+        throw new Error("JWT_SECRET is not configured in .env");
     }
 
     return secret;
 }
 
-
 function authMiddleware(req, res, next) {
-
     try {
+        const authorization = req.headers.authorization;
 
-        const authorization =
-            req.headers.authorization;
-
-
-        if (
-            !authorization ||
-            !authorization.startsWith("Bearer ")
-        ) {
-
-            return res.status(401).json({
-
-                success: false,
-
-                message:
-                    "Authentication required."
-
-            });
-
+        if (!authorization) {
+            const error = new Error("Authentication required.");
+            error.statusCode = 401;
+            return next(error);
         }
 
+        if (!authorization.startsWith("Bearer ")) {
+            const error = new Error("Invalid authentication header.");
+            error.statusCode = 401;
+            return next(error);
+        }
 
-        const token =
-            authorization.substring(7).trim();
-
+        const token = authorization.slice(7).trim();
 
         if (!token) {
-
-            return res.status(401).json({
-
-                success: false,
-
-                message:
-                    "Authentication token is required."
-
-            });
-
+            const error = new Error("Authentication token is required.");
+            error.statusCode = 401;
+            return next(error);
         }
 
+        const decoded = jwt.verify(
+            token,
+            getJwtSecret()
+        );
 
-        const decoded =
-            jwt.verify(
-                token,
-                getJwtSecret()
-            );
-
+        if (!decoded || typeof decoded !== "object") {
+            const error = new Error("Invalid authentication token.");
+            error.statusCode = 401;
+            return next(error);
+        }
 
         req.user = decoded;
 
-
-        next();
-
-
+        return next();
     } catch (error) {
-
         console.error(
             "Authentication error:",
             error.message
         );
 
-
-        if (
-            error.name === "TokenExpiredError"
-        ) {
-
-            return res.status(401).json({
-
-                success: false,
-
-                message:
-                    "Authentication token has expired."
-
-            });
-
-        }
-
-
-        if (
-            error.name === "JsonWebTokenError"
-        ) {
-
-            return res.status(401).json({
-
-                success: false,
-
-                message:
-                    "Invalid authentication token."
-
-            });
-
-        }
-
-
-        return res.status(500).json({
-
-            success: false,
-
-            message:
-                "Authentication service error."
-
-        });
-
+        return next(error);
     }
-
 }
 
-
-module.exports =
-    authMiddleware;
+module.exports = authMiddleware;

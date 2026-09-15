@@ -1,28 +1,5 @@
-/*
-|--------------------------------------------------------------------------
-| SCHOOL MANAGEMENT SYSTEM
-| API.JS
-|--------------------------------------------------------------------------
-| Central frontend API communication layer.
-|
-| IMPORTANT:
-| Authentication is shared with auth.js.
-|
-| Official authentication keys:
-| - school_management_token
-| - school_management_user
-|
-| api.js does NOT maintain a separate token system.
-|--------------------------------------------------------------------------
-*/
-
 (function () {
     "use strict";
-
-
-    /* ============================================================
-       CONFIGURATION
-       ============================================================ */
 
     const API_BASE_URL = "/api";
 
@@ -32,23 +9,7 @@
     const USER_KEY =
         "school_management_user";
 
-
-    /* ============================================================
-       TOKEN
-       ============================================================ */
-
-    /*
-     * There is ONE official token.
-     *
-     * auth.js stores:
-     *
-     * school_management_token
-     *
-     * api.js reads the exact same key.
-     */
-
     function getApiToken() {
-
         return (
             localStorage.getItem(TOKEN_KEY) ||
             sessionStorage.getItem(TOKEN_KEY) ||
@@ -56,343 +17,291 @@
         );
     }
 
+    function getStoredUser() {
+        const storedUser =
+            localStorage.getItem(USER_KEY) ||
+            sessionStorage.getItem(USER_KEY);
 
-    /* ============================================================
-       CLEAR AUTHENTICATION
-       ============================================================ */
+        if (!storedUser) {
+            return null;
+        }
 
-    /*
-     * Authentication is normally cleared through auth.js.
-     *
-     * The fallback below keeps api.js safe if auth.js is not
-     * available for some reason.
-     */
+        try {
+            return JSON.parse(storedUser);
+        } catch (error) {
+            localStorage.removeItem(USER_KEY);
+            sessionStorage.removeItem(USER_KEY);
+            return null;
+        }
+    }
 
     function clearApiAuthentication() {
-
         if (
             window.Auth &&
             typeof window.Auth.clearAuthentication ===
-            "function"
+                "function"
         ) {
-
             window.Auth.clearAuthentication();
-
             return;
         }
 
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
 
-        localStorage.removeItem(
-            TOKEN_KEY
-        );
-
-        localStorage.removeItem(
-            USER_KEY
-        );
-
-        sessionStorage.removeItem(
-            TOKEN_KEY
-        );
-
-        sessionStorage.removeItem(
-            USER_KEY
-        );
+        sessionStorage.removeItem(TOKEN_KEY);
+        sessionStorage.removeItem(USER_KEY);
     }
 
-
-    /* ============================================================
-       LOGIN PAGE CHECK
-       ============================================================ */
-
     function isLoginPage() {
-
         return window.location.pathname
             .toLowerCase()
             .endsWith("/login.html");
     }
 
-
-    /* ============================================================
-       API REQUEST
-       ============================================================ */
-
-    async function apiRequest(
-        endpoint,
-        options = {}
-    ) {
-
-        const token =
-            getApiToken();
-
-
-        /*
-         * Build API URL.
-         */
-
-        let url =
-            endpoint;
-
-
+    function buildApiUrl(endpoint) {
         if (
-            !url.startsWith("http://") &&
-            !url.startsWith("https://")
+            typeof endpoint !== "string" ||
+            !endpoint.trim()
         ) {
-
-            if (
-                !url.startsWith("/")
-            ) {
-
-                url =
-                    "/" + url;
-            }
-
-
-            if (
-                !url.startsWith(
-                    API_BASE_URL + "/"
-                )
-            ) {
-
-                url =
-                    API_BASE_URL + url;
-            }
+            throw new Error(
+                "API endpoint is required."
+            );
         }
 
+        let url = endpoint.trim();
 
-        /*
-         * Build request options.
-         */
+        if (
+            url.startsWith("http://") ||
+            url.startsWith("https://")
+        ) {
+            return url;
+        }
 
-        const requestOptions = {
-            ...options,
+        if (!url.startsWith("/")) {
+            url = `/${url}`;
+        }
 
-            headers: {
-                ...(options.headers || {})
-            },
+        if (
+            url === API_BASE_URL ||
+            url.startsWith(
+                `${API_BASE_URL}/`
+            )
+        ) {
+            return url;
+        }
 
-            credentials: "include"
+        return `${API_BASE_URL}${url}`;
+    }
+
+    function buildRequestHeaders(
+        options,
+        token
+    ) {
+        const headers = {
+            ...(options.headers || {})
         };
 
-
-        /* ========================================================
-           AUTHORIZATION
-           ======================================================== */
-
-        /*
-         * Use the SAME token as auth.js.
-         */
-
         if (token) {
-
-            requestOptions.headers.Authorization =
+            headers.Authorization =
                 `Bearer ${token}`;
         }
 
+        const hasBody =
+            options.body !== undefined &&
+            options.body !== null;
 
-        /* ========================================================
-           CONTENT TYPE
-           ======================================================== */
+        const isFormData =
+            typeof FormData !== "undefined" &&
+            options.body instanceof FormData;
+
+        const hasContentType =
+            Boolean(
+                headers["Content-Type"] ||
+                headers["content-type"]
+            );
 
         if (
-            requestOptions.body &&
-            !(requestOptions.body instanceof FormData) &&
-            !requestOptions.headers["Content-Type"] &&
-            !requestOptions.headers["content-type"]
+            hasBody &&
+            !isFormData &&
+            !hasContentType
         ) {
-
-            requestOptions.headers["Content-Type"] =
+            headers["Content-Type"] =
                 "application/json";
         }
 
-
-        /* ========================================================
-           ACCEPT
-           ======================================================== */
-
         if (
-            !requestOptions.headers.Accept &&
-            !requestOptions.headers.accept
+            !headers.Accept &&
+            !headers.accept
         ) {
-
-            requestOptions.headers.Accept =
+            headers.Accept =
                 "application/json";
         }
 
+        return headers;
+    }
 
-        /* ========================================================
-           REQUEST
-           ======================================================== */
-
-        let response;
-
-
-        try {
-
-            response =
-                await fetch(
-                    url,
-                    requestOptions
-                );
-
-        } catch (error) {
-
-            console.error(
-                "API request failed:",
-                error
-            );
-
-            throw new Error(
-                "Unable to connect to the server. Please check your connection."
-            );
-        }
-
-
-        /* ========================================================
-           AUTHENTICATION ERROR
-           ======================================================== */
-
-        if (
-            response.status === 401
-        ) {
-
-            console.warn(
-                "Authentication rejected by server:",
-                url
-            );
-
-
-            /*
-             * Clear the SAME authentication used by auth.js.
-             */
-
-            clearApiAuthentication();
-
-
-            /*
-             * Redirect only when we are not already
-             * on the login page.
-             */
-
-            if (!isLoginPage()) {
-
-                window.location.replace(
-                    "/pages/login.html"
-                );
-            }
-
-
-            throw new Error(
-                "Authentication required."
-            );
-        }
-
-
-        /* ========================================================
-           PERMISSION ERROR
-           ======================================================== */
-
-        if (
-            response.status === 403
-        ) {
-
-            throw new Error(
-                "You do not have permission to perform this action."
-            );
-        }
-
-
-        /* ========================================================
-           RESPONSE PARSING
-           ======================================================== */
-
+    async function parseResponse(response) {
         const contentType =
             response.headers.get(
                 "content-type"
             ) || "";
 
-
-        let data;
-
-
         if (
-            contentType.includes(
-                "application/json"
-            )
+            contentType
+                .toLowerCase()
+                .includes("application/json")
         ) {
-
             try {
-
-                data =
-                    await response.json();
-
+                return await response.json();
             } catch (error) {
-
-                console.error(
-                    "Unable to parse JSON response:",
-                    error
-                );
-
                 throw new Error(
                     "The server returned invalid JSON."
                 );
             }
-
-        } else {
-
-            data =
-                await response.text();
         }
 
+        return response.text();
+    }
 
-        /* ========================================================
-           HTTP ERRORS
-           ======================================================== */
-
-        if (!response.ok) {
-
-            let message =
-                "Request failed.";
-
-
-            if (
-                data &&
-                typeof data === "object"
-            ) {
-
-                message =
-                    data.message ||
-                    data.error ||
-                    message;
-
-            } else if (
-                typeof data === "string" &&
-                data.trim()
-            ) {
-
-                message =
-                    data;
-            }
-
-
-            throw new Error(
-                message
+    function getResponseErrorMessage(
+        data
+    ) {
+        if (
+            data &&
+            typeof data === "object"
+        ) {
+            return (
+                data.message ||
+                data.error ||
+                "Request failed."
             );
         }
 
+        if (
+            typeof data === "string" &&
+            data.trim()
+        ) {
+            return data.trim();
+        }
+
+        return "Request failed.";
+    }
+
+    async function apiRequest(
+        endpoint,
+        options = {}
+    ) {
+        const url =
+            buildApiUrl(endpoint);
+
+        const token =
+            getApiToken();
+
+        const requestOptions = {
+            ...options,
+            headers:
+                buildRequestHeaders(
+                    options,
+                    token
+                ),
+            credentials:
+                options.credentials ||
+                "include"
+        };
+
+        let response;
+
+        try {
+            response =
+                await fetch(
+                    url,
+                    requestOptions
+                );
+        } catch (error) {
+            console.error(
+                "API request failed:",
+                error
+            );
+
+            const networkError =
+                new Error(
+                    "Unable to connect to the server. Please check your connection."
+                );
+
+            networkError.cause =
+                error;
+
+            throw networkError;
+        }
+
+        if (
+            response.status === 401
+        ) {
+            console.warn(
+                "Authentication rejected by server:",
+                url
+            );
+
+            clearApiAuthentication();
+
+            if (!isLoginPage()) {
+                window.location.replace(
+                    "/pages/login.html"
+                );
+            }
+
+            const error =
+                new Error(
+                    "Authentication required."
+                );
+
+            error.statusCode = 401;
+
+            throw error;
+        }
+
+        if (
+            response.status === 403
+        ) {
+            const error =
+                new Error(
+                    "You do not have permission to perform this action."
+                );
+
+            error.statusCode = 403;
+
+            throw error;
+        }
+
+        const data =
+            await parseResponse(
+                response
+            );
+
+        if (!response.ok) {
+            const error =
+                new Error(
+                    getResponseErrorMessage(
+                        data
+                    )
+                );
+
+            error.statusCode =
+                response.status;
+
+            error.response =
+                data;
+
+            throw error;
+        }
 
         return data;
     }
-
-
-    /* ============================================================
-       GET
-       ============================================================ */
 
     async function apiGet(
         endpoint,
         options = {}
     ) {
-
         return apiRequest(
             endpoint,
             {
@@ -402,169 +311,122 @@
         );
     }
 
-
-    /* ============================================================
-       POST
-       ============================================================ */
-
     async function apiPost(
         endpoint,
         body,
         options = {}
     ) {
-
         const requestBody =
             body instanceof FormData
                 ? body
-                : body !== undefined
+                : body !== undefined &&
+                  body !== null
                     ? JSON.stringify(body)
                     : undefined;
-
 
         return apiRequest(
             endpoint,
             {
                 ...options,
-
                 method: "POST",
-
-                body:
-                    requestBody
+                body: requestBody
             }
         );
     }
-
-
-    /* ============================================================
-       PUT
-       ============================================================ */
 
     async function apiPut(
         endpoint,
         body,
         options = {}
     ) {
-
         const requestBody =
             body instanceof FormData
                 ? body
-                : body !== undefined
+                : body !== undefined &&
+                  body !== null
                     ? JSON.stringify(body)
                     : undefined;
-
 
         return apiRequest(
             endpoint,
             {
                 ...options,
-
                 method: "PUT",
-
-                body:
-                    requestBody
+                body: requestBody
             }
         );
     }
-
-
-    /* ============================================================
-       PATCH
-       ============================================================ */
 
     async function apiPatch(
         endpoint,
         body,
         options = {}
     ) {
-
         const requestBody =
             body instanceof FormData
                 ? body
-                : body !== undefined
+                : body !== undefined &&
+                  body !== null
                     ? JSON.stringify(body)
                     : undefined;
-
 
         return apiRequest(
             endpoint,
             {
                 ...options,
-
                 method: "PATCH",
-
-                body:
-                    requestBody
+                body: requestBody
             }
         );
     }
-
-
-    /* ============================================================
-       DELETE
-       ============================================================ */
 
     async function apiDelete(
         endpoint,
         options = {}
     ) {
-
         return apiRequest(
             endpoint,
             {
                 ...options,
-
                 method: "DELETE"
             }
         );
     }
 
-
-    /* ============================================================
-       CURRENT USER
-       ============================================================ */
-
     async function getCurrentUserFromAPI() {
-
         return apiGet(
             "/auth/me"
         );
     }
 
-
-    /* ============================================================
-       API HEALTH
-       ============================================================ */
-
     async function checkApiHealth() {
-
         try {
-
             const response =
                 await fetch(
-                    "/api/health"
+                    "/api/health",
+                    {
+                        method: "GET",
+                        headers: {
+                            Accept:
+                                "application/json"
+                        },
+                        credentials:
+                            "include"
+                    }
                 );
-
 
             if (!response.ok) {
                 return false;
             }
 
-
             const data =
                 await response.json();
 
-
             return (
                 data &&
-                (
-                    data.success === true ||
-                    data.status === "ok" ||
-                    data.status === "healthy"
-                )
+                data.success === true
             );
-
         } catch (error) {
-
             console.error(
                 "API health check failed:",
                 error
@@ -573,11 +435,6 @@
             return false;
         }
     }
-
-
-    /* ============================================================
-       GLOBAL EXPORTS
-       ============================================================ */
 
     window.apiRequest =
         apiRequest;
@@ -597,18 +454,18 @@
     window.apiDelete =
         apiDelete;
 
-
     window.getCurrentUserFromAPI =
         getCurrentUserFromAPI;
 
     window.checkApiHealth =
         checkApiHealth;
 
-
     window.getApiToken =
         getApiToken;
 
+    window.getStoredUser =
+        getStoredUser;
+
     window.clearApiAuthentication =
         clearApiAuthentication;
-
 })();

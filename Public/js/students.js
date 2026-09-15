@@ -10,471 +10,375 @@ const PAGE_SIZE = 10;
 
 let studentToDelete = null;
 
+let tableBody = null;
+let searchInput = null;
+let statusFilter = null;
+let genderFilter = null;
+let refreshButton = null;
+let addStudentButton = null;
 
-/*
-|--------------------------------------------------------------------------
-| INITIALIZE
-|--------------------------------------------------------------------------
-| Authentication is handled centrally by auth.js.
-| Do NOT call protectPage() here.
-|--------------------------------------------------------------------------
-*/
+let previousButton = null;
+let nextButton = null;
+let pageNumber = null;
+
+let showingFrom = null;
+let showingTo = null;
+let totalResults = null;
+
+let totalStudents = null;
+let activeStudents = null;
+let maleStudents = null;
+let femaleStudents = null;
+
+let deleteModal = null;
+let deleteStudentName = null;
+let confirmDeleteButton = null;
+let closeDeleteModalButton = null;
+let cancelDeleteButton = null;
 
 document.addEventListener(
     "DOMContentLoaded",
     initializeStudentsPage
 );
 
-
 async function initializeStudentsPage() {
-
     initializeElements();
     initializeEvents();
 
     await loadStudents();
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| ELEMENTS
-|--------------------------------------------------------------------------
-*/
-
-let tableBody;
-let searchInput;
-let statusFilter;
-let genderFilter;
-let refreshButton;
-let addStudentButton;
-
-let previousButton;
-let nextButton;
-let pageNumber;
-
-let showingFrom;
-let showingTo;
-let totalResults;
-
-let totalStudents;
-let activeStudents;
-let maleStudents;
-let femaleStudents;
-
-let deleteModal;
-let deleteStudentName;
-let confirmDeleteButton;
-let closeDeleteModalButton;
-let cancelDeleteButton;
-
-
-/*
-|--------------------------------------------------------------------------
-| INITIALIZE ELEMENTS
-|--------------------------------------------------------------------------
-*/
-
 function initializeElements() {
-
     tableBody =
-        document.getElementById("studentsTableBody");
+        document.getElementById(
+            "studentsTableBody"
+        );
 
     searchInput =
-        document.getElementById("searchInput");
+        document.getElementById(
+            "searchInput"
+        );
 
     statusFilter =
-        document.getElementById("statusFilter");
+        document.getElementById(
+            "statusFilter"
+        );
 
     genderFilter =
-        document.getElementById("genderFilter");
+        document.getElementById(
+            "genderFilter"
+        );
 
     refreshButton =
-        document.getElementById("refreshButton");
+        document.getElementById(
+            "refreshButton"
+        );
 
     addStudentButton =
-        document.getElementById("addStudentButton");
+        document.getElementById(
+            "addStudentButton"
+        );
 
     previousButton =
-        document.getElementById("previousButton");
+        document.getElementById(
+            "previousButton"
+        );
 
     nextButton =
-        document.getElementById("nextButton");
+        document.getElementById(
+            "nextButton"
+        );
 
     pageNumber =
-        document.getElementById("pageNumber");
+        document.getElementById(
+            "pageNumber"
+        );
 
     showingFrom =
-        document.getElementById("showingFrom");
+        document.getElementById(
+            "showingFrom"
+        );
 
     showingTo =
-        document.getElementById("showingTo");
+        document.getElementById(
+            "showingTo"
+        );
 
     totalResults =
-        document.getElementById("totalResults");
+        document.getElementById(
+            "totalResults"
+        );
 
     totalStudents =
-        document.getElementById("totalStudents");
+        document.getElementById(
+            "totalStudents"
+        );
 
     activeStudents =
-        document.getElementById("activeStudents");
+        document.getElementById(
+            "activeStudents"
+        );
 
     maleStudents =
-        document.getElementById("maleStudents");
+        document.getElementById(
+            "maleStudents"
+        );
 
     femaleStudents =
-        document.getElementById("femaleStudents");
+        document.getElementById(
+            "femaleStudents"
+        );
 
     deleteModal =
-        document.getElementById("deleteModal");
+        document.getElementById(
+            "deleteModal"
+        );
 
     deleteStudentName =
-        document.getElementById("deleteStudentName");
+        document.getElementById(
+            "deleteStudentName"
+        );
 
     confirmDeleteButton =
-        document.getElementById("confirmDeleteButton");
+        document.getElementById(
+            "confirmDeleteButton"
+        );
 
     closeDeleteModalButton =
-        document.getElementById("closeDeleteModal");
+        document.getElementById(
+            "closeDeleteModal"
+        );
 
     cancelDeleteButton =
-        document.getElementById("cancelDeleteModal") ||
-        document.getElementById("cancelDeleteButton");
+        document.getElementById(
+            "cancelDeleteButton"
+        );
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| EVENTS
-|--------------------------------------------------------------------------
-*/
-
 function initializeEvents() {
-
     if (searchInput) {
-
         searchInput.addEventListener(
             "input",
             handleFilters
         );
     }
 
-
     if (statusFilter) {
-
         statusFilter.addEventListener(
             "change",
             handleFilters
         );
     }
 
-
     if (genderFilter) {
-
         genderFilter.addEventListener(
             "change",
             handleFilters
         );
     }
 
-
     if (refreshButton) {
-
         refreshButton.addEventListener(
             "click",
             loadStudents
         );
     }
 
-
     if (addStudentButton) {
-
         addStudentButton.addEventListener(
             "click",
             function () {
-
                 window.location.href =
                     "/pages/student-form.html";
-
             }
         );
     }
 
-
     if (previousButton) {
-
         previousButton.addEventListener(
             "click",
             function () {
-
                 if (currentPage > 1) {
-
                     currentPage--;
 
                     renderStudents();
-
                 }
-
             }
         );
     }
 
-
     if (nextButton) {
-
         nextButton.addEventListener(
             "click",
             function () {
-
                 const totalPages =
                     getTotalPages();
 
                 if (currentPage < totalPages) {
-
                     currentPage++;
 
                     renderStudents();
-
                 }
-
             }
         );
     }
 
-
     if (tableBody) {
-
         tableBody.addEventListener(
             "click",
             handleTableAction
         );
     }
 
-
     if (closeDeleteModalButton) {
-
         closeDeleteModalButton.addEventListener(
             "click",
             closeDeleteModal
         );
     }
 
-
     if (cancelDeleteButton) {
-
         cancelDeleteButton.addEventListener(
             "click",
             closeDeleteModal
         );
     }
 
-
     if (confirmDeleteButton) {
-
         confirmDeleteButton.addEventListener(
             "click",
             confirmDeleteStudent
         );
     }
 
-
     if (deleteModal) {
-
         deleteModal.addEventListener(
             "click",
             function (event) {
-
                 if (event.target === deleteModal) {
-
                     closeDeleteModal();
-
                 }
-
             }
         );
     }
 
-
     document.addEventListener(
         "keydown",
         function (event) {
-
             if (
                 event.key === "Escape" &&
                 deleteModal &&
                 !deleteModal.hidden
             ) {
-
                 closeDeleteModal();
-
             }
-
         }
     );
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| LOAD STUDENTS
-|--------------------------------------------------------------------------
-*/
-
 async function loadStudents() {
-
     if (!tableBody) {
         return;
     }
 
-
     showLoading();
 
-
     try {
-
         if (typeof apiGet !== "function") {
-
             throw new Error(
                 "API service is not available."
             );
-
         }
 
-
         const data =
-            await apiGet(STUDENTS_API);
-
+            await apiGet(
+                STUDENTS_API
+            );
 
         if (!data) {
-
             throw new Error(
                 "Unable to load students."
             );
-
         }
-
 
         students =
             extractStudents(data);
 
-
         updateStatistics();
-
 
         currentPage = 1;
 
-
         applyFilters();
-
-
     } catch (error) {
-
         console.error(
             "Load students error:",
             error
         );
 
-
         students = [];
         filteredStudents = [];
 
-
         updateStatistics();
         renderStudents();
-
 
         showMessage(
             error.message ||
             "Unable to load students.",
             "error"
         );
-
     }
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| EXTRACT STUDENTS
-|--------------------------------------------------------------------------
-*/
-
 function extractStudents(data) {
-
     if (Array.isArray(data)) {
-
         return data;
-
     }
-
 
     if (
         data &&
         Array.isArray(data.students)
     ) {
-
         return data.students;
-
     }
-
 
     if (
         data &&
         Array.isArray(data.data)
     ) {
-
         return data.data;
-
     }
-
 
     if (
         data &&
         data.data &&
         Array.isArray(data.data.students)
     ) {
-
         return data.data.students;
-
     }
-
 
     if (
         data &&
         Array.isArray(data.rows)
     ) {
-
         return data.rows;
-
     }
-
 
     return [];
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| FILTERS
-|--------------------------------------------------------------------------
-*/
-
 function handleFilters() {
-
     currentPage = 1;
 
     applyFilters();
 }
 
-
 function applyFilters() {
-
     const search =
         searchInput
             ? searchInput.value
                 .trim()
                 .toLowerCase()
             : "";
-
 
     const selectedStatus =
         statusFilter
@@ -483,7 +387,6 @@ function applyFilters() {
                 .toLowerCase()
             : "";
 
-
     const selectedGender =
         genderFilter
             ? genderFilter.value
@@ -491,15 +394,13 @@ function applyFilters() {
                 .toLowerCase()
             : "";
 
-
     filteredStudents =
         students.filter(
             function (student) {
-
                 const name =
-                    getStudentName(student)
-                        .toLowerCase();
-
+                    getStudentName(
+                        student
+                    ).toLowerCase();
 
                 const admissionNumber =
                     String(
@@ -510,7 +411,6 @@ function applyFilters() {
                         ) || ""
                     ).toLowerCase();
 
-
                 const studentNumber =
                     String(
                         getField(
@@ -519,7 +419,6 @@ function applyFilters() {
                             "studentNumber"
                         ) || ""
                     ).toLowerCase();
-
 
                 const phone =
                     String(
@@ -530,7 +429,6 @@ function applyFilters() {
                         ) || ""
                     ).toLowerCase();
 
-
                 const email =
                     String(
                         getField(
@@ -539,7 +437,6 @@ function applyFilters() {
                             "email"
                         ) || ""
                     ).toLowerCase();
-
 
                 const status =
                     String(
@@ -550,7 +447,6 @@ function applyFilters() {
                         ) || "active"
                     ).toLowerCase();
 
-
                 const gender =
                     String(
                         getField(
@@ -560,7 +456,6 @@ function applyFilters() {
                         ) || ""
                     ).toLowerCase();
 
-
                 const matchesSearch =
                     !search ||
                     name.includes(search) ||
@@ -569,62 +464,43 @@ function applyFilters() {
                     phone.includes(search) ||
                     email.includes(search);
 
-
                 const matchesStatus =
                     !selectedStatus ||
                     status === selectedStatus;
 
-
                 const matchesGender =
                     !selectedGender ||
                     gender === selectedGender;
-
 
                 return (
                     matchesSearch &&
                     matchesStatus &&
                     matchesGender
                 );
-
             }
         );
-
 
     renderStudents();
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| RENDER STUDENTS
-|--------------------------------------------------------------------------
-*/
-
 function renderStudents() {
-
     if (!tableBody) {
         return;
     }
 
-
     const total =
         filteredStudents.length;
-
 
     const totalPages =
         getTotalPages();
 
-
     if (currentPage > totalPages) {
-
         currentPage = totalPages;
-
     }
 
-
     const start =
-        (currentPage - 1) * PAGE_SIZE;
-
+        (currentPage - 1) *
+        PAGE_SIZE;
 
     const end =
         Math.min(
@@ -632,19 +508,15 @@ function renderStudents() {
             total
         );
 
-
     const pageStudents =
         filteredStudents.slice(
             start,
             end
         );
 
-
     tableBody.innerHTML = "";
 
-
     if (pageStudents.length === 0) {
-
         tableBody.innerHTML = `
             <tr>
                 <td
@@ -655,20 +527,15 @@ function renderStudents() {
                 </td>
             </tr>
         `;
-
     }
-
 
     pageStudents.forEach(
         function (student, index) {
-
             const id =
                 getStudentId(student);
 
-
             const name =
                 getStudentName(student);
-
 
             const admissionNumber =
                 getField(
@@ -677,14 +544,12 @@ function renderStudents() {
                     "admissionNumber"
                 );
 
-
             const gender =
                 getField(
                     student,
                     "gender",
                     "gender"
                 );
-
 
             const className =
                 getField(
@@ -703,7 +568,6 @@ function renderStudents() {
                     "classLevel"
                 );
 
-
             const classArm =
                 getField(
                     student,
@@ -716,14 +580,12 @@ function renderStudents() {
                     "classArm"
                 );
 
-
             const phone =
                 getField(
                     student,
                     "phone",
                     "phoneNumber"
                 );
-
 
             const status =
                 getField(
@@ -732,10 +594,10 @@ function renderStudents() {
                     "status"
                 ) || "active";
 
-
             const row =
-                document.createElement("tr");
-
+                document.createElement(
+                    "tr"
+                );
 
             row.innerHTML = `
                 <td>
@@ -755,40 +617,54 @@ function renderStudents() {
                 <td>
                     <span class="student-name">
                         ${escapeHtml(
-                            valueOrDash(name)
+                            valueOrDash(
+                                name
+                            )
                         )}
                     </span>
                 </td>
 
                 <td>
                     ${escapeHtml(
-                        valueOrDash(gender)
+                        valueOrDash(
+                            gender
+                        )
                     )}
                 </td>
 
                 <td>
                     ${escapeHtml(
-                        valueOrDash(className)
+                        valueOrDash(
+                            className
+                        )
                     )}
                 </td>
 
                 <td>
                     ${escapeHtml(
-                        valueOrDash(classArm)
+                        valueOrDash(
+                            classArm
+                        )
                     )}
                 </td>
 
                 <td>
                     ${escapeHtml(
-                        valueOrDash(phone)
+                        valueOrDash(
+                            phone
+                        )
                     )}
                 </td>
 
                 <td>
                     <span
-                        class="${getStatusClass(status)}"
+                        class="${getStatusClass(
+                            status
+                        )}"
                     >
-                        ${escapeHtml(status)}
+                        ${escapeHtml(
+                            status
+                        )}
                     </span>
                 </td>
 
@@ -826,12 +702,9 @@ function renderStudents() {
                 </td>
             `;
 
-
             tableBody.appendChild(row);
-
         }
     );
-
 
     updatePagination(
         total,
@@ -841,194 +714,120 @@ function renderStudents() {
     );
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| TABLE ACTION
-|--------------------------------------------------------------------------
-*/
-
 function handleTableAction(event) {
-
     const button =
         event.target.closest(
             "[data-action]"
         );
 
-
     if (!button) {
         return;
     }
 
-
     const action =
         button.dataset.action;
-
 
     const id =
         button.dataset.id;
 
-
     if (!id) {
-
         showMessage(
             "Student ID was not found.",
             "error"
         );
 
         return;
-
     }
-
 
     if (action === "view") {
-
         viewStudent(id);
-
+        return;
     }
-
 
     if (action === "edit") {
-
         editStudent(id);
-
+        return;
     }
 
-
     if (action === "delete") {
-
         openDeleteModal(id);
-
     }
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| VIEW STUDENT
-|--------------------------------------------------------------------------
-*/
-
 function viewStudent(id) {
-
     window.location.href =
         "/pages/student-profile.html?id=" +
         encodeURIComponent(id);
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| EDIT STUDENT
-|--------------------------------------------------------------------------
-*/
-
 function editStudent(id) {
-
     window.location.href =
         "/pages/student-form.html?id=" +
         encodeURIComponent(id);
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| DELETE MODAL
-|--------------------------------------------------------------------------
-*/
-
 function openDeleteModal(id) {
-
     const student =
         students.find(
             function (item) {
-
                 return String(
                     getStudentId(item)
                 ) === String(id);
-
             }
         );
 
-
     if (!student) {
-
         showMessage(
             "Student record was not found.",
             "error"
         );
 
         return;
-
     }
-
 
     studentToDelete = id;
 
-
     if (deleteStudentName) {
-
         deleteStudentName.textContent =
             getStudentName(student) ||
             "this student";
-
     }
-
 
     if (deleteModal) {
-
         deleteModal.hidden = false;
-
     }
 }
-
 
 function closeDeleteModal() {
-
     studentToDelete = null;
 
-
     if (deleteModal) {
-
         deleteModal.hidden = true;
-
     }
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| DELETE STUDENT
-|--------------------------------------------------------------------------
-*/
-
 async function confirmDeleteStudent() {
-
     if (!studentToDelete) {
         return;
     }
 
-
     try {
-
         if (confirmDeleteButton) {
-
-            confirmDeleteButton.disabled = true;
+            confirmDeleteButton.disabled =
+                true;
 
             confirmDeleteButton.textContent =
                 "Deleting...";
-
         }
 
-
-        if (typeof apiDelete !== "function") {
-
+        if (
+            typeof apiDelete !==
+            "function"
+        ) {
             throw new Error(
                 "API service is not available."
             );
-
         }
-
 
         const data =
             await apiDelete(
@@ -1039,74 +838,49 @@ async function confirmDeleteStudent() {
                 )
             );
 
-
         if (!data) {
-
             throw new Error(
                 "Unable to delete student."
             );
-
         }
 
-
         closeDeleteModal();
-
 
         showMessage(
             "Student deleted successfully.",
             "success"
         );
 
-
         await loadStudents();
-
-
     } catch (error) {
-
         console.error(
             "Delete student error:",
             error
         );
-
 
         showMessage(
             error.message ||
             "Unable to delete student.",
             "error"
         );
-
-
     } finally {
-
         if (confirmDeleteButton) {
-
-            confirmDeleteButton.disabled = false;
+            confirmDeleteButton.disabled =
+                false;
 
             confirmDeleteButton.textContent =
                 "Delete Student";
-
         }
-
     }
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| STATISTICS
-|--------------------------------------------------------------------------
-*/
-
 function updateStatistics() {
-
     const total =
         students.length;
-
 
     const active =
         students.filter(
             function (student) {
-
                 return String(
                     getField(
                         student,
@@ -1116,15 +890,12 @@ function updateStatistics() {
                 )
                     .toLowerCase() ===
                     "active";
-
             }
         ).length;
-
 
     const male =
         students.filter(
             function (student) {
-
                 return String(
                     getField(
                         student,
@@ -1134,15 +905,12 @@ function updateStatistics() {
                 )
                     .toLowerCase() ===
                     "male";
-
             }
         ).length;
-
 
     const female =
         students.filter(
             function (student) {
-
                 return String(
                     getField(
                         student,
@@ -1152,52 +920,31 @@ function updateStatistics() {
                 )
                     .toLowerCase() ===
                     "female";
-
             }
         ).length;
 
-
     if (totalStudents) {
-
         totalStudents.textContent =
             total;
-
     }
-
 
     if (activeStudents) {
-
         activeStudents.textContent =
             active;
-
     }
-
 
     if (maleStudents) {
-
         maleStudents.textContent =
             male;
-
     }
 
-
     if (femaleStudents) {
-
         femaleStudents.textContent =
             female;
-
     }
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| PAGINATION
-|--------------------------------------------------------------------------
-*/
-
 function getTotalPages() {
-
     return Math.max(
         1,
         Math.ceil(
@@ -1207,80 +954,52 @@ function getTotalPages() {
     );
 }
 
-
 function updatePagination(
     total,
     start,
     end,
     totalPages
 ) {
-
     if (showingFrom) {
-
         showingFrom.textContent =
             total === 0
                 ? 0
                 : start + 1;
-
     }
-
 
     if (showingTo) {
-
         showingTo.textContent =
             end;
-
     }
-
 
     if (totalResults) {
-
         totalResults.textContent =
             total;
-
     }
 
-
     if (pageNumber) {
-
         pageNumber.textContent =
             "Page " +
             currentPage +
             " of " +
             totalPages;
-
     }
-
 
     if (previousButton) {
-
         previousButton.disabled =
             currentPage <= 1;
-
     }
 
-
     if (nextButton) {
-
         nextButton.disabled =
             currentPage >= totalPages;
-
     }
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| LOADING
-|--------------------------------------------------------------------------
-*/
-
 function showLoading() {
-
     if (!tableBody) {
         return;
     }
-
 
     tableBody.innerHTML = `
         <tr>
@@ -1294,72 +1013,43 @@ function showLoading() {
     `;
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| MESSAGE
-|--------------------------------------------------------------------------
-*/
-
 function showMessage(
     message,
     type = "success"
 ) {
-
     const element =
         document.getElementById(
             "pageMessage"
         );
 
-
     if (!element) {
-
         console.log(message);
-
         return;
-
     }
-
 
     element.textContent =
         message;
 
-
     element.className =
         "message " + type;
 
-
     setTimeout(
         function () {
-
             element.className =
                 "message";
-
         },
         4000
     );
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| STUDENT NAME
-|--------------------------------------------------------------------------
-*/
-
 function getStudentName(student) {
-
     if (!student) {
         return "";
     }
 
-
     if (student.name) {
-
         return student.name;
-
     }
-
 
     return [
         student.first_name ||
@@ -1378,19 +1068,10 @@ function getStudentName(student) {
         .join(" ");
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| STUDENT ID
-|--------------------------------------------------------------------------
-*/
-
 function getStudentId(student) {
-
     if (!student) {
         return "";
     }
-
 
     return (
         student.id ||
@@ -1400,23 +1081,14 @@ function getStudentId(student) {
     );
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| FIELD
-|--------------------------------------------------------------------------
-*/
-
 function getField(
     student,
     snakeCase,
     camelCase
 ) {
-
     if (!student) {
         return "";
     }
-
 
     return (
         student[snakeCase] ??
@@ -1424,38 +1096,19 @@ function getField(
     );
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| SAFE VALUE
-|--------------------------------------------------------------------------
-*/
-
 function valueOrDash(value) {
-
     if (
         value === null ||
         value === undefined ||
         value === ""
     ) {
-
         return "—";
-
     }
-
 
     return value;
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| STATUS CLASS
-|--------------------------------------------------------------------------
-*/
-
 function getStatusClass(status) {
-
     const normalized =
         String(
             status || "active"
@@ -1466,22 +1119,13 @@ function getStatusClass(status) {
                 "-"
             );
 
-
     return (
         "status status-" +
         normalized
     );
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| ESCAPE HTML
-|--------------------------------------------------------------------------
-*/
-
 function escapeHtml(value) {
-
     return String(value ?? "")
         .replace(
             /&/g,
@@ -1504,13 +1148,6 @@ function escapeHtml(value) {
             "&#039;"
         );
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| GLOBAL EXPORTS
-|--------------------------------------------------------------------------
-*/
 
 window.students =
     students;

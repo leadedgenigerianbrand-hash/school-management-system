@@ -1,448 +1,246 @@
-```javascript
 "use strict";
-
-const { query } = require("../config/database");
 
 /*
 |--------------------------------------------------------------------------
 | RESULT SERVICE
 |--------------------------------------------------------------------------
-| Uses the actual results table structure:
 |
-| student_id
-| school_id
-| academic_session_id
-| term_id
-| class_id
-| subject_id
-| ca_score
-| exam_score
-| total_score
-| grade
-| grade_point
-| position
-| teacher_remark
-| principal_remark
-| is_published
+| This service is the business/coordination layer for the Results module.
+|
+| Architecture:
+|
+| Controller
+| ↓
+| Result Service
+| ↓
+| Result Model
+| ↓
+| PostgreSQL
+|
+| The service does NOT contain direct SQL for the results table.
+| Database operations belong to:
+|
+| models/resultModel.js
+|
+| This prevents duplicate database logic and keeps the Results module
+| consistent throughout the application.
 |--------------------------------------------------------------------------
 */
 
+const resultModel = require("../models/resultModel");
 
 /*
 |--------------------------------------------------------------------------
-| Get Student Results
+| VALIDATION HELPERS
 |--------------------------------------------------------------------------
 */
 
-async function getStudentResults(
-    studentId,
-    schoolId,
-    {
-        sessionId = null,
-        termId = null,
-        subjectId = null
-    } = {}
-) {
-    if (!studentId) {
-        throw new Error("Student ID is required.");
-    }
-
-    if (!schoolId) {
-        throw new Error("School ID is required.");
-    }
-
-    let sql = `
-        SELECT
-            r.*,
-
-            s.first_name,
-            s.last_name,
-            s.admission_number,
-
-            sub.subject_name,
-            sub.subject_code,
-
-            ac.session_name,
-            ac.session_code,
-
-            t.term_name,
-            t.term_code
-
-        FROM results r
-
-        INNER JOIN students s
-            ON s.id = r.student_id
-
-        LEFT JOIN subjects sub
-            ON sub.id = r.subject_id
-
-        LEFT JOIN academic_sessions ac
-            ON ac.id = r.academic_session_id
-
-        LEFT JOIN terms t
-            ON t.id = r.term_id
-
-        WHERE r.student_id = $1
-          AND r.school_id = $2
-    `;
-
-    const values = [
-        studentId,
-        schoolId
-    ];
-
-    if (sessionId) {
-        values.push(sessionId);
-
-        sql += `
-            AND r.academic_session_id = $${values.length}
-        `;
-    }
-
-    if (termId) {
-        values.push(termId);
-
-        sql += `
-            AND r.term_id = $${values.length}
-        `;
-    }
-
-    if (subjectId) {
-        values.push(subjectId);
-
-        sql += `
-            AND r.subject_id = $${values.length}
-        `;
-    }
-
-    sql += `
-        ORDER BY
-            sub.subject_name ASC,
-            r.created_at ASC
-    `;
-
-    const result = await query(sql, values);
-
-    return result.rows;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Get Result By ID
-|--------------------------------------------------------------------------
-*/
-
-async function getResultById(resultId, schoolId) {
-    if (!resultId) {
-        throw new Error("Result ID is required.");
-    }
-
-    if (!schoolId) {
-        throw new Error("School ID is required.");
-    }
-
-    const result = await query(
-        `
-            SELECT
-                r.*,
-
-                s.first_name,
-                s.last_name,
-                s.admission_number,
-
-                sub.subject_name,
-                sub.subject_code,
-
-                ac.session_name,
-                ac.session_code,
-
-                t.term_name,
-                t.term_code
-
-            FROM results r
-
-            INNER JOIN students s
-                ON s.id = r.student_id
-
-            LEFT JOIN subjects sub
-                ON sub.id = r.subject_id
-
-            LEFT JOIN academic_sessions ac
-                ON ac.id = r.academic_session_id
-
-            LEFT JOIN terms t
-                ON t.id = r.term_id
-
-            WHERE r.id = $1
-              AND r.school_id = $2
-
-            LIMIT 1
-        `,
-        [
-            resultId,
-            schoolId
-        ]
-    );
-
-    return result.rows[0] || null;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Find Existing Result
-|--------------------------------------------------------------------------
-*/
-
-async function findExistingResult({
-    studentId,
-    subjectId,
-    sessionId,
-    termId,
-    schoolId
-}) {
-    if (!studentId) {
-        throw new Error("Student ID is required.");
-    }
-
-    if (!subjectId) {
-        throw new Error("Subject ID is required.");
-    }
-
-    if (!schoolId) {
-        throw new Error("School ID is required.");
-    }
-
-    const result = await query(
-        `
-            SELECT *
-            FROM results
-
-            WHERE student_id = $1
-              AND subject_id = $2
-              AND school_id = $3
-              AND academic_session_id IS NOT DISTINCT FROM $4
-              AND term_id IS NOT DISTINCT FROM $5
-
-            LIMIT 1
-        `,
-        [
-            studentId,
-            subjectId,
-            schoolId,
-            sessionId || null,
-            termId || null
-        ]
-    );
-
-    return result.rows[0] || null;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Create Result
-|--------------------------------------------------------------------------
-*/
-
-async function createResult({
-    schoolId,
-    studentId,
-    subjectId,
-    sessionId = null,
-    termId = null,
-    classId = null,
-    caScore = 0,
-    examScore = 0,
-    totalScore = null,
-    grade = null,
-    gradePoint = null,
-    position = null,
-    teacherRemark = null,
-    principalRemark = null,
-    isPublished = false
-}) {
-    if (!schoolId) {
-        throw new Error("School ID is required.");
-    }
-
-    if (!studentId) {
-        throw new Error("Student ID is required.");
-    }
-
-    if (!subjectId) {
-        throw new Error("Subject ID is required.");
-    }
-
-    if (!sessionId) {
-        throw new Error("Academic session ID is required.");
-    }
-
-    const ca = Number(caScore) || 0;
-    const exam = Number(examScore) || 0;
-
-    if (ca < 0 || ca > 40) {
-        throw new Error("CA score must be between 0 and 40.");
-    }
-
-    if (exam < 0 || exam > 60) {
-        throw new Error("Exam score must be between 0 and 60.");
-    }
-
-    const calculatedTotal =
-        totalScore === null ||
-        totalScore === undefined
-            ? ca + exam
-            : Number(totalScore);
-
+function requireValue(value, message) {
     if (
-        calculatedTotal < 0 ||
-        calculatedTotal > 100
+        value === undefined ||
+        value === null ||
+        String(value).trim() === ""
     ) {
-        throw new Error(
-            "Total score must be between 0 and 100."
-        );
+        throw new Error(message);
     }
 
-    const calculatedGrade =
-        grade || calculateGrade(calculatedTotal);
-
-    const calculatedGradePoint =
-        gradePoint === null ||
-        gradePoint === undefined
-            ? calculateGradePoint(calculatedTotal)
-            : Number(gradePoint);
-
-    const result = await query(
-        `
-            INSERT INTO results (
-                school_id,
-                student_id,
-                academic_session_id,
-                term_id,
-                class_id,
-                subject_id,
-                ca_score,
-                exam_score,
-                total_score,
-                grade,
-                grade_point,
-                position,
-                teacher_remark,
-                principal_remark,
-                is_published
-            )
-
-            VALUES (
-                $1,
-                $2,
-                $3,
-                $4,
-                $5,
-                $6,
-                $7,
-                $8,
-                $9,
-                $10,
-                $11,
-                $12,
-                $13,
-                $14,
-                $15
-            )
-
-            RETURNING *
-        `,
-        [
-            schoolId,
-            studentId,
-            sessionId,
-            termId,
-            classId,
-            subjectId,
-            ca,
-            exam,
-            calculatedTotal,
-            calculatedGrade,
-            calculatedGradePoint,
-            position,
-            teacherRemark,
-            principalRemark,
-            Boolean(isPublished)
-        ]
-    );
-
-    return result.rows[0];
+    return value;
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Update Result
-|--------------------------------------------------------------------------
-*/
-
-async function updateResult(
-    resultId,
-    schoolId,
-    data
-) {
-    if (!resultId) {
-        throw new Error("Result ID is required.");
-    }
-
-    if (!schoolId) {
-        throw new Error("School ID is required.");
-    }
-
-    const currentResult = await query(
-        `
-            SELECT *
-            FROM results
-            WHERE id = $1
-              AND school_id = $2
-            LIMIT 1
-        `,
-        [
-            resultId,
-            schoolId
-        ]
-    );
-
-    const existing = currentResult.rows[0];
-
-    if (!existing) {
+function normalizeOptionalValue(value) {
+    if (
+        value === undefined ||
+        value === null ||
+        String(value).trim() === ""
+    ) {
         return null;
     }
 
-    const merged = {
-        ...existing,
-        ...data
+    return value;
+}
+
+function normalizeBoolean(value, defaultValue = false) {
+    if (
+        value === undefined ||
+        value === null ||
+        value === ""
+    ) {
+        return defaultValue;
+    }
+
+    if (typeof value === "boolean") {
+        return value;
+    }
+
+    if (typeof value === "string") {
+        const normalized = value.trim().toLowerCase();
+
+        if (
+            normalized === "true" ||
+            normalized === "1" ||
+            normalized === "yes" ||
+            normalized === "on"
+        ) {
+            return true;
+        }
+
+        if (
+            normalized === "false" ||
+            normalized === "0" ||
+            normalized === "no" ||
+            normalized === "off"
+        ) {
+            return false;
+        }
+    }
+
+    return Boolean(value);
+}
+
+function normalizeScore(value, defaultValue = 0) {
+    if (
+        value === undefined ||
+        value === null ||
+        value === ""
+    ) {
+        return defaultValue;
+    }
+
+    const number = Number(value);
+
+    if (!Number.isFinite(number)) {
+        throw new Error("Score must be a valid number.");
+    }
+
+    return number;
+}
+
+/*
+|--------------------------------------------------------------------------
+| RESULT INPUT NORMALIZATION
+|--------------------------------------------------------------------------
+*/
+
+function normalizeResultInput(data = {}) {
+    return {
+        schoolId:
+            data.schoolId ??
+            data.school_id,
+
+        studentId:
+            data.studentId ??
+            data.student_id,
+
+        subjectId:
+            data.subjectId ??
+            data.subject_id,
+
+        sessionId:
+            data.sessionId ??
+            data.session_id,
+
+        termId:
+            data.termId ??
+            data.term_id,
+
+        classId:
+            data.classId ??
+            data.class_id,
+
+        caScore:
+            data.caScore ??
+            data.ca_score ??
+            0,
+
+        examScore:
+            data.examScore ??
+            data.exam_score ??
+            0,
+
+        totalScore:
+            data.totalScore ??
+            data.total_score,
+
+        grade: data.grade,
+
+        gradePoint:
+            data.gradePoint ??
+            data.grade_point,
+
+        position: data.position,
+
+        teacherRemark:
+            data.teacherRemark ??
+            data.teacher_remark,
+
+        principalRemark:
+            data.principalRemark ??
+            data.principal_remark,
+
+        isPublished:
+            data.isPublished ??
+            data.is_published ??
+            false
     };
+}
 
-    const ca =
-        data.caScore !== undefined
-            ? Number(data.caScore) || 0
-            : Number(existing.ca_score) || 0;
+/*
+|--------------------------------------------------------------------------
+| VALIDATE RESULT INPUT
+|--------------------------------------------------------------------------
+*/
 
-    const exam =
-        data.examScore !== undefined
-            ? Number(data.examScore) || 0
-            : Number(existing.exam_score) || 0;
+function validateResultInput(data, options = {}) {
+    const input = normalizeResultInput(data);
+
+    requireValue(
+        input.schoolId,
+        "School ID is required."
+    );
+
+    requireValue(
+        input.studentId,
+        "Student ID is required."
+    );
+
+    requireValue(
+        input.subjectId,
+        "Subject ID is required."
+    );
+
+    if (options.requireSession !== false) {
+        requireValue(
+            input.sessionId,
+            "Academic session ID is required."
+        );
+    }
+
+    const ca = normalizeScore(input.caScore, 0);
+    const exam = normalizeScore(input.examScore, 0);
 
     if (ca < 0 || ca > 40) {
-        throw new Error("CA score must be between 0 and 40.");
+        throw new Error(
+            "CA score must be between 0 and 40."
+        );
     }
 
     if (exam < 0 || exam > 60) {
-        throw new Error("Exam score must be between 0 and 60.");
+        throw new Error(
+            "Exam score must be between 0 and 60."
+        );
     }
 
-    const total =
-        data.totalScore !== undefined
-            ? Number(data.totalScore)
-            : ca + exam;
+    let total = input.totalScore;
+
+    if (
+        total === undefined ||
+        total === null ||
+        total === ""
+    ) {
+        total = ca + exam;
+    } else {
+        total = normalizeScore(total);
+    }
 
     if (total < 0 || total > 100) {
         throw new Error(
@@ -450,109 +248,462 @@ async function updateResult(
         );
     }
 
-    const grade =
-        data.grade ||
-        calculateGrade(total);
+    return {
+        ...input,
 
-    const gradePoint =
-        data.gradePoint !== undefined
-            ? Number(data.gradePoint)
-            : calculateGradePoint(total);
+        schoolId: input.schoolId,
 
-    const allowedFields = {
-        studentId: "student_id",
-        subjectId: "subject_id",
-        sessionId: "academic_session_id",
-        termId: "term_id",
-        classId: "class_id",
+        studentId: input.studentId,
+
+        subjectId: input.subjectId,
+
+        sessionId: input.sessionId,
+
+        termId:
+            normalizeOptionalValue(
+                input.termId
+            ),
+
+        classId:
+            normalizeOptionalValue(
+                input.classId
+            ),
+
+        caScore: ca,
+
+        examScore: exam,
+
+        totalScore: total,
+
+        grade:
+            normalizeOptionalValue(
+                input.grade
+            ),
+
+        gradePoint:
+            input.gradePoint === undefined ||
+            input.gradePoint === null ||
+            input.gradePoint === ""
+                ? null
+                : normalizeScore(
+                    input.gradePoint
+                ),
+
+        position:
+            input.position === undefined ||
+            input.position === null ||
+            input.position === ""
+                ? null
+                : input.position,
+
+        teacherRemark:
+            normalizeOptionalValue(
+                input.teacherRemark
+            ),
+
+        principalRemark:
+            normalizeOptionalValue(
+                input.principalRemark
+            ),
+
+        isPublished:
+            normalizeBoolean(
+                input.isPublished,
+                false
+            )
+    };
+}
+
+/*
+|--------------------------------------------------------------------------
+| GET STUDENT RESULTS
+|--------------------------------------------------------------------------
+*/
+
+async function getStudentResults(
+    studentId,
+    schoolId,
+    filters = {}
+) {
+    requireValue(
+        studentId,
+        "Student ID is required."
+    );
+
+    requireValue(
+        schoolId,
+        "School ID is required."
+    );
+
+    const {
+        sessionId = null,
+        termId = null,
+        subjectId = null
+    } = filters || {};
+
+    return resultModel.getStudentResults(
+        studentId,
+        schoolId,
+        {
+            sessionId:
+                normalizeOptionalValue(
+                    sessionId
+                ),
+
+            termId:
+                normalizeOptionalValue(
+                    termId
+                ),
+
+            subjectId:
+                normalizeOptionalValue(
+                    subjectId
+                )
+        }
+    );
+}
+
+/*
+|--------------------------------------------------------------------------
+| GET RESULT BY ID
+|--------------------------------------------------------------------------
+*/
+
+async function getResultById(
+    resultId,
+    schoolId
+) {
+    requireValue(
+        resultId,
+        "Result ID is required."
+    );
+
+    requireValue(
+        schoolId,
+        "School ID is required."
+    );
+
+    return resultModel.getResultById(
+        resultId,
+        schoolId
+    );
+}
+
+/*
+|--------------------------------------------------------------------------
+| FIND EXISTING RESULT
+|--------------------------------------------------------------------------
+*/
+
+async function findExistingResult(data = {}) {
+    const input = normalizeResultInput(data);
+
+    requireValue(
+        input.studentId,
+        "Student ID is required."
+    );
+
+    requireValue(
+        input.subjectId,
+        "Subject ID is required."
+    );
+
+    requireValue(
+        input.schoolId,
+        "School ID is required."
+    );
+
+    return resultModel.findExistingResult({
+        studentId: input.studentId,
+
+        subjectId: input.subjectId,
+
+        sessionId:
+            normalizeOptionalValue(
+                input.sessionId
+            ),
+
+        termId:
+            normalizeOptionalValue(
+                input.termId
+            ),
+
+        schoolId: input.schoolId
+    });
+}
+
+/*
+|--------------------------------------------------------------------------
+| CREATE RESULT
+|--------------------------------------------------------------------------
+*/
+
+async function createResult(data = {}) {
+    const input =
+        validateResultInput(data);
+
+    return resultModel.createResult({
+        schoolId: input.schoolId,
+
+        studentId: input.studentId,
+
+        subjectId: input.subjectId,
+
+        sessionId: input.sessionId,
+
+        termId: input.termId,
+
+        classId: input.classId,
+
+        caScore: input.caScore,
+
+        examScore: input.examScore,
+
+        totalScore: input.totalScore,
+
+        grade: input.grade,
+
+        gradePoint: input.gradePoint,
+
+        position: input.position,
+
+        teacherRemark:
+            input.teacherRemark,
+
+        principalRemark:
+            input.principalRemark,
+
+        isPublished:
+            input.isPublished
+    });
+}
+
+/*
+|--------------------------------------------------------------------------
+| CREATE BULK RESULTS
+|--------------------------------------------------------------------------
+|
+| Bulk creation is deliberately coordinated here rather than duplicating
+| SQL. Every individual result goes through the finalized result model.
+|--------------------------------------------------------------------------
+*/
+
+async function createBulkResults(
+    results = [],
+    schoolId = null
+) {
+    if (!Array.isArray(results)) {
+        throw new Error(
+            "Results must be provided as an array."
+        );
+    }
+
+    requireValue(
+        schoolId,
+        "School ID is required."
+    );
+
+    if (!results.length) {
+        return [];
+    }
+
+    const createdResults = [];
+
+    for (const item of results) {
+        const input = {
+            ...item,
+
+            schoolId:
+                item.schoolId ??
+                item.school_id ??
+                schoolId
+        };
+
+        const created =
+            await createResult(input);
+
+        createdResults.push(created);
+    }
+
+    return createdResults;
+}
+
+/*
+|--------------------------------------------------------------------------
+| UPDATE RESULT
+|--------------------------------------------------------------------------
+*/
+
+async function updateResult(
+    resultId,
+    schoolId,
+    data = {}
+) {
+    requireValue(
+        resultId,
+        "Result ID is required."
+    );
+
+    requireValue(
+        schoolId,
+        "School ID is required."
+    );
+
+    if (
+        !data ||
+        typeof data !== "object" ||
+        Array.isArray(data)
+    ) {
+        throw new Error(
+            "Result update data must be an object."
+        );
+    }
+
+    const updateData = {};
+
+    const fieldMap = {
+        studentId: "studentId",
+        student_id: "studentId",
+
+        subjectId: "subjectId",
+        subject_id: "subjectId",
+
+        sessionId: "sessionId",
+        session_id: "sessionId",
+
+        termId: "termId",
+        term_id: "termId",
+
+        classId: "classId",
+        class_id: "classId",
+
+        caScore: "caScore",
+        ca_score: "caScore",
+
+        examScore: "examScore",
+        exam_score: "examScore",
+
+        totalScore: "totalScore",
+        total_score: "totalScore",
+
+        grade: "grade",
+
+        gradePoint: "gradePoint",
+        grade_point: "gradePoint",
+
         position: "position",
-        teacherRemark: "teacher_remark",
-        principalRemark: "principal_remark",
-        isPublished: "is_published"
+
+        teacherRemark: "teacherRemark",
+        teacher_remark: "teacherRemark",
+
+        principalRemark: "principalRemark",
+        principal_remark: "principalRemark",
+
+        isPublished: "isPublished",
+        is_published: "isPublished"
     };
 
-    const updates = [];
-    const values = [];
+    for (const key of Object.keys(data)) {
+        const mappedKey = fieldMap[key];
 
-    for (const key of Object.keys(data || {})) {
+        if (mappedKey) {
+            updateData[mappedKey] =
+                data[key];
+        }
+    }
+
+    if (
+        updateData.studentId !== undefined &&
+        !updateData.studentId
+    ) {
+        throw new Error(
+            "Student ID cannot be empty."
+        );
+    }
+
+    if (
+        updateData.subjectId !== undefined &&
+        !updateData.subjectId
+    ) {
+        throw new Error(
+            "Subject ID cannot be empty."
+        );
+    }
+
+    if (
+        updateData.sessionId !== undefined &&
+        !updateData.sessionId
+    ) {
+        throw new Error(
+            "Academic session ID cannot be empty."
+        );
+    }
+
+    if (updateData.caScore !== undefined) {
+        updateData.caScore =
+            normalizeScore(
+                updateData.caScore
+            );
+
         if (
-            allowedFields[key] &&
-            data[key] !== undefined
+            updateData.caScore < 0 ||
+            updateData.caScore > 40
         ) {
-            values.push(data[key]);
-
-            updates.push(
-                `${allowedFields[key]} = $${values.length}`
+            throw new Error(
+                "CA score must be between 0 and 40."
             );
         }
     }
 
-    /*
-    |----------------------------------------------------------------------
-    | Always update calculated scores when score data changes.
-    |----------------------------------------------------------------------
-    */
+    if (updateData.examScore !== undefined) {
+        updateData.examScore =
+            normalizeScore(
+                updateData.examScore
+            );
 
-    if (
-        data.caScore !== undefined ||
-        data.examScore !== undefined ||
-        data.totalScore !== undefined
-    ) {
-        values.push(ca);
-        updates.push(`ca_score = $${values.length}`);
-
-        values.push(exam);
-        updates.push(`exam_score = $${values.length}`);
-
-        values.push(total);
-        updates.push(`total_score = $${values.length}`);
-
-        values.push(grade);
-        updates.push(`grade = $${values.length}`);
-
-        values.push(gradePoint);
-        updates.push(`grade_point = $${values.length}`);
+        if (
+            updateData.examScore < 0 ||
+            updateData.examScore > 60
+        ) {
+            throw new Error(
+                "Exam score must be between 0 and 60."
+            );
+        }
     }
 
-    if (!updates.length) {
-        throw new Error(
-            "No valid fields supplied for update."
-        );
+    if (updateData.totalScore !== undefined) {
+        updateData.totalScore =
+            normalizeScore(
+                updateData.totalScore
+            );
+
+        if (
+            updateData.totalScore < 0 ||
+            updateData.totalScore > 100
+        ) {
+            throw new Error(
+                "Total score must be between 0 and 100."
+            );
+        }
     }
 
-    values.push(resultId);
+    if (updateData.isPublished !== undefined) {
+        updateData.isPublished =
+            normalizeBoolean(
+                updateData.isPublished
+            );
+    }
 
-    const resultIdPosition =
-        values.length;
-
-    values.push(schoolId);
-
-    const schoolIdPosition =
-        values.length;
-
-    const result = await query(
-        `
-            UPDATE results
-
-            SET
-                ${updates.join(", ")},
-                updated_at = CURRENT_TIMESTAMP
-
-            WHERE id = $${resultIdPosition}
-              AND school_id = $${schoolIdPosition}
-
-            RETURNING *
-        `,
-        values
+    return resultModel.updateResult(
+        resultId,
+        schoolId,
+        updateData
     );
-
-    return result.rows[0] || null;
 }
-
 
 /*
 |--------------------------------------------------------------------------
-| Delete Result
+| DELETE RESULT
 |--------------------------------------------------------------------------
 */
 
@@ -560,352 +711,160 @@ async function deleteResult(
     resultId,
     schoolId
 ) {
-    if (!resultId) {
-        throw new Error("Result ID is required.");
-    }
-
-    if (!schoolId) {
-        throw new Error("School ID is required.");
-    }
-
-    const result = await query(
-        `
-            DELETE FROM results
-
-            WHERE id = $1
-              AND school_id = $2
-
-            RETURNING *
-        `,
-        [
-            resultId,
-            schoolId
-        ]
+    requireValue(
+        resultId,
+        "Result ID is required."
     );
 
-    return result.rows[0] || null;
-}
+    requireValue(
+        schoolId,
+        "School ID is required."
+    );
 
+    return resultModel.deleteResult(
+        resultId,
+        schoolId
+    );
+}
 
 /*
 |--------------------------------------------------------------------------
-| Get Results By Class
+| GET RESULTS BY CLASS
 |--------------------------------------------------------------------------
 */
 
 async function getResultsByClass(
     classId,
     schoolId,
-    {
+    filters = {}
+) {
+    requireValue(
+        classId,
+        "Class ID is required."
+    );
+
+    requireValue(
+        schoolId,
+        "School ID is required."
+    );
+
+    const {
         sessionId = null,
         termId = null,
         subjectId = null
-    } = {}
-) {
-    if (!classId) {
-        throw new Error("Class ID is required.");
-    }
+    } = filters || {};
 
-    if (!schoolId) {
-        throw new Error("School ID is required.");
-    }
-
-    let sql = `
-        SELECT
-            r.*,
-
-            s.first_name,
-            s.last_name,
-            s.admission_number,
-
-            sub.subject_name,
-            sub.subject_code
-
-        FROM results r
-
-        INNER JOIN students s
-            ON s.id = r.student_id
-
-        LEFT JOIN subjects sub
-            ON sub.id = r.subject_id
-
-        WHERE r.class_id = $1
-          AND r.school_id = $2
-    `;
-
-    const values = [
+    return resultModel.getResultsByClass(
         classId,
-        schoolId
-    ];
+        schoolId,
+        {
+            sessionId:
+                normalizeOptionalValue(
+                    sessionId
+                ),
 
-    if (sessionId) {
-        values.push(sessionId);
+            termId:
+                normalizeOptionalValue(
+                    termId
+                ),
 
-        sql += `
-            AND r.academic_session_id = $${values.length}
-        `;
-    }
-
-    if (termId) {
-        values.push(termId);
-
-        sql += `
-            AND r.term_id = $${values.length}
-        `;
-    }
-
-    if (subjectId) {
-        values.push(subjectId);
-
-        sql += `
-            AND r.subject_id = $${values.length}
-        `;
-    }
-
-    sql += `
-        ORDER BY
-            s.last_name ASC,
-            s.first_name ASC,
-            sub.subject_name ASC
-    `;
-
-    const result = await query(sql, values);
-
-    return result.rows;
+            subjectId:
+                normalizeOptionalValue(
+                    subjectId
+                )
+        }
+    );
 }
-
 
 /*
 |--------------------------------------------------------------------------
-| Get Student Result Summary
+| GET STUDENT RESULT SUMMARY
 |--------------------------------------------------------------------------
 */
 
 async function getStudentResultSummary(
     studentId,
     schoolId,
-    {
+    filters = {}
+) {
+    requireValue(
+        studentId,
+        "Student ID is required."
+    );
+
+    requireValue(
+        schoolId,
+        "School ID is required."
+    );
+
+    const {
         sessionId = null,
         termId = null
-    } = {}
-) {
-    if (!studentId) {
-        throw new Error("Student ID is required.");
-    }
+    } = filters || {};
 
-    if (!schoolId) {
-        throw new Error("School ID is required.");
-    }
-
-    let sql = `
-        SELECT
-            COUNT(*)::INTEGER AS subject_count,
-
-            COALESCE(SUM(ca_score), 0)
-                AS total_ca,
-
-            COALESCE(SUM(exam_score), 0)
-                AS total_exam,
-
-            COALESCE(SUM(total_score), 0)
-                AS total_score,
-
-            COALESCE(AVG(total_score), 0)
-                AS average_score,
-
-            COUNT(
-                CASE
-                    WHEN grade IN ('A', 'A1')
-                    THEN 1
-                END
-            )::INTEGER AS grade_a_count,
-
-            COUNT(
-                CASE
-                    WHEN grade IN ('B', 'B2', 'B3')
-                    THEN 1
-                END
-            )::INTEGER AS grade_b_count,
-
-            COUNT(
-                CASE
-                    WHEN grade IN ('C', 'C4', 'C5', 'C6')
-                    THEN 1
-                END
-            )::INTEGER AS grade_c_count,
-
-            COUNT(
-                CASE
-                    WHEN grade IN ('D', 'E', 'F', 'F9')
-                    THEN 1
-                END
-            )::INTEGER AS below_c_count
-
-        FROM results
-
-        WHERE student_id = $1
-          AND school_id = $2
-    `;
-
-    const values = [
+    return resultModel.getStudentResultSummary(
         studentId,
-        schoolId
-    ];
+        schoolId,
+        {
+            sessionId:
+                normalizeOptionalValue(
+                    sessionId
+                ),
 
-    if (sessionId) {
-        values.push(sessionId);
-
-        sql += `
-            AND academic_session_id = $${values.length}
-        `;
-    }
-
-    if (termId) {
-        values.push(termId);
-
-        sql += `
-            AND term_id = $${values.length}
-        `;
-    }
-
-    const result = await query(sql, values);
-
-    const row = result.rows[0];
-
-    return {
-        subjectCount:
-            Number(row.subject_count),
-
-        totalCA:
-            Number(row.total_ca),
-
-        totalExam:
-            Number(row.total_exam),
-
-        totalScore:
-            Number(row.total_score),
-
-        averageScore:
-            Number(row.average_score),
-
-        gradeACount:
-            Number(row.grade_a_count),
-
-        gradeBCount:
-            Number(row.grade_b_count),
-
-        gradeCCount:
-            Number(row.grade_c_count),
-
-        belowCCount:
-            Number(row.below_c_count)
-    };
+            termId:
+                normalizeOptionalValue(
+                    termId
+                )
+        }
+    );
 }
-
 
 /*
 |--------------------------------------------------------------------------
-| Get Class Result Statistics
+| GET CLASS RESULT STATISTICS
 |--------------------------------------------------------------------------
 */
 
 async function getClassResultStatistics(
     classId,
     schoolId,
-    {
+    filters = {}
+) {
+    requireValue(
+        classId,
+        "Class ID is required."
+    );
+
+    requireValue(
+        schoolId,
+        "School ID is required."
+    );
+
+    const {
         sessionId = null,
         termId = null
-    } = {}
-) {
-    if (!classId) {
-        throw new Error("Class ID is required.");
-    }
+    } = filters || {};
 
-    if (!schoolId) {
-        throw new Error("School ID is required.");
-    }
-
-    let sql = `
-        SELECT
-            COUNT(*)::INTEGER AS result_count,
-
-            COUNT(DISTINCT student_id)::INTEGER
-                AS student_count,
-
-            COUNT(DISTINCT subject_id)::INTEGER
-                AS subject_count,
-
-            COALESCE(SUM(total_score), 0)
-                AS total_score,
-
-            COALESCE(AVG(total_score), 0)
-                AS average_score,
-
-            COALESCE(MAX(total_score), 0)
-                AS highest_score,
-
-            COALESCE(MIN(total_score), 0)
-                AS lowest_score
-
-        FROM results
-
-        WHERE class_id = $1
-          AND school_id = $2
-    `;
-
-    const values = [
+    return resultModel.getClassResultStatistics(
         classId,
-        schoolId
-    ];
+        schoolId,
+        {
+            sessionId:
+                normalizeOptionalValue(
+                    sessionId
+                ),
 
-    if (sessionId) {
-        values.push(sessionId);
-
-        sql += `
-            AND academic_session_id = $${values.length}
-        `;
-    }
-
-    if (termId) {
-        values.push(termId);
-
-        sql += `
-            AND term_id = $${values.length}
-        `;
-    }
-
-    const result = await query(sql, values);
-
-    const row = result.rows[0];
-
-    return {
-        resultCount:
-            Number(row.result_count),
-
-        studentCount:
-            Number(row.student_count),
-
-        subjectCount:
-            Number(row.subject_count),
-
-        totalScore:
-            Number(row.total_score),
-
-        averageScore:
-            Number(row.average_score),
-
-        highestScore:
-            Number(row.highest_score),
-
-        lowestScore:
-            Number(row.lowest_score)
-    };
+            termId:
+                normalizeOptionalValue(
+                    termId
+                )
+        }
+    );
 }
-
 
 /*
 |--------------------------------------------------------------------------
-| Search Results
+| SEARCH RESULTS
 |--------------------------------------------------------------------------
 */
 
@@ -913,9 +872,10 @@ async function searchResults(
     searchTerm,
     schoolId
 ) {
-    if (!schoolId) {
-        throw new Error("School ID is required.");
-    }
+    requireValue(
+        schoolId,
+        "School ID is required."
+    );
 
     const term =
         String(searchTerm || "").trim();
@@ -924,128 +884,60 @@ async function searchResults(
         return [];
     }
 
-    const result = await query(
-        `
-            SELECT
-                r.*,
-
-                s.first_name,
-                s.last_name,
-                s.admission_number,
-
-                sub.subject_name,
-                sub.subject_code
-
-            FROM results r
-
-            INNER JOIN students s
-                ON s.id = r.student_id
-
-            LEFT JOIN subjects sub
-                ON sub.id = r.subject_id
-
-            WHERE r.school_id = $1
-
-              AND (
-                    s.first_name ILIKE $2
-                    OR s.last_name ILIKE $2
-                    OR s.admission_number ILIKE $2
-                    OR sub.subject_name ILIKE $2
-                    OR sub.subject_code ILIKE $2
-                  )
-
-            ORDER BY
-                s.last_name ASC,
-                s.first_name ASC
-
-            LIMIT 100
-        `,
-        [
-            schoolId,
-            `%${term}%`
-        ]
+    return resultModel.searchResults(
+        term,
+        schoolId
     );
-
-    return result.rows;
 }
-
 
 /*
 |--------------------------------------------------------------------------
-| Publish Results
+| PUBLISH RESULTS
 |--------------------------------------------------------------------------
 */
 
-async function publishResults({
-    schoolId,
-    studentId = null,
-    classId = null,
-    sessionId = null,
-    termId = null
-}) {
-    if (!schoolId) {
-        throw new Error("School ID is required.");
-    }
+async function publishResults(data = {}) {
+    const schoolId =
+        data.schoolId ??
+        data.school_id;
 
-    let sql = `
-        UPDATE results
+    requireValue(
+        schoolId,
+        "School ID is required."
+    );
 
-        SET
-            is_published = TRUE,
-            updated_at = CURRENT_TIMESTAMP
+    return resultModel.publishResults({
+        schoolId,
 
-        WHERE school_id = $1
-    `;
+        studentId:
+            normalizeOptionalValue(
+                data.studentId ??
+                data.student_id
+            ),
 
-    const values = [
-        schoolId
-    ];
+        classId:
+            normalizeOptionalValue(
+                data.classId ??
+                data.class_id
+            ),
 
-    if (studentId) {
-        values.push(studentId);
+        sessionId:
+            normalizeOptionalValue(
+                data.sessionId ??
+                data.session_id
+            ),
 
-        sql += `
-            AND student_id = $${values.length}
-        `;
-    }
-
-    if (classId) {
-        values.push(classId);
-
-        sql += `
-            AND class_id = $${values.length}
-        `;
-    }
-
-    if (sessionId) {
-        values.push(sessionId);
-
-        sql += `
-            AND academic_session_id = $${values.length}
-        `;
-    }
-
-    if (termId) {
-        values.push(termId);
-
-        sql += `
-            AND term_id = $${values.length}
-        `;
-    }
-
-    sql += `
-        RETURNING *
-    `;
-
-    const result = await query(sql, values);
-
-    return result.rows;
+        termId:
+            normalizeOptionalValue(
+                data.termId ??
+                data.term_id
+            )
+    });
 }
-
 
 /*
 |--------------------------------------------------------------------------
-| Get Published Results
+| GET PUBLISHED RESULTS
 |--------------------------------------------------------------------------
 */
 
@@ -1055,119 +947,152 @@ async function getPublishedResults(
     sessionId = null,
     termId = null
 ) {
-    if (!studentId) {
-        throw new Error("Student ID is required.");
-    }
-
-    if (!schoolId) {
-        throw new Error("School ID is required.");
-    }
-
-    let sql = `
-        SELECT
-            r.*,
-
-            sub.subject_name,
-            sub.subject_code
-
-        FROM results r
-
-        LEFT JOIN subjects sub
-            ON sub.id = r.subject_id
-
-        WHERE r.student_id = $1
-          AND r.school_id = $2
-          AND r.is_published = TRUE
-    `;
-
-    const values = [
+    requireValue(
         studentId,
-        schoolId
-    ];
+        "Student ID is required."
+    );
 
-    if (sessionId) {
-        values.push(sessionId);
+    requireValue(
+        schoolId,
+        "School ID is required."
+    );
 
-        sql += `
-            AND r.academic_session_id = $${values.length}
-        `;
-    }
-
-    if (termId) {
-        values.push(termId);
-
-        sql += `
-            AND r.term_id = $${values.length}
-        `;
-    }
-
-    sql += `
-        ORDER BY
-            sub.subject_name ASC
-    `;
-
-    const result = await query(sql, values);
-
-    return result.rows;
+    return resultModel.getPublishedResults(
+        studentId,
+        schoolId,
+        normalizeOptionalValue(
+            sessionId
+        ),
+        normalizeOptionalValue(
+            termId
+        )
+    );
 }
-
 
 /*
 |--------------------------------------------------------------------------
-| Grade Calculator
+| GRADE CALCULATION
+|--------------------------------------------------------------------------
+|
+| These functions remain available from the service for compatibility with
+| controllers and other Results components.
+|
+| The database model remains responsible for applying the grade when a
+| result is created or updated.
 |--------------------------------------------------------------------------
 */
 
 function calculateGrade(score) {
     const value = Number(score);
 
-    if (value >= 75) return "A";
-    if (value >= 65) return "B";
-    if (value >= 55) return "C";
-    if (value >= 45) return "D";
-    if (value >= 40) return "E";
+    if (!Number.isFinite(value)) {
+        throw new Error(
+            "Score must be a valid number."
+        );
+    }
+
+    if (value >= 75) {
+        return "A";
+    }
+
+    if (value >= 65) {
+        return "B";
+    }
+
+    if (value >= 55) {
+        return "C";
+    }
+
+    if (value >= 45) {
+        return "D";
+    }
+
+    if (value >= 40) {
+        return "E";
+    }
 
     return "F";
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Grade Point Calculator
-|--------------------------------------------------------------------------
-*/
-
 function calculateGradePoint(score) {
     const value = Number(score);
 
-    if (value >= 75) return 4.0;
-    if (value >= 65) return 3.0;
-    if (value >= 55) return 2.0;
-    if (value >= 45) return 1.0;
-    if (value >= 40) return 0.0;
+    if (!Number.isFinite(value)) {
+        throw new Error(
+            "Score must be a valid number."
+        );
+    }
+
+    if (value >= 75) {
+        return 4.0;
+    }
+
+    if (value >= 65) {
+        return 3.0;
+    }
+
+    if (value >= 55) {
+        return 2.0;
+    }
+
+    if (value >= 45) {
+        return 1.0;
+    }
 
     return 0.0;
 }
 
+/*
+|--------------------------------------------------------------------------
+| COMPATIBILITY ALIASES
+|--------------------------------------------------------------------------
+|
+| These aliases prevent unnecessary controller changes when older Results
+| code uses slightly different service function names.
+|--------------------------------------------------------------------------
+*/
+
+const getStudentResult = getStudentResults;
+
+const getClassResults = getResultsByClass;
+
+const getClassResult = getResultsByClass;
+
+const getResult = getResultById;
 
 /*
 |--------------------------------------------------------------------------
-| Export
+| EXPORT
 |--------------------------------------------------------------------------
 */
 
 module.exports = {
     getStudentResults,
+    getStudentResult,
+
     getResultById,
+    getResult,
+
     findExistingResult,
+
     createResult,
+    createBulkResults,
+
     updateResult,
     deleteResult,
+
     getResultsByClass,
+    getClassResults,
+    getClassResult,
+
     getStudentResultSummary,
     getClassResultStatistics,
+
     searchResults,
+
     publishResults,
-    getPublishedResults
+    getPublishedResults,
+
+    calculateGrade,
+    calculateGradePoint
 };
-```

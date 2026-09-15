@@ -1,218 +1,662 @@
-const API_BASE = "/api";
+"use strict";
 
-const sessionTableBody = document.getElementById("sessionTableBody");
-const searchInput = document.getElementById("searchInput");
-const statusFilter = document.getElementById("statusFilter");
-const sessionForm = document.getElementById("sessionForm");
-const sessionModal = document.getElementById("sessionModal");
-const messageContainer = document.getElementById("message");
+const sessionsTableBody =
+    document.getElementById("sessionsTableBody");
+
+const searchInput =
+    document.getElementById("searchInput");
+
+const statusFilter =
+    document.getElementById("statusFilter");
+
+const sessionForm =
+    document.getElementById("sessionForm");
+
+const sessionModal =
+    document.getElementById("sessionModal");
+
+const alertMessage =
+    document.getElementById("alertMessage");
+
+const addSessionBtn =
+    document.getElementById("addSessionBtn");
+
+const closeModalBtn =
+    document.getElementById("closeModalBtn");
+
+const cancelModalBtn =
+    document.getElementById("cancelModalBtn");
+
+const saveSessionBtn =
+    document.getElementById("saveSessionBtn");
+
+const totalSessions =
+    document.getElementById("totalSessions");
+
+const activeSessions =
+    document.getElementById("activeSessions");
+
+const upcomingSessions =
+    document.getElementById("upcomingSessions");
+
+const completedSessions =
+    document.getElementById("completedSessions");
+
+const sessionsTable =
+    document.getElementById("sessionsTable");
+
+const tableContainer =
+    document.getElementById("tableContainer");
+
+const loadingState =
+    document.getElementById("loadingState");
+
+const emptyState =
+    document.getElementById("emptyState");
+
+const isActiveField =
+    document.getElementById("isActive");
 
 let sessions = [];
+
 let editingSessionId = null;
 
-function getToken() {
-    return (
-        localStorage.getItem("school_management_token") ||
-        sessionStorage.getItem("school_management_token") ||
-        localStorage.getItem("token") ||
-        sessionStorage.getItem("token") ||
-        localStorage.getItem("accessToken") ||
-        sessionStorage.getItem("accessToken")
+let bootstrapModal = null;
+
+let originalEmptyStateHtml = "";
+
+if (emptyState) {
+    originalEmptyStateHtml =
+        emptyState.innerHTML;
+}
+
+function getApiRequest() {
+    if (
+        typeof window.apiRequest ===
+        "function"
+    ) {
+        return window.apiRequest;
+    }
+
+    throw new Error(
+        "Central API service is not available."
     );
 }
 
-async function apiRequest(url, options = {}) {
-    const token = getToken();
-
-    const headers = {
-        ...(options.body instanceof FormData
-            ? {}
-            : { "Content-Type": "application/json" }),
-        ...(options.headers || {})
-    };
-
-    if (token) {
-        headers.Authorization = "Bearer " + token;
-    }
-
-    const response = await fetch(API_BASE + url, {
-        ...options,
-        headers
-    });
-
-    let data = null;
-
-    try {
-        data = await response.json();
-    } catch (error) {
-        data = null;
-    }
-
-    if (response.status === 401 || response.status === 403) {
-        throw new Error("Authentication required.");
-    }
-
-    if (!response.ok) {
-        throw new Error(
-            data && data.message
-                ? data.message
-                : "Request failed."
-        );
-    }
-
-    return data;
-}
-
-function showMessage(message, type = "success") {
-    if (!messageContainer) {
+function showMessage(
+    message,
+    type = "success"
+) {
+    if (!alertMessage) {
         return;
     }
 
-    messageContainer.textContent = message;
-    messageContainer.className = "message " + type;
+    alertMessage.textContent =
+        message || "";
 
-    setTimeout(function () {
-        messageContainer.textContent = "";
-        messageContainer.className = "message";
-    }, 4000);
+    alertMessage.className =
+        "alert mb-4 alert-" +
+        (
+            type === "error"
+                ? "danger"
+                : type
+        );
+
+    alertMessage.classList.remove(
+        "d-none"
+    );
+
+    window.clearTimeout(
+        showMessage.timeoutId
+    );
+
+    showMessage.timeoutId =
+        window.setTimeout(
+            function () {
+                alertMessage.textContent =
+                    "";
+
+                alertMessage.classList.add(
+                    "d-none"
+                );
+            },
+            4000
+        );
+}
+
+function showLoading() {
+    if (loadingState) {
+        loadingState.style.display =
+            "block";
+    }
+
+    if (tableContainer) {
+        tableContainer.classList.add(
+            "d-none"
+        );
+    }
+
+    if (emptyState) {
+        emptyState.classList.add(
+            "d-none"
+        );
+    }
+}
+
+function showEmptyState(
+    message
+) {
+    if (loadingState) {
+        loadingState.style.display =
+            "none";
+    }
+
+    if (tableContainer) {
+        tableContainer.classList.add(
+            "d-none"
+        );
+    }
+
+    if (emptyState) {
+        emptyState.innerHTML =
+            originalEmptyStateHtml;
+
+        const paragraph =
+            emptyState.querySelector(
+                "p"
+            );
+
+        if (paragraph && message) {
+            paragraph.textContent =
+                message;
+        }
+
+        emptyState.classList.remove(
+            "d-none"
+        );
+    }
+}
+
+function showErrorState(
+    message
+) {
+    if (loadingState) {
+        loadingState.style.display =
+            "none";
+    }
+
+    if (tableContainer) {
+        tableContainer.classList.add(
+            "d-none"
+        );
+    }
+
+    if (emptyState) {
+        emptyState.innerHTML = `
+            <div class="display-5 text-danger mb-3">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <h2 class="h5 fw-bold">
+                Unable to Load Sessions
+            </h2>
+            <p class="text-muted mb-3"></p>
+            <button
+                type="button"
+                class="btn btn-outline-primary btn-sm"
+                id="retrySessionsBtn">
+                <i class="bi bi-arrow-clockwise me-1"></i>
+                Try Again
+            </button>
+        `;
+
+        const paragraph =
+            emptyState.querySelector(
+                "p"
+            );
+
+        if (paragraph) {
+            paragraph.textContent =
+                message ||
+                "Unable to load academic sessions.";
+        }
+
+        const retryButton =
+            document.getElementById(
+                "retrySessionsBtn"
+            );
+
+        if (retryButton) {
+            retryButton.addEventListener(
+                "click",
+                loadSessions
+            );
+        }
+
+        emptyState.classList.remove(
+            "d-none"
+        );
+    }
+}
+
+function getSessionStatus(
+    session
+) {
+    const isActive =
+        Boolean(session.is_active);
+
+    const isCurrent =
+        Boolean(session.is_current);
+
+    if (!isActive) {
+        return "inactive";
+    }
+
+    if (isCurrent) {
+        return "active";
+    }
+
+    const startDate =
+        parseDateOnly(
+            session.start_date
+        );
+
+    const endDate =
+        parseDateOnly(
+            session.end_date
+        );
+
+    const today =
+        getTodayDate();
+
+    if (
+        startDate &&
+        startDate > today
+    ) {
+        return "upcoming";
+    }
+
+    if (
+        endDate &&
+        endDate < today
+    ) {
+        return "completed";
+    }
+
+    return "active";
+}
+
+function getTodayDate() {
+    const now =
+        new Date();
+
+    return new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate()
+    );
+}
+
+function parseDateOnly(
+    value
+) {
+    if (!value) {
+        return null;
+    }
+
+    const text =
+        String(value)
+            .substring(0, 10);
+
+    const parts =
+        text.split("-");
+
+    if (
+        parts.length !== 3
+    ) {
+        return null;
+    }
+
+    const year =
+        Number(parts[0]);
+
+    const month =
+        Number(parts[1]);
+
+    const day =
+        Number(parts[2]);
+
+    if (
+        !Number.isInteger(year) ||
+        !Number.isInteger(month) ||
+        !Number.isInteger(day)
+    ) {
+        return null;
+    }
+
+    const date =
+        new Date(
+            year,
+            month - 1,
+            day
+        );
+
+    if (
+        date.getFullYear() !== year ||
+        date.getMonth() !== month - 1 ||
+        date.getDate() !== day
+    ) {
+        return null;
+    }
+
+    return date;
+}
+
+function updateStatistics() {
+    const total =
+        sessions.length;
+
+    const active =
+        sessions.filter(
+            function (session) {
+                return (
+                    getSessionStatus(
+                        session
+                    ) === "active"
+                );
+            }
+        ).length;
+
+    const upcoming =
+        sessions.filter(
+            function (session) {
+                return (
+                    getSessionStatus(
+                        session
+                    ) === "upcoming"
+                );
+            }
+        ).length;
+
+    const completed =
+        sessions.filter(
+            function (session) {
+                return (
+                    getSessionStatus(
+                        session
+                    ) === "completed"
+                );
+            }
+        ).length;
+
+    if (totalSessions) {
+        totalSessions.textContent =
+            total;
+    }
+
+    if (activeSessions) {
+        activeSessions.textContent =
+            active;
+    }
+
+    if (upcomingSessions) {
+        upcomingSessions.textContent =
+            upcoming;
+    }
+
+    if (completedSessions) {
+        completedSessions.textContent =
+            completed;
+    }
 }
 
 async function loadSessions() {
+    showLoading();
+
     try {
-        showLoading();
+        const apiRequest =
+            getApiRequest();
 
-        const result = await apiRequest("/academic-sessions");
+        const result =
+            await apiRequest(
+                "/academic-sessions"
+            );
 
-        sessions = Array.isArray(result && result.data)
-            ? result.data
-            : Array.isArray(result && result.sessions)
-                ? result.sessions
-                : Array.isArray(result)
-                    ? result
-                    : [];
+        sessions =
+            Array.isArray(
+                result?.data
+            )
+                ? result.data
+                : Array.isArray(
+                    result?.sessions
+                )
+                    ? result.sessions
+                    : Array.isArray(
+                        result
+                    )
+                        ? result
+                        : [];
+
+        updateStatistics();
 
         renderSessions();
     } catch (error) {
-        console.error("Load academic sessions error:", error);
-
-        showMessage(
-            error.message || "Unable to load academic sessions.",
-            "error"
+        console.error(
+            "Load academic sessions error:",
+            error
         );
 
-        showEmptyState("Unable to load academic sessions.");
+        sessions = [];
+
+        updateStatistics();
+
+        showErrorState(
+            error.message ||
+            "Unable to load academic sessions."
+        );
+
+        showMessage(
+            error.message ||
+            "Unable to load academic sessions.",
+            "error"
+        );
     }
 }
 
 function renderSessions() {
-    if (!sessionTableBody) {
+    if (!sessionsTableBody) {
         return;
     }
 
-    const searchTerm = searchInput
-        ? searchInput.value.trim().toLowerCase()
-        : "";
+    const searchTerm =
+        searchInput
+            ? searchInput.value
+                .trim()
+                .toLowerCase()
+            : "";
 
-    const selectedStatus = statusFilter
-        ? statusFilter.value.toLowerCase()
-        : "";
+    const selectedStatus =
+        statusFilter
+            ? statusFilter.value
+                .trim()
+                .toLowerCase()
+            : "";
 
-    const filteredSessions = sessions.filter(function (session) {
-        const sessionName = String(
-            session.session_name ||
-            session.sessionName ||
-            ""
-        ).toLowerCase();
+    const filteredSessions =
+        sessions.filter(
+            function (session) {
+                const sessionName =
+                    String(
+                        session.session_name ||
+                        ""
+                    ).toLowerCase();
 
-        const sessionCode = String(
-            session.session_code ||
-            session.sessionCode ||
-            ""
-        ).toLowerCase();
+                const status =
+                    getSessionStatus(
+                        session
+                    );
 
-        const status = String(
-            session.status || ""
-        ).toLowerCase();
+                const matchesSearch =
+                    !searchTerm ||
+                    sessionName.includes(
+                        searchTerm
+                    );
 
-        const matchesSearch =
-            !searchTerm ||
-            sessionName.includes(searchTerm) ||
-            sessionCode.includes(searchTerm);
+                const matchesStatus =
+                    !selectedStatus ||
+                    status ===
+                    selectedStatus;
 
-        const matchesStatus =
-            !selectedStatus ||
-            status === selectedStatus;
+                return (
+                    matchesSearch &&
+                    matchesStatus
+                );
+            }
+        );
 
-        return matchesSearch && matchesStatus;
-    });
+    if (
+        filteredSessions.length ===
+        0
+    ) {
+        showEmptyState(
+            sessions.length === 0
+                ? "Create your first academic session to get started."
+                : "No sessions match your current search or filter."
+        );
 
-    if (filteredSessions.length === 0) {
-        showEmptyState("No academic sessions found.");
         return;
     }
 
-    sessionTableBody.innerHTML = filteredSessions
-        .map(createSessionRow)
-        .join("");
+    if (loadingState) {
+        loadingState.style.display =
+            "none";
+    }
+
+    if (emptyState) {
+        emptyState.classList.add(
+            "d-none"
+        );
+    }
+
+    if (tableContainer) {
+        tableContainer.classList.remove(
+            "d-none"
+        );
+    }
+
+    if (sessionsTable) {
+        sessionsTable.style.display =
+            "table";
+    }
+
+    sessionsTableBody.innerHTML =
+        filteredSessions
+            .map(
+                createSessionRow
+            )
+            .join("");
 }
 
-function createSessionRow(session) {
-    const id = session.id;
+function createSessionRow(
+    session
+) {
+    const id =
+        session.id;
 
-    const name = escapeHtml(
-        session.session_name ||
-        session.sessionName ||
-        "-"
-    );
+    const name =
+        escapeHtml(
+            session.session_name ||
+            "-"
+        );
 
-    const code = escapeHtml(
-        session.session_code ||
-        session.sessionCode ||
-        "-"
-    );
+    const startDate =
+        formatDate(
+            session.start_date
+        );
 
-    const startDate = formatDate(
-        session.start_date ||
-        session.startDate
-    );
+    const endDate =
+        formatDate(
+            session.end_date
+        );
 
-    const endDate = formatDate(
-        session.end_date ||
-        session.endDate
-    );
+    const status =
+        getSessionStatus(
+            session
+        );
 
-    const status = String(
-        session.status || "upcoming"
-    ).toLowerCase();
+    const statusLabel =
+        formatStatus(
+            status
+        );
 
-    const statusLabel = formatStatus(status);
+    const currentBadge =
+        session.is_current
+            ? `
+                <span class="badge text-bg-primary">
+                    Current
+                </span>
+            `
+            : `
+                <span class="text-muted">
+                    No
+                </span>
+            `;
+
+    const currentButton =
+        session.is_current
+            ? ""
+            : `
+                <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary"
+                    onclick="setCurrentSession('${escapeJs(id)}')">
+                    <i class="bi bi-check-circle me-1"></i>
+                    Set Current
+                </button>
+            `;
 
     return `
         <tr>
-            <td>${name}</td>
-            <td>${code}</td>
-            <td>${startDate}</td>
-            <td>${endDate}</td>
             <td>
-                <span class="status-badge status-${escapeHtml(status)}">
+                <div class="fw-bold">
+                    ${name}
+                </div>
+            </td>
+
+            <td>
+                ${startDate}
+            </td>
+
+            <td>
+                ${endDate}
+            </td>
+
+            <td>
+                ${currentBadge}
+            </td>
+
+            <td>
+                <span class="badge ${getStatusBadgeClass(status)}">
                     ${escapeHtml(statusLabel)}
                 </span>
             </td>
+
             <td>
-                <div class="action-buttons">
+                <div class="d-flex flex-wrap gap-2">
                     <button
                         type="button"
-                        class="btn btn-sm btn-primary"
-                        onclick="editSession('${escapeJs(id)}')"
-                    >
+                        class="btn btn-sm btn-outline-secondary"
+                        onclick="editSession('${escapeJs(id)}')">
+                        <i class="bi bi-pencil me-1"></i>
                         Edit
                     </button>
 
+                    ${currentButton}
+
                     <button
                         type="button"
-                        class="btn btn-sm btn-danger"
-                        onclick="deleteSession('${escapeJs(id)}')"
-                    >
+                        class="btn btn-sm btn-outline-danger"
+                        onclick="deleteSession('${escapeJs(id)}')">
+                        <i class="bi bi-trash me-1"></i>
                         Delete
                     </button>
                 </div>
@@ -221,107 +665,128 @@ function createSessionRow(session) {
     `;
 }
 
-function formatDate(value) {
+function getStatusBadgeClass(
+    status
+) {
+    const classes = {
+        active:
+            "text-bg-success",
+        upcoming:
+            "text-bg-info",
+        completed:
+            "text-bg-secondary",
+        inactive:
+            "text-bg-danger"
+    };
+
+    return (
+        classes[status] ||
+        "text-bg-secondary"
+    );
+}
+
+function formatStatus(
+    status
+) {
+    const labels = {
+        active:
+            "Active",
+        upcoming:
+            "Upcoming",
+        completed:
+            "Completed",
+        inactive:
+            "Inactive"
+    };
+
+    return (
+        labels[status] ||
+        String(status)
+            .replace(/_/g, " ")
+            .replace(
+                /\b\w/g,
+                function (letter) {
+                    return letter.toUpperCase();
+                }
+            )
+    );
+}
+
+function formatDate(
+    value
+) {
     if (!value) {
         return "-";
     }
 
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-        return escapeHtml(String(value));
-    }
-
-    return date.toLocaleDateString("en-NG", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric"
-    });
-}
-
-function formatStatus(status) {
-    const labels = {
-        active: "Active",
-        upcoming: "Upcoming",
-        completed: "Completed",
-        inactive: "Inactive"
-    };
-
-    if (labels[status]) {
-        return labels[status];
-    }
-
-    return String(status)
-        .replace(/_/g, " ")
-        .replace(/\b\w/g, function (letter) {
-            return letter.toUpperCase();
-        });
-}
-
-function showLoading() {
-    if (!sessionTableBody) {
-        return;
-    }
-
-    sessionTableBody.innerHTML = `
-        <tr>
-            <td colspan="6" style="text-align:center;padding:30px;">
-                Loading academic sessions...
-            </td>
-        </tr>
-    `;
-}
-
-function showEmptyState(text) {
-    if (!sessionTableBody) {
-        return;
-    }
-
-    sessionTableBody.innerHTML = `
-        <tr>
-            <td colspan="6" style="text-align:center;padding:30px;">
-                ${escapeHtml(text)}
-            </td>
-        </tr>
-    `;
-}
-
-function openAddSessionModal() {
-    editingSessionId = null;
-
-    if (sessionForm) {
-        sessionForm.reset();
-    }
-
-    setModalTitle("Add Academic Session");
-    setSubmitButton("Save Session");
-    openModal();
-}
-
-async function editSession(sessionId) {
-    try {
-        const result = await apiRequest(
-            "/academic-sessions/" + encodeURIComponent(sessionId)
+    const date =
+        parseDateOnly(
+            value
         );
 
+    if (!date) {
+        return escapeHtml(
+            String(value)
+        );
+    }
+
+    return date.toLocaleDateString(
+        "en-NG",
+        {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+        }
+    );
+}
+
+async function editSession(
+    sessionId
+) {
+    try {
+        const apiRequest =
+            getApiRequest();
+
+        const result =
+            await apiRequest(
+                "/academic-sessions/" +
+                encodeURIComponent(
+                    sessionId
+                )
+            );
+
         const session =
-            (result && result.data) ||
-            (result && result.session) ||
+            result?.data ||
+            result?.session ||
             result;
 
         if (!session) {
-            throw new Error("Academic session not found.");
+            throw new Error(
+                "Academic session not found."
+            );
         }
 
-        editingSessionId = sessionId;
+        editingSessionId =
+            sessionId;
 
-        populateForm(session);
+        populateForm(
+            session
+        );
 
-        setModalTitle("Edit Academic Session");
-        setSubmitButton("Update Session");
+        setModalTitle(
+            "Edit Academic Session"
+        );
+
+        setSubmitButton(
+            "Update Session"
+        );
+
         openModal();
     } catch (error) {
-        console.error("Edit session error:", error);
+        console.error(
+            "Edit academic session error:",
+            error
+        );
 
         showMessage(
             error.message ||
@@ -331,145 +796,170 @@ async function editSession(sessionId) {
     }
 }
 
-function populateForm(session) {
+function populateForm(
+    session
+) {
     setField(
         "sessionName",
         session.session_name ||
-        session.sessionName ||
-        ""
-    );
-
-    setField(
-        "sessionCode",
-        session.session_code ||
-        session.sessionCode ||
         ""
     );
 
     setField(
         "startDate",
         toInputDate(
-            session.start_date ||
-            session.startDate
+            session.start_date
         )
     );
 
     setField(
         "endDate",
         toInputDate(
-            session.end_date ||
-            session.endDate
+            session.end_date
         )
     );
 
-    setField(
-        "description",
-        session.description || ""
-    );
-
-    const statusField = document.getElementById("status");
-
-    if (statusField) {
-        statusField.value =
-            session.status || "upcoming";
+    if (isActiveField) {
+        isActiveField.checked =
+            Boolean(
+                session.is_active
+            );
     }
-}
-
-function setField(id, value) {
-    const field = document.getElementById(id);
-
-    if (field) {
-        field.value = value;
-    }
-}
-
-function toInputDate(value) {
-    if (!value) {
-        return "";
-    }
-
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-        return String(value).substring(0, 10);
-    }
-
-    return (
-        date.getFullYear() +
-        "-" +
-        String(date.getMonth() + 1).padStart(2, "0") +
-        "-" +
-        String(date.getDate()).padStart(2, "0")
-    );
 }
 
 function getFormData() {
-    function getValue(id) {
-        const field = document.getElementById(id);
-        return field ? field.value.trim() : "";
-    }
+    const sessionNameField =
+        document.getElementById(
+            "sessionName"
+        );
 
-    const statusField = document.getElementById("status");
+    const startDateField =
+        document.getElementById(
+            "startDate"
+        );
+
+    const endDateField =
+        document.getElementById(
+            "endDate"
+        );
 
     return {
-        sessionName: getValue("sessionName"),
-        sessionCode: getValue("sessionCode") || null,
-        startDate: getValue("startDate") || null,
-        endDate: getValue("endDate") || null,
-        description: getValue("description") || null,
-        status: statusField
-            ? statusField.value
-            : "upcoming"
+        sessionName:
+            sessionNameField
+                ? sessionNameField.value.trim()
+                : "",
+
+        startDate:
+            startDateField &&
+            startDateField.value
+                ? startDateField.value
+                : null,
+
+        endDate:
+            endDateField &&
+            endDateField.value
+                ? endDateField.value
+                : null,
+
+        isActive:
+            isActiveField
+                ? Boolean(
+                    isActiveField.checked
+                )
+                : true
     };
 }
 
-function validateForm(data) {
+function validateForm(
+    data
+) {
     if (!data.sessionName) {
-        return "Academic session name is required.";
+        return (
+            "Academic session name is required."
+        );
     }
 
     if (
         data.startDate &&
         data.endDate &&
-        data.endDate < data.startDate
+        data.endDate <
+        data.startDate
     ) {
-        return "End date cannot be earlier than start date.";
+        return (
+            "End date cannot be earlier than start date."
+        );
     }
 
     return null;
 }
 
-async function saveSession(event) {
+async function saveSession(
+    event
+) {
     event.preventDefault();
 
-    const data = getFormData();
-    const validationError = validateForm(data);
+    const data =
+        getFormData();
+
+    const validationError =
+        validateForm(
+            data
+        );
 
     if (validationError) {
-        showMessage(validationError, "error");
+        showMessage(
+            validationError,
+            "error"
+        );
+
         return;
     }
 
-    const isEditing = Boolean(editingSessionId);
+    const isEditing =
+        Boolean(
+            editingSessionId
+        );
 
     try {
         setSubmitButton(
-            isEditing ? "Updating..." : "Saving..."
+            isEditing
+                ? "Updating..."
+                : "Saving..."
         );
 
-        const result = await apiRequest(
+        if (saveSessionBtn) {
+            saveSessionBtn.disabled =
+                true;
+        }
+
+        const apiRequest =
+            getApiRequest();
+
+        const endpoint =
             isEditing
                 ? "/academic-sessions/" +
-                  encodeURIComponent(editingSessionId)
-                : "/academic-sessions",
-            {
-                method: isEditing ? "PUT" : "POST",
-                body: JSON.stringify(data)
-            }
-        );
+                    encodeURIComponent(
+                        editingSessionId
+                    )
+                : "/academic-sessions";
+
+        const result =
+            await apiRequest(
+                endpoint,
+                {
+                    method:
+                        isEditing
+                            ? "PUT"
+                            : "POST",
+                    body:
+                        JSON.stringify(
+                            data
+                        )
+                }
+            );
 
         showMessage(
-            (result && result.message) ||
+            result?.message ||
             (
                 isEditing
                     ? "Academic session updated successfully."
@@ -479,6 +969,7 @@ async function saveSession(event) {
         );
 
         closeModal();
+
         await loadSessions();
     } catch (error) {
         console.error(
@@ -497,38 +988,128 @@ async function saveSession(event) {
                 ? "Update Session"
                 : "Save Session"
         );
+
+        if (saveSessionBtn) {
+            saveSessionBtn.disabled =
+                false;
+        }
     }
 }
 
-async function deleteSession(sessionId) {
-    const session = sessions.find(function (item) {
-        return String(item.id) === String(sessionId);
-    });
+async function setCurrentSession(
+    sessionId
+) {
+    const session =
+        sessions.find(
+            function (item) {
+                return (
+                    String(item.id) ===
+                    String(sessionId)
+                );
+            }
+        );
 
-    const sessionName = session
-        ? (
-            session.session_name ||
-            session.sessionName ||
-            "this academic session"
-        )
-        : "this academic session";
+    const sessionName =
+        session
+            ? (
+                session.session_name ||
+                "this academic session"
+            )
+            : "this academic session";
 
-    const confirmed = window.confirm(
-        'Are you sure you want to delete "' +
-        sessionName +
-        '"?'
-    );
+    const confirmed =
+        window.confirm(
+            'Set "' +
+            sessionName +
+            '" as the current academic session?'
+        );
 
     if (!confirmed) {
         return;
     }
 
     try {
+        const apiRequest =
+            getApiRequest();
+
+        const result =
+            await apiRequest(
+                "/academic-sessions/" +
+                encodeURIComponent(
+                    sessionId
+                ) +
+                "/current",
+                {
+                    method:
+                        "PATCH"
+                }
+            );
+
+        showMessage(
+            result?.message ||
+            "Current academic session updated successfully.",
+            "success"
+        );
+
+        await loadSessions();
+    } catch (error) {
+        console.error(
+            "Set current academic session error:",
+            error
+        );
+
+        showMessage(
+            error.message ||
+            "Unable to set the current academic session.",
+            "error"
+        );
+    }
+}
+
+async function deleteSession(
+    sessionId
+) {
+    const session =
+        sessions.find(
+            function (item) {
+                return (
+                    String(item.id) ===
+                    String(sessionId)
+                );
+            }
+        );
+
+    const sessionName =
+        session
+            ? (
+                session.session_name ||
+                "this academic session"
+            )
+            : "this academic session";
+
+    const confirmed =
+        window.confirm(
+            'Are you sure you want to delete "' +
+            sessionName +
+            '"?'
+        );
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+        const apiRequest =
+            getApiRequest();
+
         await apiRequest(
             "/academic-sessions/" +
-            encodeURIComponent(sessionId),
+            encodeURIComponent(
+                sessionId
+            ),
             {
-                method: "DELETE"
+                method:
+                    "DELETE"
             }
         );
 
@@ -552,13 +1133,63 @@ async function deleteSession(sessionId) {
     }
 }
 
+function openAddSessionModal() {
+    editingSessionId =
+        null;
+
+    if (sessionForm) {
+        sessionForm.reset();
+    }
+
+    if (isActiveField) {
+        isActiveField.checked =
+            true;
+    }
+
+    setModalTitle(
+        "Add Academic Session"
+    );
+
+    setSubmitButton(
+        "Save Session"
+    );
+
+    openModal();
+}
+
 function openModal() {
     if (!sessionModal) {
         return;
     }
 
-    sessionModal.style.display = "flex";
-    document.body.style.overflow = "hidden";
+    if (
+        window.bootstrap &&
+        window.bootstrap.Modal
+    ) {
+        bootstrapModal =
+            bootstrap.Modal.getOrCreateInstance(
+                sessionModal
+            );
+
+        bootstrapModal.show();
+
+        return;
+    }
+
+    sessionModal.style.display =
+        "block";
+
+    sessionModal.classList.add(
+        "show"
+    );
+
+    sessionModal.removeAttribute(
+        "aria-hidden"
+    );
+
+    document.body.classList.add(
+        "modal-open"
+    );
 }
 
 function closeModal() {
@@ -566,46 +1197,217 @@ function closeModal() {
         return;
     }
 
-    sessionModal.style.display = "none";
-    document.body.style.overflow = "";
-    editingSessionId = null;
+    if (
+        window.bootstrap &&
+        window.bootstrap.Modal
+    ) {
+        bootstrapModal =
+            bootstrap.Modal.getOrCreateInstance(
+                sessionModal
+            );
+
+        bootstrapModal.hide();
+    } else {
+        sessionModal.style.display =
+            "none";
+
+        sessionModal.classList.remove(
+            "show"
+        );
+
+        sessionModal.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+
+        document.body.classList.remove(
+            "modal-open"
+        );
+    }
+
+    editingSessionId =
+        null;
 }
 
-function setModalTitle(title) {
+function setModalTitle(
+    title
+) {
     const titleElement =
-        document.getElementById("modalTitle");
+        document.getElementById(
+            "modalTitle"
+        );
 
     if (titleElement) {
-        titleElement.textContent = title;
+        titleElement.textContent =
+            title;
     }
 }
 
-function setSubmitButton(text) {
-    const button =
-        document.getElementById("submitButton");
+function setSubmitButton(
+    text
+) {
+    if (!saveSessionBtn) {
+        return;
+    }
 
-    if (button) {
-        button.textContent = text;
+    const icon =
+        saveSessionBtn.querySelector(
+            "i"
+        );
+
+    if (icon) {
+        saveSessionBtn.innerHTML =
+            "";
+
+        saveSessionBtn.appendChild(
+            icon
+        );
+
+        saveSessionBtn.appendChild(
+            document.createTextNode(
+                " " + text
+            )
+        );
+    } else {
+        saveSessionBtn.textContent =
+            text;
     }
 }
 
-function escapeHtml(value) {
-    return String(value == null ? "" : value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+function setField(
+    id,
+    value
+) {
+    const field =
+        document.getElementById(
+            id
+        );
+
+    if (field) {
+        field.value =
+            value == null
+                ? ""
+                : value;
+    }
 }
 
-function escapeJs(value) {
-    return String(value == null ? "" : value)
-        .replace(/\\/g, "\\\\")
-        .replace(/'/g, "\\'");
+function toInputDate(
+    value
+) {
+    if (!value) {
+        return "";
+    }
+
+    const text =
+        String(value)
+            .substring(0, 10);
+
+    if (
+        /^\d{4}-\d{2}-\d{2}$/.test(
+            text
+        )
+    ) {
+        return text;
+    }
+
+    const date =
+        new Date(value);
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+        return "";
+    }
+
+    return (
+        date.getFullYear() +
+        "-" +
+        String(
+            date.getMonth() + 1
+        ).padStart(2, "0") +
+        "-" +
+        String(
+            date.getDate()
+        ).padStart(2, "0")
+    );
+}
+
+function escapeHtml(
+    value
+) {
+    return String(
+        value == null
+            ? ""
+            : value
+    )
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+}
+
+function escapeJs(
+    value
+) {
+    return String(
+        value == null
+            ? ""
+            : value
+    )
+        .replace(
+            /\\/g,
+            "\\\\"
+        )
+        .replace(
+            /'/g,
+            "\\'"
+        );
 }
 
 if (sessionForm) {
-    sessionForm.addEventListener("submit", saveSession);
+    sessionForm.addEventListener(
+        "submit",
+        saveSession
+    );
+}
+
+if (addSessionBtn) {
+    addSessionBtn.addEventListener(
+        "click",
+        openAddSessionModal
+    );
+}
+
+if (closeModalBtn) {
+    closeModalBtn.addEventListener(
+        "click",
+        closeModal
+    );
+}
+
+if (cancelModalBtn) {
+    cancelModalBtn.addEventListener(
+        "click",
+        closeModal
+    );
 }
 
 if (searchInput) {
@@ -622,22 +1424,23 @@ if (statusFilter) {
     );
 }
 
-if (sessionModal) {
-    sessionModal.addEventListener(
-        "click",
-        function (event) {
-            if (event.target === sessionModal) {
-                closeModal();
-            }
-        }
-    );
-}
+window.loadSessions =
+    loadSessions;
 
-window.loadSessions = loadSessions;
-window.openAddSessionModal = openAddSessionModal;
-window.editSession = editSession;
-window.deleteSession = deleteSession;
-window.closeSessionModal = closeModal;
+window.openAddSessionModal =
+    openAddSessionModal;
+
+window.editSession =
+    editSession;
+
+window.deleteSession =
+    deleteSession;
+
+window.setCurrentSession =
+    setCurrentSession;
+
+window.closeSessionModal =
+    closeModal;
 
 document.addEventListener(
     "DOMContentLoaded",

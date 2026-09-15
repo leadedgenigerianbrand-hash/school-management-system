@@ -1,3 +1,5 @@
+"use strict";
+
 const express = require("express");
 
 const router = express.Router();
@@ -112,6 +114,9 @@ for (
 |--------------------------------------------------------------------------
 |
 | GET /api/classes/search?q=
+|
+| IMPORTANT:
+| This route must remain before /:id.
 |
 |--------------------------------------------------------------------------
 */
