@@ -395,6 +395,22 @@ VALUES
     'Delete school announcements.'
 ),
 (
+    'roles.view',
+    'View system roles and role permissions.'
+),
+(
+    'roles.create',
+    'Create system roles.'
+),
+(
+    'roles.update',
+    'Update system roles and role permissions.'
+),
+(
+    'roles.delete',
+    'Delete system roles and role permissions.'
+),
+(
     'audit.view',
     'View system audit logs.'
 );
