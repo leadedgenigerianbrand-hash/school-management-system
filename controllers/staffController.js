@@ -12,12 +12,67 @@ const staffModel = require("../models/staffModel");
 | Responsibilities:
 | - Validate request data
 | - Resolve the current school
+| - Normalize staff status values
 | - Call the staff model
 | - Return consistent JSON responses
 | - Pass unexpected errors to the global error middleware
 |
 |--------------------------------------------------------------------------
 */
+
+/*
+|--------------------------------------------------------------------------
+| STAFF STATUS VALUES
+|--------------------------------------------------------------------------
+|
+| These values must match the PostgreSQL staff.status check constraint:
+|
+| Active
+| Inactive
+| Suspended
+| Resigned
+|
+|--------------------------------------------------------------------------
+*/
+
+const STAFF_STATUSES = Object.freeze([
+    "Active",
+    "Inactive",
+    "Suspended",
+    "Resigned"
+]);
+
+/*
+|--------------------------------------------------------------------------
+| NORMALIZE STAFF STATUS
+|--------------------------------------------------------------------------
+|
+| Accepts case-insensitive status input from the frontend/API and converts
+| it to the exact canonical value expected by PostgreSQL.
+|
+| Examples:
+| active     -> Active
+| ACTIVE     -> Active
+| inactive   -> Inactive
+| SUSPENDED  -> Suspended
+| resigned   -> Resigned
+|
+|--------------------------------------------------------------------------
+*/
+
+function normalizeStaffStatus(value, defaultValue = "Active") {
+    if (value === undefined || value === null || String(value).trim() === "") {
+        return defaultValue;
+    }
+
+    const normalizedInput = String(value).trim().toLowerCase();
+
+    const matchedStatus = STAFF_STATUSES.find(
+        (status) => status.toLowerCase() === normalizedInput
+    );
+
+    return matchedStatus || null;
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -98,41 +153,84 @@ async function createStaff(req, res, next) {
             });
         }
 
+        const normalizedStatus = normalizeStaffStatus(
+            status,
+            "Active"
+        );
+
+        if (!normalizedStatus) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Invalid staff status. Allowed values are Active, Inactive, Suspended, and Resigned."
+            });
+        }
+
         if (staffNumber) {
             const exists = await staffModel.staffNumberExists(
-                staffNumber,
+                String(staffNumber).trim(),
                 finalSchoolId
             );
 
             if (exists) {
                 return res.status(409).json({
                     success: false,
-                    message: "A staff member with this staff number already exists."
+                    message:
+                        "A staff member with this staff number already exists."
                 });
             }
         }
 
         const staff = await staffModel.createStaff({
             schoolId: finalSchoolId,
+
             staffNumber: staffNumber
                 ? String(staffNumber).trim()
                 : null,
+
             firstName: String(firstName).trim(),
+
             lastName: String(lastName).trim(),
+
             middleName: middleName
                 ? String(middleName).trim()
                 : null,
-            gender: gender || null,
+
+            gender: gender
+                ? String(gender).trim()
+                : null,
+
             dateOfBirth: dateOfBirth || null,
-            phone: phone || null,
-            email: email || null,
-            address: address || null,
+
+            phone: phone
+                ? String(phone).trim()
+                : null,
+
+            email: email
+                ? String(email).trim()
+                : null,
+
+            address: address
+                ? String(address).trim()
+                : null,
+
             departmentId: departmentId || null,
-            position: position || null,
-            employmentType: employmentType || null,
+
+            position: position
+                ? String(position).trim()
+                : null,
+
+            employmentType: employmentType
+                ? String(employmentType).trim()
+                : null,
+
             employmentDate: employmentDate || null,
-            qualification: qualification || null,
-            status: status || "active"
+
+            qualification: qualification
+                ? String(qualification).trim()
+                : null,
+
+            status: normalizedStatus
         });
 
         return res.status(201).json({
@@ -168,10 +266,24 @@ async function getStaff(req, res, next) {
             });
         }
 
+        let normalizedStatus = null;
+
+        if (status !== undefined && status !== null && String(status).trim() !== "") {
+            normalizedStatus = normalizeStaffStatus(status, null);
+
+            if (!normalizedStatus) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Invalid staff status. Allowed values are Active, Inactive, Suspended, and Resigned."
+                });
+            }
+        }
+
         const staff = await staffModel.findStaff({
             schoolId,
             departmentId: departmentId || null,
-            status: status || null
+            status: normalizedStatus
         });
 
         return res.status(200).json({
@@ -367,7 +479,25 @@ async function updateStaff(req, res, next) {
             if (duplicate) {
                 return res.status(409).json({
                     success: false,
-                    message: "A staff member with this staff number already exists."
+                    message:
+                        "A staff member with this staff number already exists."
+                });
+            }
+        }
+
+        let normalizedStatus = existing.status || "Active";
+
+        if (req.body.status !== undefined) {
+            normalizedStatus = normalizeStaffStatus(
+                req.body.status,
+                null
+            );
+
+            if (!normalizedStatus) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Invalid staff status. Allowed values are Active, Inactive, Suspended, and Resigned."
                 });
             }
         }
@@ -447,10 +577,7 @@ async function updateStaff(req, res, next) {
                     ? req.body.qualification || null
                     : existing.qualification,
 
-            status:
-                req.body.status !== undefined
-                    ? req.body.status || null
-                    : existing.status
+            status: normalizedStatus
         };
 
         if (!data.firstName) {
@@ -562,11 +689,25 @@ async function countStaff(req, res, next) {
             });
         }
 
+        let normalizedStatus = null;
+
+        if (status !== undefined && status !== null && String(status).trim() !== "") {
+            normalizedStatus = normalizeStaffStatus(status, null);
+
+            if (!normalizedStatus) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Invalid staff status. Allowed values are Active, Inactive, Suspended, and Resigned."
+                });
+            }
+        }
+
         const count = await staffModel.countStaff(
             schoolId,
             {
                 departmentId: departmentId || null,
-                status: status || null
+                status: normalizedStatus
             }
         );
 

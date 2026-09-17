@@ -3,634 +3,774 @@
 const { query } = require("../config/database");
 
 /*
-|--------------------------------------------------------------------------
-| STAFF MODEL
-|--------------------------------------------------------------------------
-|
-| Database table:
-| staff
-|
-| Current staff columns:
-| id
-| school_id
-| user_id
-| staff_number
-| first_name
-| middle_name
-| last_name
-| email
-| phone
-| position
-| department
-| employment_date
-| profile_photo_url
-| status
-| created_at
-| updated_at
-|
-| This model provides the stable database layer for the Staff module.
-|
-|--------------------------------------------------------------------------
+------------------------------------------------------------------------------
+STAFF MODEL
+--------------------------------------------------------------------------
+
+This model handles database operations for the Staff module.
+
+IMPORTANT DATABASE DESIGN
+-------------------------
+The live PostgreSQL staff table stores the department as TEXT:
+
+staff.department
+
+The departments table stores:
+
+departments.id
+departments.department_name
+
+Therefore, when the controller supplies departmentId, this model
+resolves the department record and stores department_name in staff.department.
+
+When staff records are read, the model joins departments using:
+
+school_id
+department_name = staff.department
+
+This allows the frontend/controller to continue working with departmentId
+while respecting the actual PostgreSQL schema.
+--------------------------------------------------------------------------
 */
 
 /*
-|--------------------------------------------------------------------------
-| Create Staff
-|--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+COMMON STAFF SELECT
+--------------------------------------------------------------------------
 */
 
-async function createStaff({
-    schoolId,
-    userId = null,
-    staffNumber,
-    firstName,
-    middleName = null,
-    lastName,
-    email = null,
-    phone = null,
-    position = null,
-    department = null,
-    employmentDate = null,
-    profilePhotoUrl = null,
-    status = "Active"
-}) {
-    if (!schoolId) {
-        throw new Error("School ID is required.");
-    }
+const STAFF_SELECT = [
+"st.id",
+"st.school_id",
+"st.user_id",
+"st.staff_number",
+"st.first_name",
+"st.middle_name",
+"st.last_name",
+"st.email",
+"st.phone",
+"st.position",
+"st.department",
+"d.id AS department_id",
+"d.department_name",
+"st.employment_date",
+"st.profile_photo_url",
+"st.status",
+"st.created_at",
+"st.updated_at",
+"st.gender",
+"st.date_of_birth",
+"st.employment_type",
+"st.qualification",
+"st.address",
+"st.notes"
+].join(",\n        ");
 
-    if (!staffNumber || !String(staffNumber).trim()) {
-        throw new Error("Staff number is required.");
-    }
+/*
+--------------------------------------------------------------------------
+NORMALIZE EMPTY VALUES
+--------------------------------------------------------------------------
+*/
 
-    if (!firstName || !String(firstName).trim()) {
-        throw new Error("First name is required.");
-    }
+function normalizeNullable(value) {
+if (value === undefined || value === null) {
+return null;
+}
 
-    if (!lastName || !String(lastName).trim()) {
-        throw new Error("Last name is required.");
-    }
+if (typeof value === "string") {
+    const trimmed = value.trim();
 
-    const sql = `
-        INSERT INTO staff (
-            school_id,
-            user_id,
-            staff_number,
-            first_name,
-            middle_name,
-            last_name,
-            email,
-            phone,
-            position,
-            department,
-            employment_date,
-            profile_photo_url,
-            status
-        )
-        VALUES (
-            $1, $2, $3, $4, $5, $6, $7,
-            $8, $9, $10, $11, $12, $13
-        )
-        RETURNING *
-    `;
+    return trimmed === "" ? null : trimmed;
+}
 
-    const result = await query(sql, [
-        schoolId,
-        userId,
-        String(staffNumber).trim(),
-        String(firstName).trim(),
-        middleName ? String(middleName).trim() : null,
-        String(lastName).trim(),
-        email ? String(email).trim() : null,
-        phone ? String(phone).trim() : null,
-        position ? String(position).trim() : null,
-        department ? String(department).trim() : null,
-        employmentDate || null,
-        profilePhotoUrl || null,
-        status ? String(status).trim() : "Active"
-    ]);
+return value;
 
-    return result.rows[0] || null;
 }
 
 /*
-|--------------------------------------------------------------------------
-| Find Staff By ID
-|--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+RESOLVE DEPARTMENT NAME
+--------------------------------------------------------------------------
+
+Converts departmentId into the department_name stored by the staff table.
+--------------------------------------------------------------------------
+*/
+
+async function resolveDepartmentName(departmentId, schoolId) {
+if (!departmentId || !schoolId) {
+return null;
+}
+
+const result = await query(
+    [
+        "SELECT department_name",
+        "FROM departments",
+        "WHERE id = $1",
+        "AND school_id = $2",
+        "LIMIT 1"
+    ].join(" "),
+    [departmentId, schoolId]
+);
+
+if (result.rows.length === 0) {
+    throw new Error("Selected department was not found for this school.");
+}
+
+return result.rows[0].department_name;
+
+}
+
+/*
+--------------------------------------------------------------------------
+CREATE STAFF
+--------------------------------------------------------------------------
+*/
+
+async function createStaff(data = {}) {
+const schoolId = normalizeNullable(data.schoolId);
+
+if (!schoolId) {
+    throw new Error("School ID is required.");
+}
+
+const department = await resolveDepartmentName(
+    data.departmentId,
+    schoolId
+);
+
+const staffNumber = normalizeNullable(data.staffNumber);
+const firstName = normalizeNullable(data.firstName);
+const lastName = normalizeNullable(data.lastName);
+const middleName = normalizeNullable(data.middleName);
+const gender = normalizeNullable(data.gender);
+const dateOfBirth = normalizeNullable(data.dateOfBirth);
+const phone = normalizeNullable(data.phone);
+const email = normalizeNullable(data.email);
+const address = normalizeNullable(data.address);
+const position = normalizeNullable(data.position);
+const employmentType = normalizeNullable(data.employmentType);
+const employmentDate = normalizeNullable(data.employmentDate);
+const qualification = normalizeNullable(data.qualification);
+const status = normalizeNullable(data.status) || "Active";
+const notes = normalizeNullable(data.notes);
+const userId = normalizeNullable(data.userId);
+const profilePhotoUrl = normalizeNullable(data.profilePhotoUrl);
+
+const result = await query(
+    [
+        "INSERT INTO staff (",
+        "school_id,",
+        "user_id,",
+        "staff_number,",
+        "first_name,",
+        "middle_name,",
+        "last_name,",
+        "email,",
+        "phone,",
+        "position,",
+        "department,",
+        "employment_date,",
+        "profile_photo_url,",
+        "status,",
+        "gender,",
+        "date_of_birth,",
+        "employment_type,",
+        "qualification,",
+        "address,",
+        "notes",
+        ")",
+        "VALUES (",
+        "$1, $2, $3, $4, $5, $6, $7, $8, $9, $10,",
+        "$11, $12, $13, $14, $15, $16, $17, $18, $19",
+        ")",
+        "RETURNING id"
+    ].join(" "),
+    [
+        schoolId,
+        userId,
+        staffNumber,
+        firstName,
+        middleName,
+        lastName,
+        email,
+        phone,
+        position,
+        department,
+        employmentDate,
+        profilePhotoUrl,
+        status,
+        gender,
+        dateOfBirth,
+        employmentType,
+        qualification,
+        address,
+        notes
+    ]
+);
+
+if (result.rows.length === 0) {
+    throw new Error("Staff record could not be created.");
+}
+
+return findStaffById(result.rows[0].id, schoolId);
+
+}
+
+/*
+--------------------------------------------------------------------------
+FIND ALL STAFF
+--------------------------------------------------------------------------
+*/
+
+async function findStaff(options = {}) {
+const schoolId = normalizeNullable(options.schoolId);
+
+if (!schoolId) {
+    return [];
+}
+
+const departmentId = normalizeNullable(options.departmentId);
+const status = normalizeNullable(options.status);
+
+const conditions = [
+    "st.school_id = $1"
+];
+
+const values = [schoolId];
+
+if (departmentId) {
+    values.push(departmentId);
+    conditions.push("d.id = $" + values.length);
+}
+
+if (status) {
+    values.push(status);
+    conditions.push("st.status = $" + values.length);
+}
+
+const sql = [
+    "SELECT",
+    "        " + STAFF_SELECT,
+    "FROM staff st",
+    "LEFT JOIN departments d",
+    "       ON d.school_id = st.school_id",
+    "      AND LOWER(TRIM(d.department_name)) = LOWER(TRIM(st.department))",
+    "WHERE " + conditions.join("\n  AND "),
+    "ORDER BY st.first_name ASC, st.last_name ASC"
+].join("\n");
+
+const result = await query(sql, values);
+
+return result.rows;
+
+}
+
+/*
+--------------------------------------------------------------------------
+FIND STAFF BY ID
+--------------------------------------------------------------------------
 */
 
 async function findStaffById(staffId, schoolId = null) {
-    if (!staffId) {
-        return null;
-    }
+if (!staffId) {
+return null;
+}
 
-    let sql = `
-        SELECT
-            st.*,
-            s.school_name
-        FROM staff st
-        LEFT JOIN schools s
-            ON s.id = st.school_id
-        WHERE st.id = $1
-    `;
+const conditions = [
+    "st.id = $1"
+];
 
-    const values = [staffId];
+const values = [staffId];
 
-    if (schoolId) {
-        values.push(schoolId);
+if (schoolId) {
+    values.push(schoolId);
+    conditions.push("st.school_id = $" + values.length);
+}
 
-        sql += `
-            AND st.school_id = $${values.length}
-        `;
-    }
+const sql = [
+    "SELECT",
+    "        " + STAFF_SELECT,
+    "FROM staff st",
+    "LEFT JOIN departments d",
+    "       ON d.school_id = st.school_id",
+    "      AND LOWER(TRIM(d.department_name)) = LOWER(TRIM(st.department))",
+    "WHERE " + conditions.join("\n  AND "),
+    "LIMIT 1"
+].join("\n");
 
-    sql += `
-        LIMIT 1
-    `;
+const result = await query(sql, values);
 
-    const result = await query(sql, values);
+return result.rows.length > 0 ? result.rows[0] : null;
 
-    return result.rows[0] || null;
 }
 
 /*
-|--------------------------------------------------------------------------
-| Find Staff By Staff Number
-|--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+FIND STAFF BY STAFF NUMBER
+--------------------------------------------------------------------------
 */
 
 async function findStaffByNumber(staffNumber, schoolId = null) {
-    if (!staffNumber) {
-        return null;
-    }
+if (!staffNumber) {
+return null;
+}
 
-    let sql = `
-        SELECT
-            st.*,
-            s.school_name
-        FROM staff st
-        LEFT JOIN schools s
-            ON s.id = st.school_id
-        WHERE st.staff_number = $1
-    `;
+const conditions = [
+    "LOWER(TRIM(st.staff_number)) = LOWER(TRIM($1))"
+];
 
-    const values = [String(staffNumber).trim()];
+const values = [staffNumber];
 
-    if (schoolId) {
-        values.push(schoolId);
+if (schoolId) {
+    values.push(schoolId);
+    conditions.push("st.school_id = $" + values.length);
+}
 
-        sql += `
-            AND st.school_id = $${values.length}
-        `;
-    }
+const sql = [
+    "SELECT",
+    "        " + STAFF_SELECT,
+    "FROM staff st",
+    "LEFT JOIN departments d",
+    "       ON d.school_id = st.school_id",
+    "      AND LOWER(TRIM(d.department_name)) = LOWER(TRIM(st.department))",
+    "WHERE " + conditions.join("\n  AND "),
+    "LIMIT 1"
+].join("\n");
 
-    sql += `
-        LIMIT 1
-    `;
+const result = await query(sql, values);
 
-    const result = await query(sql, values);
+return result.rows.length > 0 ? result.rows[0] : null;
 
-    return result.rows[0] || null;
 }
 
 /*
-|--------------------------------------------------------------------------
-| Find Staff
-|--------------------------------------------------------------------------
-*/
-
-async function findStaff({
-    schoolId,
-    department = null,
-    status = null,
-    limit = 100,
-    offset = 0
-}) {
-    if (!schoolId) {
-        throw new Error("School ID is required.");
-    }
-
-    let sql = `
-        SELECT
-            st.*,
-            s.school_name
-        FROM staff st
-        LEFT JOIN schools s
-            ON s.id = st.school_id
-        WHERE st.school_id = $1
-    `;
-
-    const values = [schoolId];
-
-    if (department && String(department).trim()) {
-        values.push(String(department).trim());
-
-        sql += `
-            AND st.department = $${values.length}
-        `;
-    }
-
-    if (status && String(status).trim()) {
-        values.push(String(status).trim());
-
-        sql += `
-            AND st.status = $${values.length}
-        `;
-    }
-
-    const safeLimit = Math.min(
-        Math.max(Number(limit) || 100, 1),
-        100
-    );
-
-    const safeOffset = Math.max(
-        Number(offset) || 0,
-        0
-    );
-
-    values.push(safeLimit);
-
-    sql += `
-        ORDER BY
-            st.last_name ASC,
-            st.first_name ASC,
-            st.id ASC
-        LIMIT $${values.length}
-    `;
-
-    values.push(safeOffset);
-
-    sql += `
-        OFFSET $${values.length}
-    `;
-
-    const result = await query(sql, values);
-
-    return result.rows;
-}
-
-/*
-|--------------------------------------------------------------------------
-| Search Staff
-|--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+SEARCH STAFF
+--------------------------------------------------------------------------
 */
 
 async function searchStaff(searchTerm, schoolId) {
-    if (!schoolId || !searchTerm) {
-        return [];
-    }
+if (!schoolId || !searchTerm) {
+return [];
+}
 
-    const cleanedSearchTerm = String(searchTerm).trim();
+const term = "%" + String(searchTerm).trim() + "%";
 
-    if (!cleanedSearchTerm) {
-        return [];
-    }
+const sql = [
+    "SELECT",
+    "        " + STAFF_SELECT,
+    "FROM staff st",
+    "LEFT JOIN departments d",
+    "       ON d.school_id = st.school_id",
+    "      AND LOWER(TRIM(d.department_name)) = LOWER(TRIM(st.department))",
+    "WHERE st.school_id = $1",
+    "AND (",
+    "       st.staff_number ILIKE $2",
+    "    OR st.first_name ILIKE $2",
+    "    OR st.middle_name ILIKE $2",
+    "    OR st.last_name ILIKE $2",
+    "    OR st.email ILIKE $2",
+    "    OR st.phone ILIKE $2",
+    "    OR st.position ILIKE $2",
+    "    OR st.department ILIKE $2",
+    "    OR CONCAT_WS(' ', st.first_name, st.middle_name, st.last_name) ILIKE $2",
+    ")",
+    "ORDER BY st.first_name ASC, st.last_name ASC"
+].join("\n");
 
-    const sql = `
-        SELECT
-            st.*,
-            s.school_name
-        FROM staff st
-        LEFT JOIN schools s
-            ON s.id = st.school_id
-        WHERE st.school_id = $1
-          AND (
-              st.staff_number ILIKE $2
-              OR st.first_name ILIKE $2
-              OR st.middle_name ILIKE $2
-              OR st.last_name ILIKE $2
-              OR st.email ILIKE $2
-              OR st.phone ILIKE $2
-              OR st.position ILIKE $2
-              OR st.department ILIKE $2
-          )
-        ORDER BY
-            st.last_name ASC,
-            st.first_name ASC,
-            st.id ASC
-        LIMIT 100
-    `;
+const result = await query(sql, [
+    schoolId,
+    term
+]);
 
-    const result = await query(sql, [
-        schoolId,
-        `%${cleanedSearchTerm}%`
-    ]);
+return result.rows;
 
-    return result.rows;
 }
 
 /*
-|--------------------------------------------------------------------------
-| Update Staff
-|--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+UPDATE STAFF
+--------------------------------------------------------------------------
 */
 
-async function updateStaff(staffId, schoolId, data) {
-    if (!staffId) {
-        throw new Error("Staff ID is required.");
-    }
-
-    if (!schoolId) {
-        throw new Error("School ID is required.");
-    }
-
-    const allowedFields = {
-        userId: "user_id",
-        staffNumber: "staff_number",
-        firstName: "first_name",
-        middleName: "middle_name",
-        lastName: "last_name",
-        email: "email",
-        phone: "phone",
-        position: "position",
-        department: "department",
-        employmentDate: "employment_date",
-        profilePhotoUrl: "profile_photo_url",
-        status: "status"
-    };
-
-    const updates = [];
-    const values = [];
-
-    for (const key of Object.keys(data || {})) {
-        if (
-            allowedFields[key] &&
-            data[key] !== undefined
-        ) {
-            let value = data[key];
-
-            if (
-                [
-                    "staffNumber",
-                    "firstName",
-                    "middleName",
-                    "lastName",
-                    "email",
-                    "phone",
-                    "position",
-                    "department",
-                    "status"
-                ].includes(key)
-            ) {
-                if (value === null || value === "") {
-                    value = null;
-                } else if (typeof value === "string") {
-                    value = value.trim();
-                }
-            }
-
-            if (key === "employmentDate" && value === "") {
-                value = null;
-            }
-
-            if (key === "profilePhotoUrl" && value === "") {
-                value = null;
-            }
-
-            values.push(value);
-
-            updates.push(
-                `${allowedFields[key]} = $${values.length}`
-            );
-        }
-    }
-
-    if (updates.length === 0) {
-        throw new Error("No valid fields supplied for update.");
-    }
-
-    values.push(staffId);
-    const staffIdPosition = values.length;
-
-    values.push(schoolId);
-    const schoolIdPosition = values.length;
-
-    const sql = `
-        UPDATE staff
-        SET
-            ${updates.join(", ")},
-            updated_at = NOW()
-        WHERE id = $${staffIdPosition}
-          AND school_id = $${schoolIdPosition}
-        RETURNING *
-    `;
-
-    const result = await query(sql, values);
-
-    return result.rows[0] || null;
+async function updateStaff(staffId, schoolId, data = {}) {
+if (!staffId) {
+throw new Error("Staff ID is required.");
 }
 
-/*
-|--------------------------------------------------------------------------
-| Delete Staff
-|--------------------------------------------------------------------------
-*/
+if (!schoolId) {
+    throw new Error("School ID is required.");
+}
 
-async function deleteStaff(staffId, schoolId) {
-    if (!staffId) {
-        throw new Error("Staff ID is required.");
-    }
+const existing = await findStaffById(staffId, schoolId);
 
-    if (!schoolId) {
-        throw new Error("School ID is required.");
-    }
+if (!existing) {
+    return null;
+}
 
-    const sql = `
-        DELETE FROM staff
-        WHERE id = $1
-          AND school_id = $2
-        RETURNING *
-    `;
+let department = existing.department;
 
-    const result = await query(sql, [
-        staffId,
+if (data.departmentId !== undefined) {
+    department = await resolveDepartmentName(
+        data.departmentId,
         schoolId
-    ]);
-
-    return result.rows[0] || null;
-}
-
-/*
-|--------------------------------------------------------------------------
-| Count Staff
-|--------------------------------------------------------------------------
-*/
-
-async function countStaff(schoolId, status = null) {
-    if (!schoolId) {
-        throw new Error("School ID is required.");
-    }
-
-    let sql = `
-        SELECT
-            COUNT(*)::INTEGER AS staff_count
-        FROM staff
-        WHERE school_id = $1
-    `;
-
-    const values = [schoolId];
-
-    if (status && String(status).trim()) {
-        values.push(String(status).trim());
-
-        sql += `
-            AND status = $${values.length}
-        `;
-    }
-
-    const result = await query(sql, values);
-
-    return Number(
-        result.rows[0]?.staff_count || 0
     );
 }
 
+const staffNumber =
+    data.staffNumber !== undefined
+        ? normalizeNullable(data.staffNumber)
+        : existing.staff_number;
+
+const firstName =
+    data.firstName !== undefined
+        ? normalizeNullable(data.firstName)
+        : existing.first_name;
+
+const lastName =
+    data.lastName !== undefined
+        ? normalizeNullable(data.lastName)
+        : existing.last_name;
+
+const middleName =
+    data.middleName !== undefined
+        ? normalizeNullable(data.middleName)
+        : existing.middle_name;
+
+const gender =
+    data.gender !== undefined
+        ? normalizeNullable(data.gender)
+        : existing.gender;
+
+const dateOfBirth =
+    data.dateOfBirth !== undefined
+        ? normalizeNullable(data.dateOfBirth)
+        : existing.date_of_birth;
+
+const phone =
+    data.phone !== undefined
+        ? normalizeNullable(data.phone)
+        : existing.phone;
+
+const email =
+    data.email !== undefined
+        ? normalizeNullable(data.email)
+        : existing.email;
+
+const address =
+    data.address !== undefined
+        ? normalizeNullable(data.address)
+        : existing.address;
+
+const position =
+    data.position !== undefined
+        ? normalizeNullable(data.position)
+        : existing.position;
+
+const employmentType =
+    data.employmentType !== undefined
+        ? normalizeNullable(data.employmentType)
+        : existing.employment_type;
+
+const employmentDate =
+    data.employmentDate !== undefined
+        ? normalizeNullable(data.employmentDate)
+        : existing.employment_date;
+
+const qualification =
+    data.qualification !== undefined
+        ? normalizeNullable(data.qualification)
+        : existing.qualification;
+
+const status =
+    data.status !== undefined
+        ? normalizeNullable(data.status)
+        : existing.status;
+
+const notes =
+    data.notes !== undefined
+        ? normalizeNullable(data.notes)
+        : existing.notes;
+
+const profilePhotoUrl =
+    data.profilePhotoUrl !== undefined
+        ? normalizeNullable(data.profilePhotoUrl)
+        : existing.profile_photo_url;
+
+const userId =
+    data.userId !== undefined
+        ? normalizeNullable(data.userId)
+        : existing.user_id;
+
+const sql = [
+    "UPDATE staff",
+    "SET",
+    "staff_number = $1,",
+    "first_name = $2,",
+    "middle_name = $3,",
+    "last_name = $4,",
+    "email = $5,",
+    "phone = $6,",
+    "position = $7,",
+    "department = $8,",
+    "employment_date = $9,",
+    "profile_photo_url = $10,",
+    "status = $11,",
+    "gender = $12,",
+    "date_of_birth = $13,",
+    "employment_type = $14,",
+    "qualification = $15,",
+    "address = $16,",
+    "notes = $17,",
+    "user_id = $18,",
+    "updated_at = CURRENT_TIMESTAMP",
+    "WHERE id = $19",
+    "AND school_id = $20",
+    "RETURNING id"
+].join("\n");
+
+const result = await query(sql, [
+    staffNumber,
+    firstName,
+    middleName,
+    lastName,
+    email,
+    phone,
+    position,
+    department,
+    employmentDate,
+    profilePhotoUrl,
+    status,
+    gender,
+    dateOfBirth,
+    employmentType,
+    qualification,
+    address,
+    notes,
+    userId,
+    staffId,
+    schoolId
+]);
+
+if (result.rows.length === 0) {
+    return null;
+}
+
+return findStaffById(staffId, schoolId);
+
+}
+
 /*
-|--------------------------------------------------------------------------
-| Staff Statistics
-|--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+DELETE STAFF
+--------------------------------------------------------------------------
+*/
+
+async function deleteStaff(staffId, schoolId) {
+if (!staffId) {
+throw new Error("Staff ID is required.");
+}
+
+if (!schoolId) {
+    throw new Error("School ID is required.");
+}
+
+const result = await query(
+    [
+        "DELETE FROM staff",
+        "WHERE id = $1",
+        "AND school_id = $2",
+        "RETURNING id, staff_number, first_name, middle_name, last_name"
+    ].join(" "),
+    [
+        staffId,
+        schoolId
+    ]
+);
+
+return result.rows.length > 0 ? result.rows[0] : null;
+
+}
+
+/*
+--------------------------------------------------------------------------
+COUNT STAFF
+--------------------------------------------------------------------------
+*/
+
+async function countStaff(schoolId, filters = {}) {
+if (!schoolId) {
+return 0;
+}
+
+const conditions = [
+    "st.school_id = $1"
+];
+
+const values = [schoolId];
+
+if (filters.departmentId) {
+    values.push(filters.departmentId);
+    conditions.push("d.id = $" + values.length);
+}
+
+if (filters.status) {
+    values.push(filters.status);
+    conditions.push("st.status = $" + values.length);
+}
+
+const sql = [
+    "SELECT COUNT(*)::int AS count",
+    "FROM staff st",
+    "LEFT JOIN departments d",
+    "       ON d.school_id = st.school_id",
+    "      AND LOWER(TRIM(d.department_name)) = LOWER(TRIM(st.department))",
+    "WHERE " + conditions.join("\n  AND ")
+].join("\n");
+
+const result = await query(sql, values);
+
+return Number(result.rows[0]?.count || 0);
+
+}
+
+/*
+--------------------------------------------------------------------------
+STAFF STATISTICS
+--------------------------------------------------------------------------
+
+Returns the values required by the Staff dashboard summary:
+
+total       = all staff
+active      = staff with Active status
+teachers    = positions containing teacher or teaching
+departments = distinct non-empty department names represented by staff
+--------------------------------------------------------------------------
 */
 
 async function getStaffStatistics(schoolId) {
-    if (!schoolId) {
-        throw new Error("School ID is required.");
-    }
+if (!schoolId) {
+return {
+total: 0,
+active: 0,
+teachers: 0,
+departments: 0
+};
+}
 
-    const sql = `
-        SELECT
-            COUNT(*)::INTEGER AS total_staff,
+const sql = [
+    "SELECT",
+    "COUNT(*)::int AS total,",
+    "COUNT(*) FILTER (WHERE st.status = 'Active')::int AS active,",
+    "COUNT(*) FILTER (",
+    "    WHERE LOWER(COALESCE(st.position, '')) LIKE '%teacher%'",
+    "       OR LOWER(COALESCE(st.position, '')) LIKE '%teaching%'",
+    ")::int AS teachers,",
+    "COUNT(DISTINCT NULLIF(LOWER(TRIM(st.department)), ''))::int AS departments",
+    "FROM staff st",
+    "WHERE st.school_id = $1"
+].join("\n");
 
-            COUNT(*) FILTER (
-                WHERE LOWER(COALESCE(status, '')) = 'active'
-            )::INTEGER AS active_staff,
+const result = await query(sql, [schoolId]);
 
-            COUNT(*) FILTER (
-                WHERE LOWER(COALESCE(status, '')) = 'inactive'
-            )::INTEGER AS inactive_staff,
+const row = result.rows[0] || {};
 
-            COUNT(*) FILTER (
-                WHERE LOWER(COALESCE(status, '')) = 'suspended'
-            )::INTEGER AS suspended_staff,
+return {
+    total: Number(row.total || 0),
+    active: Number(row.active || 0),
+    teachers: Number(row.teachers || 0),
+    departments: Number(row.departments || 0)
+};
 
-            COUNT(*) FILTER (
-                WHERE LOWER(COALESCE(status, '')) = 'resigned'
-            )::INTEGER AS resigned_staff
-
-        FROM staff
-        WHERE school_id = $1
-    `;
-
-    const result = await query(sql, [schoolId]);
-
-    const row = result.rows[0] || {};
-
-    return {
-        totalStaff: Number(row.total_staff || 0),
-        activeStaff: Number(row.active_staff || 0),
-        inactiveStaff: Number(row.inactive_staff || 0),
-        suspendedStaff: Number(row.suspended_staff || 0),
-        resignedStaff: Number(row.resigned_staff || 0)
-    };
 }
 
 /*
-|--------------------------------------------------------------------------
-| Get Staff By Department
-|--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+FIND STAFF BY DEPARTMENT
+--------------------------------------------------------------------------
 */
 
-async function getStaffByDepartment(schoolId, department) {
-    if (!schoolId) {
-        throw new Error("School ID is required.");
-    }
+async function getStaffByDepartment(departmentId, schoolId) {
+if (!departmentId || !schoolId) {
+return [];
+}
 
-    if (!department || !String(department).trim()) {
-        return [];
-    }
+const sql = [
+    "SELECT",
+    "        " + STAFF_SELECT,
+    "FROM staff st",
+    "INNER JOIN departments d",
+    "        ON d.school_id = st.school_id",
+    "       AND LOWER(TRIM(d.department_name)) = LOWER(TRIM(st.department))",
+    "WHERE d.id = $1",
+    "AND st.school_id = $2",
+    "ORDER BY st.first_name ASC, st.last_name ASC"
+].join("\n");
 
-    const sql = `
-        SELECT
-            st.*,
-            s.school_name
-        FROM staff st
-        LEFT JOIN schools s
-            ON s.id = st.school_id
-        WHERE st.school_id = $1
-          AND st.department = $2
-        ORDER BY
-            st.last_name ASC,
-            st.first_name ASC,
-            st.id ASC
-    `;
+const result = await query(sql, [
+    departmentId,
+    schoolId
+]);
 
-    const result = await query(sql, [
-        schoolId,
-        String(department).trim()
-    ]);
+return result.rows;
 
-    return result.rows;
 }
 
 /*
-|--------------------------------------------------------------------------
-| Check Staff Number
-|--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+CHECK STAFF NUMBER
+--------------------------------------------------------------------------
 */
 
-async function staffNumberExists(
-    staffNumber,
+async function staffNumberExists(staffNumber, schoolId, excludeStaffId = null) {
+if (!staffNumber || !schoolId) {
+return false;
+}
+
+const conditions = [
+    "school_id = $1",
+    "LOWER(TRIM(staff_number)) = LOWER(TRIM($2))"
+];
+
+const values = [
     schoolId,
-    excludeStaffId = null
-) {
-    if (!staffNumber || !schoolId) {
-        return false;
-    }
+    staffNumber
+];
 
-    let sql = `
-        SELECT EXISTS (
-            SELECT 1
-            FROM staff
-            WHERE staff_number = $1
-              AND school_id = $2
-    `;
+if (excludeStaffId) {
+    values.push(excludeStaffId);
+    conditions.push("id <> $" + values.length);
+}
 
-    const values = [
-        String(staffNumber).trim(),
-        schoolId
-    ];
+const sql = [
+    "SELECT 1",
+    "FROM staff",
+    "WHERE " + conditions.join("\n  AND "),
+    "LIMIT 1"
+].join("\n");
 
-    if (excludeStaffId) {
-        values.push(excludeStaffId);
+const result = await query(sql, values);
 
-        sql += `
-            AND id <> $${values.length}
-        `;
-    }
+return result.rows.length > 0;
 
-    sql += `
-        ) AS exists
-    `;
-
-    const result = await query(sql, values);
-
-    return Boolean(result.rows[0]?.exists);
 }
 
 /*
-|--------------------------------------------------------------------------
-| Export
-|--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+EXPORTS
+--------------------------------------------------------------------------
 */
 
 module.exports = {
-    createStaff,
-    findStaffById,
-    findStaffByNumber,
-    findStaff,
-    searchStaff,
-    updateStaff,
-    deleteStaff,
-    countStaff,
-    getStaffStatistics,
-    getStaffByDepartment,
-    staffNumberExists
+createStaff,
+findStaff,
+findStaffById,
+findStaffByNumber,
+searchStaff,
+updateStaff,
+deleteStaff,
+countStaff,
+getStaffStatistics,
+getStaffByDepartment,
+staffNumberExists
 };
