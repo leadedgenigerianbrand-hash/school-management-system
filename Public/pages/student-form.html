@@ -1,135 +1,759 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    ```
     <title>Student Form | School Management System</title>
 
+    <meta name="description" content="Student registration and management form">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/dashboard.css">
     <link rel="stylesheet" href="../css/responsive.css">
     <link rel="stylesheet" href="../css/forms.css">
     <link rel="stylesheet" href="../css/students.css">
-    ```
 
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --sidebar-bg: #111827;
+            --sidebar-hover: rgba(255, 255, 255, 0.09);
+            --sidebar-active: rgba(13, 110, 253, 0.18);
+            --sidebar-text: #d1d5db;
+            --sidebar-muted: #9ca3af;
+            --page-bg: #f8f9fa;
+            --content-gap: 28px;
+        }
+
+        html {
+            min-height: 100%;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            background: var(--page-bg);
+            color: #212529;
+            overflow-x: hidden;
+        }
+
+        /* =========================================================
+           APPLICATION LAYOUT
+           ========================================================= */
+
+        .sms-layout {
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        /* =========================================================
+           DASHBOARD-STYLE SIDEBAR
+           ========================================================= */
+
+        .sms-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--sidebar-bg);
+            color: #fff;
+            z-index: 1040;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 12px rgba(0, 0, 0, 0.08);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .sidebar-brand {
+            padding: 24px 22px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand-icon {
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: rgba(13, 110, 253, 0.18);
+            color: #6ea8fe;
+            margin-bottom: 12px;
+            font-size: 1.2rem;
+        }
+
+        .brand-title {
+            color: #ffffff;
+            font-size: 1.05rem;
+            font-weight: 700;
+            line-height: 1.3;
+            margin: 0;
+        }
+
+        .brand-subtitle {
+            color: var(--sidebar-muted);
+            font-size: 0.78rem;
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            padding: 12px 12px 20px;
+        }
+
+        .sidebar-section {
+            padding: 14px 12px 7px;
+            color: #6b7280;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .sidebar-section:first-child {
+            padding-top: 6px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            min-height: 42px;
+            padding: 9px 12px;
+            margin: 2px 0;
+            border-radius: 8px;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition:
+                background-color 0.18s ease,
+                color 0.18s ease,
+                transform 0.18s ease;
+        }
+
+        .sidebar-link i {
+            width: 20px;
+            min-width: 20px;
+            text-align: center;
+            font-size: 1rem;
+            color: #9ca3af;
+        }
+
+        .sidebar-link:hover {
+            background: var(--sidebar-hover);
+            color: #ffffff;
+        }
+
+        .sidebar-link:hover i {
+            color: #ffffff;
+        }
+
+        .sidebar-link.active {
+            background: var(--sidebar-active);
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .sidebar-link.active i {
+            color: #6ea8fe;
+        }
+
+        /* =========================================================
+           MAIN CONTENT
+           ========================================================= */
+
+        .sms-main {
+            min-height: 100vh;
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            background: var(--page-bg);
+        }
+
+        /* =========================================================
+           TOP BAR
+           ========================================================= */
+
+        .topbar {
+            min-height: 72px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 14px 28px;
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .topbar-title {
+            flex: 1;
+            color: #111827;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .topbar-user {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #495057;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .topbar-user::before {
+            content: "";
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: #e9f2ff;
+            border: 1px solid #cfe2ff;
+            display: inline-block;
+        }
+
+        #mobileSidebarBtn {
+            border-radius: 8px;
+        }
+
+        /* =========================================================
+           FORM PAGE
+           ========================================================= */
+
+        .form-page {
+            width: 100%;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 30px var(--content-gap) 50px;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 24px;
+            margin-bottom: 24px;
+            padding: 0 2px;
+        }
+
+        .page-header h1 {
+            margin: 0;
+            color: #111827;
+            font-size: clamp(1.55rem, 2vw, 2rem);
+            font-weight: 700;
+            line-height: 1.25;
+        }
+
+        .page-header p {
+            margin: 8px 0 0;
+            max-width: 760px;
+            color: #6b7280;
+            font-size: 0.93rem;
+            line-height: 1.6;
+        }
+
+        .page-header .btn {
+            flex-shrink: 0;
+            white-space: nowrap;
+            border-radius: 8px;
+        }
+
+        /* =========================================================
+           ALERT AREA
+           ========================================================= */
+
+        #alertArea {
+            margin-bottom: 20px;
+        }
+
+        /* =========================================================
+           FORM CARDS
+           ========================================================= */
+
+        .form-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            margin-bottom: 22px;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.035);
+            overflow: hidden;
+        }
+
+        .form-card-header {
+            padding: 16px 22px;
+            background: #ffffff;
+            border-bottom: 1px solid #e9ecef;
+            color: #111827;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .form-card-body {
+            padding: 22px;
+        }
+
+        .form-card .row {
+            --bs-gutter-y: 1rem;
+        }
+
+        /* =========================================================
+           FORM LABELS
+           ========================================================= */
+
+        .form-label {
+            color: #0d6efd;
+            font-weight: 600;
+            font-size: 0.88rem;
+            margin-bottom: 7px;
+        }
+
+        .form-label.required {
+            color: #0d6efd;
+        }
+
+        .form-label.required::after {
+            content: " *";
+            color: #0d6efd;
+            font-weight: 700;
+        }
+
+        /* Specifically keep Academic Session blue */
+        label[for="academic_session"] {
+            color: #0d6efd !important;
+        }
+
+        label[for="academic_session"]::after {
+            color: #0d6efd !important;
+        }
+
+        .form-control,
+        .form-select {
+            min-height: 44px;
+            border-color: #d9dee5;
+            border-radius: 8px;
+            color: #212529;
+            background-color: #ffffff;
+            font-size: 0.92rem;
+            transition:
+                border-color 0.15s ease,
+                box-shadow 0.15s ease;
+        }
+
+        textarea.form-control {
+            min-height: auto;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.12);
+        }
+
+        .form-control::placeholder {
+            color: #adb5bd;
+        }
+
+        .form-select:disabled,
+        .form-control:disabled {
+            background-color: #f3f4f6;
+            color: #6b7280;
+            cursor: not-allowed;
+        }
+
+        .text-muted {
+            color: #6b7280 !important;
+        }
+
+        /* =========================================================
+           ACADEMIC NOTE
+           ========================================================= */
+
+        .academic-note {
+            margin-bottom: 20px;
+            padding: 13px 15px;
+            border-left: 3px solid #0d6efd;
+            border-radius: 6px;
+            background: #f4f8ff;
+            color: #495057;
+            font-size: 0.86rem;
+            line-height: 1.55;
+        }
+
+        /* =========================================================
+           PHOTO PREVIEW
+           ========================================================= */
+
+        .photo-preview {
+            width: 150px;
+            height: 150px;
+            margin-bottom: 16px;
+            border: 2px dashed #ced4da;
+            border-radius: 12px;
+            background: #f8f9fa;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            text-align: center;
+            font-size: 0.84rem;
+            padding: 12px;
+        }
+
+        .photo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* =========================================================
+           FORM ACTIONS
+           ========================================================= */
+
+        .form-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 4px 0;
+        }
+
+        .form-actions .btn {
+            min-width: 110px;
+            min-height: 42px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        /* =========================================================
+           SIDEBAR OVERLAY
+           ========================================================= */
+
+        #sidebarOverlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            z-index: 1030;
+        }
+
+        #sidebarOverlay.show {
+            display: block;
+        }
+
+        /* =========================================================
+           SCROLLBAR
+           ========================================================= */
+
+        .sms-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sms-sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sms-sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.16);
+            border-radius: 10px;
+        }
+
+        .sms-sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* =========================================================
+           RESPONSIVE
+           ========================================================= */
+
+        @media (max-width: 1199.98px) {
+            .form-page {
+                padding-left: 24px;
+                padding-right: 24px;
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .sms-sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.25s ease;
+                box-shadow: 8px 0 24px rgba(0, 0, 0, 0.18);
+            }
+
+            .sms-sidebar.show {
+                transform: translateX(0);
+            }
+
+            .sms-main {
+                width: 100%;
+                margin-left: 0;
+            }
+
+            .topbar {
+                padding-left: 18px;
+                padding-right: 18px;
+            }
+
+            .form-page {
+                padding: 24px 20px 40px;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .topbar {
+                min-height: 64px;
+                gap: 12px;
+            }
+
+            .topbar-title {
+                font-size: 0.94rem;
+            }
+
+            .topbar-user {
+                font-size: 0.82rem;
+            }
+
+            .topbar-user::before {
+                width: 30px;
+                height: 30px;
+            }
+
+            .form-page {
+                padding: 20px 15px 35px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                gap: 16px;
+                margin-bottom: 20px;
+            }
+
+            .page-header .btn {
+                width: 100%;
+            }
+
+            .form-card {
+                margin-bottom: 18px;
+                border-radius: 10px;
+            }
+
+            .form-card-header {
+                padding: 14px 16px;
+            }
+
+            .form-card-body {
+                padding: 17px 16px;
+            }
+
+            .form-actions {
+                flex-direction: column-reverse;
+                align-items: stretch;
+            }
+
+            .form-actions .btn {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .topbar-user {
+                display: none;
+            }
+
+            .page-header h1 {
+                font-size: 1.45rem;
+            }
+
+            .page-header p {
+                font-size: 0.86rem;
+            }
+
+            .form-card-body {
+                padding: 15px;
+            }
+
+            .photo-preview {
+                width: 130px;
+                height: 130px;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
-    ```
     <div class="sms-layout">
 
-        <aside class="sms-sidebar">
+        <aside id="smsSidebar" class="sms-sidebar">
 
             <div class="sidebar-brand">
-                <div class="brand-title">School Management</div>
-                <div class="brand-subtitle">Leadedge Model College</div>
+
+                <div class="sidebar-brand-icon">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
+
+                <div class="brand-title">
+                    School Management
+                </div>
+
+                <div class="brand-subtitle">
+                    Leadedge Model College
+                </div>
+
             </div>
 
-            <nav class="sidebar-nav">
+            <div class="sidebar-content">
 
-                <a href="../index.html" class="sidebar-link">
+                <div class="sidebar-section">
+                    Main
+                </div>
+
+                <a href="dashboard.html" class="sidebar-link">
+                    <i class="bi bi-grid-1x2-fill"></i>
                     <span>Dashboard</span>
                 </a>
 
                 <a href="students.html" class="sidebar-link active">
+                    <i class="bi bi-people-fill"></i>
                     <span>Students</span>
                 </a>
 
                 <a href="staff.html" class="sidebar-link">
+                    <i class="bi bi-person-badge-fill"></i>
                     <span>Staff</span>
                 </a>
 
                 <a href="guardians.html" class="sidebar-link">
+                    <i class="bi bi-person-hearts"></i>
                     <span>Guardians</span>
                 </a>
 
+                <div class="sidebar-section">
+                    Academic
+                </div>
+
                 <a href="classes.html" class="sidebar-link">
+                    <i class="bi bi-diagram-3-fill"></i>
                     <span>Classes</span>
                 </a>
 
                 <a href="class-arms.html" class="sidebar-link">
+                    <i class="bi bi-collection-fill"></i>
                     <span>Class Arms</span>
                 </a>
 
                 <a href="departments.html" class="sidebar-link">
+                    <i class="bi bi-building-fill"></i>
                     <span>Departments</span>
                 </a>
 
                 <a href="subjects.html" class="sidebar-link">
+                    <i class="bi bi-book-fill"></i>
                     <span>Subjects</span>
                 </a>
 
                 <a href="academic-levels.html" class="sidebar-link">
+                    <i class="bi bi-layers-fill"></i>
                     <span>Academic Levels</span>
                 </a>
 
                 <a href="academic-sessions.html" class="sidebar-link">
+                    <i class="bi bi-calendar3"></i>
                     <span>Academic Sessions</span>
                 </a>
 
                 <a href="terms.html" class="sidebar-link">
+                    <i class="bi bi-calendar-week-fill"></i>
                     <span>Terms</span>
                 </a>
 
                 <a href="attendance.html" class="sidebar-link">
+                    <i class="bi bi-check2-square"></i>
                     <span>Attendance</span>
                 </a>
 
                 <a href="results.html" class="sidebar-link">
+                    <i class="bi bi-bar-chart-fill"></i>
                     <span>Results</span>
                 </a>
 
+                <div class="sidebar-section">
+                    Finance &amp; Records
+                </div>
+
                 <a href="fees.html" class="sidebar-link">
+                    <i class="bi bi-cash-stack"></i>
                     <span>Fees</span>
                 </a>
 
                 <a href="documents.html" class="sidebar-link">
+                    <i class="bi bi-folder-fill"></i>
                     <span>Documents</span>
                 </a>
 
                 <a href="reports.html" class="sidebar-link">
+                    <i class="bi bi-file-earmark-bar-graph-fill"></i>
                     <span>Reports</span>
                 </a>
 
+                <div class="sidebar-section">
+                    Administration
+                </div>
+
                 <a href="users.html" class="sidebar-link">
+                    <i class="bi bi-person-gear"></i>
                     <span>Users</span>
                 </a>
 
                 <a href="roles.html" class="sidebar-link">
+                    <i class="bi bi-shield-lock-fill"></i>
                     <span>Roles</span>
                 </a>
 
                 <a href="permissions.html" class="sidebar-link">
+                    <i class="bi bi-key-fill"></i>
                     <span>Permissions</span>
                 </a>
 
                 <a href="profile.html" class="sidebar-link">
+                    <i class="bi bi-person-circle"></i>
                     <span>Profile</span>
                 </a>
 
                 <a href="settings.html" class="sidebar-link">
+                    <i class="bi bi-gear-fill"></i>
                     <span>Settings</span>
                 </a>
 
-            </nav>
+            </div>
 
         </aside>
+
+        <div id="sidebarOverlay"></div>
 
         <main class="sms-main">
 
             <header class="topbar">
 
                 <div>
-                    <button type="button" id="mobileSidebarBtn" class="btn btn-outline-secondary d-lg-none"
-                        aria-label="Open navigation menu">
-                        ☰
+                    <button type="button" id="mobileSidebarBtn" class="btn btn-light border d-lg-none"
+                        aria-label="Open navigation menu" title="Open navigation menu">
+                        <i class="bi bi-list fs-5"></i>
                     </button>
                 </div>
 
@@ -148,6 +772,7 @@
                 <div class="page-header">
 
                     <div>
+
                         <h1 id="pageTitle">
                             Add Student
                         </h1>
@@ -155,10 +780,12 @@
                         <p id="pageDescription">
                             Register a student and assign the student to the appropriate academic class.
                         </p>
+
                     </div>
 
                     <a href="students.html" class="btn btn-outline-secondary">
-                        ← Back to Students
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Back to Students
                     </a>
 
                 </div>
@@ -327,7 +954,9 @@
                                 <div class="col-md-4">
 
                                     <label for="academic_session" class="form-label required">
+
                                         Academic Session
+
                                     </label>
 
                                     <select class="form-select" id="academic_session" name="academic_session" required>
@@ -536,19 +1165,30 @@
 
                     <div class="form-card">
 
-                        <div class="form-actions">
+                        <div class="form-card-body">
 
-                            <a href="students.html" class="btn btn-outline-secondary">
-                                Cancel
-                            </a>
+                            <div class="form-actions">
 
-                            <button type="reset" class="btn btn-outline-warning" id="resetBtn">
-                                Reset
-                            </button>
+                                <a href="students.html" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-lg me-1"></i>
+                                    Cancel
+                                </a>
 
-                            <button type="submit" class="btn btn-primary" id="saveStudentBtn">
-                                Save Student
-                            </button>
+                                <button type="reset" class="btn btn-outline-warning" id="resetBtn">
+
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i>
+                                    Reset
+
+                                </button>
+
+                                <button type="submit" class="btn btn-primary" id="saveStudentBtn">
+
+                                    <i class="bi bi-check-lg me-1"></i>
+                                    Save Student
+
+                                </button>
+
+                            </div>
 
                         </div>
 
@@ -568,7 +1208,85 @@
     <script src="../js/auth.js"></script>
     <script src="../js/api.js"></script>
     <script src="../js/student-form.js"></script>
-    ```
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const sidebar =
+                document.getElementById("smsSidebar");
+
+            const sidebarToggle =
+                document.getElementById("mobileSidebarBtn");
+
+            const sidebarOverlay =
+                document.getElementById("sidebarOverlay");
+
+            function openSidebar() {
+                if (sidebar) {
+                    sidebar.classList.add("show");
+                }
+
+                if (sidebarOverlay) {
+                    sidebarOverlay.classList.add("show");
+                }
+            }
+
+            function closeSidebar() {
+                if (sidebar) {
+                    sidebar.classList.remove("show");
+                }
+
+                if (sidebarOverlay) {
+                    sidebarOverlay.classList.remove("show");
+                }
+            }
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener(
+                    "click",
+                    function () {
+
+                        if (
+                            sidebar &&
+                            sidebar.classList.contains("show")
+                        ) {
+                            closeSidebar();
+                        } else {
+                            openSidebar();
+                        }
+
+                    }
+                );
+            }
+
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener(
+                    "click",
+                    closeSidebar
+                );
+            }
+
+            document
+                .querySelectorAll(".sidebar-link")
+                .forEach(function (link) {
+
+                    link.addEventListener(
+                        "click",
+                        function () {
+
+                            if (
+                                window.innerWidth <= 991
+                            ) {
+                                closeSidebar();
+                            }
+
+                        }
+                    );
+
+                });
+
+        });
+    </script>
 
 </body>
 

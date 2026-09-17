@@ -1,679 +1,1493 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    ```
     <title>Staff Management | School Management System</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <style>
-        body {
-            background: #f5f7fb;
-            color: #1f2937;
+        /* ==================================================================
+           GLOBAL DASHBOARD DESIGN SYSTEM
+           ================================================================== */
+
+        :root {
+            --primary-dark: #172554;
+            --primary: #1e3a8a;
+            --primary-blue: #2563eb;
+            --primary-blue-dark: #1d4ed8;
+
+            --page-bg: #f8fafc;
+            --surface: #ffffff;
+
+            --border: #e2e8f0;
+            --border-light: #edf2f7;
+
+            --text-dark: #0f172a;
+            --text: #334155;
+            --text-muted: #64748b;
+
+            --sidebar-text: #cbd5e1;
+            --sidebar-muted: #94a3b8;
+
+            --success: #198754;
+            --warning: #f59e0b;
+            --danger: #dc3545;
+
+            --sidebar-width: 260px;
+            --topbar-height: 72px;
+
+            --radius: 12px;
+
+            --shadow-sm:
+                0 1px 2px rgba(15, 23, 42, .04),
+                0 4px 12px rgba(15, 23, 42, .03);
+
+            --shadow:
+                0 4px 16px rgba(15, 23, 42, .06);
         }
 
-        .app-sidebar {
-            width: 260px;
-            min-height: 100vh;
-            background: #172033;
-            position: fixed;
-            inset: 0 auto 0 0;
-            z-index: 1040;
-            overflow-y: auto;
+
+        /* ==================================================================
+           RESET
+           ================================================================== */
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
         }
+
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+
+        body {
+            background: var(--page-bg);
+            color: var(--text);
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Helvetica,
+                Arial,
+                sans-serif;
+
+            font-size: 15px;
+
+            overflow-x: hidden;
+        }
+
+
+        /* ==================================================================
+           DASHBOARD LAYOUT
+           ================================================================== */
+
+        .dashboard-layout {
+            width: 100%;
+            min-height: 100vh;
+        }
+
+
+        /* ==================================================================
+           SIDEBAR
+           ================================================================== */
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+
+            width: var(--sidebar-width);
+
+            background:
+                linear-gradient(180deg,
+                    #0f172a 0%,
+                    #1e293b 100%);
+
+            color: #fff;
+
+            z-index: 1050;
+
+            display: flex;
+            flex-direction: column;
+
+            overflow-y: auto;
+            overflow-x: hidden;
+
+            border-right: 1px solid rgba(255, 255, 255, .05);
+        }
+
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .15);
+            border-radius: 10px;
+        }
+
+
+        /* ==================================================================
+           SIDEBAR BRAND
+           ================================================================== */
 
         .sidebar-brand {
-            padding: 22px 20px;
+            min-height: 72px;
+
+            display: flex;
+            align-items: center;
+
+            padding: 0 20px;
+
+            color: #fff;
+
             border-bottom: 1px solid rgba(255, 255, 255, .08);
+
+            flex-shrink: 0;
         }
 
+
         .sidebar-brand-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 10px;
-            background: #2563eb;
-            color: #fff;
+            width: 38px;
+            height: 38px;
+
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 21px;
+
+            margin-right: 11px;
+
+            background: rgba(37, 99, 235, .18);
+
+            border: 1px solid rgba(96, 165, 250, .25);
+
+            border-radius: 10px;
+
+            color: #93c5fd;
+
+            font-size: 18px;
         }
 
-        .sidebar-section {
-            padding: 18px 15px 5px;
-            color: #7f8ba3;
-            font-size: 11px;
+
+        .sidebar-brand-text {
+            line-height: 1.2;
+        }
+
+
+        .sidebar-brand-title {
+            display: block;
+
+            color: #fff;
+
+            font-size: 15px;
             font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .08em;
         }
 
-        .sidebar-link {
+
+        .sidebar-brand-subtitle {
+            display: block;
+
+            margin-top: 3px;
+
+            color: var(--sidebar-muted);
+
+            font-size: 11px;
+        }
+
+
+        /* ==================================================================
+           SIDEBAR NAVIGATION
+           ================================================================== */
+
+        .sidebar-nav {
+            padding: 16px 12px 24px;
+        }
+
+
+        .sidebar-section-title {
+            padding: 10px 14px 7px;
+
+            color: #64748b;
+
+            font-size: 10px;
+            font-weight: 700;
+
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+
+        .sidebar-nav a {
+            min-height: 44px;
+
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin: 2px 10px;
-            padding: 10px 12px;
+
+            gap: 10px;
+
+            margin-bottom: 3px;
+
+            padding: 10px 14px;
+
+            color: var(--sidebar-text);
+
             border-radius: 8px;
-            color: #c7cfdd;
+
             text-decoration: none;
+
             font-size: 14px;
+            font-weight: 500;
+
+            transition:
+                background .18s ease,
+                color .18s ease,
+                transform .18s ease;
         }
 
-        .sidebar-link:hover,
-        .sidebar-link.active {
-            background: #2563eb;
+
+        .sidebar-nav a i {
+            width: 20px;
+
+            color: #94a3b8;
+
+            font-size: 16px;
+
+            text-align: center;
+
+            flex-shrink: 0;
+
+            transition: color .18s ease;
+        }
+
+
+        .sidebar-nav a:hover {
+            color: #fff;
+
+            background: rgba(255, 255, 255, .07);
+
+            transform: translateX(2px);
+        }
+
+
+        .sidebar-nav a:hover i {
+            color: #bfdbfe;
+        }
+
+
+        .sidebar-nav a.active {
+            color: #fff;
+
+            background: var(--primary-blue);
+
+            box-shadow:
+                0 4px 12px rgba(37, 99, 235, .22);
+        }
+
+
+        .sidebar-nav a.active i {
             color: #fff;
         }
 
-        .sidebar-link i {
-            width: 20px;
-            font-size: 16px;
+
+        /* ==================================================================
+           MAIN CONTENT
+           ================================================================== */
+
+        .main-content {
+            min-height: 100vh;
+
+            margin-left: var(--sidebar-width);
+
+            width: calc(100% - var(--sidebar-width));
         }
 
-        .main-wrapper {
-            margin-left: 260px;
-            min-height: 100vh;
-        }
+
+        /* ==================================================================
+           TOPBAR
+           ================================================================== */
 
         .topbar {
-            height: 70px;
-            background: #fff;
-            border-bottom: 1px solid #e5e7eb;
+            height: var(--topbar-height);
+
             display: flex;
             align-items: center;
             justify-content: space-between;
+
             padding: 0 28px;
+
+            background: #fff;
+
+            border-bottom: 1px solid var(--border);
+
             position: sticky;
             top: 0;
-            z-index: 1030;
+
+            z-index: 1000;
         }
+
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+
+            min-width: 0;
+        }
+
+
+        .topbar-title {
+            margin: 0;
+
+            color: var(--text-dark);
+
+            font-size: 20px;
+            font-weight: 700;
+
+            line-height: 1.3;
+        }
+
+
+        .topbar-subtitle {
+            margin-top: 3px;
+
+            color: var(--text-muted);
+
+            font-size: 12px;
+        }
+
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+
+            gap: 8px;
+        }
+
+
+        /* ==================================================================
+           MOBILE MENU
+           ================================================================== */
+
+        .mobile-menu-button {
+            display: none;
+
+            width: 38px;
+            height: 38px;
+
+            align-items: center;
+            justify-content: center;
+
+            margin-right: 10px;
+
+            border: 1px solid var(--border);
+
+            background: #fff;
+
+            color: var(--text);
+
+            border-radius: 8px;
+        }
+
+
+        /* ==================================================================
+           PAGE CONTENT
+           ================================================================== */
 
         .page-content {
             padding: 28px;
-            max-width: 1500px;
-            margin: auto;
         }
 
-        .stat-card,
-        .content-card {
-            border: 0;
-            box-shadow: 0 3px 15px rgba(15, 23, 42, .05);
+
+        .page-heading {
+            margin-bottom: 24px;
         }
 
-        .stat-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
+
+        .page-heading h1 {
+            margin: 0;
+
+            color: var(--text-dark);
+
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+
+        .page-heading p {
+            margin: 5px 0 0;
+
+            color: var(--text-muted);
+
+            font-size: 13px;
+        }
+
+
+        /* ==================================================================
+           BUTTONS
+           ================================================================== */
+
+        .btn {
+            border-radius: 8px;
+
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+
+        .btn-primary {
+            background: var(--primary-blue);
+            border-color: var(--primary-blue);
+        }
+
+
+        .btn-primary:hover,
+        .btn-primary:focus {
+            background: var(--primary-blue-dark);
+            border-color: var(--primary-blue-dark);
+        }
+
+
+        .btn-outline-secondary {
+            color: var(--text);
+            border-color: var(--border);
+            background: #fff;
+        }
+
+
+        .btn-outline-secondary:hover {
+            color: var(--text-dark);
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+
+        /* ==================================================================
+           SUMMARY CARDS
+           ================================================================== */
+
+        .summary-card {
+            height: 100%;
+
+            padding: 20px;
+
+            background: var(--surface);
+
+            border: 1px solid var(--border);
+
+            border-radius: var(--radius);
+
+            box-shadow: var(--shadow-sm);
+        }
+
+
+        .summary-card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            margin-bottom: 16px;
+        }
+
+
+        .summary-icon {
+            width: 42px;
+            height: 42px;
+
             display: inline-flex;
             align-items: center;
             justify-content: center;
+
+            border-radius: 10px;
+
             background: #eff6ff;
-            color: #2563eb;
-            font-size: 20px;
+
+            color: var(--primary-blue);
+
+            font-size: 18px;
         }
 
-        .toolbar {
+
+        .summary-label {
+            margin-bottom: 5px;
+
+            color: var(--text-muted);
+
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+
+        .summary-value {
+            color: var(--text-dark);
+
+            font-size: 26px;
+            font-weight: 700;
+
+            line-height: 1.1;
+        }
+
+
+        /* ==================================================================
+           CONTENT CARD
+           ================================================================== */
+
+        .content-card {
             background: #fff;
-            border-bottom: 1px solid #eef0f4;
-            padding: 18px 20px;
+
+            border: 1px solid var(--border);
+
+            border-radius: var(--radius);
+
+            box-shadow: var(--shadow-sm);
+
+            overflow: hidden;
         }
 
-        .table-container {
+
+        .content-card-header {
+            padding: 18px 20px;
+
+            background: #fff;
+
+            border-bottom: 1px solid var(--border);
+        }
+
+
+        .content-card-title {
+            margin: 0;
+
+            color: var(--text-dark);
+
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+
+        .content-card-subtitle {
+            margin-top: 3px;
+
+            color: var(--text-muted);
+
+            font-size: 12px;
+        }
+
+
+        /* ==================================================================
+           SEARCH / FILTERS
+           ================================================================== */
+
+        .form-control,
+        .form-select {
+            min-height: 40px;
+
+            border-color: var(--border);
+
+            border-radius: 8px;
+
+            color: var(--text);
+
+            font-size: 13px;
+        }
+
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #93c5fd;
+
+            box-shadow:
+                0 0 0 .2rem rgba(37, 99, 235, .08);
+        }
+
+
+        .input-group-text {
+            background: #fff;
+
+            border-color: var(--border);
+
+            color: var(--text-muted);
+
+            border-radius: 8px 0 0 8px;
+        }
+
+
+        /* ==================================================================
+           STAFF TABLE
+           ================================================================== */
+
+        .table-responsive {
+            width: 100%;
+
             overflow-x: auto;
         }
 
-        .staff-table {
-            min-width: 1150px;
+
+        .table {
+            margin-bottom: 0;
+
+            color: var(--text);
+
+            vertical-align: middle;
         }
 
-        .staff-table th {
+
+        .table thead th {
+            padding: 13px 16px;
+
             background: #f8fafc;
-            color: #64748b;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: .04em;
+
+            border-bottom: 1px solid var(--border);
+
+            color: #475569;
+
+            font-size: 11px;
+            font-weight: 700;
+
+            letter-spacing: .02em;
+
             white-space: nowrap;
         }
 
-        .staff-table td {
-            vertical-align: middle;
-            font-size: 14px;
+
+        .table tbody td {
+            padding: 14px 16px;
+
+            border-bottom: 1px solid var(--border-light);
+
+            font-size: 13px;
         }
 
-        .staff-avatar {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: #dbeafe;
-            color: #1d4ed8;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            flex-shrink: 0;
+
+        .table tbody tr:last-child td {
+            border-bottom: 0;
         }
+
+
+        .table-hover>tbody>tr:hover>* {
+            background: #f8fafc;
+        }
+
+
+        /* ==================================================================
+           STATUS BADGES
+           ================================================================== */
 
         .status-badge {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            padding: 5px 10px;
-            border-radius: 50px;
+
+            padding: 5px 9px;
+
+            border-radius: 999px;
+
             font-size: 11px;
             font-weight: 700;
         }
+
 
         .status-active {
             background: #dcfce7;
             color: #166534;
         }
 
+
         .status-inactive {
             background: #fee2e2;
             color: #991b1b;
         }
 
-        .action-button {
+
+        /* ==================================================================
+           EMPTY STATE
+           ================================================================== */
+
+        .empty-state {
+            padding: 55px 20px;
+
+            text-align: center;
+
+            color: var(--text-muted);
+        }
+
+
+        /* ==================================================================
+           STAFF MODAL
+           ================================================================== */
+
+        #staffModal .modal-dialog {
+            width: calc(100% - 2rem);
+
+            max-width: 1080px;
+
+            margin: 1rem auto;
+        }
+
+
+        #staffModal .modal-content {
+            height: calc(100vh - 2rem);
+
+            max-height: calc(100vh - 2rem);
+
+            display: flex;
+            flex-direction: column;
+
+            background: #fff;
+
             border: 0;
-            border-radius: 7px;
-            padding: 6px 9px;
+
+            border-radius: 12px;
+
+            box-shadow:
+                0 20px 60px rgba(15, 23, 42, .18);
+
+            overflow: hidden;
+        }
+
+
+        /* ==================================================================
+           MODAL HEADER
+           ================================================================== */
+
+        #staffModal .modal-header {
+            flex: 0 0 auto;
+
+            padding: 20px 24px;
+
+            background: #fff;
+
+            border-bottom: 1px solid var(--border);
+        }
+
+
+        #staffModal .modal-title {
+            color: var(--text-dark);
+
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+
+        #staffModal .modal-header small {
+            color: var(--text-muted) !important;
+
             font-size: 12px;
         }
 
-        .edit-button {
-            background: #dbeafe;
-            color: #1d4ed8;
+
+        /* ==================================================================
+           STAFF FORM SCROLL AREA
+           ================================================================== */
+
+        #staffModal .staff-form-scroll {
+            display: block !important;
+
+            width: 100% !important;
+
+            height: calc(100vh - 190px) !important;
+
+            max-height: calc(100vh - 190px) !important;
+
+            overflow-y: auto !important;
+
+            overflow-x: hidden !important;
+
+            padding: 24px !important;
+
+            background: #f8fafc;
+
+            box-sizing: border-box;
+
+            position: relative;
+
+            -webkit-overflow-scrolling: touch;
+
+            overscroll-behavior: contain;
+
+            scrollbar-width: auto;
         }
 
-        .delete-button {
-            background: #fee2e2;
-            color: #991b1b;
+
+        #staffModal .staff-form-content {
+            display: block;
+
+            width: 100%;
+
+            min-height: 900px;
+
+            padding: 20px;
+
+            background: #fff;
+
+            border: 1px solid var(--border);
+
+            border-radius: 10px;
+
+            box-shadow: var(--shadow-sm);
         }
 
-        .modal-content {
-            border: 0;
-            border-radius: 14px;
-            box-shadow: 0 20px 50px rgba(15, 23, 42, .18);
+
+        #staffModal #staffForm {
+            display: block;
+
+            width: 100%;
         }
 
-        .form-label {
-            font-size: 13px;
-            font-weight: 600;
+
+        /* ==================================================================
+           FORM LABELS
+           ================================================================== */
+
+        #staffModal .form-label {
+            display: block;
+
+            margin-bottom: 7px;
+
+            color: #334155;
+
+            font-size: 12px;
+            font-weight: 700;
         }
 
-        .form-control,
-        .form-select {
+
+        #staffModal .form-control,
+        #staffModal .form-select {
             min-height: 42px;
-            border-color: #d9dee8;
+
+            background: #fff;
         }
 
-        .form-control:focus,
-        .form-select:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 .2rem rgba(37, 99, 235, .12);
+
+        #staffModal textarea.form-control {
+            min-height: 110px;
+
+            resize: vertical;
         }
 
-        #sidebarOverlay {
+
+        /* ==================================================================
+           FORM SCROLLBAR
+           ================================================================== */
+
+        #staffModal .staff-form-scroll::-webkit-scrollbar {
+            width: 14px;
+        }
+
+
+        #staffModal .staff-form-scroll::-webkit-scrollbar-track {
+            background: #e2e8f0;
+        }
+
+
+        #staffModal .staff-form-scroll::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+
+            border: 3px solid #e2e8f0;
+
+            border-radius: 10px;
+        }
+
+
+        #staffModal .staff-form-scroll::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+
+        /* ==================================================================
+           MODAL FOOTER
+           ================================================================== */
+
+        #staffModal .modal-footer {
+            flex: 0 0 auto;
+
+            padding: 14px 24px;
+
+            background: #fff;
+
+            border-top: 1px solid var(--border);
+        }
+
+
+        /* ==================================================================
+           MOBILE SIDEBAR OVERLAY
+           ================================================================== */
+
+        .sidebar-overlay {
             display: none;
+
+            position: fixed;
+
+            inset: 0;
+
+            z-index: 1040;
+
+            background: rgba(15, 23, 42, .45);
         }
+
+
+        /* ==================================================================
+           RESPONSIVE - TABLET
+           ================================================================== */
 
         @media (max-width: 991.98px) {
-            .app-sidebar {
+
+            .sidebar {
                 transform: translateX(-100%);
+
                 transition: transform .25s ease;
             }
 
-            .app-sidebar.show {
+
+            .sidebar.show {
                 transform: translateX(0);
             }
 
-            .main-wrapper {
+
+            .sidebar.show+.sidebar-overlay {
+                display: block;
+            }
+
+
+            .main-content {
+                width: 100%;
+
                 margin-left: 0;
             }
 
-            #sidebarOverlay.show {
-                display: block;
-                position: fixed;
-                inset: 0;
-                background: rgba(0, 0, 0, .45);
-                z-index: 1035;
+
+            .mobile-menu-button {
+                display: inline-flex;
             }
 
-            .page-content {
-                padding: 20px;
+
+            .topbar {
+                padding: 0 20px;
             }
+
+
+            .page-content {
+                padding: 22px;
+            }
+
         }
+
+
+        /* ==================================================================
+           RESPONSIVE - MOBILE
+           ================================================================== */
 
         @media (max-width: 575.98px) {
-            .topbar {
-                padding: 0 16px;
+
+            .sidebar {
+                width: min(var(--sidebar-width), 88vw);
             }
+
+
+            .topbar {
+                height: 64px;
+
+                padding: 0 14px;
+            }
+
+
+            .topbar-title {
+                font-size: 17px;
+            }
+
+
+            .topbar-subtitle {
+                display: none;
+            }
+
+
+            .topbar-actions .btn {
+                width: 38px;
+                height: 38px;
+
+                padding: 0;
+            }
+
+
+            .topbar-actions .btn span {
+                display: none;
+            }
+
 
             .page-content {
-                padding: 15px;
+                padding: 14px;
             }
+
+
+            .page-heading {
+                margin-bottom: 18px;
+            }
+
+
+            .page-heading h1 {
+                font-size: 21px;
+            }
+
+
+            .summary-card {
+                padding: 16px;
+            }
+
+
+            #staffModal .modal-dialog {
+                width: 100%;
+
+                max-width: none;
+
+                margin: 0;
+            }
+
+
+            #staffModal .modal-content {
+                height: 100vh;
+
+                max-height: 100vh;
+
+                border-radius: 0;
+            }
+
+
+            #staffModal .staff-form-scroll {
+                height: calc(100vh - 175px) !important;
+
+                max-height: calc(100vh - 175px) !important;
+
+                padding: 14px !important;
+            }
+
+
+            #staffModal .staff-form-content {
+                min-height: 1000px;
+
+                padding: 16px;
+            }
+
         }
     </style>
-    ```
-
 </head>
 
 <body>
 
-    ```
-    <div id="sidebarOverlay"></div>
+    <div class="dashboard-layout">
 
-    <aside id="sidebar" class="app-sidebar">
+        <!-- ================================================================
+         SIDEBAR
+         ================================================================ -->
 
-        <div class="sidebar-brand">
-            <div class="d-flex align-items-center gap-3">
+        <aside class="sidebar" id="sidebar">
+
+            <div class="sidebar-brand">
 
                 <div class="sidebar-brand-icon">
                     <i class="bi bi-mortarboard-fill"></i>
                 </div>
 
-                <div>
-                    <div class="text-white fw-bold">
+                <div class="sidebar-brand-text">
+
+                    <span class="sidebar-brand-title">
                         School Management
+                    </span>
+
+                    <span class="sidebar-brand-subtitle">
+                        Administration System
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <nav class="sidebar-nav">
+
+                <div class="sidebar-section-title">
+                    Main
+                </div>
+
+                <a href="/pages/dashboard.html">
+
+                    <i class="bi bi-speedometer2"></i>
+
+                    <span>
+                        Dashboard
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/students.html">
+
+                    <i class="bi bi-people-fill"></i>
+
+                    <span>
+                        Students
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/staff.html" class="active">
+
+                    <i class="bi bi-person-badge-fill"></i>
+
+                    <span>
+                        Staff
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/guardians.html">
+
+                    <i class="bi bi-person-hearts"></i>
+
+                    <span>
+                        Guardians
+                    </span>
+
+                </a>
+
+
+                <div class="sidebar-section-title">
+                    Academic
+                </div>
+
+
+                <a href="/pages/classes.html">
+
+                    <i class="bi bi-diagram-3-fill"></i>
+
+                    <span>
+                        Classes
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/class-arms.html">
+
+                    <i class="bi bi-grid-3x3-gap-fill"></i>
+
+                    <span>
+                        Class Arms
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/subjects.html">
+
+                    <i class="bi bi-book-fill"></i>
+
+                    <span>
+                        Subjects
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/departments.html">
+
+                    <i class="bi bi-building-fill"></i>
+
+                    <span>
+                        Departments
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/attendance.html">
+
+                    <i class="bi bi-calendar-check-fill"></i>
+
+                    <span>
+                        Attendance
+                    </span>
+
+                </a>
+
+
+                <div class="sidebar-section-title">
+                    Finance & Reports
+                </div>
+
+
+                <a href="/pages/fees.html">
+
+                    <i class="bi bi-cash-stack"></i>
+
+                    <span>
+                        Fees
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/results.html">
+
+                    <i class="bi bi-bar-chart-fill"></i>
+
+                    <span>
+                        Results
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/reports.html">
+
+                    <i class="bi bi-file-earmark-bar-graph-fill"></i>
+
+                    <span>
+                        Reports
+                    </span>
+
+                </a>
+
+
+                <div class="sidebar-section-title">
+                    Administration
+                </div>
+
+
+                <a href="/pages/documents.html">
+
+                    <i class="bi bi-folder-fill"></i>
+
+                    <span>
+                        Documents
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/settings.html">
+
+                    <i class="bi bi-gear-fill"></i>
+
+                    <span>
+                        Settings
+                    </span>
+
+                </a>
+
+            </nav>
+
+        </aside>
+
+
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+
+        <!-- ================================================================
+         MAIN CONTENT
+         ================================================================ -->
+
+        <main class="main-content">
+
+
+            <!-- ============================================================
+             TOPBAR
+             ============================================================ -->
+
+            <header class="topbar">
+
+                <div class="topbar-left">
+
+                    <button type="button" class="mobile-menu-button" id="mobileMenuButton" aria-label="Open navigation">
+                        <i class="bi bi-list fs-5"></i>
+                    </button>
+
+
+                    <div>
+
+                        <h1 class="topbar-title">
+                            Staff Management
+                        </h1>
+
+                        <div class="topbar-subtitle">
+                            Manage teaching and non-teaching staff
+                        </div>
+
                     </div>
 
-                    <small class="text-secondary">
-                        Administration System
-                    </small>
                 </div>
 
-            </div>
-        </div>
+
+                <div class="topbar-actions">
+
+                    <button type="button" class="btn btn-outline-secondary" id="refreshStaffButton">
+                        <i class="bi bi-arrow-clockwise me-1"></i>
+
+                        <span>
+                            Refresh
+                        </span>
+
+                    </button>
 
 
-        <div class="sidebar-section">
-            Main
-        </div>
+                    <button type="button" class="btn btn-primary" id="addStaffButton">
+                        <i class="bi bi-person-plus-fill me-1"></i>
 
-        <a href="dashboard.html" class="sidebar-link">
-            <i class="bi bi-grid-1x2-fill"></i>
-            <span>Dashboard</span>
-        </a>
+                        <span>
+                            Add Staff
+                        </span>
 
-        <a href="students.html" class="sidebar-link">
-            <i class="bi bi-people-fill"></i>
-            <span>Students</span>
-        </a>
+                    </button>
 
-        <a href="staff.html" class="sidebar-link active">
-            <i class="bi bi-person-badge-fill"></i>
-            <span>Staff</span>
-        </a>
+                </div>
 
-        <a href="guardians.html" class="sidebar-link">
-            <i class="bi bi-person-hearts"></i>
-            <span>Guardians</span>
-        </a>
+            </header>
 
 
-        <div class="sidebar-section">
-            Academic
-        </div>
+            <!-- ============================================================
+             PAGE CONTENT
+             ============================================================ -->
 
-        <a href="classes.html" class="sidebar-link">
-            <i class="bi bi-building"></i>
-            <span>Classes</span>
-        </a>
-
-        <a href="class-arms.html" class="sidebar-link">
-            <i class="bi bi-diagram-3-fill"></i>
-            <span>Class Arms</span>
-        </a>
-
-        <a href="departments.html" class="sidebar-link">
-            <i class="bi bi-diagram-2-fill"></i>
-            <span>Departments</span>
-        </a>
-
-        <a href="subjects.html" class="sidebar-link">
-            <i class="bi bi-book-fill"></i>
-            <span>Subjects</span>
-        </a>
-
-        <a href="academic-sessions.html" class="sidebar-link">
-            <i class="bi bi-calendar3"></i>
-            <span>Sessions</span>
-        </a>
-
-        <a href="terms.html" class="sidebar-link">
-            <i class="bi bi-calendar-event"></i>
-            <span>Terms</span>
-        </a>
-
-        <a href="attendance.html" class="sidebar-link">
-            <i class="bi bi-calendar-check-fill"></i>
-            <span>Attendance</span>
-        </a>
-
-        <a href="results.html" class="sidebar-link">
-            <i class="bi bi-bar-chart-fill"></i>
-            <span>Results</span>
-        </a>
+            <section class="page-content">
 
 
-        <div class="sidebar-section">
-            Finance & Records
-        </div>
+                <!-- ========================================================
+                 PAGE HEADING
+                 ======================================================== -->
 
-        <a href="fees.html" class="sidebar-link">
-            <i class="bi bi-cash-stack"></i>
-            <span>Fees</span>
-        </a>
+                <div class="page-heading">
 
-        <a href="documents.html" class="sidebar-link">
-            <i class="bi bi-folder-fill"></i>
-            <span>Documents</span>
-        </a>
-
-        <a href="reports.html" class="sidebar-link">
-            <i class="bi bi-file-earmark-bar-graph-fill"></i>
-            <span>Reports</span>
-        </a>
-
-
-        <div class="sidebar-section">
-            Administration
-        </div>
-
-        <a href="users.html" class="sidebar-link">
-            <i class="bi bi-person-gear"></i>
-            <span>Users</span>
-        </a>
-
-        <a href="roles.html" class="sidebar-link">
-            <i class="bi bi-shield-lock-fill"></i>
-            <span>Roles</span>
-        </a>
-
-        <a href="permissions.html" class="sidebar-link">
-            <i class="bi bi-key-fill"></i>
-            <span>Permissions</span>
-        </a>
-
-        <a href="profile.html" class="sidebar-link">
-            <i class="bi bi-person-circle"></i>
-            <span>My Profile</span>
-        </a>
-
-        <a href="settings.html" class="sidebar-link">
-            <i class="bi bi-gear-fill"></i>
-            <span>Settings</span>
-        </a>
-
-    </aside>
-
-
-    <div class="main-wrapper">
-
-        <header class="topbar">
-
-            <div class="d-flex align-items-center gap-3">
-
-                <button id="sidebarToggle" class="btn btn-light d-lg-none" type="button" aria-label="Open navigation">
-                    <i class="bi bi-list fs-5"></i>
-                </button>
-
-                <div>
-                    <h1 class="h5 mb-0 fw-bold">
-                        Staff Management
+                    <h1>
+                        Staff
                     </h1>
 
-                    <small class="text-muted">
-                        Manage teachers, administrators and other school staff
-                    </small>
+                    <p>
+                        Manage staff records, departments, positions and employment information.
+                    </p>
+
                 </div>
 
-            </div>
 
-            <button type="button" class="btn btn-primary btn-sm" id="addStaffButton">
+                <!-- ========================================================
+                 SUMMARY CARDS
+                 ======================================================== -->
 
-                <i class="bi bi-person-plus-fill me-1"></i>
-                Add Staff
-
-            </button>
-
-        </header>
+                <div class="row g-3 mb-4">
 
 
-        <main class="page-content">
+                    <div class="col-12 col-sm-6 col-xl-3">
 
-            <div class="row g-4 mb-4">
+                        <div class="summary-card">
 
-                <div class="col-sm-6 col-xl-3">
+                            <div class="summary-card-top">
 
-                    <div class="card stat-card h-100">
-
-                        <div class="card-body">
-
-                            <div class="d-flex justify-content-between align-items-start">
-
-                                <div>
-
-                                    <div class="text-muted small mb-2">
-                                        Total Staff
-                                    </div>
-
-                                    <div id="totalStaff" class="fs-3 fw-bold">
-                                        0
-                                    </div>
-
-                                </div>
-
-                                <div class="stat-icon">
+                                <div class="summary-icon">
                                     <i class="bi bi-people-fill"></i>
                                 </div>
 
                             </div>
 
+                            <div class="summary-label">
+                                Total Staff
+                            </div>
+
+                            <div class="summary-value" id="totalStaffCount">
+                                0
+                            </div>
+
                         </div>
 
                     </div>
 
-                </div>
 
+                    <div class="col-12 col-sm-6 col-xl-3">
 
-                <div class="col-sm-6 col-xl-3">
+                        <div class="summary-card">
 
-                    <div class="card stat-card h-100">
+                            <div class="summary-card-top">
 
-                        <div class="card-body">
-
-                            <div class="d-flex justify-content-between align-items-start">
-
-                                <div>
-
-                                    <div class="text-muted small mb-2">
-                                        Active Staff
-                                    </div>
-
-                                    <div id="activeStaff" class="fs-3 fw-bold">
-                                        0
-                                    </div>
-
-                                </div>
-
-                                <div class="stat-icon">
+                                <div class="summary-icon">
                                     <i class="bi bi-person-check-fill"></i>
                                 </div>
 
                             </div>
 
+                            <div class="summary-label">
+                                Active Staff
+                            </div>
+
+                            <div class="summary-value" id="activeStaffCount">
+                                0
+                            </div>
+
                         </div>
 
                     </div>
 
-                </div>
 
+                    <div class="col-12 col-sm-6 col-xl-3">
 
-                <div class="col-sm-6 col-xl-3">
+                        <div class="summary-card">
 
-                    <div class="card stat-card h-100">
+                            <div class="summary-card-top">
 
-                        <div class="card-body">
-
-                            <div class="d-flex justify-content-between align-items-start">
-
-                                <div>
-
-                                    <div class="text-muted small mb-2">
-                                        Teachers
-                                    </div>
-
-                                    <div id="teacherCount" class="fs-3 fw-bold">
-                                        0
-                                    </div>
-
-                                </div>
-
-                                <div class="stat-icon">
+                                <div class="summary-icon">
                                     <i class="bi bi-person-workspace"></i>
                                 </div>
 
                             </div>
 
+                            <div class="summary-label">
+                                Teachers
+                            </div>
+
+                            <div class="summary-value" id="teacherCount">
+                                0
+                            </div>
+
                         </div>
 
                     </div>
 
-                </div>
 
+                    <div class="col-12 col-sm-6 col-xl-3">
 
-                <div class="col-sm-6 col-xl-3">
+                        <div class="summary-card">
 
-                    <div class="card stat-card h-100">
+                            <div class="summary-card-top">
 
-                        <div class="card-body">
-
-                            <div class="d-flex justify-content-between align-items-start">
-
-                                <div>
-
-                                    <div class="text-muted small mb-2">
-                                        Departments
-                                    </div>
-
-                                    <div id="departmentCount" class="fs-3 fw-bold">
-                                        0
-                                    </div>
-
-                                </div>
-
-                                <div class="stat-icon">
-                                    <i class="bi bi-diagram-2-fill"></i>
+                                <div class="summary-icon">
+                                    <i class="bi bi-building-fill"></i>
                                 </div>
 
                             </div>
 
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <section class="card content-card">
-
-                <div class="toolbar">
-
-                    <div class="row g-2">
-
-                        <div class="col-lg-5">
-
-                            <div class="input-group">
-
-                                <span class="input-group-text bg-white">
-                                    <i class="bi bi-search"></i>
-                                </span>
-
-                                <input type="search" id="searchInput" class="form-control"
-                                    placeholder="Search staff name, number, phone or email...">
-
+                            <div class="summary-label">
+                                Departments
                             </div>
 
-                        </div>
-
-
-                        <div class="col-sm-6 col-lg-2">
-
-                            <select id="statusFilter" class="form-select">
-
-                                <option value="">
-                                    All Statuses
-                                </option>
-
-                                <option value="active">
-                                    Active
-                                </option>
-
-                                <option value="inactive">
-                                    Inactive
-                                </option>
-
-                            </select>
-
-                        </div>
-
-
-                        <div class="col-sm-6 col-lg-3">
-
-                            <select id="staffTypeFilter" class="form-select">
-
-                                <option value="">
-                                    All Staff Types
-                                </option>
-
-                                <option value="teacher">
-                                    Teacher
-                                </option>
-
-                                <option value="administrator">
-                                    Administrator
-                                </option>
-
-                                <option value="accountant">
-                                    Accountant
-                                </option>
-
-                                <option value="librarian">
-                                    Librarian
-                                </option>
-
-                                <option value="support">
-                                    Support Staff
-                                </option>
-
-                                <option value="other">
-                                    Other
-                                </option>
-
-                            </select>
-
-                        </div>
-
-
-                        <div class="col-lg-2">
-
-                            <button type="button" class="btn btn-outline-secondary w-100" id="refreshButton">
-
-                                <i class="bi bi-arrow-clockwise me-1"></i>
-                                Refresh
-
-                            </button>
+                            <div class="summary-value" id="departmentCount">
+                                0
+                            </div>
 
                         </div>
 
@@ -682,286 +1496,41 @@
                 </div>
 
 
-                <div class="table-container">
+                <!-- ========================================================
+                 STAFF TABLE CARD
+                 ======================================================== -->
 
-                    <table class="table table-hover mb-0 staff-table">
-
-                        <thead>
-
-                            <tr>
-
-                                <th>Staff No.</th>
-                                <th>Name</th>
-                                <th>Gender</th>
-                                <th>Staff Type</th>
-                                <th>Department</th>
-                                <th>Phone</th>
-                                <th>Email</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-
-                            </tr>
-
-                        </thead>
-
-                        <tbody id="staffTableBody">
-
-                            <tr>
-
-                                <td colspan="9" class="text-center py-5 text-muted">
-
-                                    <div class="spinner-border spinner-border-sm text-primary me-2"></div>
-
-                                    Loading staff...
-
-                                </td>
-
-                            </tr>
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </section>
-
-        </main>
-
-    </div>
+                <div class="content-card">
 
 
-    <div class="modal fade" id="staffModal" tabindex="-1" aria-labelledby="staffModalTitle" aria-hidden="true">
+                    <div class="content-card-header">
 
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-
-            <div class="modal-content">
-
-                <div class="modal-header">
-
-                    <div>
-
-                        <h2 id="staffModalTitle" class="modal-title h5 fw-bold">
-                            Add Staff
-                        </h2>
-
-                        <small class="text-muted">
-                            Enter staff information
-                        </small>
-
-                    </div>
-
-                    <button type="button" class="btn-close" id="closeStaffModal" data-bs-dismiss="modal"
-                        aria-label="Close">
-                    </button>
-
-                </div>
+                        <div class="row g-3 align-items-center">
 
 
-                <form id="staffForm">
+                            <div class="col-12 col-lg-5">
 
-                    <div class="modal-body">
+                                <div class="input-group">
 
-                        <input type="hidden" id="staffId">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-search"></i>
+                                    </span>
 
+                                    <input type="search" class="form-control" id="searchInput" name="staff_search"
+                                        placeholder="Search staff by name, number or email..." autocomplete="off">
 
-                        <div class="row g-3">
-
-                            <div class="col-md-4">
-
-                                <label for="staffNumber" class="form-label">
-                                    Staff Number
-                                </label>
-
-                                <input type="text" id="staffNumber" class="form-control" placeholder="e.g. STF001"
-                                    required>
+                                </div>
 
                             </div>
 
 
-                            <div class="col-md-4">
+                            <div class="col-12 col-sm-6 col-lg-3">
 
-                                <label for="firstName" class="form-label">
-                                    First Name
-                                </label>
-
-                                <input type="text" id="firstName" class="form-control" required>
-
-                            </div>
-
-
-                            <div class="col-md-4">
-
-                                <label for="middleName" class="form-label">
-                                    Middle Name
-                                </label>
-
-                                <input type="text" id="middleName" class="form-control">
-
-                            </div>
-
-
-                            <div class="col-md-4">
-
-                                <label for="lastName" class="form-label">
-                                    Last Name
-                                </label>
-
-                                <input type="text" id="lastName" class="form-control" required>
-
-                            </div>
-
-
-                            <div class="col-md-4">
-
-                                <label for="gender" class="form-label">
-                                    Gender
-                                </label>
-
-                                <select id="gender" class="form-select">
+                                <select class="form-select" id="statusFilter" name="status_filter">
 
                                     <option value="">
-                                        Select Gender
+                                        All Statuses
                                     </option>
-
-                                    <option value="male">
-                                        Male
-                                    </option>
-
-                                    <option value="female">
-                                        Female
-                                    </option>
-
-                                </select>
-
-                            </div>
-
-
-                            <div class="col-md-4">
-
-                                <label for="dateOfBirth" class="form-label">
-                                    Date of Birth
-                                </label>
-
-                                <input type="date" id="dateOfBirth" class="form-control">
-
-                            </div>
-
-
-                            <div class="col-md-4">
-
-                                <label for="employmentType" class="form-label">
-                                    Staff Type
-                                </label>
-
-                                <select id="employmentType" class="form-select" required>
-
-                                    <option value="">
-                                        Select Staff Type
-                                    </option>
-
-                                    <option value="teacher">
-                                        Teacher
-                                    </option>
-
-                                    <option value="administrator">
-                                        Administrator
-                                    </option>
-
-                                    <option value="accountant">
-                                        Accountant
-                                    </option>
-
-                                    <option value="librarian">
-                                        Librarian
-                                    </option>
-
-                                    <option value="support">
-                                        Support Staff
-                                    </option>
-
-                                    <option value="other">
-                                        Other
-                                    </option>
-
-                                </select>
-
-                            </div>
-
-
-                            <div class="col-md-4">
-
-                                <label for="departmentId" class="form-label">
-                                    Department ID
-                                </label>
-
-                                <input type="number" id="departmentId" class="form-control" placeholder="Department ID">
-
-                            </div>
-
-
-                            <div class="col-md-4">
-
-                                <label for="position" class="form-label">
-                                    Position
-                                </label>
-
-                                <input type="text" id="position" class="form-control" placeholder="e.g. Senior Teacher">
-
-                            </div>
-
-
-                            <div class="col-md-4">
-
-                                <label for="phone" class="form-label">
-                                    Phone Number
-                                </label>
-
-                                <input type="tel" id="phone" class="form-control" placeholder="08012345678">
-
-                            </div>
-
-
-                            <div class="col-md-4">
-
-                                <label for="email" class="form-label">
-                                    Email Address
-                                </label>
-
-                                <input type="email" id="email" class="form-control" placeholder="staff@example.com">
-
-                            </div>
-
-
-                            <div class="col-md-4">
-
-                                <label for="employmentDate" class="form-label">
-                                    Employment Date
-                                </label>
-
-                                <input type="date" id="employmentDate" class="form-control">
-
-                            </div>
-
-
-                            <div class="col-md-6">
-
-                                <label for="qualification" class="form-label">
-                                    Qualification
-                                </label>
-
-                                <input type="text" id="qualification" class="form-control" placeholder="e.g. B.Ed">
-
-                            </div>
-
-
-                            <div class="col-md-6">
-
-                                <label for="status" class="form-label">
-                                    Status
-                                </label>
-
-                                <select id="status" class="form-select">
 
                                     <option value="active">
                                         Active
@@ -976,26 +1545,39 @@
                             </div>
 
 
-                            <div class="col-12">
+                            <div class="col-12 col-sm-6 col-lg-4">
 
-                                <label for="address" class="form-label">
-                                    Address
-                                </label>
+                                <select class="form-select" id="staffTypeFilter" name="staff_type_filter">
 
-                                <textarea id="address" class="form-control" rows="3"
-                                    placeholder="Staff residential address"></textarea>
+                                    <option value="">
+                                        All Staff Types
+                                    </option>
 
-                            </div>
+                                    <option value="Teacher">
+                                        Teacher
+                                    </option>
 
+                                    <option value="Administrator">
+                                        Administrator
+                                    </option>
 
-                            <div class="col-12">
+                                    <option value="Accountant">
+                                        Accountant
+                                    </option>
 
-                                <label for="notes" class="form-label">
-                                    Notes
-                                </label>
+                                    <option value="Librarian">
+                                        Librarian
+                                    </option>
 
-                                <textarea id="notes" class="form-control" rows="3"
-                                    placeholder="Additional information"></textarea>
+                                    <option value="Support Staff">
+                                        Support Staff
+                                    </option>
+
+                                    <option value="Other">
+                                        Other
+                                    </option>
+
+                                </select>
 
                             </div>
 
@@ -1004,24 +1586,446 @@
                     </div>
 
 
-                    <div class="modal-footer">
+                    <div class="table-responsive">
 
-                        <button type="button" class="btn btn-light" id="cancelStaffButton" data-bs-dismiss="modal">
+                        <table class="table table-hover align-middle">
 
-                            Cancel
+                            <thead>
 
-                        </button>
+                                <tr>
 
-                        <button type="submit" class="btn btn-primary">
+                                    <th>
+                                        Staff No.
+                                    </th>
 
-                            <i class="bi bi-check2-circle me-1"></i>
-                            Save Staff
+                                    <th>
+                                        Name
+                                    </th>
 
-                        </button>
+                                    <th>
+                                        Gender
+                                    </th>
+
+                                    <th>
+                                        Staff Type
+                                    </th>
+
+                                    <th>
+                                        Department
+                                    </th>
+
+                                    <th>
+                                        Phone
+                                    </th>
+
+                                    <th>
+                                        Email
+                                    </th>
+
+                                    <th>
+                                        Status
+                                    </th>
+
+                                    <th class="text-end">
+                                        Actions
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody id="staffTableBody">
+
+                                <tr>
+
+                                    <td colspan="9">
+
+                                        <div class="empty-state">
+
+                                            <div class="spinner-border spinner-border-sm mb-2"></div>
+
+                                            <div>
+                                                Loading staff...
+                                            </div>
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
 
                     </div>
 
-                </form>
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+
+    <!-- ====================================================================
+     ADD / EDIT STAFF MODAL
+     ==================================================================== -->
+
+    <div class="modal fade" id="staffModal" tabindex="-1" aria-labelledby="staffModalLabel" aria-hidden="true">
+
+        <div class="modal-dialog">
+
+            <div class="modal-content">
+
+
+                <!-- ==========================================================
+                 MODAL HEADER
+                 ========================================================== -->
+
+                <div class="modal-header">
+
+                    <div>
+
+                        <h5 class="modal-title" id="staffModalLabel">
+                            Add Staff
+                        </h5>
+
+                        <small>
+                            Enter staff information
+                        </small>
+
+                    </div>
+
+
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+                </div>
+
+
+                <!-- ==========================================================
+                 SCROLLABLE STAFF FORM
+                 ========================================================== -->
+
+                <div class="staff-form-scroll">
+
+                    <div class="staff-form-content">
+
+                        <form id="staffForm" novalidate>
+
+                            <input type="hidden" id="staffId" name="id">
+
+
+                            <div class="row g-3">
+
+
+                                <!-- STAFF NUMBER -->
+
+                                <div class="col-12 col-md-6">
+
+                                    <label for="staffNumber" class="form-label">
+                                        Staff Number
+                                    </label>
+
+                                    <input type="text" class="form-control" id="staffNumber" name="staffNumber"
+                                        placeholder="e.g. STF001">
+
+                                </div>
+
+
+                                <!-- FIRST NAME -->
+
+                                <div class="col-12 col-md-6">
+
+                                    <label for="firstName" class="form-label">
+                                        First Name
+                                        <span class="text-danger">*</span>
+                                    </label>
+
+                                    <input type="text" class="form-control" id="firstName" name="firstName"
+                                        placeholder="Enter first name" required>
+
+                                </div>
+
+
+                                <!-- MIDDLE NAME -->
+
+                                <div class="col-12 col-md-6">
+
+                                    <label for="middleName" class="form-label">
+                                        Middle Name
+                                    </label>
+
+                                    <input type="text" class="form-control" id="middleName" name="middleName"
+                                        placeholder="Enter middle name">
+
+                                </div>
+
+
+                                <!-- LAST NAME -->
+
+                                <div class="col-12 col-md-6">
+
+                                    <label for="lastName" class="form-label">
+                                        Last Name
+                                        <span class="text-danger">*</span>
+                                    </label>
+
+                                    <input type="text" class="form-control" id="lastName" name="lastName"
+                                        placeholder="Enter last name" required>
+
+                                </div>
+
+
+                                <!-- GENDER -->
+
+                                <div class="col-12 col-md-6">
+
+                                    <label for="gender" class="form-label">
+                                        Gender
+                                    </label>
+
+                                    <select class="form-select" id="gender" name="gender">
+
+                                        <option value="">
+                                            Select Gender
+                                        </option>
+
+                                        <option value="Male">
+                                            Male
+                                        </option>
+
+                                        <option value="Female">
+                                            Female
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+
+                                <!-- DATE OF BIRTH -->
+
+                                <div class="col-12 col-md-6">
+
+                                    <label for="dateOfBirth" class="form-label">
+                                        Date of Birth
+                                    </label>
+
+                                    <input type="date" class="form-control" id="dateOfBirth" name="dateOfBirth">
+
+                                </div>
+
+
+                                <!-- STAFF TYPE -->
+
+                                <div class="col-12 col-md-6">
+
+                                    <label for="employmentType" class="form-label">
+                                        Staff Type
+                                    </label>
+
+                                    <select class="form-select" id="employmentType" name="employmentType">
+
+                                        <option value="">
+                                            Select Staff Type
+                                        </option>
+
+                                        <option value="Teacher">
+                                            Teacher
+                                        </option>
+
+                                        <option value="Administrator">
+                                            Administrator
+                                        </option>
+
+                                        <option value="Accountant">
+                                            Accountant
+                                        </option>
+
+                                        <option value="Librarian">
+                                            Librarian
+                                        </option>
+
+                                        <option value="Support Staff">
+                                            Support Staff
+                                        </option>
+
+                                        <option value="Other">
+                                            Other
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+
+                                <!-- DEPARTMENT -->
+
+                                <div class="col-12 col-md-6">
+
+                                    <label for="departmentId" class="form-label">
+                                        Department
+                                    </label>
+
+                                    <select class="form-select" id="departmentId" name="departmentId">
+
+                                        <option value="">
+                                            Select department
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+
+                                <!-- POSITION -->
+
+                                <div class="col-12 col-md-6">
+
+                                    <label for="position" class="form-label">
+                                        Position
+                                    </label>
+
+                                    <input type="text" class="form-control" id="position" name="position"
+                                        placeholder="e.g. Mathematics Teacher">
+
+                                </div>
+
+
+                                <!-- PHONE -->
+
+                                <div class="col-12 col-md-6">
+
+                                    <label for="phone" class="form-label">
+                                        Phone Number
+                                    </label>
+
+                                    <input type="tel" class="form-control" id="phone" name="phone"
+                                        placeholder="Enter phone number">
+
+                                </div>
+
+
+                                <!-- EMAIL -->
+
+                                <div class="col-12 col-md-6">
+
+                                    <label for="email" class="form-label">
+                                        Email Address
+                                    </label>
+
+                                    <input type="email" class="form-control" id="email" name="email"
+                                        placeholder="Enter email address">
+
+                                </div>
+
+
+                                <!-- EMPLOYMENT DATE -->
+
+                                <div class="col-12 col-md-6">
+
+                                    <label for="employmentDate" class="form-label">
+                                        Employment Date
+                                    </label>
+
+                                    <input type="date" class="form-control" id="employmentDate" name="employmentDate">
+
+                                </div>
+
+
+                                <!-- QUALIFICATION -->
+
+                                <div class="col-12 col-md-6">
+
+                                    <label for="qualification" class="form-label">
+                                        Qualification
+                                    </label>
+
+                                    <input type="text" class="form-control" id="qualification" name="qualification"
+                                        placeholder="e.g. B.Ed, B.Sc, NCE">
+
+                                </div>
+
+
+                                <!-- STATUS -->
+
+                                <div class="col-12 col-md-6">
+
+                                    <label for="status" class="form-label">
+                                        Status
+                                    </label>
+
+                                    <select class="form-select" id="status" name="status">
+
+                                        <option value="active">
+                                            Active
+                                        </option>
+
+                                        <option value="inactive">
+                                            Inactive
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+
+                                <!-- ADDRESS -->
+
+                                <div class="col-12">
+
+                                    <label for="address" class="form-label">
+                                        Address
+                                    </label>
+
+                                    <textarea class="form-control" id="address" name="address" rows="4"
+                                        placeholder="Enter residential address"></textarea>
+
+                                </div>
+
+
+                                <!-- NOTES -->
+
+                                <div class="col-12">
+
+                                    <label for="notes" class="form-label">
+                                        Notes
+                                    </label>
+
+                                    <textarea class="form-control" id="notes" name="notes" rows="5"
+                                        placeholder="Additional notes"></textarea>
+
+                                </div>
+
+
+                            </div>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ==========================================================
+                 MODAL FOOTER
+                 ========================================================== -->
+
+                <div class="modal-footer">
+
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+
+                    <button type="submit" class="btn btn-primary" form="staffForm" id="saveStaffButton">
+                        <i class="bi bi-check-lg me-1"></i>
+                        Save Staff
+                    </button>
+
+                </div>
 
             </div>
 
@@ -1030,37 +2034,81 @@
     </div>
 
 
+    <!-- ====================================================================
+     JAVASCRIPT
+     ==================================================================== -->
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/app.js"></script>
     <script src="../js/staff.js"></script>
+
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
 
-            const sidebarToggle =
-                document.getElementById("sidebarToggle");
+            const mobileMenuButton =
+                document.getElementById("mobileMenuButton");
 
             const sidebar =
                 document.getElementById("sidebar");
 
-            const overlay =
+            const sidebarOverlay =
                 document.getElementById("sidebarOverlay");
 
-            if (sidebarToggle && sidebar && overlay) {
-                sidebarToggle.addEventListener("click", function () {
-                    sidebar.classList.toggle("show");
-                    overlay.classList.toggle("show");
-                });
 
-                overlay.addEventListener("click", function () {
+            function closeSidebar() {
+
+                if (sidebar) {
                     sidebar.classList.remove("show");
-                    overlay.classList.remove("show");
-                });
+                }
+
+            }
+
+
+            if (mobileMenuButton && sidebar) {
+
+                mobileMenuButton.addEventListener(
+                    "click",
+                    function () {
+
+                        sidebar.classList.toggle("show");
+
+                    }
+                );
+
+            }
+
+
+            if (sidebarOverlay) {
+
+                sidebarOverlay.addEventListener(
+                    "click",
+                    closeSidebar
+                );
+
+            }
+
+
+            if (sidebar) {
+
+                sidebar
+                    .querySelectorAll("a")
+                    .forEach(function (link) {
+
+                        link.addEventListener(
+                            "click",
+                            closeSidebar
+                        );
+
+                    });
+
             }
 
         });
     </script>
-    ```
 
 </body>
 

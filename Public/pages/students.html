@@ -1,8 +1,10 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
 
+    ```
     <meta charset="UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,252 +13,2319 @@
 
     <title>Students | School Management System</title>
 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
     <link rel="stylesheet" href="../css/style.css">
 
     <link rel="stylesheet" href="../css/students.css">
+
+
+    <style>
+        /* =========================================================
+       APPLICATION VARIABLES
+    ========================================================= */
+
+        :root {
+
+            --sidebar-width: 260px;
+
+            --primary: #0d6efd;
+
+            --sidebar-bg: #111827;
+
+            --sidebar-hover: rgba(255, 255, 255, 0.09);
+
+            --page-bg: #f5f7fb;
+
+            --border-color: #e5e7eb;
+
+            --text-muted: #6b7280;
+
+            --text-dark: #111827;
+
+            --card-bg: #ffffff;
+
+            --content-gap: 28px;
+
+        }
+
+
+        /* =========================================================
+       GLOBAL
+    ========================================================= */
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        html,
+        body {
+            min-height: 100%;
+        }
+
+
+        body {
+
+            margin: 0;
+
+            min-height: 100vh;
+
+            background: var(--page-bg);
+
+            color: #1f2937;
+
+            overflow-x: hidden;
+
+        }
+
+
+        /* =========================================================
+       APPLICATION LAYOUT
+    ========================================================= */
+
+        .sms-wrapper {
+
+            min-height: 100vh;
+
+        }
+
+
+        /* =========================================================
+       SIDEBAR
+       MATCHES DASHBOARD
+    ========================================================= */
+
+        .sms-sidebar {
+
+            position: fixed;
+
+            top: 0;
+
+            left: 0;
+
+            bottom: 0;
+
+            width: var(--sidebar-width);
+
+            background:
+                linear-gradient(180deg,
+                    #111827 0%,
+                    #172033 55%,
+                    #0f172a 100%);
+
+            color: #ffffff;
+
+            z-index: 1040;
+
+            overflow-y: auto;
+
+            transition:
+                transform 0.25s ease;
+
+            box-shadow:
+                4px 0 20px rgba(0, 0, 0, 0.08);
+
+        }
+
+
+        /* =========================================================
+       SIDEBAR BRAND
+    ========================================================= */
+
+        .sidebar-brand {
+
+            min-height: 76px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            padding: 16px 20px;
+
+            border-bottom:
+                1px solid rgba(255, 255, 255, 0.08);
+
+        }
+
+
+        .brand-icon {
+
+            width: 42px;
+
+            height: 42px;
+
+            border-radius: 12px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            background:
+                rgba(255, 255, 255, 0.12);
+
+            color: #ffffff;
+
+            font-size: 21px;
+
+            flex-shrink: 0;
+
+        }
+
+
+        .brand-title {
+
+            color: #ffffff;
+
+            font-weight: 700;
+
+            font-size: 15px;
+
+            line-height: 1.2;
+
+        }
+
+
+        .brand-subtitle {
+
+            display: block;
+
+            margin-top: 2px;
+
+            color:
+                rgba(255, 255, 255, 0.55);
+
+            font-size: 11px;
+
+            line-height: 1.2;
+
+        }
+
+
+        /* =========================================================
+       SIDEBAR CONTENT
+    ========================================================= */
+
+        .sidebar-content {
+
+            padding:
+                16px 12px 28px;
+
+        }
+
+
+        .sidebar-section {
+
+            margin-top: 20px;
+
+            margin-bottom: 7px;
+
+            padding: 0 10px;
+
+            color:
+                rgba(255, 255, 255, 0.40);
+
+            font-size: 10px;
+
+            font-weight: 700;
+
+            letter-spacing: 0.12em;
+
+            text-transform: uppercase;
+
+        }
+
+
+        .sidebar-section:first-child {
+
+            margin-top: 2px;
+
+        }
+
+
+        /* =========================================================
+       SIDEBAR LINKS
+    ========================================================= */
+
+        .sidebar-link {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            width: 100%;
+
+            min-height: 43px;
+
+            padding: 9px 11px;
+
+            margin-bottom: 3px;
+
+            border-radius: 9px;
+
+            color:
+                rgba(255, 255, 255, 0.72);
+
+            text-decoration: none;
+
+            font-size: 13px;
+
+            font-weight: 500;
+
+            transition:
+                background-color 0.18s ease,
+                color 0.18s ease,
+                transform 0.18s ease;
+
+        }
+
+
+        .sidebar-link i {
+
+            width: 21px;
+
+            min-width: 21px;
+
+            text-align: center;
+
+            font-size: 16px;
+
+            color:
+                rgba(255, 255, 255, 0.72);
+
+            flex-shrink: 0;
+
+        }
+
+
+        .sidebar-link:hover {
+
+            background:
+                var(--sidebar-hover);
+
+            color: #ffffff;
+
+        }
+
+
+        .sidebar-link:hover i {
+
+            color: #ffffff;
+
+        }
+
+
+        .sidebar-link.active {
+
+            background:
+                rgba(13, 110, 253, 0.90);
+
+            color: #ffffff;
+
+            font-weight: 600;
+
+            box-shadow:
+                0 5px 14px rgba(13, 110, 253, 0.18);
+
+        }
+
+
+        .sidebar-link.active i {
+
+            color: #ffffff;
+
+        }
+
+
+        /* =========================================================
+       SIDEBAR SCROLLBAR
+    ========================================================= */
+
+        .sms-sidebar::-webkit-scrollbar {
+
+            width: 6px;
+
+        }
+
+
+        .sms-sidebar::-webkit-scrollbar-track {
+
+            background: transparent;
+
+        }
+
+
+        .sms-sidebar::-webkit-scrollbar-thumb {
+
+            background:
+                rgba(255, 255, 255, 0.16);
+
+            border-radius: 10px;
+
+        }
+
+
+        .sms-sidebar::-webkit-scrollbar-thumb:hover {
+
+            background:
+                rgba(255, 255, 255, 0.25);
+
+        }
+
+
+        /* =========================================================
+       SIDEBAR OVERLAY
+    ========================================================= */
+
+        .sidebar-overlay {
+
+            display: none;
+
+            position: fixed;
+
+            inset: 0;
+
+            background:
+                rgba(0, 0, 0, 0.45);
+
+            z-index: 1030;
+
+        }
+
+
+        .sidebar-overlay.show {
+
+            display: block;
+
+        }
+
+
+        /* =========================================================
+       MAIN CONTENT
+    ========================================================= */
+
+        .sms-main {
+
+            margin-left: var(--sidebar-width);
+
+            min-height: 100vh;
+
+            width:
+                calc(100% - var(--sidebar-width));
+
+            background: var(--page-bg);
+
+        }
+
+
+        /* =========================================================
+       TOP HEADER
+       MATCHES DASHBOARD
+    ========================================================= */
+
+        .sms-header {
+
+            height: 76px;
+
+            position: sticky;
+
+            top: 0;
+
+            z-index: 1020;
+
+            background:
+                rgba(255, 255, 255, 0.94);
+
+            border-bottom:
+                1px solid var(--border-color);
+
+            backdrop-filter: blur(10px);
+
+        }
+
+
+        .header-inner {
+
+            height: 100%;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 20px;
+
+            padding:
+                0 28px;
+
+        }
+
+
+        .header-left {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            min-width: 0;
+
+        }
+
+
+        .header-title {
+
+            margin: 0;
+
+            color: var(--text-dark);
+
+            font-size: 1.2rem;
+
+            font-weight: 700;
+
+            line-height: 1.2;
+
+        }
+
+
+        .header-subtitle {
+
+            margin: 3px 0 0;
+
+            color: var(--text-muted);
+
+            font-size: 0.82rem;
+
+        }
+
+
+        .header-user {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            color: #4b5563;
+
+            font-size: 0.88rem;
+
+            white-space: nowrap;
+
+        }
+
+
+        .header-user-icon {
+
+            width: 34px;
+
+            height: 34px;
+
+            border-radius: 50%;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            background: #f1f5f9;
+
+            color: #475569;
+
+        }
+
+
+        .mobile-menu-button {
+
+            display: none;
+
+            width: 40px;
+
+            height: 40px;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border-radius: 8px;
+
+        }
+
+
+        /* =========================================================
+       PAGE CONTENT
+    ========================================================= */
+
+        .page-container {
+
+            width: 100%;
+
+            max-width: 1440px;
+
+            margin: 0 auto;
+
+            padding:
+                30px var(--content-gap) 50px;
+
+        }
+
+
+        /* =========================================================
+       PAGE HEADER
+    ========================================================= */
+
+        .page-header {
+
+            display: flex;
+
+            align-items: flex-start;
+
+            justify-content: space-between;
+
+            gap: 24px;
+
+            margin-bottom: 24px;
+
+            padding: 0 2px;
+
+        }
+
+
+        .page-header h1 {
+
+            margin: 0;
+
+            color: var(--text-dark);
+
+            font-size:
+                clamp(1.55rem, 2vw, 2rem);
+
+            font-weight: 700;
+
+            line-height: 1.25;
+
+        }
+
+
+        .page-header p {
+
+            margin: 8px 0 0;
+
+            max-width: 760px;
+
+            color: var(--text-muted);
+
+            font-size: 0.93rem;
+
+            line-height: 1.6;
+
+        }
+
+
+        #addStudentButton {
+
+            flex-shrink: 0;
+
+            min-height: 42px;
+
+            border-radius: 8px;
+
+            padding: 9px 17px;
+
+            font-weight: 600;
+
+            box-shadow:
+                0 2px 5px rgba(13, 110, 253, 0.12);
+
+        }
+
+
+        /* =========================================================
+       PAGE MESSAGE
+    ========================================================= */
+
+        #pageMessage {
+
+            margin-bottom: 20px;
+
+        }
+
+
+        /* =========================================================
+       STATISTICS
+    ========================================================= */
+
+        .stats-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(4, minmax(0, 1fr));
+
+            gap: 18px;
+
+            margin-bottom: 22px;
+
+        }
+
+
+        .stat-card {
+
+            min-height: 126px;
+
+            background: var(--card-bg);
+
+            border:
+                1px solid var(--border-color);
+
+            border-radius: 12px;
+
+            padding: 20px;
+
+            display: flex;
+
+            flex-direction: column;
+
+            justify-content: center;
+
+            box-shadow:
+                0 2px 8px rgba(15, 23, 42, 0.035);
+
+        }
+
+
+        .stat-card span {
+
+            color: var(--text-muted);
+
+            font-size: 0.84rem;
+
+            font-weight: 600;
+
+            margin-bottom: 8px;
+
+        }
+
+
+        .stat-card strong {
+
+            color: var(--text-dark);
+
+            font-size: 1.7rem;
+
+            font-weight: 700;
+
+            line-height: 1.2;
+
+        }
+
+
+        /* =========================================================
+       MAIN CONTENT CARD
+    ========================================================= */
+
+        .content-card {
+
+            background: var(--card-bg);
+
+            border:
+                1px solid var(--border-color);
+
+            border-radius: 12px;
+
+            box-shadow:
+                0 2px 8px rgba(15, 23, 42, 0.035);
+
+            overflow: hidden;
+
+        }
+
+
+        /* =========================================================
+       TOOLBAR
+    ========================================================= */
+
+        .toolbar {
+
+            display: grid;
+
+            grid-template-columns:
+                minmax(280px, 1fr) 180px 160px auto;
+
+            gap: 12px;
+
+            align-items: center;
+
+            padding: 20px;
+
+            border-bottom:
+                1px solid #e9ecef;
+
+            background: #ffffff;
+
+        }
+
+
+        .search-box {
+
+            position: relative;
+
+            width: 100%;
+
+        }
+
+
+        .search-icon {
+
+            position: absolute;
+
+            left: 13px;
+
+            top: 50%;
+
+            transform:
+                translateY(-50%);
+
+            color: #6c757d;
+
+            pointer-events: none;
+
+            font-size: 0.95rem;
+
+        }
+
+
+        #searchInput,
+        #statusFilter,
+        #genderFilter {
+
+            width: 100%;
+
+            min-height: 44px;
+
+            border:
+                1px solid #d9dee5;
+
+            border-radius: 8px;
+
+            background: #ffffff;
+
+            color: #212529;
+
+            font-size: 0.9rem;
+
+            outline: none;
+
+            transition:
+                border-color 0.15s ease,
+                box-shadow 0.15s ease;
+
+        }
+
+
+        #searchInput {
+
+            padding:
+                9px 12px 9px 39px;
+
+        }
+
+
+        #statusFilter,
+        #genderFilter {
+
+            padding:
+                9px 34px 9px 12px;
+
+        }
+
+
+        #searchInput:focus,
+        #statusFilter:focus,
+        #genderFilter:focus {
+
+            border-color: #86b7fe;
+
+            box-shadow:
+                0 0 0 0.2rem rgba(13, 110, 253, 0.12);
+
+        }
+
+
+        #refreshButton {
+
+            min-height: 44px;
+
+            border-radius: 8px;
+
+            padding: 9px 17px;
+
+            font-weight: 600;
+
+            white-space: nowrap;
+
+        }
+
+
+        /* =========================================================
+       TABLE
+    ========================================================= */
+
+        .table-container {
+
+            width: 100%;
+
+            overflow-x: auto;
+
+        }
+
+
+        .table-container table {
+
+            width: 100%;
+
+            min-width: 950px;
+
+            margin: 0;
+
+            border-collapse: separate;
+
+            border-spacing: 0;
+
+            background: #ffffff;
+
+        }
+
+
+        .table-container thead th {
+
+            padding: 14px 15px;
+
+            background: #f8f9fa;
+
+            border-bottom:
+                1px solid #dee2e6;
+
+            color: #495057;
+
+            font-size: 0.76rem;
+
+            font-weight: 700;
+
+            letter-spacing: 0.02em;
+
+            text-transform: uppercase;
+
+            white-space: nowrap;
+
+            vertical-align: middle;
+
+        }
+
+
+        .table-container tbody td {
+
+            padding: 14px 15px;
+
+            border-bottom:
+                1px solid #edf0f2;
+
+            color: #343a40;
+
+            font-size: 0.88rem;
+
+            vertical-align: middle;
+
+            white-space: nowrap;
+
+        }
+
+
+        .table-container tbody tr:last-child td {
+
+            border-bottom: none;
+
+        }
+
+
+        .table-container tbody tr:hover {
+
+            background: #f8fbff;
+
+        }
+
+
+        .loading-cell {
+
+            padding: 40px 15px !important;
+
+            text-align: center;
+
+            color: #6c757d !important;
+
+        }
+
+
+        /* =========================================================
+       PAGINATION
+    ========================================================= */
+
+        .pagination-container {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 20px;
+
+            padding: 17px 20px;
+
+            border-top:
+                1px solid #e9ecef;
+
+            background: #ffffff;
+
+        }
+
+
+        .pagination-info {
+
+            color: #6c757d;
+
+            font-size: 0.84rem;
+
+        }
+
+
+        .pagination-info strong {
+
+            color: #343a40;
+
+        }
+
+
+        .pagination-buttons {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+        }
+
+
+        .pagination-button {
+
+            min-height: 38px;
+
+            padding: 7px 13px;
+
+            border:
+                1px solid #d9dee5;
+
+            border-radius: 7px;
+
+            background: #ffffff;
+
+            color: #495057;
+
+            font-size: 0.84rem;
+
+            font-weight: 600;
+
+            cursor: pointer;
+
+            transition:
+                background-color 0.15s ease,
+                border-color 0.15s ease,
+                color 0.15s ease;
+
+        }
+
+
+        .pagination-button:hover:not(:disabled) {
+
+            border-color: #86b7fe;
+
+            background: #f4f8ff;
+
+            color: #0d6efd;
+
+        }
+
+
+        .pagination-button:disabled {
+
+            opacity: 0.5;
+
+            cursor: not-allowed;
+
+        }
+
+
+        .page-number {
+
+            min-width: 70px;
+
+            text-align: center;
+
+            color: #495057;
+
+            font-size: 0.84rem;
+
+            font-weight: 600;
+
+        }
+
+
+        /* =========================================================
+       DELETE MODAL
+    ========================================================= */
+
+        .modal {
+
+            position: fixed;
+
+            inset: 0;
+
+            z-index: 2000;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            padding: 20px;
+
+            background:
+                rgba(15, 23, 42, 0.55);
+
+        }
+
+
+        .modal[hidden] {
+
+            display: none !important;
+
+        }
+
+
+        .modal-content.small-modal {
+
+            width: 100%;
+
+            max-width: 460px;
+
+            background: #ffffff;
+
+            border-radius: 12px;
+
+            border:
+                1px solid #e5e7eb;
+
+            box-shadow:
+                0 18px 50px rgba(15, 23, 42, 0.18);
+
+            overflow: hidden;
+
+        }
+
+
+        .modal-header {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 15px;
+
+            padding: 18px 20px;
+
+            border-bottom:
+                1px solid #e9ecef;
+
+        }
+
+
+        .modal-header h2 {
+
+            margin: 0;
+
+            color: #111827;
+
+            font-size: 1.05rem;
+
+            font-weight: 700;
+
+        }
+
+
+        .close-button {
+
+            width: 34px;
+
+            height: 34px;
+
+            border: 0;
+
+            border-radius: 7px;
+
+            background: #f1f3f5;
+
+            color: #495057;
+
+            font-size: 1.25rem;
+
+            line-height: 1;
+
+            cursor: pointer;
+
+        }
+
+
+        .close-button:hover {
+
+            background: #e9ecef;
+
+            color: #212529;
+
+        }
+
+
+        .delete-content {
+
+            padding: 25px 20px 10px;
+
+            text-align: center;
+
+        }
+
+
+        .warning-icon {
+
+            width: 52px;
+
+            height: 52px;
+
+            margin: 0 auto 15px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: #fff3cd;
+
+            font-size: 1.35rem;
+
+        }
+
+
+        .delete-content p {
+
+            margin-bottom: 10px;
+
+            color: #495057;
+
+            font-size: 0.92rem;
+
+            line-height: 1.6;
+
+        }
+
+
+        .delete-content .warning-text {
+
+            color: #dc3545;
+
+            font-size: 0.84rem;
+
+            font-weight: 600;
+
+        }
+
+
+        .form-actions {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: flex-end;
+
+            gap: 10px;
+
+            padding: 16px 20px 20px;
+
+        }
+
+
+        .form-actions .btn {
+
+            min-height: 40px;
+
+            border-radius: 8px;
+
+            font-weight: 600;
+
+        }
+
+
+        /* =========================================================
+       RESPONSIVE
+    ========================================================= */
+
+        @media (max-width: 1199.98px) {
+
+            .page-container {
+
+                padding-left: 24px;
+
+                padding-right: 24px;
+
+            }
+
+
+            .stats-grid {
+
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
+
+            }
+
+
+            .toolbar {
+
+                grid-template-columns:
+                    minmax(220px, 1fr) 170px 150px auto;
+
+            }
+
+        }
+
+
+        @media (max-width: 991.98px) {
+
+            .sms-sidebar {
+
+                transform:
+                    translateX(-100%);
+
+            }
+
+
+            .sms-sidebar.show {
+
+                transform:
+                    translateX(0);
+
+            }
+
+
+            .sms-main {
+
+                margin-left: 0;
+
+                width: 100%;
+
+            }
+
+
+            .mobile-menu-button {
+
+                display: inline-flex;
+
+            }
+
+
+            .header-inner {
+
+                padding:
+                    0 18px;
+
+            }
+
+
+            .page-container {
+
+                padding:
+                    24px 20px 40px;
+
+            }
+
+
+            .toolbar {
+
+                grid-template-columns:
+                    1fr 1fr;
+
+            }
+
+
+            .search-box {
+
+                grid-column:
+                    1 / -1;
+
+            }
+
+        }
+
+
+        @media (max-width: 767.98px) {
+
+            .sms-header {
+
+                height: 68px;
+
+            }
+
+
+            .header-title {
+
+                font-size: 1.05rem;
+
+            }
+
+
+            .header-subtitle {
+
+                display: none;
+
+            }
+
+
+            .header-user {
+
+                display: none;
+
+            }
+
+
+            .page-container {
+
+                padding:
+                    20px 15px 35px;
+
+            }
+
+
+            .page-header {
+
+                flex-direction: column;
+
+                gap: 16px;
+
+                margin-bottom: 20px;
+
+            }
+
+
+            #addStudentButton {
+
+                width: 100%;
+
+            }
+
+
+            .stats-grid {
+
+                grid-template-columns: 1fr;
+
+                gap: 14px;
+
+            }
+
+
+            .stat-card {
+
+                min-height: 108px;
+
+            }
+
+
+            .toolbar {
+
+                grid-template-columns: 1fr;
+
+                padding: 16px;
+
+            }
+
+
+            .search-box {
+
+                grid-column: auto;
+
+            }
+
+
+            #refreshButton {
+
+                width: 100%;
+
+            }
+
+
+            .pagination-container {
+
+                flex-direction: column;
+
+                align-items: stretch;
+
+                gap: 13px;
+
+            }
+
+
+            .pagination-info {
+
+                text-align: center;
+
+            }
+
+
+            .pagination-buttons {
+
+                justify-content: center;
+
+            }
+
+
+            .delete-content {
+
+                padding-left: 17px;
+
+                padding-right: 17px;
+
+            }
+
+        }
+
+
+        @media (max-width: 575.98px) {
+
+            .header-user {
+
+                display: none;
+
+            }
+
+
+            .page-header h1 {
+
+                font-size: 1.45rem;
+
+            }
+
+
+            .page-header p {
+
+                font-size: 0.86rem;
+
+            }
+
+
+            .stat-card {
+
+                padding: 17px;
+
+            }
+
+
+            .stat-card strong {
+
+                font-size: 1.5rem;
+
+            }
+
+
+            .content-card {
+
+                border-radius: 10px;
+
+            }
+
+
+            .pagination-buttons {
+
+                width: 100%;
+
+            }
+
+
+            .pagination-button {
+
+                flex: 1;
+
+            }
+
+
+            .page-number {
+
+                min-width: 60px;
+
+            }
+
+        }
+    </style>
+    ```
 
 </head>
 
 <body>
 
-    <main class="page-container">
-
-        <section class="page-header">
-
-            <div>
-
-                <h1>Students</h1>
-
-                <p>
-                    Manage students registered in this school.
-                </p>
-
-            </div>
-
-            <button type="button" class="btn btn-primary" id="addStudentButton">
-                + Add Student
-            </button>
-
-        </section>
+    ```
+    <div class="sms-wrapper">
 
 
-        <div id="pageMessage" class="message" role="alert" aria-live="polite"></div>
+        <!-- =====================================================
+         SIDEBAR
+         EXACT DASHBOARD-STYLE NAVIGATION
+    ====================================================== -->
+
+        <aside id="smsSidebar" class="sms-sidebar">
 
 
-        <section class="stats-grid">
+            <!-- =================================================
+             SIDEBAR BRAND
+        ================================================== -->
 
-            <div class="stat-card">
+            <div class="sidebar-brand">
 
-                <span>Total Students</span>
+                <div class="brand-icon">
 
-                <strong id="totalStudents">0</strong>
+                    <i class="bi bi-mortarboard-fill"></i>
 
-            </div>
-
-
-            <div class="stat-card">
-
-                <span>Active Students</span>
-
-                <strong id="activeStudents">0</strong>
-
-            </div>
+                </div>
 
 
-            <div class="stat-card">
+                <div>
 
-                <span>Male Students</span>
+                    <div class="brand-title">
+                        School Management
+                    </div>
 
-                <strong id="maleStudents">0</strong>
-
-            </div>
-
-
-            <div class="stat-card">
-
-                <span>Female Students</span>
-
-                <strong id="femaleStudents">0</strong>
-
-            </div>
-
-        </section>
-
-
-        <section class="content-card">
-
-            <div class="toolbar">
-
-                <div class="search-box">
-
-                    <span class="search-icon" aria-hidden="true">
-                        🔍
+                    <span class="brand-subtitle">
+                        Administration Portal
                     </span>
 
-                    <input type="search" id="searchInput" placeholder="Search by name, admission number, phone..."
-                        autocomplete="off" aria-label="Search students">
-
                 </div>
-
-
-                <select id="statusFilter" aria-label="Filter students by status">
-
-                    <option value="">
-                        All Statuses
-                    </option>
-
-                    <option value="active">
-                        Active
-                    </option>
-
-                    <option value="inactive">
-                        Inactive
-                    </option>
-
-                    <option value="graduated">
-                        Graduated
-                    </option>
-
-                    <option value="withdrawn">
-                        Withdrawn
-                    </option>
-
-                    <option value="transferred">
-                        Transferred
-                    </option>
-
-                </select>
-
-
-                <select id="genderFilter" aria-label="Filter students by gender">
-
-                    <option value="">
-                        All Genders
-                    </option>
-
-                    <option value="Male">
-                        Male
-                    </option>
-
-                    <option value="Female">
-                        Female
-                    </option>
-
-                </select>
-
-
-                <button type="button" class="btn btn-secondary" id="refreshButton">
-                    Refresh
-                </button>
 
             </div>
 
 
-            <div class="table-container">
+            <!-- =================================================
+             SIDEBAR CONTENT
+        ================================================== -->
 
-                <table>
-
-                    <thead>
-
-                        <tr>
-
-                            <th>#</th>
-
-                            <th>Admission No.</th>
-
-                            <th>Student Name</th>
-
-                            <th>Gender</th>
-
-                            <th>Class</th>
-
-                            <th>Class Arm</th>
-
-                            <th>Phone</th>
-
-                            <th>Status</th>
-
-                            <th>Actions</th>
-
-                        </tr>
-
-                    </thead>
+            <div class="sidebar-content">
 
 
-                    <tbody id="studentsTableBody">
+                <!-- =================================================
+                 MAIN
+            ================================================== -->
 
-                        <tr>
-
-                            <td colspan="9" class="loading-cell">
-                                Loading students...
-                            </td>
-
-                        </tr>
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-
-            <div class="pagination-container">
-
-                <div class="pagination-info">
-
-                    Showing
-
-                    <strong id="showingFrom">0</strong>
-
-                    -
-
-                    <strong id="showingTo">0</strong>
-
-                    of
-
-                    <strong id="totalResults">0</strong>
-
-                    students
-
+                <div class="sidebar-section">
+                    Main
                 </div>
 
 
-                <div class="pagination-buttons">
+                <a href="/pages/dashboard.html" class="sidebar-link">
 
-                    <button type="button" class="pagination-button" id="previousButton" disabled>
-                        ← Previous
-                    </button>
+                    <i class="bi bi-speedometer2"></i>
 
-
-                    <span class="page-number" id="pageNumber">
-                        Page 1
+                    <span>
+                        Dashboard
                     </span>
 
+                </a>
 
-                    <button type="button" class="pagination-button" id="nextButton" disabled>
-                        Next →
-                    </button>
 
+                <a href="/pages/students.html" class="sidebar-link active">
+
+                    <i class="bi bi-people"></i>
+
+                    <span>
+                        Students
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/staff.html" class="sidebar-link">
+
+                    <i class="bi bi-person-badge"></i>
+
+                    <span>
+                        Staff
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/guardians.html" class="sidebar-link">
+
+                    <i class="bi bi-person-hearts"></i>
+
+                    <span>
+                        Guardians
+                    </span>
+
+                </a>
+
+
+                <!-- =================================================
+                 ACADEMIC
+            ================================================== -->
+
+                <div class="sidebar-section">
+                    Academic
                 </div>
+
+
+                <a href="/pages/classes.html" class="sidebar-link">
+
+                    <i class="bi bi-building"></i>
+
+                    <span>
+                        Classes
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/class-arms.html" class="sidebar-link">
+
+                    <i class="bi bi-diagram-3"></i>
+
+                    <span>
+                        Class Arms
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/departments.html" class="sidebar-link">
+
+                    <i class="bi bi-diagram-2"></i>
+
+                    <span>
+                        Departments
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/subjects.html" class="sidebar-link">
+
+                    <i class="bi bi-book"></i>
+
+                    <span>
+                        Subjects
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/academic-sessions.html" class="sidebar-link">
+
+                    <i class="bi bi-calendar3"></i>
+
+                    <span>
+                        Academic Sessions
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/terms.html" class="sidebar-link">
+
+                    <i class="bi bi-calendar2-week"></i>
+
+                    <span>
+                        Terms
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/attendance.html" class="sidebar-link">
+
+                    <i class="bi bi-calendar-check"></i>
+
+                    <span>
+                        Attendance
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/results.html" class="sidebar-link">
+
+                    <i class="bi bi-bar-chart"></i>
+
+                    <span>
+                        Results
+                    </span>
+
+                </a>
+
+
+                <!-- =================================================
+                 FINANCE & RECORDS
+            ================================================== -->
+
+                <div class="sidebar-section">
+                    Finance &amp; Records
+                </div>
+
+
+                <a href="/pages/fees.html" class="sidebar-link">
+
+                    <i class="bi bi-cash-stack"></i>
+
+                    <span>
+                        Fees &amp; Payments
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/documents.html" class="sidebar-link">
+
+                    <i class="bi bi-folder2-open"></i>
+
+                    <span>
+                        Documents
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/reports.html" class="sidebar-link">
+
+                    <i class="bi bi-file-earmark-bar-graph"></i>
+
+                    <span>
+                        Reports
+                    </span>
+
+                </a>
+
+
+                <!-- =================================================
+                 ADMINISTRATION
+            ================================================== -->
+
+                <div class="sidebar-section">
+                    Administration
+                </div>
+
+
+                <a href="/pages/users.html" class="sidebar-link">
+
+                    <i class="bi bi-person-gear"></i>
+
+                    <span>
+                        Users
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/roles.html" class="sidebar-link">
+
+                    <i class="bi bi-shield-check"></i>
+
+                    <span>
+                        Roles
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/permissions.html" class="sidebar-link">
+
+                    <i class="bi bi-key"></i>
+
+                    <span>
+                        Permissions
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/profile.html" class="sidebar-link">
+
+                    <i class="bi bi-person-circle"></i>
+
+                    <span>
+                        My Profile
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/settings.html" class="sidebar-link">
+
+                    <i class="bi bi-gear"></i>
+
+                    <span>
+                        Settings
+                    </span>
+
+                </a>
 
             </div>
 
-        </section>
+        </aside>
 
-    </main>
 
+        <!-- =====================================================
+         SIDEBAR MOBILE OVERLAY
+    ====================================================== -->
+
+        <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+
+        <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+
+        <main class="sms-main">
+
+
+            <!-- =================================================
+             TOP HEADER
+        ================================================== -->
+
+            <header class="sms-header">
+
+                <div class="header-inner">
+
+
+                    <div class="header-left">
+
+
+                        <button type="button" id="mobileSidebarBtn" class="btn btn-light border mobile-menu-button"
+                            aria-label="Open navigation" title="Open navigation">
+
+                            <i class="bi bi-list fs-5"></i>
+
+                        </button>
+
+
+                        <div>
+
+                            <h1 class="header-title">
+                                Students
+                            </h1>
+
+                            <p class="header-subtitle">
+                                Manage students registered in this school.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="header-user">
+
+                        <div class="header-user-icon">
+
+                            <i class="bi bi-person"></i>
+
+                        </div>
+
+
+                        <span id="loggedInUser">
+                            User
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </header>
+
+
+            <!-- =================================================
+             PAGE CONTENT
+        ================================================== -->
+
+            <div class="page-container">
+
+
+                <!-- =================================================
+                 PAGE HEADER
+            ================================================== -->
+
+                <section class="page-header">
+
+                    <div>
+
+                        <h1>
+                            Students
+                        </h1>
+
+                        <p>
+                            Manage students registered in this school.
+                        </p>
+
+                    </div>
+
+
+                    <button type="button" class="btn btn-primary" id="addStudentButton">
+
+                        <i class="bi bi-person-plus-fill me-1"></i>
+
+                        Add Student
+
+                    </button>
+
+                </section>
+
+
+                <!-- =================================================
+                 PAGE MESSAGE
+            ================================================== -->
+
+                <div id="pageMessage" class="message" role="alert" aria-live="polite">
+                </div>
+
+
+                <!-- =================================================
+                 STATISTICS
+            ================================================== -->
+
+                <section class="stats-grid">
+
+
+                    <div class="stat-card">
+
+                        <span>
+                            Total Students
+                        </span>
+
+                        <strong id="totalStudents">
+                            0
+                        </strong>
+
+                    </div>
+
+
+                    <div class="stat-card">
+
+                        <span>
+                            Active Students
+                        </span>
+
+                        <strong id="activeStudents">
+                            0
+                        </strong>
+
+                    </div>
+
+
+                    <div class="stat-card">
+
+                        <span>
+                            Male Students
+                        </span>
+
+                        <strong id="maleStudents">
+                            0
+                        </strong>
+
+                    </div>
+
+
+                    <div class="stat-card">
+
+                        <span>
+                            Female Students
+                        </span>
+
+                        <strong id="femaleStudents">
+                            0
+                        </strong>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                 STUDENT TABLE
+            ================================================== -->
+
+                <section class="content-card">
+
+
+                    <!-- =================================================
+                     TOOLBAR
+                ================================================== -->
+
+                    <div class="toolbar">
+
+
+                        <div class="search-box">
+
+                            <span class="search-icon" aria-hidden="true">
+
+                                🔍
+
+                            </span>
+
+
+                            <input type="search" id="searchInput"
+                                placeholder="Search by name, admission number, phone..." autocomplete="off"
+                                aria-label="Search students">
+
+                        </div>
+
+
+                        <select id="statusFilter" aria-label="Filter students by status">
+
+                            <option value="">
+                                All Statuses
+                            </option>
+
+                            <option value="active">
+                                Active
+                            </option>
+
+                            <option value="inactive">
+                                Inactive
+                            </option>
+
+                            <option value="graduated">
+                                Graduated
+                            </option>
+
+                            <option value="withdrawn">
+                                Withdrawn
+                            </option>
+
+                            <option value="transferred">
+                                Transferred
+                            </option>
+
+                        </select>
+
+
+                        <select id="genderFilter" aria-label="Filter students by gender">
+
+                            <option value="">
+                                All Genders
+                            </option>
+
+                            <option value="Male">
+                                Male
+                            </option>
+
+                            <option value="Female">
+                                Female
+                            </option>
+
+                        </select>
+
+
+                        <button type="button" class="btn btn-secondary" id="refreshButton">
+
+                            <i class="bi bi-arrow-clockwise me-1"></i>
+
+                            Refresh
+
+                        </button>
+
+                    </div>
+
+
+                    <!-- =================================================
+                     TABLE
+                ================================================== -->
+
+                    <div class="table-container">
+
+                        <table>
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        #
+                                    </th>
+
+                                    <th>
+                                        Admission No.
+                                    </th>
+
+                                    <th>
+                                        Student Name
+                                    </th>
+
+                                    <th>
+                                        Gender
+                                    </th>
+
+                                    <th>
+                                        Class
+                                    </th>
+
+                                    <th>
+                                        Class Arm
+                                    </th>
+
+                                    <th>
+                                        Phone
+                                    </th>
+
+                                    <th>
+                                        Status
+                                    </th>
+
+                                    <th>
+                                        Actions
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody id="studentsTableBody">
+
+                                <tr>
+
+                                    <td colspan="9" class="loading-cell">
+
+                                        Loading students...
+
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+
+                    <!-- =================================================
+                     PAGINATION
+                ================================================== -->
+
+                    <div class="pagination-container">
+
+
+                        <div class="pagination-info">
+
+                            Showing
+
+                            <strong id="showingFrom">
+                                0
+                            </strong>
+
+                            -
+
+                            <strong id="showingTo">
+                                0
+                            </strong>
+
+                            of
+
+                            <strong id="totalResults">
+                                0
+                            </strong>
+
+                            students
+
+                        </div>
+
+
+                        <div class="pagination-buttons">
+
+
+                            <button type="button" class="pagination-button" id="previousButton" disabled>
+
+                                ← Previous
+
+                            </button>
+
+
+                            <span class="page-number" id="pageNumber">
+
+                                Page 1
+
+                            </span>
+
+
+                            <button type="button" class="pagination-button" id="nextButton" disabled>
+
+                                Next →
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+        </main>
+
+    </div>
+
+
+    <!-- =========================================================
+     DELETE STUDENT MODAL
+========================================================== -->
 
     <div id="deleteModal" class="modal" hidden>
 
+
         <div class="modal-content small-modal">
+
 
             <div class="modal-header">
 
-                <h2>Delete Student</h2>
+                <h2>
+                    Delete Student
+                </h2>
 
 
                 <button type="button" class="close-button" id="closeDeleteModal" aria-label="Close delete confirmation">
+
                     ×
+
                 </button>
 
             </div>
@@ -264,8 +2333,11 @@
 
             <div class="delete-content">
 
+
                 <div class="warning-icon" aria-hidden="true">
+
                     ⚠️
+
                 </div>
 
 
@@ -293,13 +2365,18 @@
 
             <div class="form-actions">
 
+
                 <button type="button" class="btn btn-secondary" id="cancelDeleteButton">
+
                     Cancel
+
                 </button>
 
 
                 <button type="button" class="btn btn-danger" id="confirmDeleteButton">
+
                     Delete Student
+
                 </button>
 
             </div>
@@ -309,6 +2386,12 @@
     </div>
 
 
+    <!-- =========================================================
+     JAVASCRIPT
+========================================================== -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
     <script src="../js/app.js"></script>
 
     <script src="../js/auth.js"></script>
@@ -316,6 +2399,190 @@
     <script src="../js/api.js"></script>
 
     <script src="../js/students.js"></script>
+
+
+    <!-- =========================================================
+     MOBILE SIDEBAR CONTROL
+========================================================== -->
+
+    <script>
+
+        "use strict";
+
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+
+                var sidebar =
+                    document.getElementById(
+                        "smsSidebar"
+                    );
+
+
+                var sidebarToggle =
+                    document.getElementById(
+                        "mobileSidebarBtn"
+                    );
+
+
+                var sidebarOverlay =
+                    document.getElementById(
+                        "sidebarOverlay"
+                    );
+
+
+                function openSidebar() {
+
+                    if (sidebar) {
+
+                        sidebar.classList.add(
+                            "show"
+                        );
+
+                    }
+
+
+                    if (sidebarOverlay) {
+
+                        sidebarOverlay.classList.add(
+                            "show"
+                        );
+
+                    }
+
+                }
+
+
+                function closeSidebar() {
+
+                    if (sidebar) {
+
+                        sidebar.classList.remove(
+                            "show"
+                        );
+
+                    }
+
+
+                    if (sidebarOverlay) {
+
+                        sidebarOverlay.classList.remove(
+                            "show"
+                        );
+
+                    }
+
+                }
+
+
+                if (sidebarToggle) {
+
+                    sidebarToggle.addEventListener(
+                        "click",
+                        function () {
+
+                            if (
+                                sidebar &&
+                                sidebar.classList.contains(
+                                    "show"
+                                )
+                            ) {
+
+                                closeSidebar();
+
+                            } else {
+
+                                openSidebar();
+
+                            }
+
+                        }
+                    );
+
+                }
+
+
+                if (sidebarOverlay) {
+
+                    sidebarOverlay.addEventListener(
+                        "click",
+                        closeSidebar
+                    );
+
+                }
+
+
+                if (sidebar) {
+
+                    sidebar
+                        .querySelectorAll(
+                            ".sidebar-link"
+                        )
+                        .forEach(
+                            function (link) {
+
+                                link.addEventListener(
+                                    "click",
+                                    function () {
+
+                                        if (
+                                            window.innerWidth <=
+                                            991.98
+                                        ) {
+
+                                            closeSidebar();
+
+                                        }
+
+                                    }
+                                );
+
+                            }
+                        );
+
+                }
+
+
+                window.addEventListener(
+                    "resize",
+                    function () {
+
+                        if (
+                            window.innerWidth >
+                            991.98
+                        ) {
+
+                            closeSidebar();
+
+                        }
+
+                    }
+                );
+
+
+                document.addEventListener(
+                    "keydown",
+                    function (event) {
+
+                        if (
+                            event.key === "Escape" &&
+                            window.innerWidth <=
+                            991.98
+                        ) {
+
+                            closeSidebar();
+
+                        }
+
+                    }
+                );
+
+            }
+        );
+
+    </script>
+    ```
 
 </body>
 

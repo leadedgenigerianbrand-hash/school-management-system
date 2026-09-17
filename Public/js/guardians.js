@@ -1,2068 +1,1261 @@
 "use strict";
 
-(function () {
+var API_BASE = "/api";
+var guardians = [];
+var editingGuardianId = null;
+var initialized = false;
 
-```
-const API_BASE = "/api";
-
-let guardians = [];
-let editingGuardianId = null;
-
-
-/*
-|--------------------------------------------------------------------------
-| AUTHENTICATION
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+AUTHENTICATION
+========================================================================== */
 
 function getToken() {
+return (
+localStorage.getItem("school_management_token") ||
+localStorage.getItem("token") ||
+sessionStorage.getItem("school_management_token") ||
+sessionStorage.getItem("token") ||
+""
+);
+}
 
-    return (
-        localStorage.getItem("school_management_token") ||
-        sessionStorage.getItem("school_management_token") ||
-        localStorage.getItem("token") ||
-        sessionStorage.getItem("token") ||
-        localStorage.getItem("accessToken") ||
-        sessionStorage.getItem("accessToken") ||
-        ""
-    );
+function getCurrentUser() {
+var raw =
+localStorage.getItem("school_management_user") ||
+sessionStorage.getItem("school_management_user") ||
+"";
+
+if (!raw) {
+    return null;
+}
+
+try {
+    return JSON.parse(raw);
+} catch (error) {
+    console.warn("Unable to parse current user:", error);
+    return null;
+}
 
 }
 
+function clearAuthentication() {
+localStorage.removeItem("school_management_token");
+localStorage.removeItem("school_management_user");
+localStorage.removeItem("token");
+localStorage.removeItem("user");
 
-/*
-|--------------------------------------------------------------------------
-| API REQUEST
-|--------------------------------------------------------------------------
-*/
+sessionStorage.removeItem("school_management_token");
+sessionStorage.removeItem("school_management_user");
+sessionStorage.removeItem("token");
+sessionStorage.removeItem("user");
 
-async function request(endpoint, options = {}) {
+}
 
-    let url = endpoint;
+function redirectToLogin() {
+window.location.href = "/pages/login.html";
+}
 
-    if (
-        !url.startsWith("http://") &&
-        !url.startsWith("https://")
-    ) {
+/* ==========================================================================
+API REQUEST
+========================================================================== */
 
-        if (!url.startsWith("/")) {
-            url = "/" + url;
-        }
+async function request(endpoint, options) {
+options = options || {};
 
-        if (!url.startsWith(API_BASE + "/")) {
-            url = API_BASE + url;
-        }
+var headers = options.headers || {};
 
-    }
+if (!headers["Content-Type"] && options.body) {
+    headers["Content-Type"] = "application/json";
+}
 
+var token = getToken();
 
-    const headers = {
-        ...(options.headers || {})
-    };
+if (token) {
+    headers.Authorization = "Bearer " + token;
+}
 
+options.headers = headers;
 
-    const token = getToken();
+var response;
 
-    if (token) {
-        headers.Authorization = `Bearer ${token}`;
-    }
+try {
+    response = await fetch(API_BASE + endpoint, options);
+} catch (error) {
+    console.error("Guardian API request failed:", error);
+    throw new Error(
+        "Unable to connect to the server. Please make sure the school management server is running."
+    );
+}
 
+var contentType = response.headers.get("content-type") || "";
+var data;
 
-    if (
-        options.body &&
-        !(options.body instanceof FormData) &&
-        !headers["Content-Type"] &&
-        !headers["content-type"]
-    ) {
-
-        headers["Content-Type"] = "application/json";
-
-    }
-
-
-    let response;
-
+if (contentType.indexOf("application/json") !== -1) {
     try {
-
-        response = await fetch(
-            url,
-            {
-                ...options,
-                headers
-            }
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Guardian API request failed:",
-            error
-        );
-
-        throw new Error(
-            "Unable to connect to the server. Please check your connection."
-        );
-
-    }
-
-
-    if (response.status === 401) {
-
-        localStorage.removeItem(
-            "school_management_token"
-        );
-
-        localStorage.removeItem(
-            "school_management_user"
-        );
-
-        sessionStorage.removeItem(
-            "school_management_token"
-        );
-
-        sessionStorage.removeItem(
-            "school_management_user"
-        );
-
-
-        if (
-            !window.location.pathname.endsWith(
-                "/login.html"
-            )
-        ) {
-
-            window.location.href =
-                "/pages/login.html";
-
-        }
-
-
-        throw new Error(
-            "Authentication required."
-        );
-
-    }
-
-
-    if (response.status === 403) {
-
-        throw new Error(
-            "You do not have permission to perform this action."
-        );
-
-    }
-
-
-    const contentType =
-        response.headers.get("content-type") || "";
-
-
-    let data;
-
-
-    if (
-        contentType.includes(
-            "application/json"
-        )
-    ) {
-
         data = await response.json();
-
-    } else {
-
+    } catch (error) {
+        data = {};
+    }
+} else {
+    try {
         data = await response.text();
-
-    }
-
-
-    if (!response.ok) {
-
-        let message =
-            "Request failed.";
-
-
-        if (
-            data &&
-            typeof data === "object"
-        ) {
-
-            message =
-                data.message ||
-                data.error ||
-                message;
-
-        } else if (
-            typeof data === "string" &&
-            data.trim()
-        ) {
-
-            message =
-                data;
-
-        }
-
-
-        throw new Error(message);
-
-    }
-
-
-    return data;
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| INITIALIZATION
-|--------------------------------------------------------------------------
-*/
-
-async function initialize() {
-
-    setupEvents();
-
-    await loadGuardians();
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| EVENT HANDLERS
-|--------------------------------------------------------------------------
-*/
-
-function setupEvents() {
-
-    const form =
-        document.querySelector(
-            "#guardianForm"
-        );
-
-
-    if (
-        form &&
-        !form.dataset.guardianInitialized
-    ) {
-
-        form.addEventListener(
-            "submit",
-            handleSubmit
-        );
-
-        form.dataset.guardianInitialized =
-            "true";
-
-    }
-
-
-    const searchInput =
-        document.querySelector(
-            "#searchInput"
-        );
-
-
-    if (
-        searchInput &&
-        !searchInput.dataset.guardianSearchInitialized
-    ) {
-
-        searchInput.addEventListener(
-            "input",
-            renderGuardians
-        );
-
-        searchInput.dataset.guardianSearchInitialized =
-            "true";
-
-    }
-
-
-    const relationshipFilter =
-        document.querySelector(
-            "#relationshipFilter"
-        );
-
-
-    if (
-        relationshipFilter &&
-        !relationshipFilter.dataset.guardianFilterInitialized
-    ) {
-
-        relationshipFilter.addEventListener(
-            "change",
-            renderGuardians
-        );
-
-        relationshipFilter.dataset.guardianFilterInitialized =
-            "true";
-
-    }
-
-
-    const refreshButton =
-        document.querySelector(
-            "#refreshButton"
-        );
-
-
-    if (
-        refreshButton &&
-        !refreshButton.dataset.guardianRefreshInitialized
-    ) {
-
-        refreshButton.addEventListener(
-            "click",
-            loadGuardians
-        );
-
-        refreshButton.dataset.guardianRefreshInitialized =
-            "true";
-
-    }
-
-
-    const addGuardianButton =
-        document.querySelector(
-            "#addGuardianButton"
-        );
-
-
-    if (
-        addGuardianButton &&
-        !addGuardianButton.dataset.guardianAddInitialized
-    ) {
-
-        addGuardianButton.addEventListener(
-            "click",
-            function () {
-
-                resetForm();
-
-                openGuardianModal();
-
-            }
-        );
-
-        addGuardianButton.dataset.guardianAddInitialized =
-            "true";
-
-    }
-
-
-    const closeGuardianModal =
-        document.querySelector(
-            "#closeGuardianModal"
-        );
-
-
-    if (closeGuardianModal) {
-
-        closeGuardianModal.addEventListener(
-            "click",
-            closeModal
-        );
-
-    }
-
-
-    const cancelGuardianButton =
-        document.querySelector(
-            "#cancelGuardianButton"
-        );
-
-
-    if (cancelGuardianButton) {
-
-        cancelGuardianButton.addEventListener(
-            "click",
-            closeModal
-        );
-
-    }
-
-
-    const modal =
-        document.querySelector(
-            "#guardianModal"
-        );
-
-
-    if (modal) {
-
-        modal.addEventListener(
-            "click",
-            function (event) {
-
-                if (
-                    event.target === modal
-                ) {
-
-                    closeModal();
-
-                }
-
-            }
-        );
-
-    }
-
-
-    const tableBody =
-        document.querySelector(
-            "#guardiansTableBody"
-        );
-
-
-    if (
-        tableBody &&
-        !tableBody.dataset.guardianActionsInitialized
-    ) {
-
-        tableBody.addEventListener(
-            "click",
-            handleTableAction
-        );
-
-        tableBody.dataset.guardianActionsInitialized =
-            "true";
-
-    }
-
-
-    document.addEventListener(
-        "keydown",
-        function (event) {
-
-            if (
-                event.key === "Escape"
-            ) {
-
-                closeModal();
-
-            }
-
-        }
-    );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| LOAD GUARDIANS
-|--------------------------------------------------------------------------
-*/
-
-async function loadGuardians() {
-
-    showLoading();
-
-    try {
-
-        const data =
-            await request(
-                "/guardians"
-            );
-
-
-        guardians =
-            extractRecords(data);
-
-
-        renderGuardians();
-
-        updateStatistics();
-
     } catch (error) {
-
-        console.error(
-            "Unable to load guardians:",
-            error
-        );
-
-        guardians = [];
-
-        updateStatistics();
-
-        showError(
-            error.message ||
-            "Unable to load guardians."
-        );
-
+        data = "";
     }
+}
+
+if (response.status === 401) {
+    clearAuthentication();
+    redirectToLogin();
+    throw new Error("Your session has expired. Please log in again.");
+}
+
+if (response.status === 403) {
+    throw new Error(
+        "You do not have permission to perform this guardian operation."
+    );
+}
+
+if (!response.ok) {
+    var message = "Guardian request failed.";
+
+    if (data && typeof data === "object") {
+        message =
+            data.message ||
+            data.error ||
+            data.details ||
+            message;
+    } else if (typeof data === "string" && data.trim()) {
+        message = data;
+    }
+
+    throw new Error(message);
+}
+
+return data;
 
 }
 
+/* ==========================================================================
+DOM HELPERS
+========================================================================== */
 
-/*
-|--------------------------------------------------------------------------
-| EXTRACT API RECORDS
-|--------------------------------------------------------------------------
-*/
-
-function extractRecords(data) {
-
-    if (Array.isArray(data)) {
-        return data;
-    }
-
-
-    if (
-        data &&
-        Array.isArray(data.data)
-    ) {
-
-        return data.data;
-
-    }
-
-
-    if (
-        data &&
-        Array.isArray(data.guardians)
-    ) {
-
-        return data.guardians;
-
-    }
-
-
-    if (
-        data &&
-        Array.isArray(data.records)
-    ) {
-
-        return data.records;
-
-    }
-
-
-    return [];
-
+function getElement(id) {
+return document.getElementById(id);
 }
 
+function showMessage(message, type) {
+type = type || "info";
 
-/*
-|--------------------------------------------------------------------------
-| RENDER GUARDIANS
-|--------------------------------------------------------------------------
-*/
-
-function renderGuardians() {
-
-    const container =
-        document.querySelector(
-            "#guardiansTableBody"
-        );
-
-
-    if (!container) {
-        return;
-    }
-
-
-    const searchInput =
-        document.querySelector(
-            "#searchInput"
-        );
-
-
-    const relationshipFilter =
-        document.querySelector(
-            "#relationshipFilter"
-        );
-
-
-    const search =
-        String(
-            searchInput?.value || ""
-        )
-            .trim()
-            .toLowerCase();
-
-
-    const relationship =
-        String(
-            relationshipFilter?.value || ""
-        )
-            .trim()
-            .toLowerCase();
-
-
-    const records =
-        guardians.filter(
-            function (guardian) {
-
-                const guardianName =
-                    getGuardianName(
-                        guardian
-                    ).toLowerCase();
-
-
-                const phone =
-                    String(
-                        guardian.phone ||
-                        ""
-                    ).toLowerCase();
-
-
-                const alternativePhone =
-                    String(
-                        guardian.alternative_phone ||
-                        guardian.alternativePhone ||
-                        ""
-                    ).toLowerCase();
-
-
-                const email =
-                    String(
-                        guardian.email ||
-                        ""
-                    ).toLowerCase();
-
-
-                const guardianRelationship =
-                    String(
-                        guardian.relationship ||
-                        ""
-                    ).toLowerCase();
-
-
-                const matchesSearch =
-                    !search ||
-                    guardianName.includes(
-                        search
-                    ) ||
-                    phone.includes(
-                        search
-                    ) ||
-                    alternativePhone.includes(
-                        search
-                    ) ||
-                    email.includes(
-                        search
-                    ) ||
-                    guardianRelationship.includes(
-                        search
-                    );
-
-
-                const matchesRelationship =
-                    !relationship ||
-                    guardianRelationship ===
-                        relationship;
-
-
-                return (
-                    matchesSearch &&
-                    matchesRelationship
-                );
-
-            }
-        );
-
-
-    if (!records.length) {
-
-        container.innerHTML = `
-            <tr>
-                <td colspan="7" class="text-center py-5">
-                    <div class="text-secondary">
-                        <i class="bi bi-person-x fs-2 d-block mb-2"></i>
-                        <div class="fw-semibold">
-                            No guardians found
-                        </div>
-                        <div class="small">
-                            No parent or guardian records match the current search.
-                        </div>
-                    </div>
-                </td>
-            </tr>
-        `;
-
-        return;
-
-    }
-
-
-    container.innerHTML =
-        records
-            .map(
-                renderGuardianRow
-            )
-            .join("");
-
+if (typeof window.showToast === "function") {
+    window.showToast(message, type);
+    return;
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| RENDER GUARDIAN ROW
-|--------------------------------------------------------------------------
-*/
-
-function renderGuardianRow(guardian) {
-
-    const id =
-        guardian.id ||
-        guardian.guardian_id;
-
-
-    const guardianName =
-        getGuardianName(
-            guardian
-        );
-
-
-    const relationship =
-        guardian.relationship ||
-        "-";
-
-
-    const phone =
-        guardian.phone ||
-        "-";
-
-
-    const email =
-        guardian.email ||
-        "-";
-
-
-    const studentCount =
-        getStudentCount(
-            guardian
-        );
-
-
-    const primary =
-        isPrimaryGuardian(
-            guardian
-        );
-
-
-    return `
-        <tr>
-
-            <td>
-                <div class="guardian-name">
-                    ${escapeHtml(
-                        guardianName
-                    )}
-                </div>
-
-                ${
-                    guardian.occupation
-                        ? `
-                            <div class="guardian-meta">
-                                ${escapeHtml(
-                                    guardian.occupation
-                                )}
-                            </div>
-                        `
-                        : ""
-                }
-            </td>
-
-
-            <td>
-                <span class="relationship-badge">
-                    ${escapeHtml(
-                        relationship
-                    )}
-                </span>
-            </td>
-
-
-            <td>
-                ${escapeHtml(
-                    phone
-                )}
-            </td>
-
-
-            <td>
-                ${escapeHtml(
-                    email
-                )}
-            </td>
-
-
-            <td>
-                ${
-                    studentCount > 0
-                        ? `
-                            <span class="fw-semibold">
-                                ${studentCount}
-                            </span>
-                            <span class="text-secondary small">
-                                ${studentCount === 1 ? "student" : "students"}
-                            </span>
-                        `
-                        : `
-                            <span class="text-secondary">
-                                Not linked
-                            </span>
-                        `
-                }
-            </td>
-
-
-            <td>
-                ${
-                    primary
-                        ? `
-                            <span class="primary-badge">
-                                <i class="bi bi-star-fill me-1"></i>
-                                Primary
-                            </span>
-                        `
-                        : `
-                            <span class="text-secondary">
-                                —
-                            </span>
-                        `
-                }
-            </td>
-
-
-            <td class="text-end">
-
-                <div class="btn-group btn-group-sm">
-
-                    <button
-                        type="button"
-                        class="btn btn-outline-primary"
-                        data-action="edit"
-                        data-id="${escapeAttribute(id)}"
-                        title="Edit Guardian"
-                    >
-                        <i class="bi bi-pencil"></i>
-                    </button>
-
-
-                    <button
-                        type="button"
-                        class="btn btn-outline-danger"
-                        data-action="delete"
-                        data-id="${escapeAttribute(id)}"
-                        title="Delete Guardian"
-                    >
-                        <i class="bi bi-trash"></i>
-                    </button>
-
-                </div>
-
-            </td>
-
-        </tr>
-    `;
-
+if (typeof window.showNotification === "function") {
+    window.showNotification(message, type);
+    return;
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| SUBMIT GUARDIAN
-|--------------------------------------------------------------------------
-*/
-
-async function handleSubmit(event) {
-
-    event.preventDefault();
-
-
-    const form =
-        event.currentTarget;
-
-
-    const data =
-        collectGuardianFormData(
-            form
-        );
-
-
-    if (!data.firstName) {
-
-        notify(
-            "Please enter the guardian's first name.",
-            "error"
-        );
-
-        return;
-
-    }
-
-
-    if (!data.lastName) {
-
-        notify(
-            "Please enter the guardian's last name.",
-            "error"
-        );
-
-        return;
-
-    }
-
-
-    if (!data.relationship) {
-
-        notify(
-            "Please select the guardian's relationship.",
-            "error"
-        );
-
-        return;
-
-    }
-
-
-    if (!data.phone) {
-
-        notify(
-            "Please enter the guardian's phone number.",
-            "error"
-        );
-
-        return;
-
-    }
-
-
-    const saveButton =
-        document.querySelector(
-            "#saveGuardianButton"
-        );
-
-
-    if (saveButton) {
-
-        saveButton.disabled = true;
-
-        saveButton.innerHTML =
-            `
-                <span class="spinner-border spinner-border-sm me-2"></span>
-                Saving...
-            `;
-
-    }
-
-
-    try {
-
-        if (editingGuardianId) {
-
-            await request(
-                `/guardians/${encodeURIComponent(
-                    editingGuardianId
-                )}`,
-                {
-                    method: "PUT",
-                    body: JSON.stringify(data)
-                }
-            );
-
-
-            notify(
-                "Guardian updated successfully.",
-                "success"
-            );
-
-        } else {
-
-            await request(
-                "/guardians",
-                {
-                    method: "POST",
-                    body: JSON.stringify(data)
-                }
-            );
-
-
-            notify(
-                "Guardian added successfully.",
-                "success"
-            );
-
-        }
-
-
-        resetForm();
-
-        closeModal();
-
-        await loadGuardians();
-
-    } catch (error) {
-
-        console.error(
-            "Guardian save failed:",
-            error
-        );
-
-
-        notify(
-            error.message ||
-            "Unable to save guardian.",
-            "error"
-        );
-
-    } finally {
-
-        if (saveButton) {
-
-            saveButton.disabled =
-                false;
-
-            saveButton.innerHTML =
-                `
-                    <i class="bi bi-check2 me-2"></i>
-                    Save Guardian
-                `;
-
-        }
-
-    }
-
+if (type === "error" || type === "danger") {
+    console.error(message);
+    alert(message);
+    return;
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| COLLECT GUARDIAN FORM DATA
-|--------------------------------------------------------------------------
-*/
-
-function collectGuardianFormData(form) {
-
-    const get =
-        function (selector) {
-
-            const element =
-                form.querySelector(
-                    selector
-                );
-
-            return element
-                ? String(
-                    element.value || ""
-                ).trim()
-                : "";
-
-        };
-
-
-    return {
-
-        firstName:
-            get("#firstName"),
-
-        middleName:
-            get("#middleName"),
-
-        lastName:
-            get("#lastName"),
-
-        relationship:
-            get("#relationship"),
-
-        phone:
-            get("#phone"),
-
-        alternativePhone:
-            get("#alternativePhone"),
-
-        email:
-            get("#email"),
-
-        address:
-            get("#address"),
-
-        occupation:
-            get("#occupation"),
-
-        employer:
-            get("#employer"),
-
-        emergencyContact:
-            get("#emergencyContact")
-
-    };
+console.log(message);
 
 }
-
-
-/*
-|--------------------------------------------------------------------------
-| EDIT GUARDIAN
-|--------------------------------------------------------------------------
-*/
-
-function editGuardian(id) {
-
-    const guardian =
-        guardians.find(
-            function (item) {
-
-                return String(
-                    item.id ||
-                    item.guardian_id
-                ) === String(id);
-
-            }
-        );
-
-
-    if (!guardian) {
-
-        notify(
-            "Guardian record could not be found.",
-            "error"
-        );
-
-        return;
-
-    }
-
-
-    editingGuardianId =
-        id;
-
-
-    setFormValue(
-        "#guardianId",
-        id
-    );
-
-
-    setFormValue(
-        "#firstName",
-        guardian.first_name ||
-        guardian.firstName ||
-        ""
-    );
-
-
-    setFormValue(
-        "#middleName",
-        guardian.middle_name ||
-        guardian.middleName ||
-        ""
-    );
-
-
-    setFormValue(
-        "#lastName",
-        guardian.last_name ||
-        guardian.lastName ||
-        ""
-    );
-
-
-    setFormValue(
-        "#relationship",
-        guardian.relationship ||
-        ""
-    );
-
-
-    setFormValue(
-        "#phone",
-        guardian.phone ||
-        ""
-    );
-
-
-    setFormValue(
-        "#alternativePhone",
-        guardian.alternative_phone ||
-        guardian.alternativePhone ||
-        ""
-    );
-
-
-    setFormValue(
-        "#email",
-        guardian.email ||
-        ""
-    );
-
-
-    setFormValue(
-        "#address",
-        guardian.address ||
-        ""
-    );
-
-
-    setFormValue(
-        "#occupation",
-        guardian.occupation ||
-        ""
-    );
-
-
-    setFormValue(
-        "#employer",
-        guardian.employer ||
-        ""
-    );
-
-
-    setFormValue(
-        "#emergencyContact",
-        guardian.emergency_contact ||
-        guardian.emergencyContact ||
-        ""
-    );
-
-
-    updateFormMode(
-        "Update Guardian"
-    );
-
-
-    openGuardianModal();
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| DELETE GUARDIAN
-|--------------------------------------------------------------------------
-*/
-
-async function deleteGuardian(id) {
-
-    const guardian =
-        guardians.find(
-            function (item) {
-
-                return String(
-                    item.id ||
-                    item.guardian_id
-                ) === String(id);
-
-            }
-        );
-
-
-    const name =
-        guardian
-            ? getGuardianName(
-                guardian
-            )
-            : "this guardian";
-
-
-    const confirmed =
-        window.confirm(
-            `Are you sure you want to delete "${name}"?`
-        );
-
-
-    if (!confirmed) {
-        return;
-    }
-
-
-    try {
-
-        await request(
-            `/guardians/${encodeURIComponent(
-                id
-            )}`,
-            {
-                method: "DELETE"
-            }
-        );
-
-
-        notify(
-            "Guardian deleted successfully.",
-            "success"
-        );
-
-
-        await loadGuardians();
-
-    } catch (error) {
-
-        console.error(
-            "Guardian deletion failed:",
-            error
-        );
-
-
-        notify(
-            error.message ||
-            "Unable to delete guardian.",
-            "error"
-        );
-
-    }
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| TABLE ACTIONS
-|--------------------------------------------------------------------------
-*/
-
-async function handleTableAction(event) {
-
-    const button =
-        event.target.closest(
-            "[data-action]"
-        );
-
-
-    if (!button) {
-        return;
-    }
-
-
-    const action =
-        button.getAttribute(
-            "data-action"
-        );
-
-
-    const id =
-        button.getAttribute(
-            "data-id"
-        );
-
-
-    if (!id) {
-        return;
-    }
-
-
-    if (action === "edit") {
-
-        editGuardian(id);
-
-        return;
-
-    }
-
-
-    if (action === "delete") {
-
-        await deleteGuardian(id);
-
-    }
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| FORM RESET
-|--------------------------------------------------------------------------
-*/
-
-function resetForm() {
-
-    editingGuardianId =
-        null;
-
-
-    const form =
-        document.querySelector(
-            "#guardianForm"
-        );
-
-
-    if (form) {
-        form.reset();
-    }
-
-
-    setFormValue(
-        "#guardianId",
-        ""
-    );
-
-
-    updateFormMode(
-        "Add Guardian"
-    );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| FORM MODE
-|--------------------------------------------------------------------------
-*/
-
-function updateFormMode(text) {
-
-    const title =
-        document.querySelector(
-            "#guardianModalTitle"
-        );
-
-
-    if (title) {
-
-        title.textContent =
-            text;
-
-    }
-
-
-    const button =
-        document.querySelector(
-            "#saveGuardianButton"
-        );
-
-
-    if (button) {
-
-        button.innerHTML =
-            `
-                <i class="bi bi-check2 me-2"></i>
-                ${escapeHtml(text)}
-            `;
-
-    }
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| MODAL
-|--------------------------------------------------------------------------
-*/
-
-function openGuardianModal() {
-
-    const modal =
-        document.querySelector(
-            "#guardianModal"
-        );
-
-
-    if (!modal) {
-        return;
-    }
-
-
-    modal.hidden =
-        false;
-
-
-    document.body.classList.add(
-        "modal-open"
-    );
-
-
-    document.body.style.overflow =
-        "hidden";
-
-
-    const firstName =
-        document.querySelector(
-            "#firstName"
-        );
-
-
-    if (firstName) {
-
-        setTimeout(
-            function () {
-                firstName.focus();
-            },
-            50
-        );
-
-    }
-
-}
-
-
-function closeModal() {
-
-    const modal =
-        document.querySelector(
-            "#guardianModal"
-        );
-
-
-    if (!modal) {
-        return;
-    }
-
-
-    modal.hidden =
-        true;
-
-
-    document.body.classList.remove(
-        "modal-open"
-    );
-
-
-    document.body.style.overflow =
-        "";
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| STATISTICS
-|--------------------------------------------------------------------------
-*/
-
-function updateStatistics() {
-
-    const total =
-        guardians.length;
-
-
-    const linked =
-        guardians.filter(
-            function (guardian) {
-
-                return (
-                    getStudentCount(
-                        guardian
-                    ) > 0
-                );
-
-            }
-        ).length;
-
-
-    const primary =
-        guardians.filter(
-            function (guardian) {
-
-                return isPrimaryGuardian(
-                    guardian
-                );
-
-            }
-        ).length;
-
-
-    const linkedStudents =
-        guardians.reduce(
-            function (totalCount, guardian) {
-
-                return (
-                    totalCount +
-                    getStudentCount(
-                        guardian
-                    )
-                );
-
-            },
-            0
-        );
-
-
-    setText(
-        "#totalGuardians",
-        total
-    );
-
-
-    setText(
-        "#linkedGuardians",
-        linked
-    );
-
-
-    setText(
-        "#primaryGuardians",
-        primary
-    );
-
-
-    setText(
-        "#linkedStudents",
-        linkedStudents
-    );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| RELATIONSHIP DATA HELPERS
-|--------------------------------------------------------------------------
-*/
-
-function getStudentCount(guardian) {
-
-    if (
-        Array.isArray(
-            guardian.students
-        )
-    ) {
-
-        return guardian.students.length;
-
-    }
-
-
-    if (
-        Array.isArray(
-            guardian.studentIds
-        )
-    ) {
-
-        return guardian.studentIds.length;
-
-    }
-
-
-    if (
-        Array.isArray(
-            guardian.student_ids
-        )
-    ) {
-
-        return guardian.student_ids.length;
-
-    }
-
-
-    const count =
-        Number(
-            guardian.student_count ??
-            guardian.studentCount ??
-            0
-        );
-
-
-    return Number.isFinite(count)
-        ? count
-        : 0;
-
-}
-
-
-function isPrimaryGuardian(guardian) {
-
-    return (
-        guardian.is_primary === true ||
-        guardian.isPrimary === true ||
-        guardian.is_primary === "true" ||
-        guardian.isPrimary === "true"
-    );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| GUARDIAN NAME
-|--------------------------------------------------------------------------
-*/
-
-function getGuardianName(guardian) {
-
-    const fullName =
-        guardian.name ||
-        guardian.full_name ||
-        guardian.guardian_name;
-
-
-    if (fullName) {
-
-        return String(
-            fullName
-        );
-
-    }
-
-
-    return [
-        guardian.first_name ||
-        guardian.firstName ||
-        "",
-
-        guardian.middle_name ||
-        guardian.middleName ||
-        "",
-
-        guardian.last_name ||
-        guardian.lastName ||
-        ""
-
-    ]
-        .filter(Boolean)
-        .join(" ") ||
-        "Unknown Guardian";
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| FORM VALUE
-|--------------------------------------------------------------------------
-*/
-
-function setFormValue(
-    selector,
-    value
-) {
-
-    const element =
-        document.querySelector(
-            selector
-        );
-
-
-    if (!element) {
-        return;
-    }
-
-
-    element.value =
-        value ?? "";
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| TEXT VALUE
-|--------------------------------------------------------------------------
-*/
-
-function setText(
-    selector,
-    value
-) {
-
-    const element =
-        document.querySelector(
-            selector
-        );
-
-
-    if (element) {
-
-        element.textContent =
-            String(
-                value ?? 0
-            );
-
-    }
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| LOADING STATE
-|--------------------------------------------------------------------------
-*/
-
-function showLoading() {
-
-    const container =
-        document.querySelector(
-            "#guardiansTableBody"
-        );
-
-
-    if (!container) {
-        return;
-    }
-
-
-    container.innerHTML = `
-        <tr>
-            <td colspan="7" class="text-center py-5 text-secondary">
-                <div class="spinner-border spinner-border-sm text-primary me-2"></div>
-                Loading guardians...
-            </td>
-        </tr>
-    `;
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| ERROR STATE
-|--------------------------------------------------------------------------
-*/
-
-function showError(message) {
-
-    const container =
-        document.querySelector(
-            "#guardiansTableBody"
-        );
-
-
-    if (!container) {
-        return;
-    }
-
-
-    container.innerHTML = `
-        <tr>
-            <td colspan="7" class="text-center py-5">
-                <div class="text-danger mb-2">
-                    <i class="bi bi-exclamation-triangle fs-3"></i>
-                </div>
-
-                <div class="fw-semibold">
-                    Unable to load guardians
-                </div>
-
-                <div class="small text-secondary mt-1">
-                    ${escapeHtml(message)}
-                </div>
-
-                <button
-                    type="button"
-                    class="btn btn-sm btn-outline-primary mt-3"
-                    onclick="window.GuardiansPage.loadGuardians()"
-                >
-                    <i class="bi bi-arrow-clockwise me-1"></i>
-                    Try Again
-                </button>
-            </td>
-        </tr>
-    `;
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| NOTIFICATIONS
-|--------------------------------------------------------------------------
-*/
-
-function notify(
-    message,
-    type = "success"
-) {
-
-    if (
-        typeof window.showNotification ===
-        "function"
-    ) {
-
-        window.showNotification(
-            message,
-            type
-        );
-
-        return;
-
-    }
-
-
-    let container =
-        document.querySelector(
-            "#notification-container"
-        );
-
-
-    if (!container) {
-
-        container =
-            document.createElement(
-                "div"
-            );
-
-
-        container.id =
-            "notification-container";
-
-
-        container.style.position =
-            "fixed";
-
-        container.style.top =
-            "20px";
-
-        container.style.right =
-            "20px";
-
-        container.style.zIndex =
-            "99999";
-
-        container.style.maxWidth =
-            "380px";
-
-
-        document.body.appendChild(
-            container
-        );
-
-    }
-
-
-    const alert =
-        document.createElement(
-            "div"
-        );
-
-
-    alert.className =
-        `alert alert-${
-            type === "error"
-                ? "danger"
-                : type
-        } shadow-sm`;
-
-
-    alert.textContent =
-        message;
-
-
-    container.appendChild(
-        alert
-    );
-
-
-    setTimeout(
-        function () {
-
-            alert.remove();
-
-        },
-        4000
-    );
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| HTML ESCAPING
-|--------------------------------------------------------------------------
-*/
 
 function escapeHtml(value) {
+if (value === null || value === undefined) {
+return "";
+}
 
-    if (
-        window.App &&
-        typeof window.App.escapeHtml ===
-            "function"
-    ) {
+return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 
-        return window.App.escapeHtml(
-            value
-        );
+}
 
+function getGuardianId(guardian) {
+if (!guardian) {
+return "";
+}
+
+return (
+    guardian.id ||
+    guardian.guardianId ||
+    guardian.guardian_id ||
+    ""
+);
+
+}
+
+function getGuardianFirstName(guardian) {
+return (
+guardian.firstName ||
+guardian.first_name ||
+""
+);
+}
+
+function getGuardianMiddleName(guardian) {
+return (
+guardian.middleName ||
+guardian.middle_name ||
+""
+);
+}
+
+function getGuardianLastName(guardian) {
+return (
+guardian.lastName ||
+guardian.last_name ||
+""
+);
+}
+
+function getGuardianName(guardian) {
+var parts = [
+getGuardianFirstName(guardian),
+getGuardianMiddleName(guardian),
+getGuardianLastName(guardian)
+].filter(function (value) {
+return String(value || "").trim() !== "";
+});
+
+return parts.join(" ");
+
+}
+
+function getGuardianRelationship(guardian) {
+return (
+guardian.relationship ||
+guardian.relationship_type ||
+""
+);
+}
+
+function getGuardianPhone(guardian) {
+return guardian.phone || guardian.phone_number || "";
+}
+
+function getGuardianEmail(guardian) {
+return guardian.email || "";
+}
+
+function getGuardianOccupation(guardian) {
+return guardian.occupation || "";
+}
+
+function getGuardianAddress(guardian) {
+return guardian.address || "";
+}
+
+function getGuardianEmergencyContact(guardian) {
+return (
+guardian.emergencyContact ||
+guardian.emergency_contact ||
+""
+);
+}
+
+/* ==========================================================================
+MODAL
+========================================================================== */
+
+function getGuardianModal() {
+return getElement("guardianModal");
+}
+
+function ensureModalClosed() {
+var modal = getGuardianModal();
+
+if (!modal) {
+    return;
+}
+
+modal.hidden = true;
+modal.style.display = "none";
+modal.classList.remove("show");
+modal.setAttribute("aria-hidden", "true");
+modal.removeAttribute("aria-modal");
+
+document.body.classList.remove("modal-open");
+document.body.style.removeProperty("overflow");
+
+}
+
+function openGuardianModal() {
+var modal = getGuardianModal();
+
+if (!modal) {
+    console.error("Guardian modal was not found.");
+    return;
+}
+
+modal.hidden = false;
+modal.style.display = "block";
+modal.classList.add("show");
+modal.setAttribute("aria-hidden", "false");
+modal.setAttribute("aria-modal", "true");
+
+document.body.classList.add("modal-open");
+document.body.style.overflow = "hidden";
+
+var firstName = getElement("firstName");
+
+if (firstName) {
+    setTimeout(function () {
+        firstName.focus();
+    }, 50);
+}
+
+}
+
+function closeGuardianModal() {
+var modal = getGuardianModal();
+
+if (!modal) {
+    return;
+}
+
+modal.hidden = true;
+modal.style.display = "none";
+modal.classList.remove("show");
+modal.setAttribute("aria-hidden", "true");
+modal.removeAttribute("aria-modal");
+
+document.body.classList.remove("modal-open");
+document.body.style.removeProperty("overflow");
+
+editingGuardianId = null;
+
+var form = getElement("guardianForm");
+
+if (form) {
+    form.reset();
+}
+
+setFormMode("add");
+
+}
+
+function setFormMode(mode) {
+var title = document.getElementById("guardianModalTitle");
+var saveButton = getElement("saveGuardianButton");
+
+if (title) {
+    title.textContent =
+        mode === "edit" ? "Edit Guardian" : "Add Guardian";
+}
+
+if (saveButton) {
+    saveButton.textContent =
+        mode === "edit" ? "Update Guardian" : "Save Guardian";
+}
+
+}
+
+function resetForm() {
+var form = getElement("guardianForm");
+
+if (form) {
+    form.reset();
+}
+
+var guardianId = getElement("guardianId");
+
+if (guardianId) {
+    guardianId.value = "";
+}
+
+editingGuardianId = null;
+setFormMode("add");
+
+}
+
+function openAddGuardianModal() {
+resetForm();
+openGuardianModal();
+}
+
+function openEditGuardianModal(guardian) {
+if (!guardian) {
+return;
+}
+
+var id = getGuardianId(guardian);
+
+if (!id) {
+    showMessage("The selected guardian does not have a valid ID.", "error");
+    return;
+}
+
+editingGuardianId = id;
+
+var guardianId = getElement("guardianId");
+var firstName = getElement("firstName");
+var middleName = getElement("middleName");
+var lastName = getElement("lastName");
+var relationship = getElement("relationship");
+var phone = getElement("phone");
+var alternativePhone = getElement("alternativePhone");
+var email = getElement("email");
+var occupation = getElement("occupation");
+var employer = getElement("employer");
+var address = getElement("address");
+var emergencyContact = getElement("emergencyContact");
+
+if (guardianId) {
+    guardianId.value = id;
+}
+
+if (firstName) {
+    firstName.value = getGuardianFirstName(guardian);
+}
+
+if (middleName) {
+    middleName.value = getGuardianMiddleName(guardian);
+}
+
+if (lastName) {
+    lastName.value = getGuardianLastName(guardian);
+}
+
+if (relationship) {
+    relationship.value = getGuardianRelationship(guardian);
+}
+
+if (phone) {
+    phone.value = getGuardianPhone(guardian);
+}
+
+if (alternativePhone) {
+    alternativePhone.value =
+        guardian.alternativePhone ||
+        guardian.alternative_phone ||
+        "";
+}
+
+if (email) {
+    email.value = getGuardianEmail(guardian);
+}
+
+if (occupation) {
+    occupation.value = getGuardianOccupation(guardian);
+}
+
+if (employer) {
+    employer.value = guardian.employer || "";
+}
+
+if (address) {
+    address.value = getGuardianAddress(guardian);
+}
+
+if (emergencyContact) {
+    emergencyContact.value = getGuardianEmergencyContact(guardian);
+}
+
+setFormMode("edit");
+openGuardianModal();
+
+}
+
+/* ==========================================================================
+DATA NORMALIZATION
+========================================================================== */
+
+function normalizeGuardianList(data) {
+if (Array.isArray(data)) {
+return data;
+}
+
+if (!data || typeof data !== "object") {
+    return [];
+}
+
+if (Array.isArray(data.guardians)) {
+    return data.guardians;
+}
+
+if (Array.isArray(data.data)) {
+    return data.data;
+}
+
+if (data.data && Array.isArray(data.data.guardians)) {
+    return data.data.guardians;
+}
+
+if (Array.isArray(data.rows)) {
+    return data.rows;
+}
+
+return [];
+
+}
+
+function normalizeGuardianResponse(data) {
+if (!data) {
+return null;
+}
+
+if (data.guardian) {
+    return data.guardian;
+}
+
+if (data.data && data.data.guardian) {
+    return data.data.guardian;
+}
+
+if (data.data && !Array.isArray(data.data)) {
+    return data.data;
+}
+
+if (data.id) {
+    return data;
+}
+
+return null;
+
+}
+
+/* ==========================================================================
+LOAD GUARDIANS
+========================================================================== */
+
+async function loadGuardians() {
+var tableBody = getElement("guardiansTableBody");
+
+if (tableBody) {
+    tableBody.innerHTML =
+        '<tr><td colspan="8" class="text-center py-4">Loading guardians...</td></tr>';
+}
+
+try {
+    var data = await request("/guardians", {
+        method: "GET"
+    });
+
+    guardians = normalizeGuardianList(data);
+
+    renderGuardians();
+    updateSummary();
+
+    console.log("Guardians loaded:", guardians.length);
+} catch (error) {
+    console.error("Unable to load guardians:", error);
+
+    guardians = [];
+    renderGuardians();
+    updateSummary();
+
+    if (tableBody) {
+        tableBody.innerHTML =
+            '<tr><td colspan="8" class="text-center text-danger py-4">' +
+            escapeHtml(error.message) +
+            "</td></tr>";
+    }
+}
+
+}
+
+/* ==========================================================================
+SEARCH AND FILTER
+========================================================================== */
+
+function getSearchValue() {
+var input = getElement("searchInput");
+
+if (!input) {
+    return "";
+}
+
+return String(input.value || "")
+    .trim()
+    .toLowerCase();
+
+}
+
+function getRelationshipFilterValue() {
+var select = getElement("relationshipFilter");
+
+if (!select) {
+    return "";
+}
+
+return String(select.value || "")
+    .trim()
+    .toLowerCase();
+
+}
+
+function filterGuardians() {
+var search = getSearchValue();
+var relationship = getRelationshipFilterValue();
+
+return guardians.filter(function (guardian) {
+    var searchableText = [
+        getGuardianName(guardian),
+        getGuardianRelationship(guardian),
+        getGuardianPhone(guardian),
+        getGuardianEmail(guardian),
+        getGuardianOccupation(guardian),
+        guardian.employer || "",
+        getGuardianAddress(guardian),
+        getGuardianEmergencyContact(guardian)
+    ]
+        .join(" ")
+        .toLowerCase();
+
+    var matchesSearch =
+        !search || searchableText.indexOf(search) !== -1;
+
+    var guardianRelationship =
+        getGuardianRelationship(guardian)
+            .trim()
+            .toLowerCase();
+
+    var matchesRelationship =
+        !relationship ||
+        guardianRelationship === relationship;
+
+    return matchesSearch && matchesRelationship;
+});
+
+}
+
+/* ==========================================================================
+SUMMARY
+========================================================================== */
+
+function updateSummary() {
+var totalElement = getElement("totalGuardians");
+var linkedElement = getElement("linkedGuardians");
+var primaryElement = getElement("primaryGuardians");
+var studentsElement = getElement("linkedStudents");
+
+var total = guardians.length;
+
+var linked = guardians.filter(function (guardian) {
+    var count =
+        guardian.studentCount ||
+        guardian.student_count ||
+        guardian.linkedStudents ||
+        guardian.linked_students ||
+        0;
+
+    return Number(count) > 0;
+}).length;
+
+var primary = guardians.filter(function (guardian) {
+    var relationship =
+        getGuardianRelationship(guardian)
+            .trim()
+            .toLowerCase();
+
+    return (
+        relationship === "parent" ||
+        relationship === "father" ||
+        relationship === "mother" ||
+        relationship === "guardian" ||
+        relationship === "primary"
+    );
+}).length;
+
+var linkedStudents = guardians.reduce(function (totalCount, guardian) {
+    var count =
+        guardian.studentCount ||
+        guardian.student_count ||
+        guardian.linkedStudents ||
+        guardian.linked_students ||
+        0;
+
+    var numericCount = Number(count);
+
+    if (!Number.isFinite(numericCount)) {
+        numericCount = 0;
     }
 
+    return totalCount + numericCount;
+}, 0);
 
-    return String(
-        value ?? ""
-    )
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
-        );
+if (totalElement) {
+    totalElement.textContent = String(total);
+}
+
+if (linkedElement) {
+    linkedElement.textContent = String(linked);
+}
+
+if (primaryElement) {
+    primaryElement.textContent = String(primary);
+}
+
+if (studentsElement) {
+    studentsElement.textContent = String(linkedStudents);
+}
+
+console.log("Guardian summary updated:", {
+    totalGuardians: total,
+    linkedGuardians: linked,
+    primaryGuardians: primary,
+    linkedStudents: linkedStudents
+});
 
 }
 
+/* ==========================================================================
+TABLE RENDERING
+========================================================================== */
 
-/*
-|--------------------------------------------------------------------------
-| ATTRIBUTE ESCAPING
-|--------------------------------------------------------------------------
-*/
+function renderGuardians() {
+var tableBody = getElement("guardiansTableBody");
 
-function escapeAttribute(value) {
+if (!tableBody) {
+    console.error("guardiansTableBody was not found.");
+    return;
+}
 
-    return escapeHtml(
-        value
-    );
+var filteredGuardians = filterGuardians();
+
+if (filteredGuardians.length === 0) {
+    tableBody.innerHTML =
+        '<tr><td colspan="8" class="text-center py-4 text-muted">No guardians found.</td></tr>';
+    return;
+}
+
+tableBody.innerHTML = filteredGuardians
+    .map(function (guardian) {
+        return renderGuardianRow(guardian);
+    })
+    .join("");
 
 }
 
+function renderGuardianRow(guardian) {
+var id = getGuardianId(guardian);
+var name = getGuardianName(guardian) || "Unnamed Guardian";
+var relationship =
+getGuardianRelationship(guardian) || "—";
+var phone =
+getGuardianPhone(guardian) || "—";
+var email =
+getGuardianEmail(guardian) || "—";
+var occupation =
+getGuardianOccupation(guardian) || "—";
 
-/*
-|--------------------------------------------------------------------------
-| PUBLIC API
-|--------------------------------------------------------------------------
-*/
+var studentCount =
+    guardian.studentCount ||
+    guardian.student_count ||
+    guardian.linkedStudents ||
+    guardian.linked_students ||
+    0;
 
-window.GuardiansPage = {
+var status =
+    guardian.status ||
+    (Number(studentCount) > 0 ? "Linked" : "Unlinked");
 
-    initialize,
+var photo =
+    guardian.profilePhotoUrl ||
+    guardian.profile_photo_url ||
+    guardian.photoUrl ||
+    guardian.photo_url ||
+    "";
 
-    loadGuardians,
+var avatarHtml;
 
-    editGuardian,
+if (photo) {
+    avatarHtml =
+        '<img src="' +
+        escapeHtml(photo) +
+        '" alt="' +
+        escapeHtml(name) +
+        '" class="rounded-circle" width="42" height="42" style="object-fit:cover;">';
+} else {
+    var initials = name
+        .split(/\s+/)
+        .filter(function (part) {
+            return part;
+        })
+        .slice(0, 2)
+        .map(function (part) {
+            return part.charAt(0).toUpperCase();
+        })
+        .join("");
 
-    deleteGuardian,
+    avatarHtml =
+        '<div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center" ' +
+        'style="width:42px;height:42px;">' +
+        escapeHtml(initials || "G") +
+        "</div>";
+}
 
-    resetForm,
+return (
+    '<tr data-guardian-id="' +
+    escapeHtml(id) +
+    '">' +
+    "<td>" +
+    '<div class="d-flex align-items-center gap-2">' +
+    avatarHtml +
+    '<div><div class="fw-semibold">' +
+    escapeHtml(name) +
+    "</div></div>" +
+    "</div>" +
+    "</td>" +
+    "<td>" +
+    escapeHtml(relationship) +
+    "</td>" +
+    "<td>" +
+    escapeHtml(phone) +
+    "</td>" +
+    "<td>" +
+    escapeHtml(email) +
+    "</td>" +
+    "<td>" +
+    escapeHtml(occupation) +
+    "</td>" +
+    "<td>" +
+    escapeHtml(String(studentCount)) +
+    "</td>" +
+    "<td>" +
+    '<span class="badge ' +
+    (Number(studentCount) > 0
+        ? "bg-success"
+        : "bg-secondary") +
+    '">' +
+    escapeHtml(status) +
+    "</span>" +
+    "</td>" +
+    "<td>" +
+    '<div class="btn-group btn-group-sm" role="group">' +
+    '<button type="button" class="btn btn-outline-primary guardian-edit-button" ' +
+    'data-id="' +
+    escapeHtml(id) +
+    '" title="Edit Guardian">' +
+    '<i class="bi bi-pencil"></i>' +
+    "</button>" +
+    '<button type="button" class="btn btn-outline-danger guardian-delete-button" ' +
+    'data-id="' +
+    escapeHtml(id) +
+    '" title="Delete Guardian">' +
+    '<i class="bi bi-trash"></i>' +
+    "</button>" +
+    "</div>" +
+    "</td>" +
+    "</tr>"
+);
 
-    openGuardianModal,
+}
 
-    closeModal
+/* ==========================================================================
+FORM DATA
+========================================================================== */
 
+function collectGuardianFormData() {
+var firstName = getElement("firstName");
+var middleName = getElement("middleName");
+var lastName = getElement("lastName");
+var relationship = getElement("relationship");
+var phone = getElement("phone");
+var alternativePhone = getElement("alternativePhone");
+var email = getElement("email");
+var occupation = getElement("occupation");
+var employer = getElement("employer");
+var address = getElement("address");
+var emergencyContact = getElement("emergencyContact");
+
+return {
+    firstName: firstName ? firstName.value.trim() : "",
+    middleName: middleName ? middleName.value.trim() : "",
+    lastName: lastName ? lastName.value.trim() : "",
+    relationship: relationship ? relationship.value.trim() : "",
+    phone: phone ? phone.value.trim() : "",
+    alternativePhone: alternativePhone
+        ? alternativePhone.value.trim()
+        : "",
+    email: email ? email.value.trim() : "",
+    occupation: occupation ? occupation.value.trim() : "",
+    employer: employer ? employer.value.trim() : "",
+    address: address ? address.value.trim() : "",
+    emergencyContact: emergencyContact
+        ? emergencyContact.value.trim()
+        : ""
 };
 
+}
 
-/*
-|--------------------------------------------------------------------------
-| START APPLICATION
-|--------------------------------------------------------------------------
-*/
+function validateGuardianForm(data) {
+if (!data.firstName) {
+showMessage("Please enter the guardian's first name.", "error");
+getElement("firstName")?.focus();
+return false;
+}
 
-if (
-    document.readyState ===
-    "loading"
-) {
+if (!data.lastName) {
+    showMessage("Please enter the guardian's last name.", "error");
+    getElement("lastName")?.focus();
+    return false;
+}
 
-    document.addEventListener(
-        "DOMContentLoaded",
-        initialize,
-        {
-            once: true
-        }
-    );
+if (!data.relationship) {
+    showMessage("Please select the guardian relationship.", "error");
+    getElement("relationship")?.focus();
+    return false;
+}
 
-} else {
-
-    initialize();
+return true;
 
 }
-```
 
-})();
+/* ==========================================================================
+CREATE / UPDATE
+========================================================================== */
+
+async function handleSubmit(event) {
+if (event) {
+event.preventDefault();
+}
+
+var data = collectGuardianFormData();
+
+if (!validateGuardianForm(data)) {
+    return;
+}
+
+var saveButton = getElement("saveGuardianButton");
+
+if (saveButton) {
+    saveButton.disabled = true;
+    saveButton.dataset.originalText = saveButton.textContent;
+    saveButton.textContent =
+        editingGuardianId
+            ? "Updating..."
+            : "Saving...";
+}
+
+try {
+    var endpoint = "/guardians";
+    var method = "POST";
+
+    if (editingGuardianId) {
+        endpoint += "/" + encodeURIComponent(editingGuardianId);
+        method = "PUT";
+    }
+
+    var response = await request(endpoint, {
+        method: method,
+        body: JSON.stringify(data)
+    });
+
+    var savedGuardian = normalizeGuardianResponse(response);
+
+    if (editingGuardianId) {
+        guardians = guardians.map(function (guardian) {
+            return getGuardianId(guardian) === editingGuardianId
+                ? savedGuardian || Object.assign({}, guardian, data)
+                : guardian;
+        });
+
+        showMessage("Guardian updated successfully.", "success");
+    } else {
+        if (savedGuardian) {
+            guardians.unshift(savedGuardian);
+        }
+
+        showMessage("Guardian added successfully.", "success");
+    }
+
+    renderGuardians();
+    updateSummary();
+    closeGuardianModal();
+} catch (error) {
+    console.error("Unable to save guardian:", error);
+    showMessage(error.message, "error");
+} finally {
+    if (saveButton) {
+        saveButton.disabled = false;
+        saveButton.textContent =
+            saveButton.dataset.originalText ||
+            (editingGuardianId
+                ? "Update Guardian"
+                : "Save Guardian");
+    }
+}
+
+}
+
+/* ==========================================================================
+DELETE
+========================================================================== */
+
+async function deleteGuardian(id) {
+if (!id) {
+return;
+}
+
+var guardian = guardians.find(function (item) {
+    return getGuardianId(item) === id;
+});
+
+var name = guardian
+    ? getGuardianName(guardian)
+    : "this guardian";
+
+var confirmed = window.confirm(
+    "Are you sure you want to delete " +
+    (name || "this guardian") +
+    "?"
+);
+
+if (!confirmed) {
+    return;
+}
+
+try {
+    await request("/guardians/" + encodeURIComponent(id), {
+        method: "DELETE"
+    });
+
+    guardians = guardians.filter(function (item) {
+        return getGuardianId(item) !== id;
+    });
+
+    renderGuardians();
+    updateSummary();
+
+    showMessage("Guardian deleted successfully.", "success");
+} catch (error) {
+    console.error("Unable to delete guardian:", error);
+    showMessage(error.message, "error");
+}
+
+}
+
+/* ==========================================================================
+EVENT HANDLERS
+========================================================================== */
+
+function handleTableClick(event) {
+var editButton = event.target.closest(
+".guardian-edit-button"
+);
+
+if (editButton) {
+    var editId = editButton.getAttribute("data-id");
+
+    var editGuardian = guardians.find(function (guardian) {
+        return getGuardianId(guardian) === editId;
+    });
+
+    if (editGuardian) {
+        openEditGuardianModal(editGuardian);
+    }
+
+    return;
+}
+
+var deleteButton = event.target.closest(
+    ".guardian-delete-button"
+);
+
+if (deleteButton) {
+    var deleteId = deleteButton.getAttribute("data-id");
+
+    if (deleteId) {
+        deleteGuardian(deleteId);
+    }
+}
+
+}
+
+function handleModalClick(event) {
+var modal = getGuardianModal();
+
+if (!modal) {
+    return;
+}
+
+if (event.target === modal) {
+    closeGuardianModal();
+}
+
+}
+
+function handleEscape(event) {
+if (event.key !== "Escape") {
+return;
+}
+
+var modal = getGuardianModal();
+
+if (modal && !modal.hidden) {
+    closeGuardianModal();
+}
+
+}
+
+function setupEvents() {
+var addButton = getElement("addGuardianButton");
+var cancelButton = getElement("cancelGuardianButton");
+var closeButton = getElement("closeGuardianModalButton");
+var form = getElement("guardianForm");
+var searchInput = getElement("searchInput");
+var relationshipFilter = getElement("relationshipFilter");
+var refreshButton = getElement("refreshButton");
+var tableBody = getElement("guardiansTableBody");
+var modal = getGuardianModal();
+
+if (addButton && !addButton.dataset.guardianEventsAttached) {
+    addButton.addEventListener(
+        "click",
+        openAddGuardianModal
+    );
+
+    addButton.dataset.guardianEventsAttached = "true";
+}
+
+if (cancelButton && !cancelButton.dataset.guardianEventsAttached) {
+    cancelButton.addEventListener(
+        "click",
+        closeGuardianModal
+    );
+
+    cancelButton.dataset.guardianEventsAttached = "true";
+}
+
+if (closeButton && !closeButton.dataset.guardianEventsAttached) {
+    closeButton.addEventListener(
+        "click",
+        closeGuardianModal
+    );
+
+    closeButton.dataset.guardianEventsAttached = "true";
+}
+
+if (form && !form.dataset.guardianEventsAttached) {
+    form.addEventListener(
+        "submit",
+        handleSubmit
+    );
+
+    form.dataset.guardianEventsAttached = "true";
+}
+
+if (searchInput && !searchInput.dataset.guardianEventsAttached) {
+    searchInput.addEventListener(
+        "input",
+        renderGuardians
+    );
+
+    searchInput.dataset.guardianEventsAttached = "true";
+}
+
+if (
+    relationshipFilter &&
+    !relationshipFilter.dataset.guardianEventsAttached
+) {
+    relationshipFilter.addEventListener(
+        "change",
+        renderGuardians
+    );
+
+    relationshipFilter.dataset.guardianEventsAttached = "true";
+}
+
+if (refreshButton && !refreshButton.dataset.guardianEventsAttached) {
+    refreshButton.addEventListener(
+        "click",
+        loadGuardians
+    );
+
+    refreshButton.dataset.guardianEventsAttached = "true";
+}
+
+if (tableBody && !tableBody.dataset.guardianEventsAttached) {
+    tableBody.addEventListener(
+        "click",
+        handleTableClick
+    );
+
+    tableBody.dataset.guardianEventsAttached = "true";
+}
+
+if (modal && !modal.dataset.guardianEventsAttached) {
+    modal.addEventListener(
+        "click",
+        handleModalClick
+    );
+
+    modal.dataset.guardianEventsAttached = "true";
+}
+
+if (!document.body.dataset.guardianEscapeAttached) {
+    document.addEventListener(
+        "keydown",
+        handleEscape
+    );
+
+    document.body.dataset.guardianEscapeAttached = "true";
+}
+
+}
+
+/* ==========================================================================
+INITIALIZATION
+========================================================================== */
+
+async function initialize() {
+if (initialized) {
+return;
+}
+
+initialized = true;
+
+console.log("Initializing Guardian module...");
+
+ensureModalClosed();
+setupEvents();
+
+await loadGuardians();
+
+console.log("Guardian module initialized successfully.");
+
+}
+
+/* ==========================================================================
+PUBLIC API
+========================================================================== */
+
+window.GuardiansPage = {
+initialize: initialize,
+loadGuardians: loadGuardians,
+renderGuardians: renderGuardians,
+updateSummary: updateSummary,
+openGuardianModal: openGuardianModal,
+closeGuardianModal: closeGuardianModal,
+openAddGuardianModal: openAddGuardianModal,
+openEditGuardianModal: openEditGuardianModal,
+resetForm: resetForm
+};
+
+/* ==========================================================================
+START
+========================================================================== */
+
+if (document.readyState === "loading") {
+document.addEventListener(
+"DOMContentLoaded",
+initialize,
+{
+once: true
+}
+);
+} else {
+initialize();
+}
