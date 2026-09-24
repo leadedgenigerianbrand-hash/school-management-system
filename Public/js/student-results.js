@@ -1,2232 +1,3055 @@
 "use strict";
 
-const RESULTS_API_BASE = "/api/results";
-const STUDENTS_API_BASE = "/api/students";
-const ACADEMIC_SESSIONS_API = "/api/academic-sessions";
-const TERMS_API = "/api/terms";
+/* ==========================================================================
+STUDENT RESULTS PAGE
+==========================================================================
 
-let currentStudentId = null;
-let currentStudent = null;
-let currentResult = null;
-let currentResults = [];
-let currentAcademicSessionId = null;
-let currentTermId = null;
-let currentReportCardId = null;
+Purpose:
+- Search for a student by admission number.
+- Load the student's academic results.
+- Load academic sessions and terms.
+- Allow the user to select a session and term.
+- Display all result subjects for the selected student/session/term.
+- Open the existing report-card page when available.
+- Print the current result.
+- Allow the browser print dialog to save the result as PDF.
 
-function getToken() {
-return (
-localStorage.getItem("token") ||
-localStorage.getItem("authToken") ||
-sessionStorage.getItem("token") ||
-sessionStorage.getItem("authToken") ||
-""
-);
-}
+Authentication:
+- school_management_token
+- school_management_user
 
-function getStudentIdFromUrl() {
-const params = new URLSearchParams(window.location.search);
+Important:
+This page deliberately does NOT call window.apiRequest().
+The page has its own authenticated request function so that it cannot
+recursively call itself.
 
-```
-return (
-    params.get("studentId") ||
-    params.get("student_id") ||
-    params.get("id") ||
-    ""
-);
-```
+========================================================================== */
 
-}
+(function () {
+    "use strict";
 
-function getAdmissionNumberFromUrl() {
-const params = new URLSearchParams(window.location.search);
+    const RESULTS_API_BASE = "/api/results";
+    const STUDENTS_API_BASE = "/api/students";
+    const ACADEMIC_SESSIONS_API = "/api/academic-sessions";
+    const TERMS_API = "/api/terms";
 
-```
-return (
-    params.get("admissionNumber") ||
-    params.get("admission_number") ||
-    params.get("studentNumber") ||
-    params.get("student_number") ||
-    ""
-);
-```
+    const elements = {
+        admissionNumber:
+            document.getElementById("studentIdentifier"),
 
-}
+        findStudentButton:
+            document.getElementById("searchStudentButton"),
 
-function escapeHtml(value) {
-if (value === null || value === undefined) {
-return "";
-}
+        studentSearchMessage:
+            document.getElementById("studentSearchMessage"),
 
-```
-return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-```
+        studentSummary:
+            document.getElementById("studentSummary"),
 
-}
+        studentName:
+            document.getElementById("studentName"),
 
-function toNumber(value, fallback = 0) {
-const number = Number(value);
+        displayAdmissionNumber:
+            document.getElementById("studentNumber"),
 
-```
-return Number.isFinite(number) ? number : fallback;
-```
+        studentClass:
+            document.getElementById("studentClass"),
 
-}
+        studentArm:
+            document.getElementById("studentArm"),
 
-function formatNumber(value, decimals = 2) {
-const number = toNumber(value);
+        studentLevel:
+            document.getElementById("studentLevel"),
 
-```
-if (Number.isInteger(number)) {
-    return String(number);
-}
+        studentSubtitle:
+            document.getElementById("studentSubtitle"),
 
-return number.toFixed(decimals);
-```
+        sessionId:
+            document.getElementById("academicSessionId"),
 
-}
+        termId:
+            document.getElementById("termId"),
 
-function getResponseData(payload) {
-if (!payload) {
-return null;
-}
+        resultsTableBody:
+            document.getElementById("resultsTableBody"),
 
-```
-if (payload.data !== undefined) {
-    return payload.data;
-}
+        resultContent:
+            document.getElementById("resultContent"),
 
-if (payload.result !== undefined) {
-    return payload.result;
-}
+        subjectCount:
+            document.getElementById("subjectCount"),
 
-if (payload.results !== undefined) {
-    return payload.results;
-}
+        overallTotal:
+            document.getElementById("overallTotal"),
 
-return payload;
-```
+        overallPercentage:
+            document.getElementById("overallPercentage"),
 
-}
+        studentPosition:
+            document.getElementById("studentPosition"),
 
-function getArrayFromResponse(payload, possibleKeys = []) {
-const data = getResponseData(payload);
+        resultStatusContainer:
+            document.getElementById("resultStatusContainer"),
 
-```
-if (Array.isArray(data)) {
-    return data;
-}
+        tableResultStatus:
+            document.getElementById("tableResultStatus"),
 
-if (!data || typeof data !== "object") {
-    return [];
-}
+        summaryTotalScore:
+            document.getElementById("summaryTotalScore"),
 
-for (const key of possibleKeys) {
-    if (Array.isArray(data[key])) {
-        return data[key];
+        summaryPercentage:
+            document.getElementById("summaryPercentage"),
+
+        summaryPosition:
+            document.getElementById("summaryPosition"),
+
+        summaryStatus:
+            document.getElementById("summaryStatus"),
+
+        pageMessage:
+            document.getElementById("pageMessage"),
+
+        currentUser:
+            document.getElementById("currentUser"),
+
+        logoutButton:
+            document.getElementById("logoutButton")
+    };
+
+    const state = {
+        currentStudentId: "",
+        currentStudent: null,
+        currentEnrollment: null,
+
+        currentResults: [],
+        currentResult: null,
+
+        currentAcademicSessionId: "",
+        currentTermId: "",
+
+        currentReportCardId: "",
+
+        academicSessions: [],
+        terms: [],
+
+        loading: false,
+        initialized: false
+    };
+
+    /* ==========================================================================
+    AUTHENTICATION
+    ========================================================================== */
+
+    function getToken() {
+        return (
+            localStorage.getItem("school_management_token") ||
+            sessionStorage.getItem("school_management_token") ||
+            localStorage.getItem("token") ||
+            localStorage.getItem("authToken") ||
+            sessionStorage.getItem("token") ||
+            sessionStorage.getItem("authToken") ||
+            ""
+        );
     }
-}
 
-return [];
-```
+    function getStoredUser() {
+        const keys = [
+            "school_management_user",
+            "user"
+        ];
 
-}
+        for (const key of keys) {
+            const localValue =
+                localStorage.getItem(key);
 
-function showMessage(message, type = "danger") {
-const element =
-document.getElementById("pageMessage") ||
-document.getElementById("resultsMessageContainer");
+            const sessionValue =
+                sessionStorage.getItem(key);
 
-```
-if (!element) {
-    return;
-}
+            const value =
+                localValue ||
+                sessionValue;
 
-element.className = `alert alert-${type} mb-4`;
-element.textContent = message;
-element.style.display = "block";
-```
+            if (!value) {
+                continue;
+            }
 
-}
+            try {
+                return JSON.parse(value);
+            } catch (error) {
+                console.warn(
+                    "Unable to parse stored user:",
+                    error
+                );
+            }
+        }
 
-function hideMessage() {
-const element =
-document.getElementById("pageMessage") ||
-document.getElementById("resultsMessageContainer");
-
-```
-if (!element) {
-    return;
-}
-
-element.textContent = "";
-element.style.display = "none";
-```
-
-}
-
-function setLoading(isLoading) {
-const loading = document.getElementById("resultLoading");
-
-```
-if (loading) {
-    loading.style.display = isLoading ? "block" : "none";
-}
-
-const button = document.getElementById("searchStudentButton");
-
-if (button) {
-    button.disabled = isLoading;
-}
-```
-
-}
-
-function getHeaders(includeJson = true) {
-const headers = {};
-const token = getToken();
-
-```
-if (token) {
-    headers.Authorization = `Bearer ${token}`;
-}
-
-if (includeJson) {
-    headers["Content-Type"] = "application/json";
-}
-
-return headers;
-```
-
-}
-
-async function apiRequest(url, options = {}) {
-if (typeof window.apiRequest === "function") {
-return window.apiRequest(url, options);
-}
-
-```
-const response = await fetch(url, {
-    ...options,
-    headers: {
-        ...getHeaders(options.body !== undefined),
-        ...(options.headers || {})
+        return null;
     }
-});
 
-let payload = null;
-
-try {
-    payload = await response.json();
-} catch (error) {
-    payload = null;
-}
-
-if (!response.ok) {
-    const message =
-        payload?.message ||
-        payload?.error ||
-        `Request failed with status ${response.status}.`;
-
-    const requestError = new Error(message);
-    requestError.status = response.status;
-    requestError.payload = payload;
-
-    throw requestError;
-}
-
-return payload;
-```
-
-}
-
-function setElementText(id, value) {
-const element = document.getElementById(id);
-
-```
-if (!element) {
-    return;
-}
-
-element.textContent =
-    value === null ||
-    value === undefined ||
-    value === ""
-        ? "—"
-        : value;
-```
-
-}
-
-function setButtonDisabled(id, disabled) {
-const button = document.getElementById(id);
-
-```
-if (button) {
-    button.disabled = disabled;
-}
-```
-
-}
-
-function getStudentName(student) {
-if (!student) {
-return "Student";
-}
-
-```
-return (
-    student.full_name ||
-    student.fullName ||
-    student.name ||
-    [
-        student.first_name,
-        student.middle_name,
-        student.last_name
-    ]
-        .filter(Boolean)
-        .join(" ") ||
-    "Student"
-);
-```
-
-}
-
-function getStudentAdmissionNumber(student) {
-if (!student) {
-return "";
-}
-
-```
-return (
-    student.admission_number ||
-    student.admissionNumber ||
-    student.student_number ||
-    student.studentNumber ||
-    ""
-);
-```
-
-}
-
-function getStudentClass(student) {
-if (!student) {
-return "";
-}
-
-```
-return (
-    student.class_name ||
-    student.className ||
-    student.class ||
-    student.current_class ||
-    ""
-);
-```
-
-}
-
-function getStudentArm(student) {
-if (!student) {
-return "";
-}
-
-```
-return (
-    student.class_arm_name ||
-    student.classArmName ||
-    student.class_arm ||
-    student.classArm ||
-    student.arm_name ||
-    ""
-);
-```
-
-}
-
-function getStudentLevel(student) {
-if (!student) {
-return "";
-}
-
-```
-return (
-    student.academic_level_name ||
-    student.academicLevelName ||
-    student.level_name ||
-    student.levelName ||
-    student.academic_level ||
-    ""
-);
-```
-
-}
-
-function setStudentSubtitle() {
-const subtitle =
-document.getElementById("studentSubtitle");
-
-```
-if (!subtitle) {
-    return;
-}
-
-if (!currentStudent) {
-    subtitle.textContent =
-        "Search or load a student result.";
-    return;
-}
-
-const name = getStudentName(currentStudent);
-const admissionNumber =
-    getStudentAdmissionNumber(currentStudent);
-
-subtitle.textContent = admissionNumber
-    ? `${name} • ${admissionNumber}`
-    : name;
-```
-
-}
-
-function renderStudentSummary() {
-setElementText(
-"studentName",
-getStudentName(currentStudent)
-);
-
-```
-setElementText(
-    "studentNumber",
-    getStudentAdmissionNumber(currentStudent)
-);
-
-setElementText(
-    "studentClass",
-    getStudentClass(currentStudent)
-);
-
-setElementText(
-    "studentArm",
-    getStudentArm(currentStudent)
-);
-
-setElementText(
-    "studentLevel",
-    getStudentLevel(currentStudent)
-);
-
-setStudentSubtitle();
-```
-
-}
-
-function normalizeResultRow(row) {
-const subjectName =
-row.subject_name ||
-row.subjectName ||
-row.subject ||
-row.name ||
-"Unknown Subject";
-
-```
-const ca = toNumber(
-    row.ca_score ??
-    row.caScore ??
-    row.ca ??
-    row.continuous_assessment ??
-    row.continuousAssessment ??
-    0
-);
-
-const exam = toNumber(
-    row.exam_score ??
-    row.examScore ??
-    row.exam ??
-    row.examination ??
-    0
-);
-
-const suppliedTotal =
-    row.total_score ??
-    row.totalScore ??
-    row.total;
-
-const total =
-    suppliedTotal !== undefined &&
-    suppliedTotal !== null &&
-    suppliedTotal !== ""
-        ? toNumber(suppliedTotal)
-        : ca + exam;
-
-const grade =
-    row.grade ||
-    row.grade_name ||
-    row.gradeName ||
-    "";
-
-const remark =
-    row.remark ||
-    row.remarks ||
-    row.teacher_remark ||
-    row.teacherRemark ||
-    "";
-
-return {
-    id:
-        row.id ||
-        row.result_id ||
-        row.resultId ||
-        null,
-
-    subjectId:
-        row.subject_id ||
-        row.subjectId ||
-        null,
-
-    subjectName,
-    ca,
-    exam,
-    total,
-    grade,
-    remark
-};
-```
-
-}
-
-function extractResultRows(payload) {
-const data = getResponseData(payload);
-
-```
-let rows = [];
-
-if (Array.isArray(data)) {
-    rows = data;
-} else if (data && typeof data === "object") {
-    rows =
-        data.results ||
-        data.subjects ||
-        data.resultItems ||
-        data.items ||
-        data.records ||
-        [];
-}
-
-if (!Array.isArray(rows)) {
-    return [];
-}
-
-return rows.map(normalizeResultRow);
-```
-
-}
-
-function getOverallTotal(resultRows) {
-if (!resultRows.length) {
-return 0;
-}
-
-```
-return resultRows.reduce(
-    (sum, row) => sum + toNumber(row.total),
-    0
-);
-```
-
-}
-
-function getOverallPercentage(resultRows, result) {
-const suppliedPercentage =
-result?.percentage ??
-result?.overall_percentage ??
-result?.overallPercentage;
-
-```
-if (
-    suppliedPercentage !== undefined &&
-    suppliedPercentage !== null &&
-    suppliedPercentage !== ""
-) {
-    return toNumber(suppliedPercentage);
-}
-
-if (!resultRows.length) {
-    return 0;
-}
-
-const possibleTotal =
-    resultRows.length * 100;
-
-if (!possibleTotal) {
-    return 0;
-}
-
-return (
-    getOverallTotal(resultRows) /
-    possibleTotal *
-    100
-);
-```
-
-}
-
-function getPosition(result) {
-return (
-result?.position ||
-result?.student_position ||
-result?.studentPosition ||
-result?.rank ||
-result?.ranking ||
-"—"
-);
-}
-
-function getResultStatus(result) {
-if (!result) {
-return "Draft";
-}
-
-```
-const status =
-    result.status ||
-    result.result_status ||
-    result.resultStatus ||
-    "";
-
-if (
-    result.finalized === true ||
-    result.is_finalized === true ||
-    result.isFinalized === true ||
-    String(status).toLowerCase() === "finalized"
-) {
-    return "Finalized";
-}
-
-if (
-    String(status).toLowerCase() === "published" ||
-    result.is_published === true ||
-    result.isPublished === true
-) {
-    return "Published";
-}
-
-return "Draft";
-```
-
-}
-
-function renderGrade(grade, total) {
-const safeGrade = grade || "—";
-
-```
-const passing =
-    String(safeGrade).toUpperCase() !== "F" &&
-    toNumber(total) >= 40;
-
-const className = passing
-    ? "grade-pass"
-    : "grade-fail";
-
-return `
-    <span class="grade-badge ${className}">
-        ${escapeHtml(safeGrade)}
-    </span>
-`;
-```
-
-}
-
-function renderResultsTable() {
-const tableBody =
-document.getElementById("resultsTableBody");
-
-```
-if (!tableBody) {
-    return;
-}
-
-if (!currentResults.length) {
-    tableBody.innerHTML = `
-        <tr>
-            <td colspan="7" class="text-center py-5 text-muted">
-                <i class="bi bi-journal-x fs-3 d-block mb-2"></i>
-                No result subjects were found for the selected student, session and term.
-            </td>
-        </tr>
-    `;
-    return;
-}
-
-tableBody.innerHTML = currentResults
-    .map((row, index) => {
-        return `
-            <tr>
-                <td class="ps-4">
-                    ${index + 1}
-                </td>
-
-                <td>
-                    <strong>
-                        ${escapeHtml(row.subjectName)}
-                    </strong>
-                </td>
-
-                <td>
-                    ${formatNumber(row.ca)}
-                </td>
-
-                <td>
-                    ${formatNumber(row.exam)}
-                </td>
-
-                <td>
-                    <strong>
-                        ${formatNumber(row.total)}
-                    </strong>
-                </td>
-
-                <td>
-                    ${renderGrade(
-                        row.grade,
-                        row.total
-                    )}
-                </td>
-
-                <td>
-                    ${escapeHtml(
-                        row.remark || "—"
-                    )}
-                </td>
-            </tr>
-        `;
-    })
-    .join("");
-```
-
-}
-
-function renderStatistics() {
-const subjectCount =
-currentResults.length;
-
-```
-const overallTotal =
-    getOverallTotal(currentResults);
-
-const percentage =
-    getOverallPercentage(
-        currentResults,
-        currentResult
-    );
-
-const highest =
-    currentResults.length
-        ? Math.max(
-            ...currentResults.map(row =>
-                toNumber(row.total)
+    /* ==========================================================================
+    API REQUEST
+    ========================================================================== */
+
+    async function apiRequest(url, options = {}) {
+        const token = getToken();
+
+        const headers = {
+            ...(options.headers || {})
+        };
+
+        if (token) {
+            headers.Authorization =
+                `Bearer ${token}`;
+        }
+
+        if (
+            options.body !== undefined &&
+            !headers["Content-Type"] &&
+            !headers["content-type"]
+        ) {
+            headers["Content-Type"] =
+                "application/json";
+        }
+
+        const response =
+            await fetch(url, {
+                ...options,
+                headers
+            });
+
+        let payload = null;
+
+        try {
+            payload =
+                await response.json();
+        } catch (error) {
+            payload = null;
+        }
+
+        if (!response.ok) {
+            const message =
+                payload?.message ||
+                payload?.error ||
+                (
+                    response.status === 401
+                        ? "Your session has expired. Please log in again."
+                        : `Request failed with status ${response.status}.`
+                );
+
+            const requestError =
+                new Error(message);
+
+            requestError.status =
+                response.status;
+
+            requestError.payload =
+                payload;
+
+            throw requestError;
+        }
+
+        return payload;
+    }
+
+    /* ==========================================================================
+    RESPONSE HELPERS
+    ========================================================================== */
+
+    function getResponseData(response) {
+        if (!response) {
+            return null;
+        }
+
+        if (
+            Object.prototype.hasOwnProperty.call(
+                response,
+                "data"
             )
-        )
-        : 0;
+        ) {
+            return response.data;
+        }
 
-const lowest =
-    currentResults.length
-        ? Math.min(
-            ...currentResults.map(row =>
-                toNumber(row.total)
-            )
-        )
-        : 0;
-
-const position =
-    getPosition(currentResult);
-
-setElementText(
-    "subjectCount",
-    subjectCount
-);
-
-setElementText(
-    "overallTotal",
-    formatNumber(overallTotal)
-);
-
-setElementText(
-    "overallPercentage",
-    `${formatNumber(percentage)}%`
-);
-
-setElementText(
-    "studentPosition",
-    position
-);
-
-setElementText(
-    "summaryTotalScore",
-    formatNumber(overallTotal)
-);
-
-setElementText(
-    "summaryPercentage",
-    `${formatNumber(percentage)}%`
-);
-
-setElementText(
-    "summaryPosition",
-    position
-);
-
-setElementText(
-    "highestScore",
-    formatNumber(highest)
-);
-
-setElementText(
-    "lowestScore",
-    formatNumber(lowest)
-);
-
-setElementText(
-    "summaryStatus",
-    getResultStatus(currentResult)
-);
-```
-
-}
-
-function renderResultStatus() {
-const status =
-getResultStatus(currentResult);
-
-```
-const finalized =
-    status === "Finalized";
-
-const published =
-    status === "Published";
-
-const statusElements = [
-    document.getElementById(
-        "resultStatusContainer"
-    ),
-    document.getElementById(
-        "tableResultStatus"
-    )
-];
-
-statusElements.forEach(element => {
-    if (!element) {
-        return;
+        return response;
     }
 
-    let label = "Draft";
-    let icon = "bi-pencil-square";
-
-    if (finalized) {
-        label = "Finalized";
-        icon = "bi-check-circle";
-    } else if (published) {
-        label = "Published";
-        icon = "bi-megaphone";
-    }
-
-    element.innerHTML = `
-        <span class="result-status">
-            <i class="bi ${icon} me-1"></i>
-            ${label}
-        </span>
-    `;
-});
-
-setElementText(
-    "summaryStatus",
-    finalized
-        ? "Finalized"
-        : published
-            ? "Published"
-            : "Draft"
-);
-```
-
-}
-
-function resetResultDisplay() {
-currentResult = null;
-currentResults = [];
-currentReportCardId = null;
-
-```
-setElementText("subjectCount", "0");
-setElementText("overallTotal", "0");
-setElementText("overallPercentage", "0%");
-setElementText("studentPosition", "—");
-setElementText("highestScore", "0");
-setElementText("lowestScore", "0");
-setElementText("summaryTotalScore", "0");
-setElementText("summaryPercentage", "0%");
-setElementText("summaryPosition", "—");
-setElementText("summaryStatus", "Draft");
-
-setButtonDisabled(
-    "viewReportCardButton",
-    true
-);
-
-setButtonDisabled(
-    "viewReportCardActionButton",
-    true
-);
-
-setButtonDisabled(
-    "openReportCardButton",
-    true
-);
-
-renderResultsTable();
-```
-
-}
-
-async function findStudent(identifier) {
-const value =
-String(identifier || "").trim();
-
-```
-if (!value) {
-    throw new Error(
-        "Enter the student's admission number."
-    );
-}
-
-const encoded =
-    encodeURIComponent(value);
-
-const urls = [
-    `${STUDENTS_API_BASE}/admission/${encoded}`,
-    `${STUDENTS_API_BASE}?admissionNumber=${encoded}`,
-    `${STUDENTS_API_BASE}?admission_number=${encoded}`,
-    `${STUDENTS_API_BASE}?studentNumber=${encoded}`,
-    `${STUDENTS_API_BASE}?student_number=${encoded}`,
-    `${STUDENTS_API_BASE}?search=${encoded}`
-];
-
-let lastError = null;
-
-for (const url of urls) {
-    try {
-        const payload =
-            await apiRequest(url);
-
+    function getResponseArray(
+        response,
+        possibleKeys = []
+    ) {
         const data =
-            getResponseData(payload);
+            getResponseData(response);
 
         if (Array.isArray(data)) {
-            const found =
-                data.find(student => {
-                    return (
-                        String(
-                            getStudentAdmissionNumber(
-                                student
-                            )
-                        ).toLowerCase() ===
-                        value.toLowerCase()
-                    );
-                });
-
-            if (found) {
-                return found;
-            }
+            return data;
         }
 
         if (
             data &&
             typeof data === "object"
         ) {
-            if (
-                data.id ||
-                data.student_id ||
-                data.studentId
+            for (
+                const key of possibleKeys
             ) {
-                return data;
+                if (
+                    Array.isArray(
+                        data[key]
+                    )
+                ) {
+                    return data[key];
+                }
             }
 
             if (
                 Array.isArray(
-                    data.students
+                    data.rows
                 )
             ) {
-                const found =
-                    data.students.find(
-                        student => {
-                            return (
-                                String(
-                                    getStudentAdmissionNumber(
-                                        student
-                                    )
-                                ).toLowerCase() ===
-                                value.toLowerCase()
-                            );
+                return data.rows;
+            }
+
+            if (
+                Array.isArray(
+                    data.results
+                )
+            ) {
+                return data.results;
+            }
+        }
+
+        if (
+            Array.isArray(response)
+        ) {
+            return response;
+        }
+
+        if (
+            response &&
+            Array.isArray(
+                response.rows
+            )
+        ) {
+            return response.rows;
+        }
+
+        return [];
+    }
+
+    /* ==========================================================================
+    GENERAL HELPERS
+    ========================================================================== */
+
+    function normalizeId(value) {
+        if (
+            value === undefined ||
+            value === null
+        ) {
+            return "";
+        }
+
+        return String(value).trim();
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function formatNumber(value, decimals = 2) {
+        const number =
+            Number(value);
+
+        if (
+            !Number.isFinite(number)
+        ) {
+            return (
+                0
+            ).toFixed(decimals);
+        }
+
+        return number.toFixed(
+            decimals
+        );
+    }
+
+    function getStudentId(student) {
+        return normalizeId(
+            student?.id ||
+            student?.student_id ||
+            student?.studentId
+        );
+    }
+
+    function getStudentAdmissionNumber(
+        student
+    ) {
+        return (
+            student?.admission_number ||
+            student?.admissionNumber ||
+            student?.admission_no ||
+            student?.admissionNo ||
+            student?.student_number ||
+            student?.studentNumber ||
+            ""
+        );
+    }
+
+    function getStudentName(student) {
+        if (!student) {
+            return "";
+        }
+
+        if (student.name) {
+            return String(
+                student.name
+            ).trim();
+        }
+
+        return [
+            student.first_name ||
+                student.firstName,
+            student.middle_name ||
+                student.middleName,
+            student.last_name ||
+                student.lastName
+        ]
+            .filter(Boolean)
+            .join(" ")
+            .trim();
+    }
+
+    function getResultSubjectName(
+        result
+    ) {
+        return (
+            result?.subject_name ||
+            result?.subjectName ||
+            result?.subject?.name ||
+            result?.name ||
+            "Subject"
+        );
+    }
+
+    function getResultCA(result) {
+        return Number(
+            result?.ca_score ??
+            result?.caScore ??
+            result?.ca ??
+            result?.continuous_assessment ??
+            0
+        );
+    }
+
+    function getResultExam(result) {
+        return Number(
+            result?.exam_score ??
+            result?.examScore ??
+            result?.exam ??
+            0
+        );
+    }
+
+    function getResultTotal(result) {
+        const storedTotal =
+            result?.total_score ??
+            result?.totalScore ??
+            result?.total;
+
+        if (
+            storedTotal !== undefined &&
+            storedTotal !== null &&
+            storedTotal !== ""
+        ) {
+            const number =
+                Number(storedTotal);
+
+            if (
+                Number.isFinite(number)
+            ) {
+                return number;
+            }
+        }
+
+        return (
+            getResultCA(result) +
+            getResultExam(result)
+        );
+    }
+
+    function getResultGrade(
+        result,
+        total
+    ) {
+        if (
+            result?.grade !== undefined &&
+            result?.grade !== null &&
+            result?.grade !== ""
+        ) {
+            return String(
+                result.grade
+            );
+        }
+
+        return calculateGrade(total);
+    }
+
+    function getResultRemark(
+        result,
+        total
+    ) {
+        return (
+            result?.remarks ||
+            result?.remark ||
+            result?.remark_text ||
+            calculateRemark(total)
+        );
+    }
+
+    function calculateGrade(score) {
+        if (score >= 75) {
+            return "A";
+        }
+
+        if (score >= 65) {
+            return "B";
+        }
+
+        if (score >= 55) {
+            return "C";
+        }
+
+        if (score >= 45) {
+            return "D";
+        }
+
+        if (score >= 40) {
+            return "E";
+        }
+
+        return "F";
+    }
+
+    function calculateRemark(score) {
+        if (score >= 75) {
+            return "Excellent";
+        }
+
+        if (score >= 65) {
+            return "Very Good";
+        }
+
+        if (score >= 55) {
+            return "Good";
+        }
+
+        if (score >= 45) {
+            return "Fair";
+        }
+
+        if (score >= 40) {
+            return "Pass";
+        }
+
+        return "Fail";
+    }
+
+    function calculateStatus(
+        average
+    ) {
+        return average >= 40
+            ? "Passed"
+            : "Failed";
+    }
+
+    /* ==========================================================================
+    MESSAGES
+    ========================================================================== */
+
+    function showMessage(
+        message,
+        type = "danger"
+    ) {
+        if (!elements.pageMessage) {
+            return;
+        }
+
+        elements.pageMessage.textContent =
+            message || "";
+
+        elements.pageMessage.className =
+            "alert mb-4";
+
+        if (type === "success") {
+            elements.pageMessage.classList.add(
+                "alert-success"
+            );
+        } else if (
+            type === "warning"
+        ) {
+            elements.pageMessage.classList.add(
+                "alert-warning"
+            );
+        } else if (
+            type === "info"
+        ) {
+            elements.pageMessage.classList.add(
+                "alert-info"
+            );
+        } else {
+            elements.pageMessage.classList.add(
+                "alert-danger"
+            );
+        }
+
+        elements.pageMessage.style.display =
+            message
+                ? "block"
+                : "none";
+    }
+
+    function showSearchMessage(
+        message,
+        type = "info"
+    ) {
+        if (!elements.studentSearchMessage) {
+            return;
+        }
+
+        elements.studentSearchMessage.textContent =
+            message || "";
+
+        elements.studentSearchMessage.className =
+            "small mt-2";
+
+        if (type === "success") {
+            elements.studentSearchMessage.classList.add(
+                "text-success"
+            );
+        } else if (
+            type === "danger" ||
+            type === "error"
+        ) {
+            elements.studentSearchMessage.classList.add(
+                "text-danger"
+            );
+        } else if (
+            type === "warning"
+        ) {
+            elements.studentSearchMessage.classList.add(
+                "text-warning"
+            );
+        } else {
+            elements.studentSearchMessage.classList.add(
+                "text-muted"
+            );
+        }
+    }
+
+    /* ==========================================================================
+    STUDENT SEARCH
+    ========================================================================== */
+
+    async function findStudent(
+        identifier
+    ) {
+        const value =
+            String(
+                identifier || ""
+            ).trim();
+
+        if (!value) {
+            throw new Error(
+                "Enter a student admission number."
+            );
+        }
+
+        const encoded =
+            encodeURIComponent(
+                value
+            );
+
+        let response = null;
+
+        try {
+            response =
+                await apiRequest(
+                    `${STUDENTS_API_BASE}/admission/${encoded}`,
+                    {
+                        method: "GET"
+                    }
+                );
+
+            const student =
+                getResponseData(
+                    response
+                );
+
+            if (
+                student &&
+                typeof student === "object"
+            ) {
+                return (
+                    student.student ||
+                    student
+                );
+            }
+        } catch (error) {
+            if (
+                error.status !== 404
+            ) {
+                throw error;
+            }
+        }
+
+        const searchEndpoints = [
+            `${STUDENTS_API_BASE}/search?q=${encoded}`,
+            `${STUDENTS_API_BASE}?search=${encoded}`,
+            `${STUDENTS_API_BASE}?admissionNumber=${encoded}`
+        ];
+
+        for (
+            const endpoint of
+                searchEndpoints
+        ) {
+            try {
+                const response =
+                    await apiRequest(
+                        endpoint,
+                        {
+                            method: "GET"
                         }
                     );
 
-                if (found) {
-                    return found;
+                const students =
+                    getResponseArray(
+                        response,
+                        [
+                            "students"
+                        ]
+                    );
+
+                const matchingStudent =
+                    students.find(
+                        student =>
+                            String(
+                                getStudentAdmissionNumber(
+                                    student
+                                )
+                            ).toLowerCase() ===
+                            value.toLowerCase()
+                    );
+
+                if (
+                    matchingStudent
+                ) {
+                    return matchingStudent;
                 }
+            } catch (error) {
+                if (
+                    error.status === 404
+                ) {
+                    continue;
+                }
+
+                throw error;
             }
         }
-    } catch (error) {
-        lastError = error;
+
+        throw new Error(
+            `No student was found with admission number "${value}".`
+        );
+    }
+
+    async function searchStudentAndLoadResult() {
+        const identifier =
+            String(
+                elements.admissionNumber?.value ||
+                ""
+            ).trim();
+
+        if (!identifier) {
+            showSearchMessage(
+                "Enter the student's admission number.",
+                "warning"
+            );
+
+            elements.admissionNumber?.focus();
+
+            return;
+        }
+
+        state.currentStudentId = "";
+        state.currentStudent = null;
+        state.currentResults = [];
+        state.currentResult = null;
+        state.currentReportCardId = "";
+
+        clearResultDisplay();
+
+        showMessage("");
 
         if (
-            error.status !== 404 &&
-            error.status !== 400
+            elements.findStudentButton
         ) {
-            break;
+            elements.findStudentButton.disabled =
+                true;
+
+            elements.findStudentButton.innerHTML =
+                '<span class="spinner-border spinner-border-sm me-1"></span>Searching...';
         }
-    }
-}
 
-throw new Error(
-    lastError?.message ||
-    "Student could not be found using that admission number."
-);
-```
-
-}
-
-async function loadStudentById(studentId) {
-const payload =
-await apiRequest(
-`${STUDENTS_API_BASE}/${encodeURIComponent(studentId)}`
-);
-
-```
-const data =
-    getResponseData(payload);
-
-if (
-    !data ||
-    typeof data !== "object"
-) {
-    throw new Error(
-        "Student information could not be loaded."
-    );
-}
-
-return data;
-```
-
-}
-
-async function loadAcademicSessions() {
-const select =
-document.getElementById(
-"academicSessionId"
-);
-
-```
-if (!select) {
-    return;
-}
-
-try {
-    const payload =
-        await apiRequest(
-            ACADEMIC_SESSIONS_API
+        showSearchMessage(
+            "Searching for student...",
+            "info"
         );
 
-    const sessions =
-        getArrayFromResponse(
-            payload,
-            [
-                "sessions",
-                "academicSessions",
-                "items",
-                "records"
-            ]
-        );
+        try {
+            const student =
+                await findStudent(
+                    identifier
+                );
 
-    select.innerHTML = `
-        <option value="">
-            Select academic session
-        </option>
-    `;
+            const studentId =
+                getStudentId(
+                    student
+                );
 
-    sessions.forEach(session => {
-        const id =
-            session.id ||
-            session.academic_session_id ||
-            session.academicSessionId;
+            if (!studentId) {
+                throw new Error(
+                    "The student record was found but does not contain a valid student ID."
+                );
+            }
 
-        const name =
-            session.name ||
-            session.session_name ||
-            session.sessionName ||
-            session.title ||
-            (
-                session.start_year &&
-                session.end_year
-                    ? `${session.start_year}/${session.end_year}`
-                    : ""
+            state.currentStudent =
+                student;
+
+            state.currentStudentId =
+                studentId;
+
+            await loadStudentEnrollment();
+
+            renderStudentSummary(
+                student
             );
 
-        if (!id) {
-            return;
+            showSearchMessage(
+                `Student found: ${getStudentName(student) || identifier}.`,
+                "success"
+            );
+
+            await loadStudentResult();
+
+        } catch (error) {
+            console.error(
+                "Student search error:",
+                error
+            );
+
+            clearStudentSummary();
+            clearResultDisplay();
+
+            showSearchMessage(
+                error.message ||
+                    "Unable to find student.",
+                "danger"
+            );
+
+            showMessage(
+                error.message ||
+                    "Unable to find student.",
+                "danger"
+            );
+        } finally {
+            if (
+                elements.findStudentButton
+            ) {
+                elements.findStudentButton.disabled =
+                    false;
+
+                elements.findStudentButton.innerHTML =
+                    '<i class="bi bi-search me-1"></i> Find Student';
+            }
+        }
+    }
+
+    /* ==========================================================================
+    STUDENT DISPLAY
+    ========================================================================== */
+
+    function renderStudentSummary(
+        student,
+        enrollment = state.currentEnrollment
+    ) {
+        const name =
+            getStudentName(
+                student
+            );
+
+        const admissionNumber =
+            getStudentAdmissionNumber(
+                student
+            );
+
+        const className =
+            enrollment?.class_name ||
+            enrollment?.className ||
+            enrollment?.class ||
+            enrollment?.class_name_display ||
+            student?.class_name ||
+            student?.className ||
+            student?.class ||
+            "";
+
+        const armName =
+            enrollment?.arm_name ||
+            enrollment?.armName ||
+            enrollment?.class_arm_name ||
+            enrollment?.classArmName ||
+            enrollment?.arm ||
+            student?.arm_name ||
+            student?.armName ||
+            student?.arm ||
+            "";
+
+        const academicLevel =
+            enrollment?.academic_level_name ||
+            enrollment?.academicLevelName ||
+            enrollment?.academic_level ||
+            enrollment?.academicLevel ||
+            enrollment?.level_name ||
+            enrollment?.level ||
+            student?.academic_level_name ||
+            student?.academicLevelName ||
+            student?.academic_level ||
+            student?.academicLevel ||
+            student?.level_name ||
+            student?.level ||
+            "";
+
+        if (
+            elements.studentName
+        ) {
+            elements.studentName.textContent =
+                name ||
+                "Student";
         }
 
-        const option =
+        if (
+            elements.displayAdmissionNumber
+        ) {
+            elements.displayAdmissionNumber.textContent =
+                admissionNumber ||
+                "—";
+        }
+
+        if (
+            elements.studentClass
+        ) {
+            elements.studentClass.textContent =
+                className ||
+                "Not available";
+        }
+
+        if (
+            elements.studentArm
+        ) {
+            elements.studentArm.textContent =
+                armName ||
+                "—";
+        }
+
+        if (
+            elements.studentLevel
+        ) {
+            elements.studentLevel.textContent =
+                academicLevel ||
+                "—";
+        }
+
+        if (
+            elements.studentSubtitle
+        ) {
+            elements.studentSubtitle.textContent =
+                name
+                    ? `Academic results for ${name}`
+                    : "Student academic results";
+        }
+
+        if (
+            elements.admissionNumber &&
+            admissionNumber
+        ) {
+            elements.admissionNumber.value =
+                admissionNumber;
+        }
+
+        if (
+            elements.studentSummary
+        ) {
+            elements.studentSummary.hidden =
+                false;
+
+            elements.studentSummary.style.display =
+                "";
+        }
+    }
+
+    function clearStudentSummary() {
+        if (
+            elements.studentSummary
+        ) {
+            elements.studentSummary.hidden =
+                true;
+        }
+
+        if (
+            elements.studentName
+        ) {
+            elements.studentName.textContent =
+                "";
+        }
+
+        if (
+            elements.displayAdmissionNumber
+        ) {
+            elements.displayAdmissionNumber.textContent =
+                "";
+        }
+
+        if (
+            elements.studentClass
+        ) {
+            elements.studentClass.textContent =
+                "";
+        }
+    }
+
+    /* ==========================================================================
+    ACADEMIC SESSIONS
+    ========================================================================== */
+
+    async function loadAcademicSessions() {
+        const response =
+            await apiRequest(
+                ACADEMIC_SESSIONS_API,
+                {
+                    method: "GET"
+                }
+            );
+
+        const sessions =
+            getResponseArray(
+                response,
+                [
+                    "sessions",
+                    "academicSessions"
+                ]
+            );
+
+        state.academicSessions =
+            sessions;
+
+        if (
+            !elements.sessionId
+        ) {
+            return sessions;
+        }
+
+        const currentValue =
+            elements.sessionId.value;
+
+        elements.sessionId.innerHTML =
+            "";
+
+        const placeholder =
             document.createElement(
                 "option"
             );
 
-        option.value = id;
-        option.textContent =
-            name || "Academic Session";
+        placeholder.value =
+            "";
 
-        select.appendChild(option);
-    });
+        placeholder.textContent =
+            "Select Academic Session";
 
-    const urlParams =
-        new URLSearchParams(
-            window.location.search
+        elements.sessionId.appendChild(
+            placeholder
         );
 
-    const requestedSession =
-        urlParams.get(
-            "academicSessionId"
-        ) ||
-        urlParams.get(
-            "academic_session_id"
-        ) ||
-        urlParams.get("sessionId") ||
-        "";
+        sessions.forEach(
+            session => {
+                const id =
+                    normalizeId(
+                        session?.id ||
+                        session?.session_id ||
+                        session?.academic_session_id
+                    );
 
-    if (requestedSession) {
-        select.value =
-            requestedSession;
+                if (!id) {
+                    return;
+                }
 
-        currentAcademicSessionId =
-            requestedSession;
-    }
-} catch (error) {
-    console.warn(
-        "Academic sessions could not be loaded:",
-        error.message
-    );
-}
-```
+                const option =
+                    document.createElement(
+                        "option"
+                    );
 
-}
+                option.value =
+                    id;
 
-async function loadTerms() {
-const select =
-document.getElementById("termId");
+                option.textContent =
+                    session?.name ||
+                    session?.session_name ||
+                    session?.academic_session_name ||
+                    session?.title ||
+                    id;
 
-```
-if (!select) {
-    return;
-}
-
-try {
-    const payload =
-        await apiRequest(TERMS_API);
-
-    const terms =
-        getArrayFromResponse(
-            payload,
-            [
-                "terms",
-                "items",
-                "records"
-            ]
+                elements.sessionId.appendChild(
+                    option
+                );
+            }
         );
 
-    select.innerHTML = `
-        <option value="">
-            Select term
-        </option>
-    `;
+        const urlParams =
+            new URLSearchParams(
+                window.location.search
+            );
 
-    terms.forEach(term => {
-        const id =
-            term.id ||
-            term.term_id ||
-            term.termId;
+        const requestedSession =
+            normalizeId(
+                urlParams.get(
+                    "academicSessionId"
+                ) ||
+                urlParams.get(
+                    "sessionId"
+                )
+            );
 
-        const name =
-            term.name ||
-            term.term_name ||
-            term.termName ||
-            term.title;
+        const valueToUse =
+            requestedSession ||
+            currentValue;
 
-        if (!id) {
-            return;
+        if (
+            valueToUse &&
+            Array.from(
+                elements.sessionId.options
+            ).some(
+                option =>
+                    option.value ===
+                    valueToUse
+            )
+        ) {
+            elements.sessionId.value =
+                valueToUse;
         }
 
-        const option =
+        return sessions;
+    }
+
+    /* ==========================================================================
+    TERMS
+    ========================================================================== */
+
+    async function loadTerms() {
+        const response =
+            await apiRequest(
+                TERMS_API,
+                {
+                    method: "GET"
+                }
+            );
+
+        const terms =
+            getResponseArray(
+                response,
+                [
+                    "terms"
+                ]
+            );
+
+        state.terms =
+            terms;
+
+        if (
+            !elements.termId
+        ) {
+            return terms;
+        }
+
+        const currentValue =
+            elements.termId.value;
+
+        elements.termId.innerHTML =
+            "";
+
+        const placeholder =
             document.createElement(
                 "option"
             );
 
-        option.value = id;
-        option.textContent =
-            name || `Term ${id}`;
+        placeholder.value =
+            "";
 
-        select.appendChild(option);
-    });
+        placeholder.textContent =
+            "Select Term";
 
-    const urlParams =
-        new URLSearchParams(
-            window.location.search
+        elements.termId.appendChild(
+            placeholder
         );
 
-    const requestedTerm =
-        urlParams.get("termId") ||
-        urlParams.get("term_id") ||
-        "";
+        terms.forEach(
+            term => {
+                const id =
+                    normalizeId(
+                        term?.id ||
+                        term?.term_id
+                    );
 
-    if (requestedTerm) {
-        select.value =
-            requestedTerm;
+                if (!id) {
+                    return;
+                }
 
-        currentTermId =
-            requestedTerm;
-    }
-} catch (error) {
-    console.warn(
-        "Terms could not be loaded:",
-        error.message
-    );
-}
-```
+                const option =
+                    document.createElement(
+                        "option"
+                    );
 
-}
+                option.value =
+                    id;
 
-async function loadStudentResult() {
-if (!currentStudentId) {
-resetResultDisplay();
+                option.textContent =
+                    term?.name ||
+                    term?.term_name ||
+                    term?.title ||
+                    id;
 
-```
-    showMessage(
-        "Select a student before loading a result.",
-        "warning"
-    );
-
-    return;
-}
-
-setLoading(true);
-hideMessage();
-
-try {
-    const query =
-        new URLSearchParams();
-
-    if (currentAcademicSessionId) {
-        query.set(
-            "sessionId",
-            currentAcademicSessionId
+                elements.termId.appendChild(
+                    option
+                );
+            }
         );
 
-        query.set(
-            "academicSessionId",
-            currentAcademicSessionId
-        );
-    }
+        const urlParams =
+            new URLSearchParams(
+                window.location.search
+            );
 
-    if (currentTermId) {
-        query.set(
-            "termId",
-            currentTermId
-        );
-    }
+        const requestedTerm =
+            normalizeId(
+                urlParams.get(
+                    "termId"
+                )
+            );
 
-    const queryString =
-        query.toString();
+        const valueToUse =
+            requestedTerm ||
+            currentValue;
 
-    const url =
-        `${RESULTS_API_BASE}/student/${encodeURIComponent(currentStudentId)}` +
-        (
-            queryString
-                ? `?${queryString}`
-                : ""
-        );
+        if (
+            valueToUse &&
+            Array.from(
+                elements.termId.options
+            ).some(
+                option =>
+                    option.value ===
+                    valueToUse
+            )
+        ) {
+            elements.termId.value =
+                valueToUse;
+        }
 
-    const payload =
-        await apiRequest(url);
-
-    const data =
-        getResponseData(payload);
-
-    if (Array.isArray(data)) {
-        currentResult = {};
-    } else {
-        currentResult = data || {};
+        return terms;
     }
 
-    currentResults =
-        extractResultRows(payload);
+    /* ==========================================================================
+    LOAD STUDENT BY ID
+    ========================================================================== */
 
-    currentReportCardId =
-        currentResult.report_card_id ||
-        currentResult.reportCardId ||
-        currentResult.report_card?.id ||
-        currentResult.reportCard?.id ||
-        null;
+    async function loadStudentById(
+        studentId
+    ) {
+        const id =
+            normalizeId(
+                studentId
+            );
 
-    renderResultsTable();
-    renderStatistics();
-    renderResultStatus();
+        if (!id) {
+            throw new Error(
+                "Student ID is required."
+            );
+        }
 
-    const reportAvailable =
-        Boolean(currentReportCardId);
+        const response =
+            await apiRequest(
+                `${STUDENTS_API_BASE}/${encodeURIComponent(id)}`,
+                {
+                    method: "GET"
+                }
+            );
 
-    setButtonDisabled(
-        "viewReportCardButton",
-        !reportAvailable
-    );
+        const data =
+            getResponseData(
+                response
+            );
 
-    setButtonDisabled(
-        "viewReportCardActionButton",
-        !reportAvailable
-    );
+        const student =
+            data?.student ||
+            data;
 
-    setButtonDisabled(
-        "openReportCardButton",
-        !reportAvailable
-    );
+        if (
+            !student ||
+            typeof student !==
+                "object"
+        ) {
+            throw new Error(
+                "Unable to load the selected student."
+            );
+        }
 
-    if (!currentResults.length) {
-        showMessage(
-            "The student was found, but no results are available for the selected session and term.",
-            "warning"
-        );
-    }
-} catch (error) {
-    resetResultDisplay();
+        state.currentStudent =
+            student;
 
-    showMessage(
-        error.message ||
-        "Unable to load the student's result."
-    );
-} finally {
-    setLoading(false);
-}
-```
+        state.currentStudentId =
+            getStudentId(
+                student
+            ) || id;
 
-}
+        await loadStudentEnrollment();
 
-async function searchStudentAndLoadResult() {
-const input =
-document.getElementById(
-"studentIdentifier"
-);
-
-```
-const identifier =
-    input?.value?.trim() || "";
-
-if (!identifier) {
-    showMessage(
-        "Enter the student's admission number, for example LMC001.",
-        "warning"
-    );
-
-    input?.focus();
-
-    return;
-}
-
-setLoading(true);
-hideMessage();
-
-try {
-    const student =
-        await findStudent(identifier);
-
-    currentStudent =
-        student;
-
-    currentStudentId =
-        student.id ||
-        student.student_id ||
-        student.studentId ||
-        null;
-
-    if (!currentStudentId) {
-        throw new Error(
-            "The student record does not contain a valid student ID."
-        );
-    }
-
-    const admissionNumber =
-        getStudentAdmissionNumber(
+        renderStudentSummary(
             student
         );
 
-    if (
-        input &&
-        admissionNumber
-    ) {
-        input.value =
-            admissionNumber;
+        return student;
     }
 
-    renderStudentSummary();
+    /* ==========================================================================
+    LOAD STUDENT ENROLLMENT
+    ========================================================================== */
+
+    async function loadStudentEnrollment() {
+        const studentId =
+            normalizeId(
+                state.currentStudentId
+            );
+
+        const sessionId =
+            normalizeId(
+                elements.sessionId?.value
+            );
+
+        if (!studentId || !sessionId) {
+            state.currentEnrollment = null;
+            return null;
+        }
 
-    await loadStudentResult();
-} catch (error) {
-    currentStudent = null;
-    currentStudentId = null;
-
-    resetResultDisplay();
-
-    setElementText(
-        "studentName",
-        "Not selected"
-    );
-
-    setElementText(
-        "studentNumber",
-        "—"
-    );
-
-    setElementText(
-        "studentClass",
-        "—"
-    );
-
-    setElementText(
-        "studentArm",
-        "—"
-    );
-
-    setElementText(
-        "studentLevel",
-        "—"
-    );
-
-    setStudentSubtitle();
-
-    showMessage(
-        error.message ||
-        "Unable to find the student."
-    );
-} finally {
-    setLoading(false);
-}
-```
-
-}
-
-function getReportCardUrl() {
-const params =
-new URLSearchParams();
-
-```
-if (currentStudentId) {
-    params.set(
-        "studentId",
-        currentStudentId
-    );
-}
-
-if (currentReportCardId) {
-    params.set(
-        "reportCardId",
-        currentReportCardId
-    );
-}
-
-if (currentAcademicSessionId) {
-    params.set(
-        "academicSessionId",
-        currentAcademicSessionId
-    );
-}
-
-if (currentTermId) {
-    params.set(
-        "termId",
-        currentTermId
-    );
-}
-
-const query =
-    params.toString();
-
-return (
-    `/pages/report-card.html` +
-    (
-        query
-            ? `?${query}`
-            : ""
-    )
-);
-```
-
-}
-
-function openReportCard() {
-if (!currentStudentId) {
-showMessage(
-"Select a student before opening the report card.",
-"warning"
-);
-
-```
-    return;
-}
-
-if (!currentReportCardId) {
-    showMessage(
-        "A report card record is not available for this result yet.",
-        "warning"
-    );
-
-    return;
-}
-
-window.location.href =
-    getReportCardUrl();
-```
-
-}
-
-function printReportCard() {
-if (!currentStudentId) {
-showMessage(
-"Select a student before printing the report card.",
-"warning"
-);
-
-```
-    return;
-}
-
-if (!currentResults.length) {
-    showMessage(
-        "There is no result available to print.",
-        "warning"
-    );
-
-    return;
-}
-
-printCurrentResult();
-```
-
-}
-
-function printCurrentResult() {
-if (
-!currentStudentId ||
-!currentResults.length
-) {
-showMessage(
-"There is no student result available to print.",
-"warning"
-);
-
-```
-    return;
-}
-
-const printWindow =
-    window.open(
-        "",
-        "_blank",
-        "width=1100,height=800"
-    );
-
-if (!printWindow) {
-    showMessage(
-        "The print window could not be opened. Please allow pop-ups for this site.",
-        "warning"
-    );
-
-    return;
-}
-
-const studentName =
-    getStudentName(currentStudent);
-
-const admissionNumber =
-    getStudentAdmissionNumber(
-        currentStudent
-    );
-
-const className =
-    getStudentClass(currentStudent);
-
-const arm =
-    getStudentArm(currentStudent);
-
-const level =
-    getStudentLevel(currentStudent);
-
-const sessionText =
-    document.getElementById(
-        "academicSessionId"
-    )?.selectedOptions?.[0]
-        ?.textContent ||
-    "—";
-
-const termText =
-    document.getElementById(
-        "termId"
-    )?.selectedOptions?.[0]
-        ?.textContent ||
-    "—";
-
-const total =
-    getOverallTotal(
-        currentResults
-    );
-
-const percentage =
-    getOverallPercentage(
-        currentResults,
-        currentResult
-    );
-
-const position =
-    getPosition(currentResult);
-
-const rows =
-    currentResults
-        .map((row, index) => {
-            return `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${escapeHtml(row.subjectName)}</td>
-                    <td>${formatNumber(row.ca)}</td>
-                    <td>${formatNumber(row.exam)}</td>
-                    <td>${formatNumber(row.total)}</td>
-                    <td>${escapeHtml(row.grade || "—")}</td>
-                    <td>${escapeHtml(row.remark || "—")}</td>
-                </tr>
-            `;
-        })
-        .join("");
-
-printWindow.document.write(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>Student Result - ${escapeHtml(studentName)}</title>
-
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                padding: 30px;
-                color: #111;
-            }
-
-            h1 {
-                margin-bottom: 5px;
-            }
-
-            .muted {
-                color: #666;
-            }
-
-            .student-info {
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 12px;
-                margin: 25px 0;
-            }
-
-            .info-box {
-                border: 1px solid #ddd;
-                padding: 10px;
-            }
-
-            .label {
-                font-size: 11px;
-                color: #666;
-                text-transform: uppercase;
-            }
-
-            .value {
-                font-weight: bold;
-                margin-top: 4px;
-            }
-
-            table {
-                width: 100%;
-                border-collapse: collapse;
-                margin-top: 20px;
-            }
-
-            th,
-            td {
-                border: 1px solid #ccc;
-                padding: 9px;
-                text-align: left;
-            }
-
-            th {
-                background: #f2f2f2;
-            }
-
-            .summary {
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 12px;
-                margin-top: 25px;
-            }
-
-            .summary-box {
-                border: 1px solid #ddd;
-                padding: 15px;
-            }
-
-            .summary-box strong {
-                display: block;
-                font-size: 20px;
-                margin-top: 5px;
-            }
-
-            @media print {
-                body {
-                    padding: 10px;
-                }
-            }
-        </style>
-    </head>
-
-    <body>
-        <h1>Student Academic Result</h1>
-
-        <div class="muted">
-            School Management System
-        </div>
-
-        <div class="student-info">
-            <div class="info-box">
-                <div class="label">Student</div>
-                <div class="value">
-                    ${escapeHtml(studentName)}
-                </div>
-            </div>
-
-            <div class="info-box">
-                <div class="label">Admission Number</div>
-                <div class="value">
-                    ${escapeHtml(admissionNumber || "—")}
-                </div>
-            </div>
-
-            <div class="info-box">
-                <div class="label">Class</div>
-                <div class="value">
-                    ${escapeHtml(className || "—")}
-                </div>
-            </div>
-
-            <div class="info-box">
-                <div class="label">Class Arm</div>
-                <div class="value">
-                    ${escapeHtml(arm || "—")}
-                </div>
-            </div>
-
-            <div class="info-box">
-                <div class="label">Academic Level</div>
-                <div class="value">
-                    ${escapeHtml(level || "—")}
-                </div>
-            </div>
-
-            <div class="info-box">
-                <div class="label">Academic Session</div>
-                <div class="value">
-                    ${escapeHtml(sessionText)}
-                </div>
-            </div>
-
-            <div class="info-box">
-                <div class="label">Term</div>
-                <div class="value">
-                    ${escapeHtml(termText)}
-                </div>
-            </div>
-        </div>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Subject</th>
-                    <th>CA</th>
-                    <th>Exam</th>
-                    <th>Total</th>
-                    <th>Grade</th>
-                    <th>Remark</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                ${rows}
-            </tbody>
-        </table>
-
-        <div class="summary">
-            <div class="summary-box">
-                Total Score
-                <strong>
-                    ${formatNumber(total)}
-                </strong>
-            </div>
-
-            <div class="summary-box">
-                Percentage
-                <strong>
-                    ${formatNumber(percentage)}%
-                </strong>
-            </div>
-
-            <div class="summary-box">
-                Position
-                <strong>
-                    ${escapeHtml(position)}
-                </strong>
-            </div>
-        </div>
-
-        <script>
-            window.onload = function () {
-                window.print();
-            };
-        <\/script>
-    </body>
-    </html>
-`);
-
-printWindow.document.close();
-```
-
-}
-
-function setupSidebar() {
-const sidebar =
-document.getElementById("sidebar");
-
-```
-const toggle =
-    document.getElementById(
-        "sidebarToggle"
-    );
-
-const overlay =
-    document.getElementById(
-        "sidebarOverlay"
-    );
-
-if (
-    !sidebar ||
-    !toggle ||
-    !overlay
-) {
-    return;
-}
-
-toggle.addEventListener(
-    "click",
-    () => {
-        sidebar.classList.toggle(
-            "show"
-        );
-
-        overlay.classList.toggle(
-            "show"
-        );
-    }
-);
-
-overlay.addEventListener(
-    "click",
-    () => {
-        sidebar.classList.remove(
-            "show"
-        );
-
-        overlay.classList.remove(
-            "show"
-        );
-    }
-);
-
-sidebar
-    .querySelectorAll("a")
-    .forEach(link => {
-        link.addEventListener(
-            "click",
-            () => {
-                sidebar.classList.remove(
-                    "show"
-                );
-
-                overlay.classList.remove(
-                    "show"
-                );
-            }
-        );
-    });
-```
-
-}
-
-function setupLogout() {
-const button =
-document.getElementById(
-"logoutButton"
-);
-
-```
-if (!button) {
-    return;
-}
-
-button.addEventListener(
-    "click",
-    () => {
         try {
-            localStorage.removeItem(
-                "token"
-            );
+            const response =
+                await apiRequest(
+                    `/api/enrollments/student/${encodeURIComponent(studentId)}/session/${encodeURIComponent(sessionId)}`,
+                    {
+                        method: "GET"
+                    }
+                );
 
-            localStorage.removeItem(
-                "authToken"
-            );
+            const data =
+                getResponseData(
+                    response
+                );
 
-            localStorage.removeItem(
-                "user"
-            );
+            const enrollment =
+                data?.enrollment ||
+                (
+                    Array.isArray(data)
+                        ? data[0]
+                        : data
+                ) ||
+                null;
 
-            sessionStorage.removeItem(
-                "token"
-            );
+            state.currentEnrollment =
+                enrollment;
 
-            sessionStorage.removeItem(
-                "authToken"
-            );
+            return enrollment;
 
-            sessionStorage.removeItem(
-                "user"
-            );
         } catch (error) {
             console.warn(
-                "Unable to clear authentication storage:",
+                "Unable to load student enrollment:",
                 error
+            );
+
+            state.currentEnrollment =
+                null;
+
+            return null;
+        }
+    }
+
+    /* ==========================================================================
+    LOAD STUDENT RESULTS
+    ========================================================================== */
+
+    async function loadStudentResult() {
+        const studentId =
+            normalizeId(
+                state.currentStudentId
+            );
+
+        if (!studentId) {
+            throw new Error(
+                "Find a student before loading results."
             );
         }
 
-        window.location.href =
-            "/pages/login.html";
+        const sessionId =
+            normalizeId(
+                elements.sessionId?.value
+            );
+
+        const termId =
+            normalizeId(
+                elements.termId?.value
+            );
+
+        state.currentAcademicSessionId =
+            sessionId;
+
+        state.currentTermId =
+            termId;
+
+        if (!sessionId) {
+            clearResultDisplay();
+
+            showSearchMessage(
+                "Select an academic session to load the student's results.",
+                "warning"
+            );
+
+            return [];
+        }
+
+        if (!termId) {
+            clearResultDisplay();
+
+            showSearchMessage(
+                "Select a term to load the student's results.",
+                "warning"
+            );
+
+            return [];
+        }
+
+        setResultsLoading();
+
+        state.loading =
+            true;
+
+        try {
+            const query =
+                new URLSearchParams();
+
+            query.set(
+                "sessionId",
+                sessionId
+            );
+
+            query.set(
+                "academicSessionId",
+                sessionId
+            );
+
+            query.set(
+                "termId",
+                termId
+            );
+
+            const response =
+                await apiRequest(
+                    `${RESULTS_API_BASE}/student/${encodeURIComponent(studentId)}?${query.toString()}`,
+                    {
+                        method: "GET"
+                    }
+                );
+
+            const results =
+                getResponseArray(
+                    response,
+                    [
+                        "results"
+                    ]
+                );
+
+            state.currentResults =
+                results;
+
+            state.currentResult =
+                response?.data?.result ||
+                response?.result ||
+                results;
+
+            state.currentReportCardId =
+                normalizeId(
+                    response?.data?.reportCardId ||
+                    response?.reportCardId ||
+                    response?.data?.report_card_id ||
+                    response?.report_card_id
+                );
+
+            renderResults(
+                results
+            );
+
+            showSearchMessage(
+                results.length
+                    ? `${results.length} subject result(s) loaded.`
+                    : "No results have been entered for this student, session and term.",
+                results.length
+                    ? "success"
+                    : "warning"
+            );
+
+            return results;
+
+        } catch (error) {
+            console.error(
+                "Load student results error:",
+                error
+            );
+
+            state.currentResults =
+                [];
+
+            clearResultDisplay();
+
+            showMessage(
+                error.message ||
+                    "Unable to load student results.",
+                "danger"
+            );
+
+            showSearchMessage(
+                error.message ||
+                    "Unable to load student results.",
+                "danger"
+            );
+
+            throw error;
+
+        } finally {
+            state.loading =
+                false;
+        }
     }
-);
-```
 
-}
+    /* ==========================================================================
+    RENDER RESULTS
+    ========================================================================== */
 
-function setupSearch() {
-const button =
-document.getElementById(
-"searchStudentButton"
-);
+    function renderResults(
+        results
+    ) {
+        const records =
+            Array.isArray(results)
+                ? results
+                : [];
 
-```
-const input =
-    document.getElementById(
-        "studentIdentifier"
-    );
+        const scores =
+            records.map(
+                result =>
+                    getResultTotal(
+                        result
+                    )
+            );
 
-if (button) {
-    button.addEventListener(
-        "click",
-        searchStudentAndLoadResult
-    );
-}
+        const total =
+            scores.reduce(
+                (
+                    sum,
+                    score
+                ) =>
+                    sum + score,
+                0
+            );
 
-if (input) {
-    input.addEventListener(
-        "keydown",
-        event => {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                searchStudentAndLoadResult();
-            }
+        const average =
+            records.length
+                ? total /
+                    records.length
+                : 0;
+
+        const highest =
+            scores.length
+                ? Math.max(
+                    ...scores
+                )
+                : 0;
+
+        const lowest =
+            scores.length
+                ? Math.min(
+                    ...scores
+                )
+                : 0;
+
+        if (
+            elements.subjectCount
+        ) {
+            elements.subjectCount.textContent =
+                records.length;
         }
-    );
-}
-```
 
-}
-
-function setupFilters() {
-const sessionSelect =
-document.getElementById(
-"academicSessionId"
-);
-
-```
-const termSelect =
-    document.getElementById(
-        "termId"
-    );
-
-if (sessionSelect) {
-    sessionSelect.addEventListener(
-        "change",
-        async () => {
-            currentAcademicSessionId =
-                sessionSelect.value || null;
-
-            if (currentStudentId) {
-                await loadStudentResult();
-            }
+        if (
+            elements.overallTotal
+        ) {
+            elements.overallTotal.textContent =
+                formatNumber(
+                    total,
+                    2
+                );
         }
-    );
-}
 
-if (termSelect) {
-    termSelect.addEventListener(
-        "change",
-        async () => {
-            currentTermId =
-                termSelect.value || null;
+        const status =
+            calculateStatus(
+                average
+            );
 
-            if (currentStudentId) {
-                await loadStudentResult();
-            }
+        const percentage =
+            formatNumber(
+                average,
+                2
+            );
+
+        if (
+            elements.overallPercentage
+        ) {
+            elements.overallPercentage.textContent =
+                `${percentage}%`;
         }
-    );
-}
-```
 
-}
-
-function setupActions() {
-const refreshButton =
-document.getElementById(
-"refreshButton"
-);
-
-```
-if (refreshButton) {
-    refreshButton.addEventListener(
-        "click",
-        async () => {
-            if (currentStudentId) {
-                await loadStudentResult();
-            } else {
-                await searchStudentAndLoadResult();
-            }
+        if (
+            elements.studentPosition
+        ) {
+            elements.studentPosition.textContent =
+                "—";
         }
-    );
-}
 
-const viewButton =
-    document.getElementById(
-        "viewReportCardButton"
-    );
+        if (
+            elements.resultStatusContainer
+        ) {
+            elements.resultStatusContainer.innerHTML =
+                `
+                <span class="result-status ${status === "Passed" ? "success" : "danger"}">
+                    <i class="bi ${status === "Passed" ? "bi-check-circle" : "bi-x-circle"}"></i>
+                    ${escapeHtml(status)}
+                </span>
+                `;
+        }
 
-if (viewButton) {
-    viewButton.addEventListener(
-        "click",
-        openReportCard
-    );
-}
+        if (
+            elements.tableResultStatus
+        ) {
+            elements.tableResultStatus.className =
+                `result-status ${status === "Passed" ? "success" : "danger"}`;
 
-const viewActionButton =
-    document.getElementById(
-        "viewReportCardActionButton"
-    );
+            elements.tableResultStatus.innerHTML =
+                `
+                <i class="bi ${status === "Passed" ? "bi-check-circle" : "bi-x-circle"}"></i>
+                ${escapeHtml(status)}
+                `;
+        }
 
-if (viewActionButton) {
-    viewActionButton.addEventListener(
-        "click",
-        openReportCard
-    );
-}
+        if (
+            elements.summaryTotalScore
+        ) {
+            elements.summaryTotalScore.textContent =
+                formatNumber(
+                    total,
+                    2
+                );
+        }
 
-const openReportCardButton =
-    document.getElementById(
-        "openReportCardButton"
-    );
+        if (
+            elements.summaryPercentage
+        ) {
+            elements.summaryPercentage.textContent =
+                `${percentage}%`;
+        }
 
-if (openReportCardButton) {
-    openReportCardButton.addEventListener(
-        "click",
-        openReportCard
-    );
-}
+        if (
+            elements.summaryPosition
+        ) {
+            elements.summaryPosition.textContent =
+                "—";
+        }
 
-const printReportButton =
-    document.getElementById(
-        "printReportCardButton"
-    );
+        if (
+            elements.summaryStatus
+        ) {
+            elements.summaryStatus.textContent =
+                status;
+        }
 
-if (printReportButton) {
-    printReportButton.addEventListener(
-        "click",
-        printReportCard
-    );
-}
+        if (
+            !elements.resultsTableBody
+        ) {
+            return;
+        }
 
-const printResultButton =
-    document.getElementById(
-        "printResultButton"
-    );
+        if (elements.resultContent) {
+            elements.resultContent.style.display = "";
+        }
 
-if (printResultButton) {
-    printResultButton.addEventListener(
-        "click",
-        printCurrentResult
-    );
-}
-```
-
-}
-
-function setupBackNavigation() {
-const button =
-document.getElementById(
-"backToProfileButton"
-);
-
-```
-if (!button) {
-    return;
-}
-
-button.addEventListener(
-    "click",
-    event => {
-        event.preventDefault();
-
-        if (currentStudentId) {
-            window.location.href =
-                `/pages/student-profile.html?studentId=${encodeURIComponent(currentStudentId)}`;
+        if (!records.length) {
+            elements.resultsTableBody.innerHTML =
+                `
+                <tr>
+                    <td
+                        colspan="7"
+                        class="text-center py-5 text-muted"
+                    >
+                        <i class="bi bi-journal-x fs-3 d-block mb-2"></i>
+                        No academic results found for the selected
+                        session and term.
+                    </td>
+                </tr>
+                `;
 
             return;
         }
 
-        window.location.href =
-            "/pages/students.html";
+        elements.resultsTableBody.innerHTML =
+            records
+                .map(
+                    result => {
+                        const ca =
+                            getResultCA(
+                                result
+                            );
+
+                        const exam =
+                            getResultExam(
+                                result
+                            );
+
+                        const resultTotal =
+                            getResultTotal(
+                                result
+                            );
+
+                        const grade =
+                            getResultGrade(
+                                result,
+                                resultTotal
+                            );
+
+                        const remark =
+                            getResultRemark(
+                                result,
+                                resultTotal
+                            );
+
+                        const gradeClass =
+                            resultTotal >= 40
+                                ? "text-success fw-bold"
+                                : "text-danger fw-bold";
+
+                        return `
+                        <tr>
+                            <td>
+                                ${escapeHtml(
+                                    getResultSubjectName(
+                                        result
+                                    )
+                                )}
+                            </td>
+
+                            <td>
+                                ${formatNumber(
+                                    ca,
+                                    2
+                                )}
+                            </td>
+
+                            <td>
+                                ${formatNumber(
+                                    exam,
+                                    2
+                                )}
+                            </td>
+
+                            <td class="${gradeClass}">
+                                ${formatNumber(
+                                    resultTotal,
+                                    2
+                                )}
+                            </td>
+
+                            <td class="${gradeClass}">
+                                ${escapeHtml(
+                                    grade
+                                )}
+                            </td>
+
+                            <td>
+                                ${escapeHtml(
+                                    remark
+                                )}
+                            </td>
+
+                            <td>
+                                ${
+                                    resultTotal >= 40
+                                        ? '<span class="badge bg-success">Pass</span>'
+                                        : '<span class="badge bg-danger">Fail</span>'
+                                }
+                            </td>
+                        </tr>
+                        `;
+                    }
+                )
+                .join("");
     }
-);
-```
 
-}
+    function setResultsLoading() {
+        if (
+            !elements.resultsTableBody
+        ) {
+            return;
+        }
 
-async function initialisePage() {
-setupSidebar();
-setupLogout();
-setupSearch();
-setupFilters();
-setupActions();
-setupBackNavigation();
-
-```
-try {
-    await Promise.all([
-        loadAcademicSessions(),
-        loadTerms()
-    ]);
-} catch (error) {
-    console.warn(
-        "Initial result filters could not be loaded:",
-        error.message
-    );
-}
-
-const urlStudentId =
-    getStudentIdFromUrl();
-
-const urlAdmissionNumber =
-    getAdmissionNumberFromUrl();
-
-if (urlAdmissionNumber) {
-    const input =
-        document.getElementById(
-            "studentIdentifier"
-        );
-
-    if (input) {
-        input.value =
-            urlAdmissionNumber;
+        elements.resultsTableBody.innerHTML =
+            `
+            <tr>
+                <td
+                    colspan="7"
+                    class="text-center py-5 text-muted"
+                >
+                    <span
+                        class="spinner-border spinner-border-sm me-2"
+                    ></span>
+                    Loading student results...
+                </td>
+            </tr>
+            `;
     }
 
-    await searchStudentAndLoadResult();
+    function clearResultDisplay() {
+        state.currentResults =
+            [];
 
-    return;
-}
+        if (
+            elements.subjectCount
+        ) {
+            elements.subjectCount.textContent =
+                "0";
+        }
 
-if (urlStudentId) {
-    try {
-        currentStudent =
-            await loadStudentById(
-                urlStudentId
+        if (
+            elements.overallTotal
+        ) {
+            elements.overallTotal.textContent =
+                "0";
+        }
+
+        if (
+            elements.overallAverage
+        ) {
+            elements.overallAverage.textContent =
+                "0";
+        }
+
+        if (
+            elements.overallStatus
+        ) {
+            elements.overallStatus.textContent =
+                "Not Loaded";
+        }
+
+        if (
+            elements.averageScore
+        ) {
+            elements.averageScore.textContent =
+                "0%";
+        }
+
+        if (
+            elements.highestScore
+        ) {
+            elements.highestScore.textContent =
+                "0";
+        }
+
+        if (
+            elements.lowestScore
+        ) {
+            elements.lowestScore.textContent =
+                "0";
+        }
+
+        if (
+            elements.resultsTableBody
+        ) {
+            elements.resultsTableBody.innerHTML =
+                `
+                <tr>
+                    <td
+                        colspan="7"
+                        class="text-center py-5 text-muted"
+                    >
+                        Search for a student and select an
+                        academic session and term.
+                    </td>
+                </tr>
+                `;
+        }
+    }
+
+    /* ==========================================================================
+    REPORT CARD
+    ========================================================================== */
+
+    function getReportCardUrl() {
+        const studentId =
+            normalizeId(
+                state.currentStudentId
             );
 
-        currentStudentId =
-            currentStudent.id ||
-            currentStudent.student_id ||
-            currentStudent.studentId ||
-            null;
+        if (!studentId) {
+            return "";
+        }
 
-        if (!currentStudentId) {
-            throw new Error(
-                "The student record does not contain a valid ID."
+        const params =
+            new URLSearchParams();
+
+        params.set(
+            "studentId",
+            studentId
+        );
+
+        const reportCardId =
+            normalizeId(
+                state.currentReportCardId
+            );
+
+        if (reportCardId) {
+            params.set(
+                "reportCardId",
+                reportCardId
             );
         }
 
-        const input =
-            document.getElementById(
-                "studentIdentifier"
+        const sessionId =
+            normalizeId(
+                state.currentAcademicSessionId ||
+                elements.sessionId?.value
             );
 
-        if (input) {
-            input.value =
-                getStudentAdmissionNumber(
-                    currentStudent
+        const termId =
+            normalizeId(
+                state.currentTermId ||
+                elements.termId?.value
+            );
+
+        if (sessionId) {
+            params.set(
+                "academicSessionId",
+                sessionId
+            );
+        }
+
+        if (termId) {
+            params.set(
+                "termId",
+                termId
+            );
+        }
+
+        return (
+            `/pages/report-card.html?${params.toString()}`
+        );
+    }
+
+    function openReportCard() {
+        const url =
+            getReportCardUrl();
+
+        if (!url) {
+            showMessage(
+                "Find a student before opening the report card.",
+                "warning"
+            );
+
+            return;
+        }
+
+        window.open(
+            url,
+            "_blank"
+        );
+    }
+
+    function printReportCard() {
+        openReportCard();
+    }
+
+    /* ==========================================================================
+    PRINT CURRENT RESULT
+    ========================================================================== */
+
+    function printCurrentResult() {
+        if (
+            !state.currentStudentId
+        ) {
+            showMessage(
+                "Find a student before printing the result.",
+                "warning"
+            );
+
+            return;
+        }
+
+        if (
+            !state.currentResults.length
+        ) {
+            showMessage(
+                "There are no results to print for the selected session and term.",
+                "warning"
+            );
+
+            return;
+        }
+
+        const student =
+            state.currentStudent ||
+            {};
+
+        const studentName =
+            getStudentName(
+                student
+            ) ||
+            "Student";
+
+        const admissionNumber =
+            getStudentAdmissionNumber(
+                student
+            ) ||
+            "";
+
+        const sessionName =
+            getSelectedOptionText(
+                elements.sessionId
+            );
+
+        const termName =
+            getSelectedOptionText(
+                elements.termId
+            );
+
+        const enrollment =
+            state.currentEnrollment ||
+            {};
+
+        const className =
+            enrollment?.class_name ||
+            enrollment?.className ||
+            student?.class_name ||
+            student?.className ||
+            student?.class ||
+            "";
+
+
+        const results =
+            state.currentResults;
+
+        const total =
+            results.reduce(
+                (
+                    sum,
+                    result
+                ) =>
+                    sum +
+                    getResultTotal(
+                        result
+                    ),
+                0
+            );
+
+        const average =
+            results.length
+                ? total /
+                    results.length
+                : 0;
+
+        const status =
+            calculateStatus(
+                average
+            );
+
+        const rows =
+            results
+                .map(
+                    result => {
+                        const ca =
+                            getResultCA(
+                                result
+                            );
+
+                        const exam =
+                            getResultExam(
+                                result
+                            );
+
+                        const resultTotal =
+                            getResultTotal(
+                                result
+                            );
+
+                        const grade =
+                            getResultGrade(
+                                result,
+                                resultTotal
+                            );
+
+                        const remark =
+                            getResultRemark(
+                                result,
+                                resultTotal
+                            );
+
+                        return `
+                        <tr>
+                            <td>
+                                ${escapeHtml(
+                                    getResultSubjectName(
+                                        result
+                                    )
+                                )}
+                            </td>
+
+                            <td>
+                                ${formatNumber(
+                                    ca,
+                                    2
+                                )}
+                            </td>
+
+                            <td>
+                                ${formatNumber(
+                                    exam,
+                                    2
+                                )}
+                            </td>
+
+                            <td>
+                                ${formatNumber(
+                                    resultTotal,
+                                    2
+                                )}
+                            </td>
+
+                            <td>
+                                ${escapeHtml(
+                                    grade
+                                )}
+                            </td>
+
+                            <td>
+                                ${escapeHtml(
+                                    remark
+                                )}
+                            </td>
+                        </tr>
+                        `;
+                    }
+                )
+                .join("");
+
+        const printWindow =
+            window.open(
+                "",
+                "_blank",
+                "width=1100,height=800"
+            );
+
+        if (!printWindow) {
+            showMessage(
+                "The print window was blocked by the browser. Please allow pop-ups for this site.",
+                "warning"
+            );
+
+            return;
+        }
+
+        const documentHtml =
+            `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+
+                <title>
+                    Student Result - ${escapeHtml(
+                        studentName
+                    )}
+                </title>
+
+                <meta
+                    name="viewport"
+                    content="width=device-width, initial-scale=1"
+                >
+
+                <style>
+                    * {
+                        box-sizing: border-box;
+                    }
+
+                    body {
+                        margin: 0;
+                        padding: 30px;
+                        font-family:
+                            Arial,
+                            Helvetica,
+                            sans-serif;
+                        color: #212529;
+                        background: #ffffff;
+                    }
+
+                    .report {
+                        max-width: 1050px;
+                        margin: 0 auto;
+                    }
+
+                    .header {
+                        text-align: center;
+                        border-bottom: 2px solid #212529;
+                        padding-bottom: 18px;
+                        margin-bottom: 20px;
+                    }
+
+                    .header h1 {
+                        margin: 0 0 6px;
+                        font-size: 26px;
+                    }
+
+                    .header h2 {
+                        margin: 0;
+                        font-size: 19px;
+                        font-weight: 600;
+                    }
+
+                    .header p {
+                        margin: 5px 0 0;
+                        color: #666;
+                    }
+
+                    .student-info {
+                        display: grid;
+                        grid-template-columns:
+                            repeat(
+                                3,
+                                1fr
+                            );
+                        gap: 12px;
+                        margin-bottom: 22px;
+                    }
+
+                    .info-box {
+                        border: 1px solid #dee2e6;
+                        padding: 10px 12px;
+                        border-radius: 5px;
+                    }
+
+                    .info-label {
+                        display: block;
+                        font-size: 11px;
+                        color: #6c757d;
+                        text-transform: uppercase;
+                        margin-bottom: 4px;
+                    }
+
+                    .info-value {
+                        font-weight: 600;
+                    }
+
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 12px;
+                    }
+
+                    th,
+                    td {
+                        border: 1px solid #adb5bd;
+                        padding: 9px;
+                        text-align: left;
+                    }
+
+                    th {
+                        background: #f1f3f5;
+                        font-weight: 700;
+                    }
+
+                    .number {
+                        text-align: center;
+                    }
+
+                    .summary {
+                        display: grid;
+                        grid-template-columns:
+                            repeat(
+                                3,
+                                1fr
+                            );
+                        gap: 12px;
+                        margin-top: 22px;
+                    }
+
+                    .summary-box {
+                        border: 1px solid #dee2e6;
+                        padding: 14px;
+                        text-align: center;
+                        border-radius: 5px;
+                    }
+
+                    .summary-label {
+                        display: block;
+                        font-size: 12px;
+                        color: #6c757d;
+                        margin-bottom: 5px;
+                    }
+
+                    .summary-value {
+                        font-size: 20px;
+                        font-weight: 700;
+                    }
+
+                    .footer {
+                        margin-top: 45px;
+                        display: flex;
+                        justify-content:
+                            space-between;
+                        gap: 40px;
+                    }
+
+                    .signature {
+                        width: 45%;
+                        border-top: 1px solid #212529;
+                        padding-top: 7px;
+                        text-align: center;
+                    }
+
+                    .print-note {
+                        margin-top: 25px;
+                        text-align: center;
+                        font-size: 11px;
+                        color: #6c757d;
+                    }
+
+                    @media print {
+                        body {
+                            padding: 0;
+                        }
+
+                        .report {
+                            max-width: none;
+                        }
+                    }
+
+                    @media screen and (
+                        max-width: 700px
+                    ) {
+                        body {
+                            padding: 15px;
+                        }
+
+                        .student-info,
+                        .summary {
+                            grid-template-columns:
+                                1fr;
+                        }
+                    }
+                </style>
+            </head>
+
+            <body>
+
+                <main class="report">
+
+                    <header class="header">
+                        <h1>
+                            School Management System
+                        </h1>
+
+                        <h2>
+                            Student Academic Result
+                        </h2>
+
+                        <p>
+                            ${escapeHtml(
+                                sessionName
+                            )}
+                            ${
+                                termName
+                                    ? " — " +
+                                        escapeHtml(
+                                            termName
+                                        )
+                                    : ""
+                            }
+                        </p>
+                    </header>
+
+                    <section class="student-info">
+
+                        <div class="info-box">
+                            <span class="info-label">
+                                Student Name
+                            </span>
+
+                            <span class="info-value">
+                                ${escapeHtml(
+                                    studentName
+                                )}
+                            </span>
+                        </div>
+
+                        <div class="info-box">
+                            <span class="info-label">
+                                Admission Number
+                            </span>
+
+                            <span class="info-value">
+                                ${escapeHtml(
+                                    admissionNumber
+                                )}
+                            </span>
+                        </div>
+
+                        <div class="info-box">
+                            <span class="info-label">
+                                Class
+                            </span>
+
+                            <span class="info-value">
+                                ${escapeHtml(
+                                    className
+                                )}
+                            </span>
+                        </div>
+
+                    </section>
+
+                    <table>
+
+                        <thead>
+                            <tr>
+                                <th>
+                                    Subject
+                                </th>
+
+                                <th class="number">
+                                    CA
+                                </th>
+
+                                <th class="number">
+                                    Exam
+                                </th>
+
+                                <th class="number">
+                                    Total
+                                </th>
+
+                                <th class="number">
+                                    Grade
+                                </th>
+
+                                <th>
+                                    Remark
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            ${rows}
+                        </tbody>
+
+                    </table>
+
+                    <section class="summary">
+
+                        <div class="summary-box">
+                            <span class="summary-label">
+                                Subjects
+                            </span>
+
+                            <span class="summary-value">
+                                ${results.length}
+                            </span>
+                        </div>
+
+                        <div class="summary-box">
+                            <span class="summary-label">
+                                Total Score
+                            </span>
+
+                            <span class="summary-value">
+                                ${formatNumber(
+                                    total,
+                                    2
+                                )}
+                            </span>
+                        </div>
+
+                        <div class="summary-box">
+                            <span class="summary-label">
+                                Average
+                            </span>
+
+                            <span class="summary-value">
+                                ${formatNumber(
+                                    average,
+                                    2
+                                )}%
+                            </span>
+                        </div>
+
+                    </section>
+
+                    <div
+                        class="summary-box"
+                        style="margin-top:12px;"
+                    >
+                        <span class="summary-label">
+                            Overall Status
+                        </span>
+
+                        <span class="summary-value">
+                            ${escapeHtml(
+                                status
+                            )}
+                        </span>
+                    </div>
+
+                    <footer class="footer">
+
+                        <div class="signature">
+                            Class Teacher's Signature
+                        </div>
+
+                        <div class="signature">
+                            Principal's Signature
+                        </div>
+
+                    </footer>
+
+                    <div class="print-note">
+                        Generated from the School Management System.
+                        Use the browser print dialog to print or
+                        select "Save as PDF" to create a PDF copy.
+                    </div>
+
+                </main>
+
+                <script>
+                    window.addEventListener(
+                        "load",
+                        function () {
+                            setTimeout(
+                                function () {
+                                    window.print();
+                                },
+                                300
+                            );
+                        }
+                    );
+                </script>
+
+            </body>
+            </html>
+            `;
+
+        printWindow.document.open();
+
+        printWindow.document.write(
+            documentHtml
+        );
+
+        printWindow.document.close();
+    }
+
+    function getSelectedOptionText(
+        select
+    ) {
+        if (!select) {
+            return "";
+        }
+
+        const option =
+            select.options[
+                select.selectedIndex
+            ];
+
+        return option
+            ? option.textContent.trim()
+            : "";
+    }
+
+    /* ==========================================================================
+    URL / INITIAL PAGE LOAD
+    ========================================================================== */
+
+    async function loadFromUrl() {
+        const params =
+            new URLSearchParams(
+                window.location.search
+            );
+
+        const studentId =
+            normalizeId(
+                params.get(
+                    "studentId"
+                ) ||
+                params.get(
+                    "id"
+                )
+            );
+
+        const admissionNumber =
+            String(
+                params.get(
+                    "admissionNumber"
+                ) ||
+                ""
+            ).trim();
+
+        if (studentId) {
+            try {
+                await loadStudentById(
+                    studentId
                 );
+
+                await loadStudentResult();
+            } catch (error) {
+                console.error(
+                    "Unable to load student from URL:",
+                    error
+                );
+
+                showMessage(
+                    error.message ||
+                        "Unable to load student.",
+                    "danger"
+                );
+            }
+
+            return;
         }
 
-        renderStudentSummary();
+        if (admissionNumber) {
+            if (
+                elements.admissionNumber
+            ) {
+                elements.admissionNumber.value =
+                    admissionNumber;
+            }
 
-        await loadStudentResult();
-    } catch (error) {
-        showMessage(
-            error.message ||
-            "Unable to load the selected student."
+            await searchStudentAndLoadResult();
+        }
+    }
+
+    /* ==========================================================================
+    EVENT HANDLERS
+    ========================================================================== */
+
+    async function handleSessionChange() {
+        state.currentAcademicSessionId =
+            normalizeId(
+                elements.sessionId?.value
+            );
+
+        state.currentTermId = "";
+
+        if (
+            elements.termId
+        ) {
+            elements.termId.value =
+                "";
+        }
+
+        clearResultDisplay();
+
+        if (
+            !state.currentStudentId
+        ) {
+            showSearchMessage(
+                "Find a student before loading results.",
+                "warning"
+            );
+
+            return;
+        }
+
+        showSearchMessage(
+            "Academic session selected. Select a term.",
+            "info"
         );
     }
 
-    return;
-}
+    async function handleTermChange() {
+        state.currentTermId =
+            normalizeId(
+                elements.termId?.value
+            );
 
-resetResultDisplay();
-```
+        if (
+            !state.currentStudentId
+        ) {
+            showSearchMessage(
+                "Find a student before loading results.",
+                "warning"
+            );
 
-}
+            return;
+        }
 
-window.StudentResultsPage = {
-loadStudentResult,
-searchStudentAndLoadResult,
-printCurrentResult,
-openReportCard
-};
+        if (
+            !elements.sessionId?.value
+        ) {
+            showSearchMessage(
+                "Select an academic session first.",
+                "warning"
+            );
 
-document.addEventListener(
-"DOMContentLoaded",
-initialisePage
-);
+            return;
+        }
+
+        if (
+            !elements.termId?.value
+        ) {
+            clearResultDisplay();
+
+            return;
+        }
+
+        try {
+            await loadStudentResult();
+        } catch (error) {
+            console.error(
+                "Term change error:",
+                error
+            );
+        }
+    }
+
+    function handleAdmissionKeydown(
+        event
+    ) {
+        if (
+            event.key === "Enter"
+        ) {
+            event.preventDefault();
+
+            searchStudentAndLoadResult();
+        }
+    }
+
+    function setupSearch() {
+        elements.findStudentButton?.addEventListener(
+            "click",
+            searchStudentAndLoadResult
+        );
+
+        elements.admissionNumber?.addEventListener(
+            "keydown",
+            handleAdmissionKeydown
+        );
+
+        elements.sessionId?.addEventListener(
+            "change",
+            handleSessionChange
+        );
+
+        elements.termId?.addEventListener(
+            "change",
+            handleTermChange
+        );
+    }
+
+    function findFirstElement(
+        ids
+    ) {
+        for (
+            const id of ids
+        ) {
+            const element =
+                document.getElementById(
+                    id
+                );
+
+            if (element) {
+                return element;
+            }
+        }
+
+        return null;
+    }
+
+    function setupActions() {
+        const refreshButton =
+            findFirstElement(
+                [
+                    "refreshResultsButton",
+                    "refreshButton"
+                ]
+            );
+
+        refreshButton?.addEventListener(
+            "click",
+            async function () {
+                if (
+                    !state.currentStudentId
+                ) {
+                    showMessage(
+                        "Find a student before refreshing results.",
+                        "warning"
+                    );
+
+                    return;
+                }
+
+                try {
+                    await loadStudentResult();
+                } catch (error) {
+                    console.error(
+                        "Refresh results error:",
+                        error
+                    );
+                }
+            }
+        );
+
+        const printButton =
+            findFirstElement(
+                [
+                    "printResultButton",
+                    "printButton",
+                    "printCurrentResultButton"
+                ]
+            );
+
+        printButton?.addEventListener(
+            "click",
+            printCurrentResult
+        );
+
+        const printReportButton =
+            findFirstElement(
+                [
+                    "printReportCardButton"
+                ]
+            );
+
+        printReportButton?.addEventListener(
+            "click",
+            printReportCard
+        );
+    }
+
+    /* ==========================================================================
+    LOGOUT
+    ========================================================================== */
+
+    function setupLogout() {
+        if (
+            !elements.logoutButton
+        ) {
+            return;
+        }
+
+        elements.logoutButton.addEventListener(
+            "click",
+            function () {
+                [
+                    "school_management_token",
+                    "school_management_user",
+                    "token",
+                    "authToken",
+                    "accessToken",
+                    "user"
+                ].forEach(
+                    key => {
+                        localStorage.removeItem(
+                            key
+                        );
+
+                        sessionStorage.removeItem(
+                            key
+                        );
+                    }
+                );
+
+                window.location.href =
+                    "/pages/login.html";
+            }
+        );
+    }
+
+    /* ==========================================================================
+    CURRENT USER
+    ========================================================================== */
+
+    function loadCurrentUser() {
+        const user =
+            getStoredUser();
+
+        if (
+            !user ||
+            !elements.currentUser
+        ) {
+            return;
+        }
+
+        const name =
+            user.name ||
+            user.username ||
+            user.firstName ||
+            user.first_name ||
+            "";
+
+        if (name) {
+            elements.currentUser.textContent =
+                name;
+        }
+    }
+
+    /* ==========================================================================
+    MOBILE SIDEBAR
+    ========================================================================== */
+
+    function setupSidebar() {
+        const sidebar =
+            document.getElementById(
+                "sidebar"
+            );
+
+        const sidebarToggle =
+            document.getElementById(
+                "sidebarToggle"
+            );
+
+        const sidebarOverlay =
+            document.getElementById(
+                "sidebarOverlay"
+            );
+
+        function closeSidebar() {
+            sidebar?.classList.remove(
+                "show"
+            );
+
+            sidebarOverlay?.classList.remove(
+                "show"
+            );
+        }
+
+        sidebarToggle?.addEventListener(
+            "click",
+            function () {
+                sidebar?.classList.toggle(
+                    "show"
+                );
+
+                sidebarOverlay?.classList.toggle(
+                    "show"
+                );
+            }
+        );
+
+        sidebarOverlay?.addEventListener(
+            "click",
+            closeSidebar
+        );
+
+        document
+            .querySelectorAll(
+                ".sidebar a, .sidebar .nav-link"
+            )
+            .forEach(
+                link => {
+                    link.addEventListener(
+                        "click",
+                        closeSidebar
+                    );
+                }
+            );
+    }
+
+    /* ==========================================================================
+    INITIALIZE
+    ========================================================================== */
+
+    async function initialisePage() {
+        if (
+            state.initialized
+        ) {
+            return;
+        }
+
+        state.initialized =
+            true;
+
+        setupSidebar();
+        setupLogout();
+        setupSearch();
+        setupActions();
+        loadCurrentUser();
+
+        clearStudentSummary();
+        clearResultDisplay();
+
+        try {
+            await Promise.all(
+                [
+                    loadAcademicSessions(),
+                    loadTerms()
+                ]
+            );
+
+            await loadFromUrl();
+
+        } catch (error) {
+            console.error(
+                "Student Results initialization error:",
+                error
+            );
+
+            showMessage(
+                error.message ||
+                    "Unable to initialize the Student Results page.",
+                "danger"
+            );
+        }
+    }
+
+    /* ==========================================================================
+    PUBLIC API
+    ========================================================================== */
+
+    window.StudentResultsPage = {
+        findStudent,
+        loadStudentById,
+        loadStudentResult,
+        searchStudentAndLoadResult,
+        printCurrentResult,
+        openReportCard,
+        printReportCard
+    };
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        initialisePage
+    );
+})();
