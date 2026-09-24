@@ -8,6 +8,7 @@ const authMiddleware = require("../middleware/authMiddleware");
 
 const {
     createResult,
+    createBulkResults,
     getAllResults,
     getResultById,
     getStudentResults,
@@ -39,16 +40,6 @@ const {
 | - Result processing
 | - Calling the Result service/model
 | - API responses
-|
-|--------------------------------------------------------------------------
-*/
-
-/*
-|--------------------------------------------------------------------------
-| AUTHENTICATION
-|--------------------------------------------------------------------------
-|
-| Every Results endpoint requires an authenticated user.
 |
 |--------------------------------------------------------------------------
 */
@@ -133,6 +124,25 @@ router.get("/class/:classId", getClassResults);
 */
 
 router.get("/subject/:subjectId", getSubjectResults);
+
+/*
+|--------------------------------------------------------------------------
+| BULK CREATE / UPDATE RESULTS
+|--------------------------------------------------------------------------
+|
+| POST /api/results/bulk
+|
+| Saves all subject results for a student in one request.
+|
+| The result controller already contains createBulkResults().
+|
+| This route must be registered before GET /:id so that "bulk" is
+| handled as a route instead of being interpreted as a result ID.
+|
+|--------------------------------------------------------------------------
+*/
+
+router.post("/bulk", createBulkResults);
 
 /*
 |--------------------------------------------------------------------------

@@ -7,170 +7,86 @@ const router = express.Router();
 const authMiddleware = require("../middleware/authMiddleware");
 
 const {
-    createGuardian,
-    getGuardians,
-    getGuardianById,
-    updateGuardian,
-    deleteGuardian,
-    searchGuardians,
-    getGuardiansByStudent
+createGuardian,
+getGuardians,
+getGuardianById,
+updateGuardian,
+deleteGuardian,
+searchGuardians,
+linkGuardianToStudent,
+unlinkGuardianFromStudent,
+getGuardiansByStudent,
+getGuardianStudents,
+setPrimaryGuardian,
+countGuardians,
+getGuardianRelationshipStats
 } = require("../controllers/guardianController");
-
-/*
-|--------------------------------------------------------------------------
-| GUARDIAN ROUTES
-|--------------------------------------------------------------------------
-|
-| Base URL:
-| /api/guardians
-|
-| Architecture:
-|
-| Route
-| ↓
-| Guardian Controller
-| ↓
-| Guardian Model
-| ↓
-| PostgreSQL
-|
-|--------------------------------------------------------------------------
-*/
-
-/*
-|--------------------------------------------------------------------------
-| AUTHENTICATION
-|--------------------------------------------------------------------------
-|
-| Every guardian endpoint requires an authenticated user.
-|
-|--------------------------------------------------------------------------
-*/
 
 router.use(authMiddleware);
 
-/*
-|--------------------------------------------------------------------------
-| SEARCH GUARDIANS
-|--------------------------------------------------------------------------
-|
-| GET /api/guardians/search?q=searchTerm
-|
-| This route must remain above /:id so that "search" is not treated
-| as a guardian ID.
-|
-|--------------------------------------------------------------------------
-*/
-
 router.get(
-    "/search",
-    searchGuardians
+"/search",
+searchGuardians
 );
 
-/*
-|--------------------------------------------------------------------------
-| GET GUARDIANS BY STUDENT
-|--------------------------------------------------------------------------
-|
-| GET /api/guardians/student/:studentId
-|
-| Returns guardians linked to a specific student through the
-| student_guardians relationship table.
-|
-|--------------------------------------------------------------------------
-*/
-
 router.get(
-    "/student/:studentId",
-    getGuardiansByStudent
+"/student/:studentId",
+getGuardiansByStudent
 );
-
-/*
-|--------------------------------------------------------------------------
-| GET ALL GUARDIANS
-|--------------------------------------------------------------------------
-|
-| GET /api/guardians
-|
-| Optional query parameters:
-|
-| ?search=
-| ?q=
-| ?limit=
-| ?offset=
-|
-|--------------------------------------------------------------------------
-*/
-
-router.get(
-    "/",
-    getGuardians
-);
-
-/*
-|--------------------------------------------------------------------------
-| CREATE GUARDIAN
-|--------------------------------------------------------------------------
-|
-| POST /api/guardians
-|
-|--------------------------------------------------------------------------
-*/
 
 router.post(
-    "/",
-    createGuardian
+"/link-student",
+linkGuardianToStudent
 );
 
-/*
-|--------------------------------------------------------------------------
-| GET GUARDIAN BY ID
-|--------------------------------------------------------------------------
-|
-| GET /api/guardians/:id
-|
-|--------------------------------------------------------------------------
-*/
+router.post(
+"/unlink-student",
+unlinkGuardianFromStudent
+);
+
+router.post(
+"/set-primary",
+setPrimaryGuardian
+);
 
 router.get(
-    "/:id",
-    getGuardianById
+"/stats/relationships",
+getGuardianRelationshipStats
 );
 
-/*
-|--------------------------------------------------------------------------
-| UPDATE GUARDIAN
-|--------------------------------------------------------------------------
-|
-| PUT /api/guardians/:id
-|
-|--------------------------------------------------------------------------
-*/
+router.get(
+"/count",
+countGuardians
+);
+
+router.get(
+"/",
+getGuardians
+);
+
+router.post(
+"/",
+createGuardian
+);
+
+router.get(
+"/:guardianId/students",
+getGuardianStudents
+);
+
+router.get(
+"/:id",
+getGuardianById
+);
 
 router.put(
-    "/:id",
-    updateGuardian
+"/:id",
+updateGuardian
 );
-
-/*
-|--------------------------------------------------------------------------
-| DELETE GUARDIAN
-|--------------------------------------------------------------------------
-|
-| DELETE /api/guardians/:id
-|
-|--------------------------------------------------------------------------
-*/
 
 router.delete(
-    "/:id",
-    deleteGuardian
+"/:id",
+deleteGuardian
 );
-
-/*
-|--------------------------------------------------------------------------
-| EXPORT ROUTER
-|--------------------------------------------------------------------------
-*/
 
 module.exports = router;

@@ -2,18 +2,12 @@
 
 (function () {
 let results = [];
-let students = [];
-let subjects = [];
+let resultSets = [];
 let sessions = [];
 let terms = [];
 
-```
-let selectedStudent = null;
-let editingResultId = null;
 
 const PASS_MARK = 40;
-const CA_MAX = 40;
-const EXAM_MAX = 60;
 
 async function request(endpoint, options = {}) {
     if (typeof window.apiRequest === "function") {
@@ -70,20 +64,38 @@ async function request(endpoint, options = {}) {
         });
     } catch (error) {
         console.error("Results API error:", error);
-        throw new Error("Unable to connect to the server.");
+        throw new Error(
+            "Unable to connect to the server."
+        );
     }
 
     if (response.status === 401) {
-        localStorage.removeItem("school_management_token");
-        localStorage.removeItem("school_management_user");
-        sessionStorage.removeItem("school_management_token");
-        sessionStorage.removeItem("school_management_user");
+        localStorage.removeItem(
+            "school_management_token"
+        );
+        localStorage.removeItem(
+            "school_management_user"
+        );
 
-        if (!window.location.pathname.endsWith("/login.html")) {
-            window.location.href = "/pages/login.html";
+        sessionStorage.removeItem(
+            "school_management_token"
+        );
+        sessionStorage.removeItem(
+            "school_management_user"
+        );
+
+        if (
+            !window.location.pathname.endsWith(
+                "/login.html"
+            )
+        ) {
+            window.location.href =
+                "/pages/login.html";
         }
 
-        throw new Error("Authentication required.");
+        throw new Error(
+            "Authentication required."
+        );
     }
 
     if (response.status === 403) {
@@ -106,7 +118,8 @@ async function request(endpoint, options = {}) {
                 ? data.message ||
                   data.error ||
                   "Request failed."
-                : data || "Request failed."
+                : data ||
+                  "Request failed."
         );
     }
 
@@ -118,14 +131,11 @@ async function initialize() {
 
     try {
         await Promise.all([
-            loadStudents(),
-            loadSubjects(),
             loadSessions(),
             loadTerms()
         ]);
 
         await loadResults();
-        updateSummary();
     } catch (error) {
         console.error(
             "Results initialization error:",
@@ -135,70 +145,10 @@ async function initialize() {
 }
 
 function setupEvents() {
-    const addResultButton =
-        document.querySelector("#addResultButton");
-
-    if (addResultButton) {
-        addResultButton.addEventListener(
-            "click",
-            function (event) {
-                event.preventDefault();
-
-                resetForm();
-                openResultModal();
-            }
-        );
-    }
-
-    const findStudentButton =
-        document.querySelector("#findStudentButton");
-
-    if (findStudentButton) {
-        findStudentButton.addEventListener(
-            "click",
-            findStudent
-        );
-    }
-
-    const admissionNumber =
-        document.querySelector("#admissionNumber");
-
-    if (admissionNumber) {
-        admissionNumber.addEventListener(
-            "keydown",
-            function (event) {
-                if (event.key === "Enter") {
-                    event.preventDefault();
-                    findStudent();
-                }
-            }
-        );
-    }
-
-    const addSubjectButton =
-        document.querySelector("#addSubjectButton");
-
-    if (addSubjectButton) {
-        addSubjectButton.addEventListener(
-            "click",
-            addSubjectRow
-        );
-    }
-
-    const saveButton =
-        document.querySelector(
-            "#saveCompleteResultButton"
-        );
-
-    if (saveButton) {
-        saveButton.addEventListener(
-            "click",
-            saveCompleteResult
-        );
-    }
-
     const searchInput =
-        document.querySelector("#searchInput");
+        document.querySelector(
+            "#searchInput"
+        );
 
     if (searchInput) {
         searchInput.addEventListener(
@@ -208,7 +158,9 @@ function setupEvents() {
     }
 
     const sessionFilter =
-        document.querySelector("#sessionFilter");
+        document.querySelector(
+            "#sessionFilter"
+        );
 
     if (sessionFilter) {
         sessionFilter.addEventListener(
@@ -218,7 +170,9 @@ function setupEvents() {
     }
 
     const termFilter =
-        document.querySelector("#termFilter");
+        document.querySelector(
+            "#termFilter"
+        );
 
     if (termFilter) {
         termFilter.addEventListener(
@@ -228,7 +182,9 @@ function setupEvents() {
     }
 
     const refreshButton =
-        document.querySelector("#refreshButton");
+        document.querySelector(
+            "#refreshButton"
+        );
 
     if (refreshButton) {
         refreshButton.addEventListener(
@@ -243,115 +199,6 @@ function setupEvents() {
         "click",
         handleActionClick
     );
-
-    document.addEventListener(
-        "input",
-        function (event) {
-            if (
-                event.target.matches(
-                    ".subject-ca, .subject-exam"
-                )
-            ) {
-                calculateSubjectRow(
-                    event.target.closest("tr")
-                );
-
-                updateOverallSummary();
-            }
-        }
-    );
-
-    document.addEventListener(
-        "click",
-        function (event) {
-            const button =
-                event.target.closest(
-                    ".remove-subject"
-                );
-
-            if (!button) {
-                return;
-            }
-
-            const row =
-                button.closest("tr");
-
-            if (row) {
-                row.remove();
-            }
-
-            updateSubjectMessage();
-            updateOverallSummary();
-        }
-    );
-
-    document.addEventListener(
-        "click",
-        function (event) {
-            const closeButton =
-                event.target.closest(
-                    "[data-bs-dismiss='modal'], .btn-close"
-                );
-
-            if (closeButton) {
-                closeResultModal();
-            }
-        }
-    );
-}
-
-async function loadStudents() {
-    try {
-        const data =
-            await request("/students");
-
-        students =
-            normalizeArray(data);
-
-        console.log(
-            "Students loaded:",
-            students.length
-        );
-    } catch (error) {
-        console.error(
-            "Unable to load students:",
-            error
-        );
-
-        students = [];
-
-        notify(
-            "Unable to load students.",
-            "error"
-        );
-    }
-}
-
-async function loadSubjects() {
-    try {
-        const data =
-            await request("/subjects");
-
-        subjects =
-            normalizeArray(data);
-
-        console.log(
-            "Subjects loaded:",
-            subjects.length
-        );
-    } catch (error) {
-        console.error(
-            "Unable to load subjects:",
-            error
-        );
-
-        subjects = [];
-
-        notify(
-            "Unable to load subjects.",
-            "error"
-        );
-    }
 }
 
 async function loadSessions() {
@@ -364,7 +211,6 @@ async function loadSessions() {
         sessions =
             normalizeArray(data);
 
-        populateSessions();
         populateSessionFilter();
     } catch (error) {
         console.error(
@@ -384,12 +230,13 @@ async function loadSessions() {
 async function loadTerms() {
     try {
         const data =
-            await request("/terms");
+            await request(
+                "/terms"
+            );
 
         terms =
             normalizeArray(data);
 
-        populateTerms();
         populateTermFilter();
     } catch (error) {
         console.error(
@@ -411,10 +258,14 @@ async function loadResults() {
 
     try {
         const sessionId =
-            getValue("#sessionFilter");
+            getValue(
+                "#sessionFilter"
+            );
 
         const termId =
-            getValue("#termFilter");
+            getValue(
+                "#termFilter"
+            );
 
         const query =
             new URLSearchParams();
@@ -439,10 +290,17 @@ async function loadResults() {
                 : "/results";
 
         const data =
-            await request(endpoint);
+            await request(
+                endpoint
+            );
 
         results =
             normalizeArray(data);
+
+        resultSets =
+            buildResultSets(
+                results
+            );
 
         renderResults();
         updateSummary();
@@ -453,6 +311,7 @@ async function loadResults() {
         );
 
         results = [];
+        resultSets = [];
 
         showError(
             error.message ||
@@ -463,257 +322,146 @@ async function loadResults() {
     }
 }
 
-function findStudent() {
-    const input =
-        document.querySelector(
-            "#admissionNumber"
-        );
+function buildResultSets(records) {
+    const groups =
+        new Map();
 
-    if (!input) {
-        return;
-    }
+    records.forEach(
+        function (result) {
+            const studentId =
+                getStudentId(
+                    result
+                );
 
-    const admissionNumber =
-        input.value
-            .trim()
-            .toLowerCase();
+            const admissionNumber =
+                getAdmissionNumber(
+                    result
+                );
 
-    if (!admissionNumber) {
-        showStudentMessage(
-            "Please enter an admission number.",
-            "error"
-        );
+            const sessionId =
+                getSessionId(
+                    result
+                );
 
-        return;
-    }
+            const termId =
+                getTermId(
+                    result
+                );
 
-    const student =
-        students.find(
-            function (item) {
-                const number =
-                    getAdmissionNumber(
-                        item
-                    )
-                        .trim()
-                        .toLowerCase();
+            const studentKey =
+                studentId ||
+                admissionNumber ||
+                getStudentName(
+                    result
+                );
 
-                return (
-                    number ===
-                    admissionNumber
+            const sessionKey =
+                sessionId ||
+                getSessionName(
+                    result
+                );
+
+            const termKey =
+                termId ||
+                getTermName(
+                    result
+                );
+
+            const key =
+                [
+                    studentKey,
+                    sessionKey,
+                    termKey
+                ].join("|");
+
+            if (!groups.has(key)) {
+                groups.set(
+                    key,
+                    {
+                        key,
+                        studentId:
+                            studentId,
+                        admissionNumber:
+                            admissionNumber,
+                        studentName:
+                            getStudentName(
+                                result
+                            ),
+                        classId:
+                            getClassId(
+                                result
+                            ),
+                        className:
+                            getClassName(
+                                result
+                            ),
+                        sessionId:
+                            sessionId,
+                        sessionName:
+                            getSessionName(
+                                result
+                            ),
+                        termId:
+                            termId,
+                        termName:
+                            getTermName(
+                                result
+                            ),
+                        records: []
+                    }
                 );
             }
-        );
 
-    if (!student) {
-        selectedStudent = null;
-
-        hideStudentSummary();
-
-        showStudentMessage(
-            "Student with this admission number was not found.",
-            "error"
-        );
-
-        return;
-    }
-
-    selectedStudent =
-        student;
-
-    displayStudentSummary(
-        student
-    );
-
-    showStudentMessage(
-        "Student found successfully.",
-        "success"
-    );
-}
-
-function displayStudentSummary(student) {
-    const summary =
-        document.querySelector(
-            "#studentSummary"
-        );
-
-    if (!summary) {
-        return;
-    }
-
-    const studentName =
-        document.querySelector(
-            "#studentName"
-        );
-
-    const admission =
-        document.querySelector(
-            "#displayAdmissionNumber"
-        );
-
-    const studentClass =
-        document.querySelector(
-            "#studentClass"
-        );
-
-    if (studentName) {
-        studentName.textContent =
-            getStudentName(student);
-    }
-
-    if (admission) {
-        admission.textContent =
-            getAdmissionNumber(student);
-    }
-
-    if (studentClass) {
-        studentClass.textContent =
-            getStudentClassName(student);
-    }
-
-    summary.style.display =
-        "block";
-}
-
-function hideStudentSummary() {
-    const summary =
-        document.querySelector(
-            "#studentSummary"
-        );
-
-    if (summary) {
-        summary.style.display =
-            "none";
-    }
-}
-
-function showStudentMessage(
-    message,
-    type
-) {
-    const element =
-        document.querySelector(
-            "#studentSearchMessage"
-        );
-
-    if (!element) {
-        return;
-    }
-
-    element.textContent =
-        message;
-
-    if (type === "error") {
-        element.className =
-            "form-text text-danger";
-    } else if (type === "success") {
-        element.className =
-            "form-text text-success";
-    } else {
-        element.className =
-            "form-text text-muted";
-    }
-}
-
-function populateSessions() {
-    const select =
-        document.querySelector(
-            "#sessionId"
-        );
-
-    if (!select) {
-        return;
-    }
-
-    select.innerHTML = `
-        <option value="">
-            Select academic session
-        </option>
-    `;
-
-    sessions.forEach(
-        function (session) {
-            const option =
-                document.createElement(
-                    "option"
+            groups
+                .get(key)
+                .records.push(
+                    result
                 );
+        }
+    );
 
-            option.value =
-                session.id ||
-                session.session_id ||
-                "";
-
-            option.textContent =
-                session.session_name ||
-                session.name ||
-                session.session ||
-                session.title ||
-                "Academic Session";
-
-            select.appendChild(
-                option
+    return Array.from(
+        groups.values()
+    ).map(
+        function (group) {
+            return calculateResultSet(
+                group
             );
         }
     );
 }
 
-function populateTerms() {
-    const select =
-        document.querySelector(
-            "#termId"
-        );
+function calculateResultSet(group) {
+    let total =
+        0;
 
-    if (!select) {
-        return;
-    }
+    let subjectCount =
+        group.records.length;
 
-    select.innerHTML = `
-        <option value="">
-            Select term
-        </option>
-    `;
-
-    const sortedTerms =
-        [...terms].sort(
-            function (a, b) {
-                return (
-                    Number(
-                        a.term_order ??
-                        a.order ??
-                        999
-                    ) -
-                    Number(
-                        b.term_order ??
-                        b.order ??
-                        999
-                    )
+    group.records.forEach(
+        function (result) {
+            total +=
+                getResultTotal(
+                    result
                 );
-            }
-        );
-
-    sortedTerms.forEach(
-        function (term) {
-            const option =
-                document.createElement(
-                    "option"
-                );
-
-            option.value =
-                term.id ||
-                term.term_id ||
-                "";
-
-            option.textContent =
-                term.term_name ||
-                term.name ||
-                term.term ||
-                term.title ||
-                "Term";
-
-            select.appendChild(
-                option
-            );
         }
     );
+
+    const average =
+        subjectCount > 0
+            ? total / subjectCount
+            : 0;
+
+    return {
+        ...group,
+        subjectCount,
+        total,
+        average,
+        status:
+            average >= PASS_MARK
+                ? "Passed"
+                : "Failed"
+    };
 }
 
 function populateSessionFilter() {
@@ -755,11 +503,9 @@ function populateSessionFilter() {
                 id;
 
             option.textContent =
-                session.session_name ||
-                session.name ||
-                session.session ||
-                session.title ||
-                "Academic Session";
+                getSessionName(
+                    session
+                );
 
             select.appendChild(
                 option
@@ -830,11 +576,9 @@ function populateTermFilter() {
                 id;
 
             option.textContent =
-                term.term_name ||
-                term.name ||
-                term.term ||
-                term.title ||
-                "Term";
+                getTermName(
+                    term
+                );
 
             select.appendChild(
                 option
@@ -845,662 +589,6 @@ function populateTermFilter() {
     if (currentValue) {
         select.value =
             currentValue;
-    }
-}
-
-function addSubjectRow(existingResult = null) {
-    const body =
-        document.querySelector(
-            "#subjectResultsBody"
-        );
-
-    if (!body) {
-        return;
-    }
-
-    const row =
-        document.createElement(
-            "tr"
-        );
-
-    row.innerHTML = `
-        <td>
-            <select
-                class="form-select subject-select"
-                data-field="subject"
-                required
-            >
-                <option value="">
-                    Select subject
-                </option>
-
-                ${subjects
-                    .map(
-                        function (subject) {
-                            const id =
-                                subject.id ||
-                                subject.subject_id ||
-                                "";
-
-                            const name =
-                                subject.subject_name ||
-                                subject.name ||
-                                subject.title ||
-                                "Subject";
-
-                            return `
-                                <option value="${escapeAttribute(id)}">
-                                    ${escapeHtml(name)}
-                                </option>
-                            `;
-                        }
-                    )
-                    .join("")}
-            </select>
-        </td>
-
-        <td>
-            <input
-                type="number"
-                class="form-control score-input subject-ca"
-                data-field="ca"
-                min="0"
-                max="40"
-                step="0.01"
-                inputmode="decimal"
-                placeholder="0"
-                required
-            >
-        </td>
-
-        <td>
-            <input
-                type="number"
-                class="form-control score-input subject-exam"
-                data-field="exam"
-                min="0"
-                max="60"
-                step="0.01"
-                inputmode="decimal"
-                placeholder="0"
-                required
-            >
-        </td>
-
-        <td>
-            <input
-                type="text"
-                class="form-control calculated-field subject-total"
-                data-field="total"
-                value="0"
-                readonly
-            >
-        </td>
-
-        <td>
-            <input
-                type="text"
-                class="form-control calculated-field subject-grade"
-                data-field="grade"
-                value="-"
-                readonly
-            >
-        </td>
-
-        <td>
-            <input
-                type="text"
-                class="form-control calculated-field subject-remark"
-                data-field="remark"
-                value="-"
-                readonly
-            >
-        </td>
-
-        <td>
-            <button
-                type="button"
-                class="btn btn-outline-danger btn-sm remove-subject"
-                title="Remove subject"
-            >
-                Remove
-            </button>
-        </td>
-    `;
-
-    body.appendChild(
-        row
-    );
-
-    if (existingResult) {
-        setFormValueOnRow(
-            row,
-            ".subject-select",
-            existingResult.subject_id ||
-            existingResult.subjectId ||
-            ""
-        );
-
-        setFormValueOnRow(
-            row,
-            ".subject-ca",
-            existingResult.ca_score ??
-            existingResult.ca ??
-            ""
-        );
-
-        setFormValueOnRow(
-            row,
-            ".subject-exam",
-            existingResult.exam_score ??
-            existingResult.exam ??
-            ""
-        );
-
-        calculateSubjectRow(
-            row
-        );
-    }
-
-    updateSubjectMessage();
-
-    const caInput =
-        row.querySelector(
-            ".subject-ca"
-        );
-
-    if (caInput && !existingResult) {
-        setTimeout(
-            function () {
-                caInput.focus();
-            },
-            50
-        );
-    }
-}
-
-function calculateSubjectRow(row) {
-    if (!row) {
-        return;
-    }
-
-    const caInput =
-        row.querySelector(
-            ".subject-ca"
-        );
-
-    const examInput =
-        row.querySelector(
-            ".subject-exam"
-        );
-
-    const totalInput =
-        row.querySelector(
-            ".subject-total"
-        );
-
-    const gradeInput =
-        row.querySelector(
-            ".subject-grade"
-        );
-
-    const remarkInput =
-        row.querySelector(
-            ".subject-remark"
-        );
-
-    let ca =
-        Number(
-            caInput?.value || 0
-        );
-
-    let exam =
-        Number(
-            examInput?.value || 0
-        );
-
-    if (ca > CA_MAX) {
-        ca = CA_MAX;
-
-        if (caInput) {
-            caInput.value =
-                CA_MAX;
-        }
-    }
-
-    if (ca < 0) {
-        ca = 0;
-
-        if (caInput) {
-            caInput.value =
-                0;
-        }
-    }
-
-    if (exam > EXAM_MAX) {
-        exam = EXAM_MAX;
-
-        if (examInput) {
-            examInput.value =
-                EXAM_MAX;
-        }
-    }
-
-    if (exam < 0) {
-        exam = 0;
-
-        if (examInput) {
-            examInput.value =
-                0;
-        }
-    }
-
-    const total =
-        ca + exam;
-
-    if (totalInput) {
-        totalInput.value =
-            total.toFixed(2);
-    }
-
-    if (gradeInput) {
-        gradeInput.value =
-            calculateGrade(total);
-    }
-
-    if (remarkInput) {
-        remarkInput.value =
-            getRemark(total);
-    }
-}
-
-function updateOverallSummary() {
-    const rows =
-        getSubjectRows();
-
-    let overallTotal =
-        0;
-
-    let passed =
-        0;
-
-    rows.forEach(
-        function (row) {
-            calculateSubjectRow(
-                row
-            );
-
-            const total =
-                Number(
-                    row.querySelector(
-                        ".subject-total"
-                    )?.value || 0
-                );
-
-            overallTotal +=
-                total;
-
-            if (total >= PASS_MARK) {
-                passed++;
-            }
-        }
-    );
-
-    const count =
-        rows.length;
-
-    const average =
-        count > 0
-            ? overallTotal / count
-            : 0;
-
-    const countInput =
-        document.querySelector(
-            "#subjectCount"
-        );
-
-    const totalInput =
-        document.querySelector(
-            "#overallTotal"
-        );
-
-    const averageInput =
-        document.querySelector(
-            "#overallAverage"
-        );
-
-    const statusInput =
-        document.querySelector(
-            "#overallStatus"
-        );
-
-    if (countInput) {
-        countInput.value =
-            count;
-    }
-
-    if (totalInput) {
-        totalInput.value =
-            overallTotal.toFixed(2);
-    }
-
-    if (averageInput) {
-        averageInput.value =
-            average.toFixed(2);
-    }
-
-    if (statusInput) {
-        if (count === 0) {
-            statusInput.value =
-                "-";
-        } else {
-            const failed =
-                count - passed;
-
-            statusInput.value =
-                failed === 0
-                    ? "PASSED"
-                    : passed > 0
-                        ? "PARTIAL PASS"
-                        : "FAILED";
-        }
-    }
-}
-
-async function saveCompleteResult() {
-    clearValidation();
-
-    if (!selectedStudent) {
-        showValidation(
-            "Please enter a valid Admission Number and find the student."
-        );
-
-        return;
-    }
-
-    const studentId =
-        getStudentId(
-            selectedStudent
-        );
-
-    if (!studentId) {
-        showValidation(
-            "The selected student does not have a valid student ID."
-        );
-
-        return;
-    }
-
-    const academicSessionId =
-        getValue(
-            "#sessionId"
-        );
-
-    if (!academicSessionId) {
-        showValidation(
-            "Please select the Academic Session."
-        );
-
-        return;
-    }
-
-    const termId =
-        getValue(
-            "#termId"
-        );
-
-    if (!termId) {
-        showValidation(
-            "Please select the Term."
-        );
-
-        return;
-    }
-
-    const classId =
-        getStudentClassId(
-            selectedStudent
-        );
-
-    if (!classId) {
-        showValidation(
-            "This student does not have a class assigned. Please assign the student to a class before entering the result."
-        );
-
-        return;
-    }
-
-    const rows =
-        getSubjectRows();
-
-    if (!rows.length) {
-        showValidation(
-            "Please add at least one subject."
-        );
-
-        return;
-    }
-
-    const subjectResults = [];
-
-    for (
-        let index = 0;
-        index < rows.length;
-        index++
-    ) {
-        const row =
-            rows[index];
-
-        const subjectId =
-            row.querySelector(
-                ".subject-select"
-            )?.value;
-
-        const ca =
-            Number(
-                row.querySelector(
-                    ".subject-ca"
-                )?.value
-            );
-
-        const exam =
-            Number(
-                row.querySelector(
-                    ".subject-exam"
-                )?.value
-            );
-
-        if (!subjectId) {
-            showValidation(
-                `Please select a subject for row ${index + 1}.`
-            );
-
-            return;
-        }
-
-        if (
-            !Number.isFinite(ca) ||
-            ca < 0 ||
-            ca > CA_MAX
-        ) {
-            showValidation(
-                `CA score for row ${index + 1} must be between 0 and ${CA_MAX}.`
-            );
-
-            return;
-        }
-
-        if (
-            !Number.isFinite(exam) ||
-            exam < 0 ||
-            exam > EXAM_MAX
-        ) {
-            showValidation(
-                `Exam score for row ${index + 1} must be between 0 and ${EXAM_MAX}.`
-            );
-
-            return;
-        }
-
-        const total =
-            ca + exam;
-
-        subjectResults.push({
-            studentId,
-            academicSessionId,
-            termId,
-            classId,
-            subjectId,
-            caScore: ca,
-            examScore: exam,
-            totalScore: total
-        });
-    }
-
-    const subjectIds =
-        subjectResults.map(
-            function (item) {
-                return item.subjectId;
-            }
-        );
-
-    const duplicate =
-        subjectIds.find(
-            function (id, index) {
-                return (
-                    subjectIds.indexOf(id) !==
-                    index
-                );
-            }
-        );
-
-    if (duplicate) {
-        showValidation(
-            "The same subject has been added more than once. Please remove the duplicate."
-        );
-
-        return;
-    }
-
-    const teacherRemark =
-        getValue(
-            "#teacherComment"
-        ).trim();
-
-    const saveButton =
-        document.querySelector(
-            "#saveCompleteResultButton"
-        );
-
-    if (saveButton) {
-        saveButton.disabled =
-            true;
-
-        saveButton.textContent =
-            "Saving Results...";
-    }
-
-    try {
-        if (editingResultId) {
-            if (
-                subjectResults.length !==
-                1
-            ) {
-                throw new Error(
-                    "Edit mode supports one result record at a time."
-                );
-            }
-
-            const item =
-                subjectResults[0];
-
-            await request(
-                `/results/${encodeURIComponent(editingResultId)}`,
-                {
-                    method: "PUT",
-                    body: JSON.stringify({
-                        academicSessionId:
-                            item.academicSessionId,
-                        termId:
-                            item.termId,
-                        classId:
-                            item.classId,
-                        subjectId:
-                            item.subjectId,
-                        caScore:
-                            item.caScore,
-                        examScore:
-                            item.examScore,
-                        totalScore:
-                            item.totalScore,
-                        teacherRemark
-                    })
-                }
-            );
-
-            notify(
-                "Result updated successfully.",
-                "success"
-            );
-        } else {
-            for (
-                const item
-                of subjectResults
-            ) {
-                await request(
-                    "/results",
-                    {
-                        method: "POST",
-                        body: JSON.stringify({
-                            studentId:
-                                item.studentId,
-                            academicSessionId:
-                                item.academicSessionId,
-                            termId:
-                                item.termId,
-                            classId:
-                                item.classId,
-                            subjectId:
-                                item.subjectId,
-                            caScore:
-                                item.caScore,
-                            examScore:
-                                item.examScore,
-                            totalScore:
-                                item.totalScore,
-                            teacherRemark
-                        })
-                    }
-                );
-            }
-
-            notify(
-                `Complete result saved for ${getStudentName(selectedStudent)}.`,
-                "success"
-            );
-        }
-
-        closeResultModal();
-        resetForm();
-        await loadResults();
-    } catch (error) {
-        console.error(
-            "Complete result save failed:",
-            error
-        );
-
-        showValidation(
-            error.message ||
-            "Unable to save the complete result."
-        );
-    } finally {
-        if (saveButton) {
-            saveButton.disabled =
-                false;
-
-            saveButton.textContent =
-                "Save Complete Result";
-        }
     }
 }
 
@@ -1522,34 +610,28 @@ function renderResults() {
             .toLowerCase();
 
     let records =
-        results;
+        resultSets;
 
     if (search) {
         records =
-            results.filter(
-                function (result) {
-                    const student =
-                        getStudentName(
-                            result
-                        )
-                            .toLowerCase();
-
-                    const admission =
-                        getAdmissionNumber(
-                            result
-                        )
-                            .toLowerCase();
-
-                    const subject =
-                        getSubjectName(
-                            result
-                        )
-                            .toLowerCase();
-
+            resultSets.filter(
+                function (resultSet) {
                     return (
-                        student.includes(search) ||
-                        admission.includes(search) ||
-                        subject.includes(search)
+                        resultSet.studentName
+                            .toLowerCase()
+                            .includes(search) ||
+                        resultSet.admissionNumber
+                            .toLowerCase()
+                            .includes(search) ||
+                        resultSet.className
+                            .toLowerCase()
+                            .includes(search) ||
+                        resultSet.sessionName
+                            .toLowerCase()
+                            .includes(search) ||
+                        resultSet.termName
+                            .toLowerCase()
+                            .includes(search)
                     );
                 }
             );
@@ -1571,98 +653,42 @@ function renderResults() {
             .join("");
 }
 
-function renderResultRow(result) {
-    const id =
-        result.id ||
-        result.result_id ||
-        "";
-
-    const studentName =
-        getStudentName(
-            result
-        );
+function renderResultRow(resultSet) {
+    const studentId =
+        resultSet.studentId;
 
     const admissionNumber =
-        getAdmissionNumber(
-            result
-        );
+        resultSet.admissionNumber ||
+        "-";
 
-    const subjectName =
-        getSubjectName(
-            result
-        );
+    const studentName =
+        resultSet.studentName ||
+        "Unknown Student";
 
     const className =
-        result.class_name ||
-        result.className ||
+        resultSet.className ||
         "-";
 
     const sessionName =
-        result.session_name ||
-        result.academic_session ||
-        result.session ||
+        resultSet.sessionName ||
         "-";
 
     const termName =
-        result.term_name ||
-        result.term ||
+        resultSet.termName ||
         "-";
 
-    const ca =
-        Number(
-            result.ca_score ??
-            result.ca ??
-            0
-        );
-
-    const exam =
-        Number(
-            result.exam_score ??
-            result.exam ??
-            0
-        );
-
-    const total =
-        Number(
-            result.total_score ??
-            ca + exam
-        );
-
-    const grade =
-        result.grade ||
-        calculateGrade(total);
-
-    const published =
-        result.is_published === true ||
-        result.is_published === 1 ||
-        result.isPublished === true;
-
     const status =
-        total >= PASS_MARK
-            ? "Passed"
-            : "Failed";
+        resultSet.status;
 
-    const approveButton =
-        published
-            ? `
-                <button
-                    type="button"
-                    class="btn btn-sm btn-outline-success"
-                    disabled
-                >
-                    Published
-                </button>
-            `
-            : `
-                <button
-                    type="button"
-                    class="btn btn-sm btn-outline-warning"
-                    data-action="publish-result"
-                    data-id="${escapeAttribute(id)}"
-                >
-                    Publish
-                </button>
-            `;
+    const statusClass =
+        status === "Passed"
+            ? "bg-success"
+            : "bg-danger";
+
+    const viewUrl =
+        buildStudentResultsUrl(
+            resultSet
+        );
 
     return `
         <tr>
@@ -1688,12 +714,6 @@ function renderResultRow(result) {
 
             <td>
                 ${escapeHtml(
-                    subjectName
-                )}
-            </td>
-
-            <td>
-                ${escapeHtml(
                     sessionName
                 )}
             </td>
@@ -1705,264 +725,74 @@ function renderResultRow(result) {
             </td>
 
             <td>
-                ${total.toFixed(2)}
+                <span class="badge bg-primary">
+                    ${resultSet.subjectCount}
+                </span>
             </td>
 
             <td>
                 <strong>
-                    ${escapeHtml(
-                        grade
-                    )}
+                    ${resultSet.average.toFixed(2)}
                 </strong>
             </td>
 
             <td>
                 <span
-                    class="badge ${
-                        total >= PASS_MARK
-                            ? "bg-success"
-                            : "bg-danger"
-                    }"
+                    class="badge ${statusClass}"
                 >
                     ${status}
                 </span>
             </td>
 
             <td>
-                <div class="d-flex gap-1 flex-wrap">
-                    <button
-                        type="button"
-                        class="btn btn-sm btn-outline-primary"
-                        data-action="edit-result"
-                        data-id="${escapeAttribute(id)}"
-                    >
-                        Edit
-                    </button>
-
-                    ${approveButton}
-
-                    <button
-                        type="button"
-                        class="btn btn-sm btn-outline-danger"
-                        data-action="delete-result"
-                        data-id="${escapeAttribute(id)}"
-                    >
-                        Delete
-                    </button>
-                </div>
+                <a
+                    href="${escapeAttribute(
+                        viewUrl
+                    )}"
+                    class="btn btn-sm btn-outline-primary"
+                >
+                    <i class="bi bi-eye me-1"></i>
+                    View Result
+                </a>
             </td>
         </tr>
     `;
 }
 
-function editResult(id) {
-    const result =
-        results.find(
-            function (item) {
-                return String(
-                    item.id ||
-                    item.result_id
-                ) === String(id);
-            }
-        );
+function buildStudentResultsUrl(resultSet) {
+    const params =
+        new URLSearchParams();
 
-    if (!result) {
-        notify(
-            "Result record not found.",
-            "error"
-        );
-
-        return;
-    }
-
-    editingResultId =
-        id;
-
-    const studentId =
-        result.student_id ||
-        result.studentId;
-
-    selectedStudent =
-        students.find(
-            function (student) {
-                return String(
-                    getStudentId(
-                        student
-                    )
-                ) === String(
-                    studentId
-                );
-            }
-        ) || null;
-
-    if (selectedStudent) {
-        setFormValue(
-            "#admissionNumber",
-            getAdmissionNumber(
-                selectedStudent
-            )
-        );
-
-        displayStudentSummary(
-            selectedStudent
-        );
-    } else {
-        selectedStudent = {
-            id: studentId,
-            student_id: studentId,
-            admission_number:
-                result.admission_number ||
-                result.admissionNumber ||
-                "",
-            student_name:
-                result.student_name ||
-                result.studentName ||
-                ""
-        };
-
-        setFormValue(
-            "#admissionNumber",
-            getAdmissionNumber(
-                selectedStudent
-            )
-        );
-
-        displayStudentSummary(
-            selectedStudent
+    if (resultSet.studentId) {
+        params.set(
+            "studentId",
+            resultSet.studentId
         );
     }
 
-    setFormValue(
-        "#sessionId",
-        result.academic_session_id ||
-        result.session_id ||
-        result.sessionId ||
-        ""
-    );
-
-    setFormValue(
-        "#termId",
-        result.term_id ||
-        result.termId ||
-        ""
-    );
-
-    const body =
-        document.querySelector(
-            "#subjectResultsBody"
-        );
-
-    if (body) {
-        body.innerHTML =
-            "";
-
-        addSubjectRow(
-            result
+    if (resultSet.sessionId) {
+        params.set(
+            "academicSessionId",
+            resultSet.sessionId
         );
     }
 
-    setFormValue(
-        "#teacherComment",
-        result.teacher_remark ||
-        result.teacherRemark ||
-        result.teacher_comment ||
-        result.teacherComment ||
-        ""
-    );
-
-    const title =
-        document.querySelector(
-            "#resultModalTitle"
+    if (resultSet.termId) {
+        params.set(
+            "termId",
+            resultSet.termId
         );
-
-    if (title) {
-        title.textContent =
-            "Edit Student Result";
     }
 
-    updateSubjectMessage();
-    updateOverallSummary();
-    clearValidation();
-    openResultModal();
+    const query =
+        params.toString();
+
+    return query
+        ? `/pages/student-results.html?${query}`
+        : "/pages/student-results.html";
 }
 
-async function deleteResult(id) {
-    const confirmed =
-        window.confirm(
-            "Are you sure you want to delete this result?"
-        );
-
-    if (!confirmed) {
-        return;
-    }
-
-    try {
-        await request(
-            `/results/${encodeURIComponent(id)}`,
-            {
-                method: "DELETE"
-            }
-        );
-
-        notify(
-            "Result deleted successfully.",
-            "success"
-        );
-
-        await loadResults();
-    } catch (error) {
-        console.error(
-            "Result deletion failed:",
-            error
-        );
-
-        notify(
-            error.message ||
-            "Unable to delete result.",
-            "error"
-        );
-    }
-}
-
-async function publishResult(id) {
-    const confirmed =
-        window.confirm(
-            "Are you sure you want to publish this result?"
-        );
-
-    if (!confirmed) {
-        return;
-    }
-
-    try {
-        await request(
-            `/results/${encodeURIComponent(id)}/approve`,
-            {
-                method: "PATCH"
-            }
-        );
-
-        notify(
-            "Result published successfully.",
-            "success"
-        );
-
-        await loadResults();
-    } catch (error) {
-        console.error(
-            "Result publishing failed:",
-            error
-        );
-
-        notify(
-            error.message ||
-            "Unable to publish result.",
-            "error"
-        );
-    }
-}
-
-async function handleActionClick(event) {
+function handleActionClick(event) {
     const button =
         event.target.closest(
             "[data-action]"
@@ -1971,228 +801,105 @@ async function handleActionClick(event) {
     if (!button) {
         return;
     }
-
-    const action =
-        button.getAttribute(
-            "data-action"
-        );
-
-    const id =
-        button.getAttribute(
-            "data-id"
-        );
-
-    if (!id) {
-        return;
-    }
-
-    if (
-        action ===
-        "edit-result"
-    ) {
-        editResult(id);
-        return;
-    }
-
-    if (
-        action ===
-        "delete-result"
-    ) {
-        await deleteResult(id);
-        return;
-    }
-
-    if (
-        action ===
-        "publish-result"
-    ) {
-        await publishResult(id);
-    }
 }
 
-function openResultModal() {
-    const modalElement =
-        document.querySelector(
-            "#resultModal"
-        );
+function updateSummary() {
+    const count =
+        resultSets.length;
 
-    if (!modalElement) {
-        console.error(
-            "Result modal was not found."
-        );
+    let passed =
+        0;
 
-        return;
-    }
+    let failed =
+        0;
 
-    if (
-        window.bootstrap &&
-        typeof window.bootstrap.Modal ===
-            "function"
-    ) {
-        const modal =
-            window.bootstrap.Modal
-                .getOrCreateInstance(
-                    modalElement
-                );
+    let totalAverage =
+        0;
 
-        modal.show();
+    resultSets.forEach(
+        function (resultSet) {
+            totalAverage +=
+                resultSet.average;
 
-        return;
-    }
-
-    modalElement.classList.add(
-        "show"
+            if (
+                resultSet.average >=
+                PASS_MARK
+            ) {
+                passed++;
+            } else {
+                failed++;
+            }
+        }
     );
 
-    modalElement.style.display =
-        "block";
+    const average =
+        count > 0
+            ? totalAverage / count
+            : 0;
 
-    modalElement.removeAttribute(
-        "aria-hidden"
+    setSummary(
+        "#totalResults",
+        count
     );
 
-    modalElement.setAttribute(
-        "aria-modal",
-        "true"
+    setSummary(
+        "#passedResults",
+        passed
     );
 
-    document.body.classList.add(
-        "modal-open"
+    setSummary(
+        "#failedResults",
+        failed
+    );
+
+    setSummary(
+        "#averageScore",
+        average.toFixed(2)
     );
 }
 
-function closeResultModal() {
-    const modalElement =
-        document.querySelector(
-            "#resultModal"
+function getResultTotal(result) {
+    const ca =
+        Number(
+            result?.ca_score ??
+            result?.caScore ??
+            result?.ca ??
+            0
         );
 
-    if (!modalElement) {
-        return;
-    }
+    const exam =
+        Number(
+            result?.exam_score ??
+            result?.examScore ??
+            result?.exam ??
+            0
+        );
+
+    const storedTotal =
+        result?.total_score ??
+        result?.totalScore ??
+        result?.total;
 
     if (
-        window.bootstrap &&
-        typeof window.bootstrap.Modal ===
-            "function"
+        storedTotal !== null &&
+        storedTotal !== undefined &&
+        storedTotal !== ""
     ) {
-        const modal =
-            window.bootstrap.Modal
-                .getInstance(
-                    modalElement
-                );
+        const parsed =
+            Number(
+                storedTotal
+            );
 
-        if (modal) {
-            modal.hide();
-            return;
+        if (
+            Number.isFinite(
+                parsed
+            )
+        ) {
+            return parsed;
         }
     }
 
-    modalElement.classList.remove(
-        "show"
-    );
-
-    modalElement.style.display =
-        "none";
-
-    modalElement.setAttribute(
-        "aria-hidden",
-        "true"
-    );
-
-    document.body.classList.remove(
-        "modal-open"
-    );
-}
-
-function resetForm() {
-    editingResultId =
-        null;
-
-    selectedStudent =
-        null;
-
-    const form =
-        document.querySelector(
-            "#resultForm"
-        );
-
-    if (form) {
-        form.reset();
-    }
-
-    hideStudentSummary();
-
-    showStudentMessage(
-        "Enter the student's admission number.",
-        "normal"
-    );
-
-    const title =
-        document.querySelector(
-            "#resultModalTitle"
-        );
-
-    if (title) {
-        title.textContent =
-            "Enter Student Result";
-    }
-
-    const body =
-        document.querySelector(
-            "#subjectResultsBody"
-        );
-
-    if (body) {
-        body.innerHTML =
-            "";
-    }
-
-    updateSubjectMessage();
-    updateOverallSummary();
-    clearValidation();
-}
-
-function updateSubjectMessage() {
-    const body =
-        document.querySelector(
-            "#subjectResultsBody"
-        );
-
-    const message =
-        document.querySelector(
-            "#noSubjectMessage"
-        );
-
-    if (!message) {
-        return;
-    }
-
-    const hasRows =
-        body &&
-        body.children.length > 0;
-
-    message.style.display =
-        hasRows
-            ? "none"
-            : "block";
-}
-
-function getSubjectRows() {
-    const body =
-        document.querySelector(
-            "#subjectResultsBody"
-        );
-
-    if (!body) {
-        return [];
-    }
-
-    return Array.from(
-        body.querySelectorAll(
-            "tr"
-        )
-    );
+    return ca + exam;
 }
 
 function calculateGrade(score) {
@@ -2249,111 +956,48 @@ function getRemark(score) {
     return "Fail";
 }
 
-function updateSummary() {
-    const count =
-        results.length;
-
-    let total =
-        0;
-
-    let passed =
-        0;
-
-    let failed =
-        0;
-
-    results.forEach(
-        function (result) {
-            const ca =
-                Number(
-                    result.ca_score ??
-                    result.ca ??
-                    0
-                );
-
-            const exam =
-                Number(
-                    result.exam_score ??
-                    result.exam ??
-                    0
-                );
-
-            const score =
-                Number(
-                    result.total_score ??
-                    ca + exam
-                );
-
-            total +=
-                score;
-
-            if (score >= PASS_MARK) {
-                passed++;
-            } else {
-                failed++;
-            }
-        }
-    );
-
-    const average =
-        count > 0
-            ? total / count
-            : 0;
-
-    setSummary(
-        "#totalResults",
-        count
-    );
-
-    setSummary(
-        "#passedResults",
-        passed
-    );
-
-    setSummary(
-        "#failedResults",
-        failed
-    );
-
-    setSummary(
-        "#averageScore",
-        average.toFixed(2)
-    );
-}
-
-function setSummary(
-    selector,
-    value
-) {
-    const element =
-        document.querySelector(
-            selector
-        );
-
-    if (element) {
-        element.textContent =
-            value;
-    }
-}
-
 function getStudentId(student) {
-    return (
-        student?.id ||
+    return String(
         student?.student_id ||
         student?.studentId ||
+        student?.studentID ||
+        student?.id ||
         ""
     );
 }
 
-function getAdmissionNumber(student) {
-    return (
-        student?.admission_number ||
-        student?.admissionNumber ||
-        student?.admission_no ||
-        student?.admissionNo ||
-        student?.student_number ||
-        student?.studentNumber ||
+function getSessionId(result) {
+    return String(
+        result?.academic_session_id ||
+        result?.academicSessionId ||
+        result?.session_id ||
+        result?.sessionId ||
         ""
+    );
+}
+
+function getTermId(result) {
+    return String(
+        result?.term_id ||
+        result?.termId ||
+        ""
+    );
+}
+
+function getClassId(result) {
+    return String(
+        result?.class_id ||
+        result?.classId ||
+        ""
+    );
+}
+
+function getClassName(result) {
+    return String(
+        result?.class_name ||
+        result?.className ||
+        result?.class ||
+        "-"
     );
 }
 
@@ -2383,84 +1027,64 @@ function getStudentName(student) {
     ) || "Unknown Student";
 }
 
-function getStudentClassId(student) {
-    return (
-        student?.class_id ||
-        student?.classId ||
-        student?.current_class_id ||
-        student?.currentClassId ||
-        student?.class?.id ||
-        student?.class?.class_id ||
-        student?.enrollment?.class_id ||
-        student?.enrollment?.classId ||
+function getAdmissionNumber(student) {
+    return String(
+        student?.admission_number ||
+        student?.admissionNumber ||
+        student?.admission_no ||
+        student?.admissionNo ||
+        student?.student_number ||
+        student?.studentNumber ||
         ""
     );
 }
 
-function getStudentClassName(student) {
-    return (
-        student?.class_name ||
-        student?.className ||
-        student?.current_class_name ||
-        student?.currentClassName ||
-        student?.class?.class_name ||
-        student?.class?.name ||
-        student?.enrollment?.class_name ||
-        student?.enrollment?.className ||
+function getSessionName(session) {
+    return String(
+        session?.session_name ||
+        session?.sessionName ||
+        session?.name ||
+        session?.session ||
+        session?.title ||
         "-"
     );
 }
 
-function getSubjectName(result) {
-    return (
-        result?.subject_name ||
-        result?.subjectName ||
-        result?.subject ||
-        result?.title ||
-        "Unknown Subject"
+function getTermName(term) {
+    return String(
+        term?.term_name ||
+        term?.termName ||
+        term?.name ||
+        term?.term ||
+        term?.title ||
+        "-"
     );
 }
 
-function showValidation(message) {
+function setSummary(
+    selector,
+    value
+) {
     const element =
         document.querySelector(
-            "#resultValidationMessage"
-        );
-
-    if (!element) {
-        notify(
-            message,
-            "error"
-        );
-
-        return;
-    }
-
-    element.textContent =
-        message;
-
-    element.style.display =
-        "block";
-
-    element.scrollIntoView({
-        behavior: "smooth",
-        block: "center"
-    });
-}
-
-function clearValidation() {
-    const element =
-        document.querySelector(
-            "#resultValidationMessage"
+            selector
         );
 
     if (element) {
         element.textContent =
-            "";
-
-        element.style.display =
-            "none";
+            value;
     }
+}
+
+function getValue(selector) {
+    const element =
+        document.querySelector(
+            selector
+        );
+
+    return element
+        ? element.value || ""
+        : "";
 }
 
 function normalizeArray(data) {
@@ -2478,18 +1102,10 @@ function normalizeArray(data) {
 
     if (
         Array.isArray(
-            data?.students
+            data?.results
         )
     ) {
-        return data.students;
-    }
-
-    if (
-        Array.isArray(
-            data?.subjects
-        )
-    ) {
-        return data.subjects;
+        return data.results;
     }
 
     if (
@@ -2510,14 +1126,6 @@ function normalizeArray(data) {
 
     if (
         Array.isArray(
-            data?.results
-        )
-    ) {
-        return data.results;
-    }
-
-    if (
-        Array.isArray(
             data?.records
         )
     ) {
@@ -2527,46 +1135,74 @@ function normalizeArray(data) {
     return [];
 }
 
-function getValue(selector) {
-    const element =
+function showLoading() {
+    const container =
         document.querySelector(
-            selector
+            "#resultsTableBody"
         );
 
-    return element
-        ? element.value || ""
-        : "";
+    if (!container) {
+        return;
+    }
+
+    container.innerHTML = `
+        <tr>
+            <td colspan="9">
+                <div class="text-center p-4">
+                    Loading results...
+                </div>
+            </td>
+        </tr>
+    `;
 }
 
-function setFormValue(
-    selector,
-    value
-) {
-    const element =
+function showEmpty(message) {
+    const container =
         document.querySelector(
-            selector
+            "#resultsTableBody"
         );
 
-    if (element) {
-        element.value =
-            value ?? "";
+    if (!container) {
+        return;
     }
+
+    container.innerHTML = `
+        <tr>
+            <td colspan="9">
+                <div class="empty-result-message">
+                    <h5>No results found</h5>
+                    <p class="mb-0">
+                        ${escapeHtml(
+                            message
+                        )}
+                    </p>
+                </div>
+            </td>
+        </tr>
+    `;
 }
 
-function setFormValueOnRow(
-    row,
-    selector,
-    value
-) {
-    const element =
-        row.querySelector(
-            selector
+function showError(message) {
+    const container =
+        document.querySelector(
+            "#resultsTableBody"
         );
 
-    if (element) {
-        element.value =
-            value ?? "";
+    if (!container) {
+        return;
     }
+
+    container.innerHTML = `
+        <tr>
+            <td colspan="9">
+                <div class="alert alert-danger m-3">
+                    ${escapeHtml(
+                        message
+                    )}
+                </div>
+            </td>
+        </tr>
+    `;
 }
 
 function notify(
@@ -2639,72 +1275,6 @@ function notify(
     );
 }
 
-function showLoading() {
-    const container =
-        document.querySelector(
-            "#resultsTableBody"
-        );
-
-    if (!container) {
-        return;
-    }
-
-    container.innerHTML = `
-        <tr>
-            <td colspan="10">
-                <div class="text-center p-4">
-                    Loading results...
-                </div>
-            </td>
-        </tr>
-    `;
-}
-
-function showEmpty(message) {
-    const container =
-        document.querySelector(
-            "#resultsTableBody"
-        );
-
-    if (!container) {
-        return;
-    }
-
-    container.innerHTML = `
-        <tr>
-            <td colspan="10">
-                <div class="empty-result-message">
-                    <h5>No results found</h5>
-                    <p class="mb-0">
-                        ${escapeHtml(message)}
-                    </p>
-                </div>
-            </td>
-        </tr>
-    `;
-}
-
-function showError(message) {
-    const container =
-        document.querySelector(
-            "#resultsTableBody"
-        );
-
-    if (!container) {
-        return;
-    }
-
-    container.innerHTML = `
-        <tr>
-            <td colspan="10">
-                <div class="alert alert-danger m-3">
-                    ${escapeHtml(message)}
-                </div>
-            </td>
-        </tr>
-    `;
-}
-
 function escapeHtml(value) {
     if (
         value === null ||
@@ -2737,20 +1307,14 @@ function escapeHtml(value) {
 }
 
 function escapeAttribute(value) {
-    return escapeHtml(
-        value
-    );
+    return escapeHtml(value);
 }
 
 window.ResultsPage = {
     initialize,
     loadResults,
-    loadStudents,
-    loadSubjects,
     loadSessions,
     loadTerms,
-    findStudent,
-    resetForm,
     calculateGrade,
     getRemark
 };
@@ -2769,6 +1333,6 @@ if (
 } else {
     initialize();
 }
-```
+
 
 })();

@@ -3,66 +3,57 @@
 const { query } = require("../config/database");
 
 /*
-|--------------------------------------------------------------------------
-| GUARDIAN MODEL
-|--------------------------------------------------------------------------
-|
-| Database tables:
-|
-| guardians
-| student_guardians
-| students
-| student_enrollments
-| classes
-| class_arms
-|
-| This model is responsible only for database operations involving
-| parents/guardians and their relationships with students.
-|
-| The public function names and signatures are preserved so existing
-| controllers and routes can continue to use this model without redesign.
-|
-|--------------------------------------------------------------------------
+GUARDIAN MODEL
+
+Database tables:
+
+* guardians
+* student_guardians
+
+Responsibilities:
+
+* Create guardians
+* Find guardians
+* Search guardians
+* Update guardians
+* Delete guardians
+* Link guardians to students
+* Unlink guardians from students
+* Get students linked to a guardian
+* Get guardians linked to a student
+* Set a primary guardian
+* Count guardians
+* Get guardian relationship statistics
 */
 
 /*
-|--------------------------------------------------------------------------
-| CREATE GUARDIAN
-|--------------------------------------------------------------------------
+CREATE GUARDIAN
 */
 
-async function createGuardian({
-    schoolId,
-    firstName,
-    middleName = null,
-    lastName,
-    relationship = null,
-    phone = null,
-    alternativePhone = null,
-    email = null,
-    address = null,
-    occupation = null,
-    employer = null,
-    emergencyContact = false
-}) {
+async function createGuardian(data) {
+    const {
+        schoolId,
+        firstName,
+        middleName,
+        lastName,
+        relationship,
+        phone,
+        alternativePhone,
+        email,
+        occupation,
+        employer,
+        address,
+        emergencyContact
+    } = data;
+
     if (!schoolId) {
         throw new Error("School ID is required.");
     }
 
-    if (
-        !firstName ||
-        typeof firstName !== "string" ||
-        !firstName.trim()
-    ) {
-        throw new Error("Guardian first name is required.");
-    }
-
-    if (
-        !lastName ||
-        typeof lastName !== "string" ||
-        !lastName.trim()
-    ) {
-        throw new Error("Guardian last name is required.");
+    if (!firstName || !lastName) {
+        throw new Error(
+            "First name and last name are required."
+        );
     }
 
     const sql = `
@@ -75,9 +66,9 @@ async function createGuardian({
             phone,
             alternative_phone,
             email,
-            address,
             occupation,
             employer,
+            address,
             emergency_contact
         )
         VALUES (
@@ -99,28 +90,24 @@ async function createGuardian({
 
     const result = await query(sql, [
         schoolId,
-        firstName.trim(),
-        typeof middleName === "string" && middleName.trim()
-            ? middleName.trim()
-            : null,
-        lastName.trim(),
+        firstName,
+        middleName || null,
+        lastName,
         relationship || null,
         phone || null,
         alternativePhone || null,
         email || null,
-        address || null,
         occupation || null,
         employer || null,
-        Boolean(emergencyContact)
+        address || null,
+        emergencyContact || null
     ]);
 
     return result.rows[0];
 }
 
 /*
-|--------------------------------------------------------------------------
-| FIND GUARDIAN BY ID
-|--------------------------------------------------------------------------
+FIND GUARDIAN BY ID
 */
 
 async function findGuardianById(
@@ -136,11 +123,15 @@ async function findGuardianById(
     }
 
     const sql = `
-        SELECT *
-        FROM guardians
-        WHERE id = $1
-          AND school_id = $2
-        LIMIT 1
+        SELECT
+            g.*,
+            COUNT(DISTINCT sg.student_id)::INTEGER AS student_count
+        FROM guardians g
+        LEFT JOIN student_guardians sg
+            ON sg.guardian_id = g.id
+        WHERE g.id = $1
+          AND g.school_id = $2
+        GROUP BY g.id
     `;
 
     const result = await query(sql, [
@@ -152,9 +143,7 @@ async function findGuardianById(
 }
 
 /*
-|--------------------------------------------------------------------------
-| FIND GUARDIANS
-|--------------------------------------------------------------------------
+FIND GUARDIANS
 */
 
 async function findGuardians({
@@ -166,34 +155,29 @@ async function findGuardians({
         throw new Error("School ID is required.");
     }
 
-    const numericLimit = Number(limit);
-    const numericOffset = Number(offset);
-
     const safeLimit = Math.min(
-        Math.max(
-            Number.isFinite(numericLimit)
-                ? Math.trunc(numericLimit)
-                : 100,
-            1
-        ),
-        100
+        Math.max(Number(limit) || 100, 1),
+        500
     );
 
     const safeOffset = Math.max(
-        Number.isFinite(numericOffset)
-            ? Math.trunc(numericOffset)
-            : 0,
+        Number(offset) || 0,
         0
     );
 
     const sql = `
-        SELECT *
-        FROM guardians
-        WHERE school_id = $1
+        SELECT
+            g.*,
+            COUNT(DISTINCT sg.student_id)::INTEGER AS student_count
+        FROM guardians g
+        LEFT JOIN student_guardians sg
+            ON sg.guardian_id = g.id
+        WHERE g.school_id = $1
+        GROUP BY g.id
         ORDER BY
-            last_name ASC,
-            first_name ASC,
-            middle_name ASC
+            g.created_at DESC,
+            g.last_name ASC,
+            g.first_name ASC
         LIMIT $2
         OFFSET $3
     `;
@@ -208,9 +192,7 @@ async function findGuardians({
 }
 
 /*
-|--------------------------------------------------------------------------
-| SEARCH GUARDIANS
-|--------------------------------------------------------------------------
+SEARCH GUARDIANS
 */
 
 async function searchGuardians(
@@ -218,52 +200,57 @@ async function searchGuardians(
     schoolId
 ) {
     if (!schoolId) {
-        return [];
+        throw new Error("School ID is required.");
     }
 
-    if (
-        !searchTerm ||
-        typeof searchTerm !== "string" ||
-        !searchTerm.trim()
-    ) {
-        return [];
+    const term = String(
+        searchTerm || ""
+    ).trim();
+
+    if (!term) {
+        return findGuardians({
+            schoolId
+        });
     }
+
+    const searchPattern = `%${term}%`;
 
     const sql = `
-        SELECT *
-        FROM guardians
-        WHERE school_id = $1
+        SELECT
+            g.*,
+            COUNT(DISTINCT sg.student_id)::INTEGER AS student_count
+        FROM guardians g
+        LEFT JOIN student_guardians sg
+            ON sg.guardian_id = g.id
+        WHERE g.school_id = $1
           AND (
-                first_name ILIKE $2
-                OR middle_name ILIKE $2
-                OR last_name ILIKE $2
-                OR phone ILIKE $2
-                OR alternative_phone ILIKE $2
-                OR email ILIKE $2
-                OR address ILIKE $2
-                OR occupation ILIKE $2
-                OR employer ILIKE $2
-                OR relationship ILIKE $2
+              g.first_name ILIKE $2
+              OR g.middle_name ILIKE $2
+              OR g.last_name ILIKE $2
+              OR g.phone ILIKE $2
+              OR g.alternative_phone ILIKE $2
+              OR g.email ILIKE $2
+              OR g.relationship ILIKE $2
+              OR g.occupation ILIKE $2
+              OR g.employer ILIKE $2
           )
+        GROUP BY g.id
         ORDER BY
-            last_name ASC,
-            first_name ASC,
-            middle_name ASC
+            g.last_name ASC,
+            g.first_name ASC
         LIMIT 100
     `;
 
     const result = await query(sql, [
         schoolId,
-        `%${searchTerm.trim()}%`
+        searchPattern
     ]);
 
     return result.rows;
 }
 
 /*
-|--------------------------------------------------------------------------
-| UPDATE GUARDIAN
-|--------------------------------------------------------------------------
+UPDATE GUARDIAN
 */
 
 async function updateGuardian(
@@ -279,93 +266,61 @@ async function updateGuardian(
         throw new Error("School ID is required.");
     }
 
-    const allowedFields = {
-        firstName: "first_name",
-        middleName: "middle_name",
-        lastName: "last_name",
-        relationship: "relationship",
-        phone: "phone",
-        alternativePhone: "alternative_phone",
-        email: "email",
-        address: "address",
-        occupation: "occupation",
-        employer: "employer",
-        emergencyContact: "emergency_contact"
-    };
-
-    const updates = [];
-    const values = [];
-
-    for (const key of Object.keys(data || {})) {
-        if (
-            !allowedFields[key] ||
-            data[key] === undefined
-        ) {
-            continue;
-        }
-
-        let value = data[key];
-
-        if (
-            [
-                "firstName",
-                "middleName",
-                "lastName"
-            ].includes(key)
-        ) {
-            if (value === null) {
-                value = null;
-            } else if (typeof value === "string") {
-                value = value.trim();
-
-                if (!value) {
-                    value = null;
-                }
-            }
-        }
-
-        if (key === "emergencyContact") {
-            value = Boolean(value);
-        }
-
-        values.push(value);
-
-        updates.push(
-            `${allowedFields[key]} = $${values.length}`
-        );
-    }
-
-    if (updates.length === 0) {
-        throw new Error(
-            "No valid fields supplied for update."
-        );
-    }
-
-    values.push(guardianId);
-    const guardianIdPosition = values.length;
-
-    values.push(schoolId);
-    const schoolIdPosition = values.length;
+    const {
+        firstName,
+        middleName,
+        lastName,
+        relationship,
+        phone,
+        alternativePhone,
+        email,
+        occupation,
+        employer,
+        address,
+        emergencyContact
+    } = data;
 
     const sql = `
         UPDATE guardians
         SET
-            ${updates.join(", ")},
+            first_name = $1,
+            middle_name = $2,
+            last_name = $3,
+            relationship = $4,
+            phone = $5,
+            alternative_phone = $6,
+            email = $7,
+            occupation = $8,
+            employer = $9,
+            address = $10,
+            emergency_contact = $11,
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = $${guardianIdPosition}
-          AND school_id = $${schoolIdPosition}
+        WHERE id = $12
+          AND school_id = $13
         RETURNING *
     `;
 
-    const result = await query(sql, values);
+    const result = await query(sql, [
+        firstName,
+        middleName || null,
+        lastName,
+        relationship || null,
+        phone || null,
+        alternativePhone || null,
+        email || null,
+        occupation || null,
+        employer || null,
+        address || null,
+        emergencyContact || null,
+        guardianId,
+        schoolId
+    ]);
 
     return result.rows[0] || null;
 }
 
 /*
-|--------------------------------------------------------------------------
-| DELETE GUARDIAN
-|--------------------------------------------------------------------------
+DELETE GUARDIAN
 */
 
 async function deleteGuardian(
@@ -396,18 +351,7 @@ async function deleteGuardian(
 }
 
 /*
-|--------------------------------------------------------------------------
-| LINK GUARDIAN TO STUDENT
-|--------------------------------------------------------------------------
-|
-| The relationship table does not contain school_id.
-|
-| Therefore the student and guardian are validated against their respective
-| school records before the relationship is inserted.
-|
-| This prevents an accidental cross-school guardian relationship.
-|
-|--------------------------------------------------------------------------
+LINK GUARDIAN TO STUDENT
 */
 
 async function linkGuardianToStudent({
@@ -450,9 +394,9 @@ async function linkGuardianToStudent({
         Boolean(isPrimary)
     ]);
 
-    if (result.rows.length === 0) {
+    if (!result.rows[0]) {
         throw new Error(
-            "Student and guardian must belong to the same school."
+            "Student and guardian could not be linked. Check that both records belong to the same school."
         );
     }
 
@@ -460,15 +404,13 @@ async function linkGuardianToStudent({
 }
 
 /*
-|--------------------------------------------------------------------------
-| UNLINK GUARDIAN FROM STUDENT
-|--------------------------------------------------------------------------
+UNLINK GUARDIAN FROM STUDENT
 */
 
-async function unlinkGuardianFromStudent(
+async function unlinkGuardianFromStudent({
     studentId,
     guardianId
-) {
+}) {
     if (!studentId) {
         throw new Error("Student ID is required.");
     }
@@ -478,14 +420,10 @@ async function unlinkGuardianFromStudent(
     }
 
     const sql = `
-        DELETE FROM student_guardians sg
-        USING students s, guardians g
-        WHERE sg.student_id = s.id
-          AND sg.guardian_id = g.id
-          AND s.id = $1
-          AND g.id = $2
-          AND s.school_id = g.school_id
-        RETURNING sg.*
+        DELETE FROM student_guardians
+        WHERE student_id = $1
+          AND guardian_id = $2
+        RETURNING *
     `;
 
     const result = await query(sql, [
@@ -497,9 +435,7 @@ async function unlinkGuardianFromStudent(
 }
 
 /*
-|--------------------------------------------------------------------------
-| GET GUARDIAN'S STUDENTS
-|--------------------------------------------------------------------------
+GET STUDENTS LINKED TO GUARDIAN
 */
 
 async function getGuardianStudents(
@@ -518,53 +454,18 @@ async function getGuardianStudents(
         SELECT
             s.*,
             sg.is_primary,
-            se.academic_session_id,
-            se.class_id,
-            se.class_arm_id,
-            se.department_id,
-            se.admission_status,
-            se.enrollment_date,
-            se.exit_date,
-            c.class_name,
-            ca.arm_name,
-            d.department_name,
-            ses.session_name
+            sg.created_at AS relationship_created_at
         FROM student_guardians sg
-
-        INNER JOIN guardians g
-            ON g.id = sg.guardian_id
-           AND g.school_id = $2
-
         INNER JOIN students s
             ON s.id = sg.student_id
-           AND s.school_id = $2
-
-        LEFT JOIN student_enrollments se
-            ON se.student_id = s.id
-           AND se.school_id = $2
-
-        LEFT JOIN classes c
-            ON c.id = se.class_id
-           AND c.school_id = $2
-
-        LEFT JOIN class_arms ca
-            ON ca.id = se.class_arm_id
-           AND ca.school_id = $2
-
-        LEFT JOIN departments d
-            ON d.id = se.department_id
-           AND d.school_id = $2
-
-        LEFT JOIN academic_sessions ses
-            ON ses.id = se.academic_session_id
-           AND ses.school_id = $2
-
+        INNER JOIN guardians g
+            ON g.id = sg.guardian_id
         WHERE sg.guardian_id = $1
-
+          AND g.school_id = $2
+          AND s.school_id = $2
         ORDER BY
             s.last_name ASC,
-            s.first_name ASC,
-            ses.start_date DESC NULLS LAST
+            s.first_name ASC
     `;
 
     const result = await query(sql, [
@@ -576,9 +477,7 @@ async function getGuardianStudents(
 }
 
 /*
-|--------------------------------------------------------------------------
-| GET STUDENT'S GUARDIANS
-|--------------------------------------------------------------------------
+GET GUARDIANS LINKED TO STUDENT
 */
 
 async function getStudentGuardians(
@@ -596,24 +495,20 @@ async function getStudentGuardians(
     const sql = `
         SELECT
             g.*,
-            sg.is_primary
+            sg.is_primary,
+            sg.created_at AS relationship_created_at
         FROM student_guardians sg
-
         INNER JOIN guardians g
             ON g.id = sg.guardian_id
-           AND g.school_id = $2
-
         INNER JOIN students s
             ON s.id = sg.student_id
-           AND s.school_id = $2
-
         WHERE sg.student_id = $1
-
+          AND g.school_id = $2
+          AND s.school_id = $2
         ORDER BY
             sg.is_primary DESC,
             g.last_name ASC,
-            g.first_name ASC,
-            g.middle_name ASC
+            g.first_name ASC
     `;
 
     const result = await query(sql, [
@@ -625,24 +520,14 @@ async function getStudentGuardians(
 }
 
 /*
-|--------------------------------------------------------------------------
-| SET PRIMARY GUARDIAN
-|--------------------------------------------------------------------------
-|
-| Only guardians belonging to the same school as the student can be made
-| primary.
-|
-| First, all guardians for the student are made non-primary.
-| Then the requested guardian is made primary.
-|
-|--------------------------------------------------------------------------
+SET PRIMARY GUARDIAN
 */
 
-async function setPrimaryGuardian(
+async function setPrimaryGuardian({
     studentId,
     guardianId,
     schoolId
-) {
+}) {
     if (!studentId) {
         throw new Error("Student ID is required.");
     }
@@ -655,51 +540,69 @@ async function setPrimaryGuardian(
         throw new Error("School ID is required.");
     }
 
-    await query(
-        `
+    await query("BEGIN");
+
+    try {
+        const resetSql = `
             UPDATE student_guardians sg
             SET is_primary = FALSE
-            FROM guardians g
-            INNER JOIN students s
-                ON s.id = sg.student_id
-            WHERE sg.guardian_id = g.id
-              AND sg.student_id = $1
-              AND g.school_id = $2
-              AND s.school_id = $2
-        `,
-        [
+            FROM guardians g,
+                 students s
+            WHERE sg.student_id = $1
+              AND sg.student_id = s.id
+              AND sg.guardian_id = g.id
+              AND s.school_id = $3
+              AND g.school_id = $3
+        `;
+
+        await query(resetSql, [
             studentId,
+            guardianId,
             schoolId
-        ]
-    );
+        ]);
 
-    const sql = `
-        UPDATE student_guardians sg
-        SET is_primary = TRUE
-        FROM guardians g
-        INNER JOIN students s
-            ON s.id = sg.student_id
-        WHERE sg.student_id = $1
-          AND sg.guardian_id = $2
-          AND g.id = sg.guardian_id
-          AND g.school_id = $3
-          AND s.school_id = $3
-        RETURNING sg.*
-    `;
+        const linkSql = `
+            INSERT INTO student_guardians (
+                student_id,
+                guardian_id,
+                is_primary
+            )
+            SELECT
+                s.id,
+                g.id,
+                TRUE
+            FROM students s
+            INNER JOIN guardians g
+                ON g.id = $2
+               AND g.school_id = s.school_id
+            WHERE s.id = $1
+              AND s.school_id = $3
+            ON CONFLICT (student_id, guardian_id)
+            DO UPDATE SET
+                is_primary = TRUE
+            RETURNING *
+        `;
 
-    const result = await query(sql, [
-        studentId,
-        guardianId,
-        schoolId
-    ]);
+        const result = await query(
+            linkSql,
+            [
+                studentId,
+                guardianId,
+                schoolId
+            ]
+        );
 
-    return result.rows[0] || null;
+        await query("COMMIT");
+
+        return result.rows[0] || null;
+    } catch (error) {
+        await query("ROLLBACK");
+        throw error;
+    }
 }
 
 /*
-|--------------------------------------------------------------------------
-| COUNT GUARDIANS
-|--------------------------------------------------------------------------
+COUNT GUARDIANS
 */
 
 async function countGuardians(
@@ -710,7 +613,7 @@ async function countGuardians(
     }
 
     const sql = `
-        SELECT COUNT(*) AS guardian_count
+        SELECT COUNT(*) AS count
         FROM guardians
         WHERE school_id = $1
     `;
@@ -720,14 +623,100 @@ async function countGuardians(
     ]);
 
     return Number(
-        result.rows[0].guardian_count
+        result.rows[0]?.count || 0
     );
 }
 
 /*
-|--------------------------------------------------------------------------
-| EXPORT
-|--------------------------------------------------------------------------
+GET GUARDIAN RELATIONSHIP STATISTICS
+
+totalGuardians:
+All guardian records belonging to the school.
+
+linkedGuardians:
+Guardians linked to at least one student.
+
+linkedStudents:
+Students linked to at least one guardian.
+
+primaryGuardians:
+Guardians that have at least one primary relationship.
+*/
+
+async function getGuardianRelationshipStats(
+    schoolId
+) {
+    if (!schoolId) {
+        throw new Error("School ID is required.");
+    }
+
+    const sql = `
+        SELECT
+            (
+                SELECT COUNT(*)
+                FROM guardians g
+                WHERE g.school_id = $1
+            ) AS total_guardians,
+
+            (
+                SELECT COUNT(DISTINCT sg.guardian_id)
+                FROM student_guardians sg
+                INNER JOIN guardians g
+                    ON g.id = sg.guardian_id
+                   AND g.school_id = $1
+                INNER JOIN students s
+                    ON s.id = sg.student_id
+                   AND s.school_id = $1
+            ) AS linked_guardians,
+
+            (
+                SELECT COUNT(DISTINCT sg.student_id)
+                FROM student_guardians sg
+                INNER JOIN guardians g
+                    ON g.id = sg.guardian_id
+                   AND g.school_id = $1
+                INNER JOIN students s
+                    ON s.id = sg.student_id
+                   AND s.school_id = $1
+            ) AS linked_students,
+
+            (
+                SELECT COUNT(DISTINCT sg.guardian_id)
+                FROM student_guardians sg
+                INNER JOIN guardians g
+                    ON g.id = sg.guardian_id
+                   AND g.school_id = $1
+                INNER JOIN students s
+                    ON s.id = sg.student_id
+                   AND s.school_id = $1
+                WHERE sg.is_primary = TRUE
+            ) AS primary_guardians
+    `;
+
+    const result = await query(sql, [
+        schoolId
+    ]);
+
+    const row = result.rows[0] || {};
+
+    return {
+        totalGuardians: Number(
+            row.total_guardians || 0
+        ),
+        linkedGuardians: Number(
+            row.linked_guardians || 0
+        ),
+        linkedStudents: Number(
+            row.linked_students || 0
+        ),
+        primaryGuardians: Number(
+            row.primary_guardians || 0
+        )
+    };
+}
+
+/*
+EXPORTS
 */
 
 module.exports = {
@@ -742,5 +731,6 @@ module.exports = {
     getGuardianStudents,
     getStudentGuardians,
     setPrimaryGuardian,
-    countGuardians
+    countGuardians,
+    getGuardianRelationshipStats
 };

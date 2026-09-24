@@ -30,7 +30,6 @@ null
 function getStudentId() {
 const params = new URLSearchParams(window.location.search);
 
-```
 return (
     params.get("id") ||
     params.get("studentId") ||
@@ -38,7 +37,6 @@ return (
     params.get("student") ||
     null
 );
-```
 
 }
 
@@ -47,14 +45,12 @@ if (value === null || value === undefined) {
 return "";
 }
 
-```
 return String(value)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
-```
 
 }
 
@@ -63,7 +59,6 @@ if (!payload || typeof payload !== "object") {
 return null;
 }
 
-```
 if (
     payload.data &&
     typeof payload.data === "object" &&
@@ -81,7 +76,6 @@ if (
 }
 
 return payload;
-```
 
 }
 
@@ -90,7 +84,6 @@ if (Array.isArray(payload)) {
 return payload;
 }
 
-```
 if (!payload || typeof payload !== "object") {
     return [];
 }
@@ -126,7 +119,6 @@ if (payload.data && typeof payload.data === "object") {
 }
 
 return [];
-```
 
 }
 
@@ -138,7 +130,6 @@ options.useGlobalApi !== false
 return window.apiRequest(url, options);
 }
 
-```
 const token = getToken();
 
 const headers = {
@@ -196,14 +187,12 @@ if (!response.ok) {
 }
 
 return payload;
-```
 
 }
 
 function showMessage(message, type = "danger") {
 const element = document.getElementById("pageMessage");
 
-```
 if (!element) {
     return;
 }
@@ -227,7 +216,6 @@ const alertType = allowedTypes.includes(type)
 
 element.textContent = message;
 element.className = `alert alert-${alertType} mb-4`;
-```
 
 }
 
@@ -237,14 +225,12 @@ const safeAmount = Number.isFinite(amount)
 ? amount
 : 0;
 
-```
 return new Intl.NumberFormat("en-NG", {
     style: "currency",
     currency: "NGN",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
 }).format(safeAmount);
-```
 
 }
 
@@ -253,7 +239,6 @@ if (!value) {
 return "—";
 }
 
-```
 const date = new Date(value);
 
 if (Number.isNaN(date.getTime())) {
@@ -265,7 +250,6 @@ return new Intl.DateTimeFormat("en-NG", {
     month: "short",
     day: "numeric"
 }).format(date);
-```
 
 }
 
@@ -274,7 +258,6 @@ if (!student) {
 return "Student";
 }
 
-```
 if (student.name) {
     return String(student.name);
 }
@@ -295,7 +278,6 @@ return [
     .filter(Boolean)
     .join(" ")
     .trim() || "Student";
-```
 
 }
 
@@ -304,7 +286,6 @@ if (!student) {
 return "";
 }
 
-```
 return (
     student.student_number ||
     student.studentNumber ||
@@ -312,14 +293,12 @@ return (
     student.admissionNumber ||
     ""
 );
-```
 
 }
 
 function renderStudentHeader(student) {
 const subtitle = document.getElementById("studentSubtitle");
 
-```
 if (!subtitle) {
     return;
 }
@@ -332,7 +311,6 @@ subtitle.textContent = number
     : `Fee records for ${name}`;
 
 document.title = `${name} - Student Fees`;
-```
 
 }
 
@@ -341,7 +319,6 @@ if (!record) {
 return 0;
 }
 
-```
 const value =
     record.amount_due ??
     record.amountDue ??
@@ -357,7 +334,6 @@ const amount = Number(value);
 return Number.isFinite(amount)
     ? amount
     : 0;
-```
 
 }
 
@@ -366,7 +342,6 @@ if (!record) {
 return 0;
 }
 
-```
 const value =
     record.amount_paid ??
     record.amountPaid ??
@@ -380,7 +355,6 @@ const amount = Number(value);
 return Number.isFinite(amount)
     ? amount
     : 0;
-```
 
 }
 
@@ -389,7 +363,6 @@ if (!record) {
 return 0;
 }
 
-```
 const explicitBalance =
     record.balance ??
     record.outstanding_balance ??
@@ -410,7 +383,6 @@ if (
 }
 
 return getFeeAmount(record) - getAmountPaid(record);
-```
 
 }
 
@@ -419,7 +391,6 @@ if (!record) {
 return "—";
 }
 
-```
 return (
     record.session_name ||
     record.sessionName ||
@@ -430,7 +401,6 @@ return (
     record.academicSession ||
     "—"
 );
-```
 
 }
 
@@ -439,14 +409,12 @@ if (!record) {
 return "—";
 }
 
-```
 return (
     record.term_name ||
     record.termName ||
     record.term ||
     "—"
 );
-```
 
 }
 
@@ -455,7 +423,6 @@ if (!record) {
 return "School Fees";
 }
 
-```
 return (
     record.fee_name ||
     record.feeName ||
@@ -464,7 +431,6 @@ return (
     record.type ||
     "School Fees"
 );
-```
 
 }
 
@@ -473,7 +439,6 @@ if (!record) {
 return null;
 }
 
-```
 return (
     record.created_at ||
     record.createdAt ||
@@ -486,7 +451,6 @@ return (
     record.date ||
     null
 );
-```
 
 }
 
@@ -495,7 +459,6 @@ if (!record) {
 return "Unpaid";
 }
 
-```
 const rawStatus =
     record.payment_status ??
     record.paymentStatus ??
@@ -543,7 +506,6 @@ if (paid > 0) {
 }
 
 return "Unpaid";
-```
 
 }
 
@@ -552,7 +514,6 @@ const normalized = String(status || "")
 .trim()
 .toLowerCase();
 
-```
 if (normalized === "paid") {
     return "status-badge status-paid";
 }
@@ -566,7 +527,6 @@ if (normalized === "overpaid") {
 }
 
 return "status-badge status-unpaid";
-```
 
 }
 
@@ -575,7 +535,6 @@ const normalized = String(status || "")
 .trim()
 .toLowerCase();
 
-```
 if (normalized === "paid") {
     return "bi-check-circle-fill";
 }
@@ -589,7 +548,6 @@ if (normalized === "partially paid") {
 }
 
 return "bi-exclamation-circle-fill";
-```
 
 }
 
@@ -598,7 +556,6 @@ let totalFees = 0;
 let amountPaid = 0;
 let balance = 0;
 
-```
 records.forEach(record => {
     totalFees += getFeeAmount(record);
     amountPaid += getAmountPaid(record);
@@ -610,7 +567,6 @@ return {
     amountPaid,
     balance
 };
-```
 
 }
 
@@ -619,7 +575,6 @@ if (!records.length) {
 return "—";
 }
 
-```
 const hasOverpaid = records.some(
     record =>
         getFeeStatus(record).toLowerCase() === "overpaid"
@@ -638,14 +593,12 @@ if (totals.amountPaid > 0) {
 }
 
 return "Unpaid";
-```
 
 }
 
 function renderStatistics(records) {
 const totals = calculateTotals(records);
 
-```
 const totalFeesElement =
     document.getElementById("totalFees");
 
@@ -721,7 +674,6 @@ if (paymentStatusElement) {
         );
     }
 }
-```
 
 }
 
@@ -729,7 +681,6 @@ function renderFees(records) {
 const tableBody =
 document.getElementById("feesTableBody");
 
-```
 if (!tableBody) {
     return;
 }
@@ -833,7 +784,6 @@ tableBody.innerHTML = sortedRecords
         `;
     })
     .join("");
-```
 
 }
 
@@ -842,7 +792,6 @@ if (!studentId) {
 const subtitle =
 document.getElementById("studentSubtitle");
 
-```
     if (subtitle) {
         subtitle.textContent =
             "Student ID was not provided.";
@@ -868,7 +817,6 @@ currentStudent = student;
 renderStudentHeader(student);
 
 return student;
-```
 
 }
 
@@ -876,7 +824,6 @@ async function loadFees() {
 const tableBody =
 document.getElementById("feesTableBody");
 
-```
 if (!studentId) {
     if (tableBody) {
         tableBody.innerHTML = `
@@ -913,7 +860,6 @@ const records = normalizeArray(payload);
 renderFees(records);
 
 return records;
-```
 
 }
 
@@ -921,7 +867,6 @@ async function refreshFees() {
 const refreshButton =
 document.getElementById("refreshButton");
 
-```
 if (refreshButton) {
     refreshButton.disabled = true;
 
@@ -975,7 +920,6 @@ try {
             `;
     }
 }
-```
 
 }
 
@@ -985,10 +929,8 @@ window.location.href = STUDENTS_PAGE;
 return;
 }
 
-```
 window.location.href =
     `/pages/student-profile.html?id=${encodeURIComponent(studentId)}`;
-```
 
 }
 
@@ -996,7 +938,6 @@ function setupSidebar() {
 const sidebarToggle =
 document.getElementById("sidebarToggle");
 
-```
 const sidebar =
     document.getElementById("sidebar");
 
@@ -1038,7 +979,6 @@ sidebar
             }
         );
     });
-```
 
 }
 
@@ -1046,7 +986,6 @@ function setupEventListeners() {
 const refreshButton =
 document.getElementById("refreshButton");
 
-```
 if (refreshButton) {
     refreshButton.addEventListener(
         "click",
@@ -1065,21 +1004,18 @@ if (backButton) {
         goBackToProfile
     );
 }
-```
 
 }
 
 function checkAuthentication() {
 const token = getToken();
 
-```
 if (!token) {
     window.location.href = LOGIN_PAGE;
     return false;
 }
 
 return true;
-```
 
 }
 
@@ -1088,7 +1024,6 @@ if (!checkAuthentication()) {
 return;
 }
 
-```
 studentId = getStudentId();
 
 setupSidebar();
@@ -1140,7 +1075,6 @@ try {
         "danger"
     );
 }
-```
 
 }
 

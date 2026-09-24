@@ -9,7 +9,6 @@ let feeStructures = [];
 let editingFeeId = null;
 let feeModal = null;
 
-```
 async function request(endpoint, options = {}) {
     if (
         window.apiRequest &&
@@ -2087,6 +2086,5 @@ if (
 } else {
     initialize();
 }
-```
 
 })();

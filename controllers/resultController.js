@@ -94,15 +94,16 @@ function requiredValue(value, message) {
 
 async function getAllResults(req, res, next) {
     try {
-        const schoolId = getSchoolId(req);
 
-        if (!schoolId) {
-            return res.status(400).json({
-                success: false,
-                message: "School ID is required."
-            });
-        }
 
+const schoolId = getSchoolId(req);
+
+if (!schoolId) {
+    return res.status(400).json({
+        success: false,
+        message: "School ID is required."
+    });
+}
         const {
             sessionId,
             termId,
@@ -1099,4 +1100,5 @@ module.exports = {
 
     searchResults,
     getResultStatistics
+
 };

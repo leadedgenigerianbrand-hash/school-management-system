@@ -1,95 +1,381 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    ```
     <title>Fees Management</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
+        :root {
+            --sidebar-width: 260px;
+            --sidebar-bg: #111827;
+            --sidebar-hover: rgba(255, 255, 255, 0.09);
+            --sidebar-text: #cbd5e1;
+            --sidebar-muted: #64748b;
+            --page-bg: #f5f7fb;
+            --card-border: #e5e7eb;
+            --text-primary: #111827;
+            --text-secondary: #64748b;
+            --primary: #2563eb;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
         body {
-            background: #f5f7fb;
-            color: #1f2937;
+            min-height: 100%;
         }
 
-        .sidebar {
-            min-height: 100vh;
-            background: #111827;
+        body {
+            margin: 0;
+            background: var(--page-bg);
+            color: var(--text-primary);
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Helvetica,
+                Arial,
+                sans-serif;
         }
 
-        .sidebar .nav-link {
-            color: #cbd5e1;
-            border-radius: .6rem;
-            margin-bottom: .2rem;
+        body.sidebar-open {
+            overflow: hidden;
         }
 
-        .sidebar .nav-link:hover,
-        .sidebar .nav-link.active {
-            background: #2563eb;
-            color: #fff;
+        /* ==============================================================
+           SIDEBAR
+        ============================================================== */
+
+        .sms-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            color: #ffffff;
+            z-index: 1040;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 4px 0 20px rgba(15, 23, 42, 0.08);
         }
 
-        .brand {
-            color: #fff;
+        .sidebar-brand {
+            min-height: 72px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--primary);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand-text {
+            color: #ffffff;
+            font-size: 0.98rem;
             font-weight: 700;
-        }
-
-        .main-content {
-            min-height: 100vh;
-        }
-
-        .stat-card {
-            border: 0;
-            border-radius: 1rem;
-            box-shadow: 0 .25rem 1rem rgba(15, 23, 42, .06);
-        }
-
-        .stat-icon {
-            width: 46px;
-            height: 46px;
-            display: grid;
-            place-items: center;
-            border-radius: .8rem;
-            background: #eff6ff;
-            color: #2563eb;
-            font-size: 1.3rem;
-        }
-
-        .content-card {
-            border: 0;
-            border-radius: 1rem;
-            box-shadow: 0 .25rem 1rem rgba(15, 23, 42, .06);
-        }
-
-        .table thead th {
+            line-height: 1.2;
             white-space: nowrap;
-            font-size: .8rem;
-            text-transform: uppercase;
-            letter-spacing: .03em;
-            color: #64748b;
         }
 
-        .table td {
-            vertical-align: middle;
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 16px 12px 24px;
         }
 
-        .page-title {
-            font-weight: 700;
+        .sidebar-content::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
         }
 
         .sidebar-section {
-            color: #64748b;
-            font-size: .7rem;
+            color: var(--sidebar-muted);
+            font-size: 0.68rem;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: .08em;
-            margin-top: 1.25rem;
-            margin-bottom: .4rem;
+            letter-spacing: 0.08em;
+            padding: 14px 12px 7px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            width: 100%;
+            min-height: 42px;
+            padding: 10px 12px;
+            margin-bottom: 2px;
+            border-radius: 9px;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition:
+                background-color 0.15s ease,
+                color 0.15s ease,
+                transform 0.15s ease;
+        }
+
+        .sidebar-link i {
+            width: 20px;
+            text-align: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .sidebar-link:hover {
+            background: var(--sidebar-hover);
+            color: #ffffff;
+        }
+
+        .sidebar-link.active {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        .sidebar-link.active:hover {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        /* ==============================================================
+           MOBILE SIDEBAR
+        ============================================================== */
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.5);
+            z-index: 1030;
+        }
+
+        .mobile-menu-button {
+            display: none;
+            width: 42px;
+            height: 42px;
+            border: 1px solid var(--card-border);
+            border-radius: 9px;
+            background: #ffffff;
+            color: var(--text-primary);
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+        }
+
+        /* ==============================================================
+           MAIN CONTENT
+        ============================================================== */
+
+        .sms-main {
+            min-height: 100vh;
+            margin-left: var(--sidebar-width);
+            padding: 28px 30px 40px;
+        }
+
+        .page-header {
+            margin-bottom: 26px;
+        }
+
+        .page-eyebrow {
+            color: var(--primary);
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .page-title {
+            margin: 0 0 5px;
+            color: var(--text-primary);
+            font-size: 1.65rem;
+            line-height: 1.25;
+            font-weight: 700;
+        }
+
+        .page-description {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+        }
+
+        /* ==============================================================
+           BUTTONS
+        ============================================================== */
+
+        .btn {
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-primary:hover,
+        .btn-primary:focus {
+            background-color: #1d4ed8;
+            border-color: #1d4ed8;
+        }
+
+        .btn-outline-secondary {
+            border-color: #d1d5db;
+            color: #374151;
+        }
+
+        .btn-outline-secondary:hover {
+            background: #f3f4f6;
+            border-color: #cbd5e1;
+            color: #111827;
+        }
+
+        /* ==============================================================
+           SUMMARY CARDS
+        ============================================================== */
+
+        .stat-card {
+            height: 100%;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            background: #ffffff;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+        }
+
+        .stat-card .card-body {
+            padding: 20px;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            font-weight: 500;
+            margin-bottom: 7px;
+        }
+
+        .stat-value {
+            color: var(--text-primary);
+            font-size: 1.35rem;
+            line-height: 1.2;
+            font-weight: 700;
+        }
+
+        .stat-value.text-success {
+            color: #198754 !important;
+        }
+
+        .stat-value.text-danger {
+            color: #dc3545 !important;
+        }
+
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: #eff6ff;
+            color: var(--primary);
+            font-size: 1.15rem;
+            flex-shrink: 0;
+        }
+
+        /* ==============================================================
+           CONTENT CARD
+        ============================================================== */
+
+        .content-card {
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            background: #ffffff;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+            overflow: hidden;
+        }
+
+        .content-card .card-body {
+            padding: 22px;
+        }
+
+        .section-title {
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .section-description {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            margin-bottom: 0;
+        }
+
+        /* ==============================================================
+           FORM CONTROLS
+        ============================================================== */
+
+        .form-control,
+        .form-select,
+        .input-group-text {
+            border-color: #d1d5db;
+        }
+
+        .form-control,
+        .form-select {
+            min-height: 40px;
+            border-radius: 8px;
+        }
+
+        .input-group>.form-control,
+        .input-group>.form-select {
+            border-radius: 0 8px 8px 0;
+        }
+
+        .input-group>.input-group-text {
+            border-radius: 8px 0 0 8px;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #93c5fd;
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.12);
         }
 
         .form-label {
@@ -97,202 +383,355 @@
         }
 
         .form-text {
-            font-size: .78rem;
+            color: var(--text-secondary);
+            font-size: 0.76rem;
         }
 
-        .status-badge {
-            font-size: .75rem;
-            font-weight: 600;
-            padding: .4rem .6rem;
-            border-radius: 999px;
+        /* ==============================================================
+           TABLE
+        ============================================================== */
+
+        .fees-table {
+            margin-bottom: 0;
+        }
+
+        .fees-table thead th {
+            background: #f8fafc;
+            border-bottom: 1px solid #e5e7eb;
+            color: #64748b;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            white-space: nowrap;
+            padding: 13px 12px;
+        }
+
+        .fees-table tbody td {
+            color: #374151;
+            font-size: 0.86rem;
+            vertical-align: middle;
+            padding: 14px 12px;
+            border-color: #eef2f7;
+        }
+
+        .fees-table tbody tr:hover {
+            background: #f8fafc;
         }
 
         .student-name {
-            font-weight: 600;
             color: #111827;
+            font-weight: 600;
         }
 
         .student-meta {
-            font-size: .78rem;
             color: #64748b;
+            font-size: 0.76rem;
+            margin-top: 2px;
         }
 
         .amount-cell {
+            color: #111827;
             font-weight: 600;
             white-space: nowrap;
         }
 
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            white-space: nowrap;
+            padding: 5px 9px;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+        }
+
+        /* ==============================================================
+           MODAL
+        ============================================================== */
+
+        .modal-content {
+            border: 0;
+            border-radius: 12px;
+        }
+
+        .modal-header {
+            padding: 20px 22px;
+            border-bottom-color: #eef2f7;
+        }
+
+        .modal-body {
+            padding: 22px;
+        }
+
+        .modal-footer {
+            padding: 16px 22px;
+            border-top-color: #eef2f7;
+        }
+
+        /* ==============================================================
+           RESPONSIVE
+        ============================================================== */
+
+        @media (max-width: 1199.98px) {
+            .sms-main {
+                padding: 24px;
+            }
+        }
+
         @media (max-width: 991.98px) {
-            .sidebar {
-                min-height: auto;
+            .sms-sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.2s ease;
+                box-shadow: 8px 0 30px rgba(15, 23, 42, 0.2);
+            }
+
+            .sms-sidebar.sidebar-open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.sidebar-open {
+                display: block;
+            }
+
+            .sms-main {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .mobile-menu-button {
+                display: inline-flex;
+            }
+
+            .page-header {
+                margin-bottom: 22px;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .sms-main {
+                padding: 16px;
+            }
+
+            .page-title {
+                font-size: 1.4rem;
+            }
+
+            .page-description {
+                font-size: 0.85rem;
+            }
+
+            .content-card .card-body {
+                padding: 16px;
+            }
+
+            .stat-card .card-body {
+                padding: 16px;
+            }
+
+            .fees-table thead th,
+            .fees-table tbody td {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .page-header {
+                gap: 14px !important;
+            }
+
+            .page-header-actions {
+                width: 100%;
+            }
+
+            .page-header-actions .btn {
+                width: 100%;
+            }
+
+            .fees-toolbar {
+                width: 100%;
+            }
+
+            .fees-toolbar>* {
+                width: 100%;
             }
         }
     </style>
-    ```
-
 </head>
 
 <body>
 
-    ```
-    <div class="container-fluid">
-        <div class="row">
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-            <aside class="col-lg-2 col-xl-2 sidebar p-3">
+    <aside class="sms-sidebar" id="smsSidebar">
 
-                <div class="d-flex align-items-center gap-2 mb-4">
-                    <div class="bg-primary rounded-3 p-2 text-white">
-                        <i class="bi bi-mortarboard-fill"></i>
-                    </div>
+        <div class="sidebar-brand">
 
-                    <span class="brand">
-                        School Management
-                    </span>
-                </div>
+            <div class="sidebar-brand-icon">
+                <i class="bi bi-mortarboard-fill"></i>
+            </div>
 
-                <nav>
+            <div class="sidebar-brand-text">
+                School Management
+            </div>
 
-                    <div class="sidebar-section">
-                        Main
-                    </div>
+        </div>
 
-                    <a class="nav-link px-3 py-2" href="dashboard.html">
-                        <i class="bi bi-speedometer2 me-2"></i>
-                        Dashboard
-                    </a>
+        <div class="sidebar-content">
 
-                    <a class="nav-link px-3 py-2" href="students.html">
-                        <i class="bi bi-people me-2"></i>
-                        Students
-                    </a>
+            <div class="sidebar-section">
+                Main
+            </div>
 
-                    <a class="nav-link px-3 py-2" href="staff.html">
-                        <i class="bi bi-person-badge me-2"></i>
-                        Staff
-                    </a>
+            <a href="/pages/dashboard.html" class="sidebar-link" data-dashboard-link>
+                <i class="bi bi-speedometer2"></i>
+                <span>Dashboard</span>
+            </a>
 
-                    <a class="nav-link px-3 py-2" href="guardians.html">
-                        <i class="bi bi-person-hearts me-2"></i>
-                        Guardians
-                    </a>
+            <a href="/pages/students.html" class="sidebar-link" data-dashboard-link>
+                <i class="bi bi-people"></i>
+                <span>Students</span>
+            </a>
 
+            <a href="/pages/staff.html" class="sidebar-link" data-dashboard-link>
+                <i class="bi bi-person-badge"></i>
+                <span>Staff</span>
+            </a>
 
-                    <div class="sidebar-section">
-                        Academic
-                    </div>
+            <a href="/pages/guardians.html" class="sidebar-link" data-dashboard-link>
+                <i class="bi bi-person-hearts"></i>
+                <span>Guardians</span>
+            </a>
 
-                    <a class="nav-link px-3 py-2" href="classes.html">
-                        <i class="bi bi-building me-2"></i>
-                        Classes
-                    </a>
+            <div class="sidebar-section">
+                Academic
+            </div>
 
-                    <a class="nav-link px-3 py-2" href="class-arms.html">
-                        <i class="bi bi-diagram-3 me-2"></i>
-                        Class Arms
-                    </a>
+            <a href="/pages/classes.html" class="sidebar-link" data-dashboard-link>
+                <i class="bi bi-building"></i>
+                <span>Classes</span>
+            </a>
 
-                    <a class="nav-link px-3 py-2" href="departments.html">
-                        <i class="bi bi-diagram-2 me-2"></i>
-                        Departments
-                    </a>
+            <a href="/pages/class-arms.html" class="sidebar-link" data-dashboard-link>
+                <i class="bi bi-diagram-3"></i>
+                <span>Class Arms</span>
+            </a>
 
-                    <a class="nav-link px-3 py-2" href="subjects.html">
-                        <i class="bi bi-book me-2"></i>
-                        Subjects
-                    </a>
+            <a href="/pages/departments.html" class="sidebar-link" data-dashboard-link>
+                <i class="bi bi-diagram-2"></i>
+                <span>Departments</span>
+            </a>
 
-                    <a class="nav-link px-3 py-2" href="academic-sessions.html">
-                        <i class="bi bi-calendar3 me-2"></i>
-                        Sessions
-                    </a>
+            <a href="/pages/subjects.html" class="sidebar-link" data-dashboard-link>
+                <i class="bi bi-book"></i>
+                <span>Subjects</span>
+            </a>
 
-                    <a class="nav-link px-3 py-2" href="terms.html">
-                        <i class="bi bi-calendar-week me-2"></i>
-                        Terms
-                    </a>
+            <a href="/pages/academic-sessions.html" class="sidebar-link" data-dashboard-link>
+                <i class="bi bi-calendar3"></i>
+                <span>Sessions</span>
+            </a>
 
-                    <a class="nav-link px-3 py-2" href="attendance.html">
-                        <i class="bi bi-check2-square me-2"></i>
-                        Attendance
-                    </a>
+            <a href="/pages/terms.html" class="sidebar-link" data-dashboard-link>
+                <i class="bi bi-calendar-week"></i>
+                <span>Terms</span>
+            </a>
 
-                    <a class="nav-link px-3 py-2" href="results.html">
-                        <i class="bi bi-bar-chart me-2"></i>
-                        Results
-                    </a>
+            <a href="/pages/attendance.html" class="sidebar-link" data-dashboard-link>
+                <i class="bi bi-check2-square"></i>
+                <span>Attendance</span>
+            </a>
 
+            <a href="/pages/results.html" class="sidebar-link" data-dashboard-link>
+                <i class="bi bi-bar-chart"></i>
+                <span>Results</span>
+            </a>
 
-                    <div class="sidebar-section">
-                        Finance & Records
-                    </div>
+            <div class="sidebar-section">
+                Finance &amp; Records
+            </div>
 
-                    <a class="nav-link active px-3 py-2" href="fees.html">
-                        <i class="bi bi-cash-stack me-2"></i>
-                        Fees
-                    </a>
+            <a href="/pages/fees.html" class="sidebar-link active" data-dashboard-link aria-current="page">
+                <i class="bi bi-cash-stack"></i>
+                <span>Fees</span>
+            </a>
 
-                    <a class="nav-link px-3 py-2" href="documents.html">
-                        <i class="bi bi-folder2-open me-2"></i>
-                        Documents
-                    </a>
+            <a href="/pages/documents.html" class="sidebar-link" data-dashboard-link>
+                <i class="bi bi-folder2-open"></i>
+                <span>Documents</span>
+            </a>
 
-                    <a class="nav-link px-3 py-2" href="reports.html">
-                        <i class="bi bi-file-earmark-bar-graph me-2"></i>
-                        Reports
-                    </a>
+            <a href="/pages/reports.html" class="sidebar-link" data-dashboard-link>
+                <i class="bi bi-file-earmark-bar-graph"></i>
+                <span>Reports</span>
+            </a>
 
+            <div class="sidebar-section">
+                Administration
+            </div>
 
-                    <div class="sidebar-section">
-                        Administration
-                    </div>
+            <a href="/pages/users.html" class="sidebar-link" data-dashboard-link>
+                <i class="bi bi-person-gear"></i>
+                <span>Users</span>
+            </a>
 
-                    <a class="nav-link px-3 py-2" href="users.html">
-                        <i class="bi bi-person-gear me-2"></i>
-                        Users
-                    </a>
+            <a href="/pages/roles.html" class="sidebar-link" data-dashboard-link>
+                <i class="bi bi-shield-check"></i>
+                <span>Roles</span>
+            </a>
 
-                    <a class="nav-link px-3 py-2" href="roles.html">
-                        <i class="bi bi-shield-check me-2"></i>
-                        Roles
-                    </a>
+            <a href="/pages/permissions.html" class="sidebar-link" data-dashboard-link>
+                <i class="bi bi-key"></i>
+                <span>Permissions</span>
+            </a>
 
-                    <a class="nav-link px-3 py-2" href="permissions.html">
-                        <i class="bi bi-key me-2"></i>
-                        Permissions
-                    </a>
+            <a href="/pages/profile.html" class="sidebar-link" data-dashboard-link>
+                <i class="bi bi-person-circle"></i>
+                <span>Profile</span>
+            </a>
 
-                    <a class="nav-link px-3 py-2" href="profile.html">
-                        <i class="bi bi-person-circle me-2"></i>
-                        Profile
-                    </a>
+            <a href="/pages/settings.html" class="sidebar-link" data-dashboard-link>
+                <i class="bi bi-gear"></i>
+                <span>Settings</span>
+            </a>
 
-                    <a class="nav-link px-3 py-2" href="settings.html">
-                        <i class="bi bi-gear me-2"></i>
-                        Settings
-                    </a>
+        </div>
 
-                </nav>
+    </aside>
 
-            </aside>
+    <main class="sms-main">
 
+        <div class="page-header">
 
-            <main class="col-lg-10 col-xl-10 main-content p-3 p-md-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
 
-                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                <div class="d-flex align-items-start gap-3">
+
+                    <button type="button" class="mobile-menu-button" id="mobileMenuButton" aria-label="Open navigation"
+                        aria-controls="smsSidebar" aria-expanded="false">
+                        <i class="bi bi-list"></i>
+                    </button>
 
                     <div>
-                        <div class="text-primary small fw-semibold mb-1">
-                            FINANCE & RECORDS
+
+                        <div class="page-eyebrow">
+                            Finance &amp; Records
                         </div>
 
-                        <h1 class="page-title h2 mb-1">
+                        <h1 class="page-title">
                             Fees Management
                         </h1>
 
-                        <p class="text-secondary mb-0">
+                        <p class="page-description">
                             Manage student fees, payments and outstanding balances.
                         </p>
+
                     </div>
+
+                </div>
+
+                <div class="page-header-actions">
 
                     <button type="button" class="btn btn-primary" id="addFeeButton">
                         <i class="bi bi-plus-circle me-2"></i>
@@ -301,249 +740,259 @@
 
                 </div>
 
-
-                <div class="row g-3 mb-4">
-
-                    <div class="col-sm-6 col-xl-3">
-
-                        <div class="card stat-card h-100">
-                            <div class="card-body">
-
-                                <div class="d-flex justify-content-between align-items-start">
-
-                                    <div>
-                                        <div class="text-secondary small mb-2">
-                                            Total Fee Records
-                                        </div>
-
-                                        <h3 class="mb-0" id="totalRecords">
-                                            0
-                                        </h3>
-                                    </div>
-
-                                    <div class="stat-icon">
-                                        <i class="bi bi-receipt"></i>
-                                    </div>
-
-                                </div>
-
-                            </div>
-                        </div>
-
-                    </div>
-
-
-                    <div class="col-sm-6 col-xl-3">
-
-                        <div class="card stat-card h-100">
-                            <div class="card-body">
-
-                                <div class="d-flex justify-content-between align-items-start">
-
-                                    <div>
-                                        <div class="text-secondary small mb-2">
-                                            Total Fees
-                                        </div>
-
-                                        <h3 class="mb-0" id="totalAmount">
-                                            ₦0.00
-                                        </h3>
-                                    </div>
-
-                                    <div class="stat-icon">
-                                        <i class="bi bi-wallet2"></i>
-                                    </div>
-
-                                </div>
-
-                            </div>
-                        </div>
-
-                    </div>
-
-
-                    <div class="col-sm-6 col-xl-3">
-
-                        <div class="card stat-card h-100">
-                            <div class="card-body">
-
-                                <div class="d-flex justify-content-between align-items-start">
-
-                                    <div>
-                                        <div class="text-secondary small mb-2">
-                                            Total Paid
-                                        </div>
-
-                                        <h3 class="mb-0 text-success" id="totalPaid">
-                                            ₦0.00
-                                        </h3>
-                                    </div>
-
-                                    <div class="stat-icon">
-                                        <i class="bi bi-check-circle"></i>
-                                    </div>
-
-                                </div>
-
-                            </div>
-                        </div>
-
-                    </div>
-
-
-                    <div class="col-sm-6 col-xl-3">
-
-                        <div class="card stat-card h-100">
-                            <div class="card-body">
-
-                                <div class="d-flex justify-content-between align-items-start">
-
-                                    <div>
-                                        <div class="text-secondary small mb-2">
-                                            Total Outstanding
-                                        </div>
-
-                                        <h3 class="mb-0 text-danger" id="totalBalance">
-                                            ₦0.00
-                                        </h3>
-                                    </div>
-
-                                    <div class="stat-icon">
-                                        <i class="bi bi-exclamation-circle"></i>
-                                    </div>
-
-                                </div>
-
-                            </div>
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <div class="card content-card">
-
-                    <div class="card-body p-3 p-md-4">
-
-                        <div class="d-flex flex-column flex-xl-row justify-content-between gap-3 mb-4">
-
-                            <div>
-                                <h2 class="h5 mb-1">
-                                    Fee Records
-                                </h2>
-
-                                <p class="text-secondary small mb-0">
-                                    Search and manage student fee records and payment balances.
-                                </p>
-                            </div>
-
-
-                            <div class="d-flex flex-column flex-md-row gap-2">
-
-                                <div class="input-group">
-
-                                    <span class="input-group-text bg-white">
-                                        <i class="bi bi-search"></i>
-                                    </span>
-
-                                    <input type="search" class="form-control" id="searchInput"
-                                        placeholder="Search student, admission number or fee..." autocomplete="off">
-
-                                </div>
-
-
-                                <select class="form-select" id="statusFilter">
-
-                                    <option value="">
-                                        All Statuses
-                                    </option>
-
-                                    <option value="Unpaid">
-                                        Unpaid
-                                    </option>
-
-                                    <option value="Partially Paid">
-                                        Partially Paid
-                                    </option>
-
-                                    <option value="Paid">
-                                        Paid
-                                    </option>
-
-                                    <option value="Overpaid">
-                                        Overpaid
-                                    </option>
-
-                                </select>
-
-
-                                <button type="button" class="btn btn-outline-secondary" id="refreshButton">
-                                    <i class="bi bi-arrow-clockwise me-1"></i>
-                                    Refresh
-                                </button>
-
-                            </div>
-
-                        </div>
-
-
-                        <div class="table-responsive">
-
-                            <table class="table table-hover align-middle mb-0">
-
-                                <thead class="table-light">
-
-                                    <tr>
-                                        <th>Student</th>
-                                        <th>Admission No.</th>
-                                        <th>Fee Type</th>
-                                        <th>Session</th>
-                                        <th>Term</th>
-                                        <th>Amount</th>
-                                        <th>Paid</th>
-                                        <th>Balance</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-
-                                </thead>
-
-                                <tbody id="feesTableBody">
-
-                                    <tr>
-
-                                        <td colspan="10" class="text-center py-5 text-secondary">
-
-                                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-
-                                            Loading fee records...
-
-                                        </td>
-
-                                    </tr>
-
-                                </tbody>
-
-                            </table>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </main>
+            </div>
 
         </div>
-    </div>
 
+        <div class="row g-3 mb-4">
+
+            <div class="col-sm-6 col-xl-3">
+
+                <div class="card stat-card">
+
+                    <div class="card-body">
+
+                        <div class="d-flex justify-content-between align-items-start">
+
+                            <div>
+
+                                <div class="stat-label">
+                                    Total Fee Records
+                                </div>
+
+                                <div class="stat-value" id="totalRecords">
+                                    0
+                                </div>
+
+                            </div>
+
+                            <div class="stat-icon">
+                                <i class="bi bi-receipt"></i>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-sm-6 col-xl-3">
+
+                <div class="card stat-card">
+
+                    <div class="card-body">
+
+                        <div class="d-flex justify-content-between align-items-start">
+
+                            <div>
+
+                                <div class="stat-label">
+                                    Total Fees
+                                </div>
+
+                                <div class="stat-value" id="totalAmount">
+                                    ₦0.00
+                                </div>
+
+                            </div>
+
+                            <div class="stat-icon">
+                                <i class="bi bi-wallet2"></i>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-sm-6 col-xl-3">
+
+                <div class="card stat-card">
+
+                    <div class="card-body">
+
+                        <div class="d-flex justify-content-between align-items-start">
+
+                            <div>
+
+                                <div class="stat-label">
+                                    Total Paid
+                                </div>
+
+                                <div class="stat-value text-success" id="totalPaid">
+                                    ₦0.00
+                                </div>
+
+                            </div>
+
+                            <div class="stat-icon">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-sm-6 col-xl-3">
+
+                <div class="card stat-card">
+
+                    <div class="card-body">
+
+                        <div class="d-flex justify-content-between align-items-start">
+
+                            <div>
+
+                                <div class="stat-label">
+                                    Total Outstanding
+                                </div>
+
+                                <div class="stat-value text-danger" id="totalBalance">
+                                    ₦0.00
+                                </div>
+
+                            </div>
+
+                            <div class="stat-icon">
+                                <i class="bi bi-exclamation-circle"></i>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="card content-card">
+
+            <div class="card-body">
+
+                <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center gap-3 mb-4">
+
+                    <div>
+
+                        <h2 class="section-title">
+                            Fee Records
+                        </h2>
+
+                        <p class="section-description">
+                            Search and manage student fee records and payment balances.
+                        </p>
+
+                    </div>
+
+                    <div class="d-flex flex-column flex-md-row gap-2 fees-toolbar">
+
+                        <div class="input-group">
+
+                            <span class="input-group-text bg-white">
+                                <i class="bi bi-search"></i>
+                            </span>
+
+                            <input type="search" class="form-control" id="searchInput"
+                                placeholder="Search student, admission number or fee..." autocomplete="off">
+
+                        </div>
+
+                        <select class="form-select" id="statusFilter">
+
+                            <option value="">
+                                All Statuses
+                            </option>
+
+                            <option value="Unpaid">
+                                Unpaid
+                            </option>
+
+                            <option value="Partially Paid">
+                                Partially Paid
+                            </option>
+
+                            <option value="Paid">
+                                Paid
+                            </option>
+
+                            <option value="Overpaid">
+                                Overpaid
+                            </option>
+
+                        </select>
+
+                        <button type="button" class="btn btn-outline-secondary" id="refreshButton">
+                            <i class="bi bi-arrow-clockwise me-1"></i>
+                            Refresh
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle fees-table">
+
+                        <thead>
+
+                            <tr>
+                                <th>Student</th>
+                                <th>Admission No.</th>
+                                <th>Fee Type</th>
+                                <th>Session</th>
+                                <th>Term</th>
+                                <th>Amount</th>
+                                <th>Paid</th>
+                                <th>Balance</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="feesTableBody">
+
+                            <tr>
+
+                                <td colspan="10" class="text-center py-5 text-secondary">
+
+                                    <div class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true">
+                                    </div>
+
+                                    Loading fee records...
+
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
 
     <div class="modal fade" id="feeModal" tabindex="-1" aria-labelledby="feeModalLabel" aria-hidden="true">
 
         <div class="modal-dialog modal-lg modal-dialog-centered">
 
-            <div class="modal-content border-0 shadow">
+            <div class="modal-content shadow">
 
                 <div class="modal-header">
 
@@ -560,11 +1009,9 @@
                     </div>
 
                     <button type="button" class="btn-close" id="closeModalButton" data-bs-dismiss="modal"
-                        aria-label="Close">
-                    </button>
+                        aria-label="Close"></button>
 
                 </div>
-
 
                 <form id="feeForm">
 
@@ -592,7 +1039,6 @@
 
                             </div>
 
-
                             <div class="col-md-6">
 
                                 <label for="feeStructureId" class="form-label fw-semibold">
@@ -613,7 +1059,6 @@
 
                             </div>
 
-
                             <div class="col-md-6">
 
                                 <label for="feeType" class="form-label fw-semibold">
@@ -627,7 +1072,6 @@
                                 </div>
 
                             </div>
-
 
                             <div class="col-md-6">
 
@@ -645,7 +1089,6 @@
 
                             </div>
 
-
                             <div class="col-md-6">
 
                                 <label for="termId" class="form-label fw-semibold">
@@ -661,7 +1104,6 @@
                                 </select>
 
                             </div>
-
 
                             <div class="col-md-6">
 
@@ -686,7 +1128,6 @@
 
                             </div>
 
-
                             <div class="col-md-6">
 
                                 <label for="amountPaid" class="form-label fw-semibold">
@@ -709,7 +1150,6 @@
                                 </div>
 
                             </div>
-
 
                             <div class="col-md-6">
 
@@ -747,7 +1187,6 @@
 
                             </div>
 
-
                             <div class="col-12">
 
                                 <label for="notes" class="form-label fw-semibold">
@@ -763,13 +1202,10 @@
 
                     </div>
 
-
                     <div class="modal-footer">
 
                         <button type="button" class="btn btn-light" id="cancelFeeButton" data-bs-dismiss="modal">
-
                             Cancel
-
                         </button>
 
                         <button type="submit" class="btn btn-primary">
@@ -790,10 +1226,114 @@
 
     </div>
 
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="../js/api.js"></script>
+
     <script src="../js/fees.js"></script>
-    ```
+
+    <script>
+        (function () {
+            "use strict";
+
+            const sidebar =
+                document.getElementById("smsSidebar");
+
+            const overlay =
+                document.getElementById("sidebarOverlay");
+
+            const mobileMenuButton =
+                document.getElementById("mobileMenuButton");
+
+            function openSidebar() {
+                if (!sidebar || !overlay) {
+                    return;
+                }
+
+                sidebar.classList.add("sidebar-open");
+                overlay.classList.add("sidebar-open");
+
+                document.body.classList.add("sidebar-open");
+
+                if (mobileMenuButton) {
+                    mobileMenuButton.setAttribute(
+                        "aria-expanded",
+                        "true"
+                    );
+                }
+            }
+
+            function closeSidebar() {
+                if (!sidebar || !overlay) {
+                    return;
+                }
+
+                sidebar.classList.remove("sidebar-open");
+                overlay.classList.remove("sidebar-open");
+
+                document.body.classList.remove("sidebar-open");
+
+                if (mobileMenuButton) {
+                    mobileMenuButton.setAttribute(
+                        "aria-expanded",
+                        "false"
+                    );
+                }
+            }
+
+            if (mobileMenuButton) {
+                mobileMenuButton.addEventListener(
+                    "click",
+                    function () {
+                        if (
+                            sidebar &&
+                            sidebar.classList.contains("sidebar-open")
+                        ) {
+                            closeSidebar();
+                        } else {
+                            openSidebar();
+                        }
+                    }
+                );
+            }
+
+            if (overlay) {
+                overlay.addEventListener(
+                    "click",
+                    closeSidebar
+                );
+            }
+
+            if (sidebar) {
+                sidebar
+                    .querySelectorAll("a.sidebar-link")
+                    .forEach(function (link) {
+                        link.addEventListener(
+                            "click",
+                            closeSidebar
+                        );
+                    });
+            }
+
+            window.addEventListener(
+                "resize",
+                function () {
+                    if (window.innerWidth > 991.98) {
+                        closeSidebar();
+                    }
+                }
+            );
+
+            document.addEventListener(
+                "keydown",
+                function (event) {
+                    if (event.key === "Escape") {
+                        closeSidebar();
+                    }
+                }
+            );
+        })();
+    </script>
 
 </body>
 

@@ -1,39 +1,29 @@
 "use strict";
 
 /*
-|--------------------------------------------------------------------------
-| RESULT SERVICE
-|--------------------------------------------------------------------------
-|
-| This service is the business/coordination layer for the Results module.
-|
-| Architecture:
-|
-| Controller
-| ↓
-| Result Service
-| ↓
-| Result Model
-| ↓
-| PostgreSQL
-|
-| The service does NOT contain direct SQL for the results table.
-| Database operations belong to:
-|
-| models/resultModel.js
-|
-| This prevents duplicate database logic and keeps the Results module
-| consistent throughout the application.
-|--------------------------------------------------------------------------
-*/
+ * RESULT SERVICE
+ *
+ * This service is the business/coordination layer for the Results module.
+ *
+ * Architecture:
+ * Controller
+ * -> Result Service
+ * -> Result Model
+ * -> PostgreSQL
+ *
+ * The service does not contain direct SQL for the results table.
+ * Database operations belong to models/resultModel.js.
+ */
+
+/*
+ * RESULT MODEL
+ */
 
 const resultModel = require("../models/resultModel");
 
 /*
-|--------------------------------------------------------------------------
-| VALIDATION HELPERS
-|--------------------------------------------------------------------------
-*/
+ * VALIDATION HELPERS
+ */
 
 function requireValue(value, message) {
     if (
@@ -116,10 +106,8 @@ function normalizeScore(value, defaultValue = 0) {
 }
 
 /*
-|--------------------------------------------------------------------------
-| RESULT INPUT NORMALIZATION
-|--------------------------------------------------------------------------
-*/
+ * RESULT INPUT NORMALIZATION
+ */
 
 function normalizeResultInput(data = {}) {
     return {
@@ -135,9 +123,19 @@ function normalizeResultInput(data = {}) {
             data.subjectId ??
             data.subject_id,
 
+        /*
+         * Academic session compatibility:
+         *
+         * The Result Entry frontend sends academicSessionId.
+         * The backend service internally uses sessionId.
+         *
+         * All supported names are normalized to sessionId.
+         */
         sessionId:
             data.sessionId ??
-            data.session_id,
+            data.session_id ??
+            data.academicSessionId ??
+            data.academic_session_id,
 
         termId:
             data.termId ??
@@ -185,10 +183,8 @@ function normalizeResultInput(data = {}) {
 }
 
 /*
-|--------------------------------------------------------------------------
-| VALIDATE RESULT INPUT
-|--------------------------------------------------------------------------
-*/
+ * VALIDATE RESULT INPUT
+ */
 
 function validateResultInput(data, options = {}) {
     const input = normalizeResultInput(data);
@@ -315,10 +311,17 @@ function validateResultInput(data, options = {}) {
 }
 
 /*
-|--------------------------------------------------------------------------
-| GET STUDENT RESULTS
-|--------------------------------------------------------------------------
-*/
+ * GET STUDENT RESULTS
+ *
+ * The result model expects a single object:
+ *
+ * {
+ *     schoolId,
+ *     studentId,
+ *     sessionId,
+ *     termId
+ * }
+ */
 
 async function getStudentResults(
     studentId,
@@ -337,37 +340,26 @@ async function getStudentResults(
 
     const {
         sessionId = null,
-        termId = null,
-        subjectId = null
+        termId = null
     } = filters || {};
 
-    return resultModel.getStudentResults(
-        studentId,
+    return resultModel.getStudentResults({
         schoolId,
-        {
-            sessionId:
-                normalizeOptionalValue(
-                    sessionId
-                ),
-
-            termId:
-                normalizeOptionalValue(
-                    termId
-                ),
-
-            subjectId:
-                normalizeOptionalValue(
-                    subjectId
-                )
-        }
-    );
+        studentId,
+        sessionId:
+            normalizeOptionalValue(
+                sessionId
+            ),
+        termId:
+            normalizeOptionalValue(
+                termId
+            )
+    });
 }
 
 /*
-|--------------------------------------------------------------------------
-| GET RESULT BY ID
-|--------------------------------------------------------------------------
-*/
+ * GET RESULT BY ID
+ */
 
 async function getResultById(
     resultId,
@@ -390,10 +382,8 @@ async function getResultById(
 }
 
 /*
-|--------------------------------------------------------------------------
-| FIND EXISTING RESULT
-|--------------------------------------------------------------------------
-*/
+ * FIND EXISTING RESULT
+ */
 
 async function findExistingResult(data = {}) {
     const input = normalizeResultInput(data);
@@ -433,10 +423,8 @@ async function findExistingResult(data = {}) {
 }
 
 /*
-|--------------------------------------------------------------------------
-| CREATE RESULT
-|--------------------------------------------------------------------------
-*/
+ * CREATE RESULT
+ */
 
 async function createResult(data = {}) {
     const input =
@@ -479,14 +467,8 @@ async function createResult(data = {}) {
 }
 
 /*
-|--------------------------------------------------------------------------
-| CREATE BULK RESULTS
-|--------------------------------------------------------------------------
-|
-| Bulk creation is deliberately coordinated here rather than duplicating
-| SQL. Every individual result goes through the finalized result model.
-|--------------------------------------------------------------------------
-*/
+ * CREATE BULK RESULTS
+ */
 
 async function createBulkResults(
     results = [],
@@ -529,10 +511,8 @@ async function createBulkResults(
 }
 
 /*
-|--------------------------------------------------------------------------
-| UPDATE RESULT
-|--------------------------------------------------------------------------
-*/
+ * UPDATE RESULT
+ */
 
 async function updateResult(
     resultId,
@@ -702,10 +682,8 @@ async function updateResult(
 }
 
 /*
-|--------------------------------------------------------------------------
-| DELETE RESULT
-|--------------------------------------------------------------------------
-*/
+ * DELETE RESULT
+ */
 
 async function deleteResult(
     resultId,
@@ -728,10 +706,8 @@ async function deleteResult(
 }
 
 /*
-|--------------------------------------------------------------------------
-| GET RESULTS BY CLASS
-|--------------------------------------------------------------------------
-*/
+ * GET RESULTS BY CLASS
+ */
 
 async function getResultsByClass(
     classId,
@@ -777,10 +753,8 @@ async function getResultsByClass(
 }
 
 /*
-|--------------------------------------------------------------------------
-| GET STUDENT RESULT SUMMARY
-|--------------------------------------------------------------------------
-*/
+ * GET STUDENT RESULT SUMMARY
+ */
 
 async function getStudentResultSummary(
     studentId,
@@ -820,10 +794,8 @@ async function getStudentResultSummary(
 }
 
 /*
-|--------------------------------------------------------------------------
-| GET CLASS RESULT STATISTICS
-|--------------------------------------------------------------------------
-*/
+ * GET CLASS RESULT STATISTICS
+ */
 
 async function getClassResultStatistics(
     classId,
@@ -863,10 +835,8 @@ async function getClassResultStatistics(
 }
 
 /*
-|--------------------------------------------------------------------------
-| SEARCH RESULTS
-|--------------------------------------------------------------------------
-*/
+ * SEARCH RESULTS
+ */
 
 async function searchResults(
     searchTerm,
@@ -891,10 +861,8 @@ async function searchResults(
 }
 
 /*
-|--------------------------------------------------------------------------
-| PUBLISH RESULTS
-|--------------------------------------------------------------------------
-*/
+ * PUBLISH RESULTS
+ */
 
 async function publishResults(data = {}) {
     const schoolId =
@@ -936,10 +904,8 @@ async function publishResults(data = {}) {
 }
 
 /*
-|--------------------------------------------------------------------------
-| GET PUBLISHED RESULTS
-|--------------------------------------------------------------------------
-*/
+ * GET PUBLISHED RESULTS
+ */
 
 async function getPublishedResults(
     studentId,
@@ -970,17 +936,8 @@ async function getPublishedResults(
 }
 
 /*
-|--------------------------------------------------------------------------
-| GRADE CALCULATION
-|--------------------------------------------------------------------------
-|
-| These functions remain available from the service for compatibility with
-| controllers and other Results components.
-|
-| The database model remains responsible for applying the grade when a
-| result is created or updated.
-|--------------------------------------------------------------------------
-*/
+ * GRADE CALCULATION
+ */
 
 function calculateGrade(score) {
     const value = Number(score);
@@ -1043,14 +1000,8 @@ function calculateGradePoint(score) {
 }
 
 /*
-|--------------------------------------------------------------------------
-| COMPATIBILITY ALIASES
-|--------------------------------------------------------------------------
-|
-| These aliases prevent unnecessary controller changes when older Results
-| code uses slightly different service function names.
-|--------------------------------------------------------------------------
-*/
+ * COMPATIBILITY ALIASES
+ */
 
 const getStudentResult = getStudentResults;
 
@@ -1061,10 +1012,8 @@ const getClassResult = getResultsByClass;
 const getResult = getResultById;
 
 /*
-|--------------------------------------------------------------------------
-| EXPORT
-|--------------------------------------------------------------------------
-*/
+ * EXPORT
+ */
 
 module.exports = {
     getStudentResults,
