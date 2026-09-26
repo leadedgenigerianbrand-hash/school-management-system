@@ -1,28 +1,259 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    ```
     <title>Class Arms | School Management System</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
+        :root {
+            --sidebar-width: 260px;
+            --primary: #0d6efd;
+            --sidebar-bg: #111827;
+            --sidebar-hover: rgba(255, 255, 255, 0.09);
+            --page-bg: #f5f7fb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            background: #f5f7fb;
+            margin: 0;
+            background: var(--page-bg);
             color: #1f2937;
+            font-family:
+                Inter,
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        .sms-wrapper {
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR */
+        .sms-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            background:
+                linear-gradient(180deg, #111827 0%, #172033 55%, #0f172a 100%);
+            color: #fff;
+            z-index: 1040;
+            overflow-y: auto;
+            transition: transform 0.25s ease;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .sidebar-brand {
+            min-height: 76px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 21px;
+            flex-shrink: 0;
+        }
+
+        .brand-title {
+            font-weight: 700;
+            font-size: 15px;
+            line-height: 1.2;
+        }
+
+        .brand-subtitle {
+            display: block;
+            margin-top: 3px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.55);
+        }
+
+        .sidebar-content {
+            padding: 16px 12px 28px;
+        }
+
+        .sidebar-section {
+            margin-top: 20px;
+            margin-bottom: 7px;
+            padding: 0 10px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .sidebar-section:first-child {
+            margin-top: 2px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            min-height: 43px;
+            padding: 9px 11px;
+            margin-bottom: 3px;
+            border-radius: 9px;
+            color: rgba(255, 255, 255, 0.72);
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-link i {
+            width: 21px;
+            text-align: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-link:hover {
+            background: var(--sidebar-hover);
+            color: #fff;
+        }
+
+        .sidebar-link.active {
+            background: rgba(13, 110, 253, 0.9);
+            color: #fff;
+            box-shadow: 0 5px 14px rgba(13, 110, 253, 0.18);
+        }
+
+        /* SIDEBAR OVERLAY */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            z-index: 1030;
+        }
+
+        /* MAIN */
+        .sms-main {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        /* HEADER */
+        .sms-header {
+            height: 76px;
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+            background: rgba(255, 255, 255, 0.96);
+            border-bottom: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+        }
+
+        .header-inner {
+            min-height: 76px;
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+        }
+
+        .page-heading h1 {
+            margin: 0;
+            font-size: 21px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .page-heading p {
+            margin: 3px 0 0;
+            color: #6b7280;
+            font-size: 12px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e7f0ff;
+            color: #0d6efd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .user-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.2;
+        }
+
+        .user-role {
+            display: block;
+            margin-top: 2px;
+            font-size: 11px;
+            color: #6b7280;
+        }
+
+        .mobile-menu-button {
+            display: none;
+        }
+
+        /* CONTENT */
+        .sms-content {
+            padding: 30px;
         }
 
         .page-container {
             max-width: 1500px;
             margin: 0 auto;
-            padding: 30px;
         }
 
         .page-title h1 {
@@ -163,8 +394,67 @@
             margin-right: 0;
         }
 
+        @media (max-width: 991.98px) {
+            .sms-sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sms-sidebar.show {
+                transform: translateX(0);
+            }
+
+            .sms-main {
+                margin-left: 0;
+            }
+
+            .sidebar-overlay.show {
+                display: block;
+            }
+
+            .mobile-menu-button {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .header-inner {
+                padding: 0 20px;
+            }
+
+            .sms-content {
+                padding: 24px 20px;
+            }
+        }
+
         @media (max-width: 767.98px) {
-            .page-container {
+
+            .sms-header,
+            .header-inner {
+                min-height: 68px;
+                height: 68px;
+            }
+
+            .header-inner {
+                padding: 0 15px;
+            }
+
+            .page-heading h1 {
+                font-size: 18px;
+            }
+
+            .page-heading p {
+                display: none;
+            }
+
+            .header-actions {
+                gap: 8px;
+            }
+
+            .user-details {
+                display: none;
+            }
+
+            .sms-content {
                 padding: 20px 15px;
             }
 
@@ -181,246 +471,439 @@
             }
         }
     </style>
-    ```
-
 </head>
 
 <body>
 
-    ```
-    <div class="page-container">
+    <div class="sms-wrapper">
 
-        <div class="page-header d-flex justify-content-between align-items-center gap-3 flex-wrap mb-4">
+        <!-- SIDEBAR -->
+        <aside id="smsSidebar" class="sms-sidebar">
 
-            <div class="page-title">
-                <div class="d-flex align-items-center gap-2 mb-1">
-                    <span class="text-primary fs-4">
-                        <i class="bi bi-diagram-3-fill"></i>
-                    </span>
-
-                    <h1 class="h3 mb-0">Class Arms</h1>
+            <div class="sidebar-brand">
+                <div class="brand-icon">
+                    <i class="bi bi-mortarboard-fill"></i>
                 </div>
 
-                <p class="mb-0">
-                    Manage class arms such as JSS 1A, JSS 1B and SS 2A.
-                </p>
+                <div>
+                    <div class="brand-title">School Management</div>
+                    <span class="brand-subtitle">Administration Portal</span>
+                </div>
             </div>
 
-            <button type="button" class="btn btn-primary px-4" id="addClassArmBtn">
-                <i class="bi bi-plus-lg me-2"></i>
-                Add Class Arm
-            </button>
+            <div class="sidebar-content">
 
-        </div>
+                <div class="sidebar-section">Main</div>
 
-        <div id="alertMessage" class="alert d-none" role="alert"></div>
+                <a href="/pages/dashboard.html" class="sidebar-link">
+                    <i class="bi bi-grid-1x2-fill"></i>
+                    <span>Dashboard</span>
+                </a>
 
-        <div class="row g-3 mb-4">
+                <a href="/pages/students.html" class="sidebar-link">
+                    <i class="bi bi-people-fill"></i>
+                    <span>Students</span>
+                </a>
 
-            <div class="col-12 col-md-6 col-xl-3">
-                <div class="card stat-card">
-                    <div class="card-body p-4">
+                <a href="/pages/staff.html" class="sidebar-link">
+                    <i class="bi bi-person-badge-fill"></i>
+                    <span>Staff</span>
+                </a>
 
-                        <div class="d-flex justify-content-between align-items-center">
+                <a href="/pages/guardians.html" class="sidebar-link">
+                    <i class="bi bi-person-hearts"></i>
+                    <span>Guardians</span>
+                </a>
 
-                            <div>
-                                <div class="text-secondary small fw-semibold mb-2">
-                                    Total Class Arms
-                                </div>
+                <div class="sidebar-section">Academic</div>
 
-                                <div class="fs-3 fw-bold" id="totalClassArms">
-                                    0
-                                </div>
+                <a href="/pages/classes.html" class="sidebar-link">
+                    <i class="bi bi-building"></i>
+                    <span>Classes</span>
+                </a>
+
+                <a href="/pages/class-arms.html" class="sidebar-link active">
+                    <i class="bi bi-diagram-3-fill"></i>
+                    <span>Class Arms</span>
+                </a>
+
+                <a href="/pages/departments.html" class="sidebar-link">
+                    <i class="bi bi-diagram-2-fill"></i>
+                    <span>Departments</span>
+                </a>
+
+                <a href="/pages/subjects.html" class="sidebar-link">
+                    <i class="bi bi-book-half"></i>
+                    <span>Subjects</span>
+                </a>
+
+                <a href="/pages/academic-sessions.html" class="sidebar-link">
+                    <i class="bi bi-calendar3"></i>
+                    <span>Academic Sessions</span>
+                </a>
+
+                <a href="/pages/terms.html" class="sidebar-link">
+                    <i class="bi bi-calendar-week"></i>
+                    <span>Terms</span>
+                </a>
+
+                <a href="/pages/attendance.html" class="sidebar-link">
+                    <i class="bi bi-calendar-check-fill"></i>
+                    <span>Attendance</span>
+                </a>
+
+                <a href="/pages/results.html" class="sidebar-link">
+                    <i class="bi bi-bar-chart-fill"></i>
+                    <span>Results</span>
+                </a>
+
+                <div class="sidebar-section">Finance & Records</div>
+
+                <a href="/pages/fees.html" class="sidebar-link">
+                    <i class="bi bi-wallet2"></i>
+                    <span>Fees & Payments</span>
+                </a>
+
+                <a href="/pages/documents.html" class="sidebar-link">
+                    <i class="bi bi-folder-fill"></i>
+                    <span>Documents</span>
+                </a>
+
+                <a href="/pages/reports.html" class="sidebar-link">
+                    <i class="bi bi-file-earmark-bar-graph-fill"></i>
+                    <span>Reports</span>
+                </a>
+
+                <div class="sidebar-section">Administration</div>
+
+                <a href="/pages/users.html" class="sidebar-link">
+                    <i class="bi bi-person-gear"></i>
+                    <span>Users</span>
+                </a>
+
+                <a href="/pages/roles.html" class="sidebar-link">
+                    <i class="bi bi-shield-lock-fill"></i>
+                    <span>Roles</span>
+                </a>
+
+                <a href="/pages/permissions.html" class="sidebar-link">
+                    <i class="bi bi-key-fill"></i>
+                    <span>Permissions</span>
+                </a>
+
+                <a href="/pages/profile.html" class="sidebar-link">
+                    <i class="bi bi-person-circle"></i>
+                    <span>My Profile</span>
+                </a>
+
+                <a href="/pages/settings.html" class="sidebar-link">
+                    <i class="bi bi-gear-fill"></i>
+                    <span>Settings</span>
+                </a>
+
+            </div>
+        </aside>
+
+        <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+        <main class="sms-main">
+
+            <header class="sms-header">
+
+                <div class="header-inner">
+
+                    <div class="header-left">
+
+                        <button id="sidebarToggle" type="button" class="btn btn-light border mobile-menu-button"
+                            aria-label="Open navigation">
+                            <i class="bi bi-list fs-5"></i>
+                        </button>
+
+                        <div class="page-heading">
+                            <h1>Class Arms</h1>
+                            <p>Manage your school's class arms</p>
+                        </div>
+
+                    </div>
+
+                    <div class="header-actions">
+
+                        <div class="header-user">
+
+                            <div id="userAvatar" class="user-avatar" aria-label="User avatar">
+                                U
                             </div>
 
-                            <div class="stat-icon bg-primary-subtle text-primary">
+                            <div class="user-details">
+                                <div id="currentUserName" class="user-name" data-user-name>
+                                    School Administrator
+                                </div>
+
+                                <span class="user-role" data-user-role>
+                                    School Administrator
+                                </span>
+                            </div>
+
+                            <button id="logoutButton" type="button"
+                                class="btn btn-outline-danger btn-sm d-none d-md-inline-flex align-items-center gap-1">
+                                <i class="bi bi-box-arrow-right"></i>
+                                Logout
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section class="sms-content">
+
+                <div class="page-container">
+
+                    <div class="page-header d-flex justify-content-between align-items-center gap-3 flex-wrap mb-4">
+
+                        <div class="page-title">
+
+                            <div class="d-flex align-items-center gap-2 mb-1">
+
+                                <span class="text-primary fs-4">
+                                    <i class="bi bi-diagram-3-fill"></i>
+                                </span>
+
+                                <h1 class="h3 mb-0">Class Arms</h1>
+
+                            </div>
+
+                            <p class="mb-0">
+                                Manage class arms such as JSS 1A, JSS 1B and SS 2A.
+                            </p>
+
+                        </div>
+
+                        <button type="button" class="btn btn-primary px-4" id="addClassArmBtn">
+                            <i class="bi bi-plus-lg me-2"></i>
+                            Add Class Arm
+                        </button>
+
+                    </div>
+
+                    <div id="alertMessage" class="alert d-none" role="alert"></div>
+
+                    <div class="row g-3 mb-4">
+
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <div class="card stat-card">
+                                <div class="card-body p-4">
+
+                                    <div class="d-flex justify-content-between align-items-center">
+
+                                        <div>
+                                            <div class="text-secondary small fw-semibold mb-2">
+                                                Total Class Arms
+                                            </div>
+
+                                            <div class="fs-3 fw-bold" id="totalClassArms">
+                                                0
+                                            </div>
+                                        </div>
+
+                                        <div class="stat-icon bg-primary-subtle text-primary">
+                                            <i class="bi bi-diagram-3"></i>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <div class="card stat-card">
+                                <div class="card-body p-4">
+
+                                    <div class="d-flex justify-content-between align-items-center">
+
+                                        <div>
+                                            <div class="text-secondary small fw-semibold mb-2">
+                                                Active Class Arms
+                                            </div>
+
+                                            <div class="fs-3 fw-bold" id="activeClassArms">
+                                                0
+                                            </div>
+                                        </div>
+
+                                        <div class="stat-icon bg-success-subtle text-success">
+                                            <i class="bi bi-check-circle"></i>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <div class="card stat-card">
+                                <div class="card-body p-4">
+
+                                    <div class="d-flex justify-content-between align-items-center">
+
+                                        <div>
+                                            <div class="text-secondary small fw-semibold mb-2">
+                                                Inactive Class Arms
+                                            </div>
+
+                                            <div class="fs-3 fw-bold" id="inactiveClassArms">
+                                                0
+                                            </div>
+                                        </div>
+
+                                        <div class="stat-icon bg-danger-subtle text-danger">
+                                            <i class="bi bi-pause-circle"></i>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-6 col-xl-3">
+                            <div class="card stat-card">
+                                <div class="card-body p-4">
+
+                                    <div class="d-flex justify-content-between align-items-center">
+
+                                        <div>
+                                            <div class="text-secondary small fw-semibold mb-2">
+                                                Students Assigned
+                                            </div>
+
+                                            <div class="fs-3 fw-bold" id="studentsAssigned">
+                                                0
+                                            </div>
+                                        </div>
+
+                                        <div class="stat-icon bg-info-subtle text-info">
+                                            <i class="bi bi-people"></i>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="card toolbar-card mb-4">
+
+                        <div class="card-body p-3 p-md-4">
+
+                            <div class="row g-3 align-items-center">
+
+                                <div class="col-12 col-lg-6">
+
+                                    <div class="input-group">
+
+                                        <span class="input-group-text bg-white">
+                                            <i class="bi bi-search"></i>
+                                        </span>
+
+                                        <input type="search" id="searchInput" class="form-control"
+                                            placeholder="Search class arms..." autocomplete="off">
+
+                                    </div>
+
+                                </div>
+
+                                <div class="col-12 col-md-6 col-lg-3">
+
+                                    <select id="classFilter" class="form-select">
+                                        <option value="">All Classes</option>
+                                    </select>
+
+                                </div>
+
+                                <div class="col-12 col-md-6 col-lg-3">
+
+                                    <select id="statusFilter" class="form-select">
+                                        <option value="">All Statuses</option>
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                    </select>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="card table-card">
+
+                        <div id="loadingState" class="loading">
+
+                            <div class="spinner-border text-primary mb-3" role="status" aria-hidden="true"></div>
+
+                            <div>
+                                Loading class arms...
+                            </div>
+
+                        </div>
+
+                        <div class="table-responsive">
+
+                            <table id="classArmsTable" class="table table-hover align-middle mb-0"
+                                style="display: none;">
+
+                                <thead>
+
+                                    <tr>
+                                        <th class="ps-4">Class</th>
+                                        <th>Arm</th>
+                                        <th>Arm Code</th>
+                                        <th>Capacity</th>
+                                        <th>Students</th>
+                                        <th>Status</th>
+                                        <th class="pe-4">Actions</th>
+                                    </tr>
+
+                                </thead>
+
+                                <tbody id="classArmsTableBody"></tbody>
+
+                            </table>
+
+                        </div>
+
+                        <div id="emptyState" class="empty-state" style="display: none;">
+
+                            <div class="empty-state-icon">
                                 <i class="bi bi-diagram-3"></i>
                             </div>
 
-                        </div>
+                            <h5 class="fw-bold text-dark">
+                                No Class Arms Found
+                            </h5>
 
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-md-6 col-xl-3">
-                <div class="card stat-card">
-                    <div class="card-body p-4">
-
-                        <div class="d-flex justify-content-between align-items-center">
-
-                            <div>
-                                <div class="text-secondary small fw-semibold mb-2">
-                                    Active Class Arms
-                                </div>
-
-                                <div class="fs-3 fw-bold" id="activeClassArms">
-                                    0
-                                </div>
-                            </div>
-
-                            <div class="stat-icon bg-success-subtle text-success">
-                                <i class="bi bi-check-circle"></i>
-                            </div>
-
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-md-6 col-xl-3">
-                <div class="card stat-card">
-                    <div class="card-body p-4">
-
-                        <div class="d-flex justify-content-between align-items-center">
-
-                            <div>
-                                <div class="text-secondary small fw-semibold mb-2">
-                                    Inactive Class Arms
-                                </div>
-
-                                <div class="fs-3 fw-bold" id="inactiveClassArms">
-                                    0
-                                </div>
-                            </div>
-
-                            <div class="stat-icon bg-danger-subtle text-danger">
-                                <i class="bi bi-pause-circle"></i>
-                            </div>
-
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-md-6 col-xl-3">
-                <div class="card stat-card">
-                    <div class="card-body p-4">
-
-                        <div class="d-flex justify-content-between align-items-center">
-
-                            <div>
-                                <div class="text-secondary small fw-semibold mb-2">
-                                    Students Assigned
-                                </div>
-
-                                <div class="fs-3 fw-bold" id="studentsAssigned">
-                                    0
-                                </div>
-                            </div>
-
-                            <div class="stat-icon bg-info-subtle text-info">
-                                <i class="bi bi-people"></i>
-                            </div>
-
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <div class="card toolbar-card mb-4">
-
-            <div class="card-body p-3 p-md-4">
-
-                <div class="row g-3 align-items-center">
-
-                    <div class="col-12 col-lg-6">
-
-                        <div class="input-group">
-
-                            <span class="input-group-text bg-white">
-                                <i class="bi bi-search"></i>
-                            </span>
-
-                            <input type="search" id="searchInput" class="form-control"
-                                placeholder="Search class arms..." autocomplete="off">
+                            <p class="mb-0">
+                                Create a class arm to get started.
+                            </p>
 
                         </div>
 
                     </div>
 
-                    <div class="col-12 col-md-6 col-lg-3">
-
-                        <select id="classFilter" class="form-select">
-                            <option value="">All Classes</option>
-                        </select>
-
-                    </div>
-
-                    <div class="col-12 col-md-6 col-lg-3">
-
-                        <select id="statusFilter" class="form-select">
-                            <option value="">All Statuses</option>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
-
-                    </div>
-
                 </div>
 
-            </div>
+            </section>
 
-        </div>
-
-        <div class="card table-card">
-
-            <div id="loadingState" class="loading">
-
-                <div class="spinner-border text-primary mb-3" role="status" aria-hidden="true"></div>
-
-                <div>
-                    Loading class arms...
-                </div>
-
-            </div>
-
-            <div class="table-responsive">
-
-                <table id="classArmsTable" class="table table-hover align-middle mb-0" style="display: none;">
-
-                    <thead>
-
-                        <tr>
-                            <th class="ps-4">Class</th>
-                            <th>Arm</th>
-                            <th>Arm Code</th>
-                            <th>Capacity</th>
-                            <th>Students</th>
-                            <th>Status</th>
-                            <th class="pe-4">Actions</th>
-                        </tr>
-
-                    </thead>
-
-                    <tbody id="classArmsTableBody"></tbody>
-
-                </table>
-
-            </div>
-
-            <div id="emptyState" class="empty-state" style="display: none;">
-
-                <div class="empty-state-icon">
-                    <i class="bi bi-diagram-3"></i>
-                </div>
-
-                <h5 class="fw-bold text-dark">
-                    No Class Arms Found
-                </h5>
-
-                <p class="mb-0">
-                    Create a class arm to get started.
-                </p>
-
-            </div>
-
-        </div>
+        </main>
 
     </div>
 
@@ -567,13 +1050,110 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
     <script src="../js/api.js"></script>
-
     <script src="../js/auth.js"></script>
-
     <script src="../js/class-arms.js"></script>
-    ```
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const sidebar = document.getElementById("smsSidebar");
+            const overlay = document.getElementById("sidebarOverlay");
+            const toggle = document.getElementById("sidebarToggle");
+
+            function openSidebar() {
+                sidebar.classList.add("show");
+                overlay.classList.add("show");
+                document.body.style.overflow = "hidden";
+            }
+
+            function closeSidebar() {
+                sidebar.classList.remove("show");
+                overlay.classList.remove("show");
+                document.body.style.overflow = "";
+            }
+
+            if (toggle) {
+                toggle.addEventListener("click", openSidebar);
+            }
+
+            if (overlay) {
+                overlay.addEventListener("click", closeSidebar);
+            }
+
+            document.querySelectorAll(".sidebar-link").forEach(function (link) {
+                link.addEventListener("click", function () {
+                    if (window.innerWidth <= 991.98) {
+                        closeSidebar();
+                    }
+                });
+            });
+
+            window.addEventListener("resize", function () {
+                if (window.innerWidth > 991.98) {
+                    closeSidebar();
+                }
+            });
+
+            const logoutButton = document.getElementById("logoutButton");
+
+            if (logoutButton) {
+                logoutButton.addEventListener("click", function () {
+                    if (typeof logout === "function") {
+                        logout();
+                        return;
+                    }
+
+                    localStorage.removeItem("school_management_token");
+                    localStorage.removeItem("school_management_user");
+                    window.location.href = "/pages/login.html";
+                });
+            }
+
+            try {
+                const storedUser =
+                    JSON.parse(
+                        localStorage.getItem("school_management_user") || "null"
+                    );
+
+                if (storedUser) {
+
+                    const displayName =
+                        storedUser.name ||
+                        storedUser.fullName ||
+                        storedUser.full_name ||
+                        storedUser.username ||
+                        storedUser.email ||
+                        "School Administrator";
+
+                    const role =
+                        storedUser.roleName ||
+                        storedUser.role_name ||
+                        storedUser.role ||
+                        "School Administrator";
+
+                    document.querySelectorAll("[data-user-name]").forEach(function (element) {
+                        element.textContent = displayName;
+                    });
+
+                    document.querySelectorAll("[data-user-role]").forEach(function (element) {
+                        element.textContent = role;
+                    });
+
+                    const avatar = document.getElementById("userAvatar");
+
+                    if (avatar) {
+                        avatar.textContent =
+                            displayName.charAt(0).toUpperCase();
+                    }
+                }
+
+            } catch (error) {
+                console.warn("Unable to load stored user information:", error);
+            }
+
+        });
+    </script>
 
 </body>
 

@@ -1,12 +1,10 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    ```
     <title>Departments | School Management System</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -15,9 +13,241 @@
     <link rel="stylesheet" href="../css/style.css">
 
     <style>
-        body {
-            background: #f5f7fb;
+        :root {
+            --sidebar-width: 260px;
+            --primary: #0d6efd;
+            --sidebar-bg: #111827;
+            --sidebar-hover: rgba(255, 255, 255, 0.09);
         }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f5f7fb;
+            color: #172033;
+        }
+
+        /* ==========================================================
+           SIDEBAR
+        ========================================================== */
+
+        .sms-wrapper {
+            min-height: 100vh;
+        }
+
+        .sms-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            background:
+                linear-gradient(180deg,
+                    #111827 0%,
+                    #0f172a 100%);
+            color: #fff;
+            z-index: 1040;
+            overflow-y: auto;
+            box-shadow: 4px 0 18px rgba(15, 23, 42, 0.12);
+            transition: transform 0.25s ease;
+        }
+
+        .sidebar-brand {
+            min-height: 76px;
+            padding: 15px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(13, 110, 253, 0.18);
+            color: #60a5fa;
+            font-size: 21px;
+            flex-shrink: 0;
+        }
+
+        .brand-title {
+            font-size: 15px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .brand-subtitle {
+            display: block;
+            margin-top: 3px;
+            color: rgba(255, 255, 255, 0.58);
+            font-size: 11px;
+        }
+
+        .sidebar-content {
+            padding: 16px 12px 24px;
+        }
+
+        .sidebar-section {
+            padding: 12px 10px 7px;
+            color: rgba(255, 255, 255, 0.42);
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            min-height: 42px;
+            padding: 9px 12px;
+            margin: 2px 0;
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.76);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition:
+                background-color 0.18s ease,
+                color 0.18s ease;
+        }
+
+        .sidebar-link i {
+            width: 19px;
+            text-align: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-link:hover {
+            background: var(--sidebar-hover);
+            color: #fff;
+        }
+
+        .sidebar-link.active {
+            background: rgba(13, 110, 253, 0.22);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .sidebar-link.active i {
+            color: #60a5fa;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            z-index: 1030;
+        }
+
+        /* ==========================================================
+           MAIN AREA
+        ========================================================== */
+
+        .sms-main {
+            min-height: 100vh;
+            margin-left: var(--sidebar-width);
+        }
+
+        .sms-header {
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+            min-height: 76px;
+            background: rgba(255, 255, 255, 0.96);
+            border-bottom: 1px solid #e7eaf0;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-inner {
+            min-height: 76px;
+            padding: 0 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+        }
+
+        .header-left .page-heading h1 {
+            margin: 0;
+            color: #172033;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .header-left .page-heading p {
+            margin: 3px 0 0;
+            color: #6b7280;
+            font-size: 12px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e8f1ff;
+            color: #0d6efd;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .user-details {
+            min-width: 0;
+        }
+
+        .user-name {
+            color: #172033;
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .user-role {
+            display: block;
+            margin-top: 1px;
+            color: #6b7280;
+            font-size: 11px;
+        }
+
+        .mobile-menu-button {
+            display: none;
+        }
+
+        /* ==========================================================
+           PAGE CONTENT
+        ========================================================== */
 
         .page-container {
             max-width: 1500px;
@@ -46,6 +276,22 @@
             color: #6b7280;
         }
 
+        .header-actions .btn {
+            min-height: 42px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        #addDepartmentBtn {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+            color: #fff;
+        }
+
+        /* ==========================================================
+           STATISTICS
+        ========================================================== */
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -58,7 +304,7 @@
             border: 1px solid #e7eaf0;
             border-radius: 14px;
             padding: 22px;
-            box-shadow: 0 4px 15px rgba(15, 23, 42, .04);
+            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
         }
 
         .stat-icon {
@@ -87,12 +333,16 @@
             color: #172033;
         }
 
+        /* ==========================================================
+           TOOLBAR / TABLE
+        ========================================================== */
+
         .toolbar,
         .table-container {
             background: #fff;
             border: 1px solid #e7eaf0;
             border-radius: 14px;
-            box-shadow: 0 4px 15px rgba(15, 23, 42, .04);
+            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
         }
 
         .toolbar {
@@ -138,7 +388,7 @@
         .form-control:focus,
         .form-select:focus {
             border-color: #2563eb;
-            box-shadow: 0 0 0 .2rem rgba(37, 99, 235, .1);
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.1);
         }
 
         .table-container {
@@ -160,7 +410,7 @@
             font-size: 12px;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: .04em;
+            letter-spacing: 0.04em;
             padding: 16px;
             border-bottom: 1px solid #e5e7eb;
             white-space: nowrap;
@@ -248,10 +498,14 @@
             font-weight: 700;
         }
 
+        /* ==========================================================
+           MODAL
+        ========================================================== */
+
         .modal-content {
             border: 0;
             border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(15, 23, 42, .2);
+            box-shadow: 0 20px 60px rgba(15, 23, 42, 0.2);
         }
 
         .modal-header {
@@ -287,9 +541,45 @@
             cursor: pointer;
         }
 
-        @media (max-width: 1000px) {
+        /* ==========================================================
+           RESPONSIVE
+        ========================================================== */
+
+        @media (max-width: 1100px) {
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
+            }
+
+            .user-details {
+                display: none;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .sms-sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sms-sidebar.show {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.show {
+                display: block;
+            }
+
+            .sms-main {
+                margin-left: 0;
+            }
+
+            .mobile-menu-button {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .header-inner {
+                padding: 0 18px;
             }
         }
 
@@ -316,181 +606,429 @@
                 min-width: 100%;
             }
 
-            .header-actions {
+            .page-header {
+                align-items: stretch;
+            }
+
+            .page-header .header-actions {
                 width: 100%;
             }
 
-            .header-actions .btn {
+            .page-header .header-actions .btn {
                 width: 100%;
+            }
+
+            .header-actions {
+                gap: 8px;
+            }
+
+            .user-avatar {
+                width: 36px;
+                height: 36px;
             }
         }
     </style>
-    ```
-
 </head>
 
 <body>
 
-    ```
-    <div class="page-container">
+    <div class="sms-wrapper">
 
-        <div class="page-header">
+        <!-- SIDEBAR -->
+        <aside id="smsSidebar" class="sms-sidebar">
 
-            <div class="page-title">
+            <div class="sidebar-brand">
 
-                <div class="d-flex align-items-center gap-2 mb-2">
-                    <span class="badge text-bg-primary rounded-pill px-3 py-2">
-                        <i class="bi bi-diagram-3 me-1"></i>
-                        Academic Structure
-                    </span>
-                </div>
-
-                <h1>Departments</h1>
-
-                <p>
-                    Manage academic and administrative departments in the school.
-                </p>
-
-            </div>
-
-            <div class="header-actions">
-
-                <button type="button" class="btn btn-primary px-4 py-2" id="addDepartmentBtn">
-                    <i class="bi bi-plus-lg me-2"></i>
-                    Add Department
-                </button>
-
-            </div>
-
-        </div>
-
-        <div id="alertMessage" class="alert d-none" role="alert"></div>
-
-        <div class="stats-grid">
-
-            <div class="stat-card">
-
-                <div class="stat-icon">
-                    <i class="bi bi-diagram-3"></i>
-                </div>
-
-                <h3>Total Departments</h3>
-
-                <div class="value" id="totalDepartments">
-                    0
-                </div>
-
-            </div>
-
-            <div class="stat-card">
-
-                <div class="stat-icon">
-                    <i class="bi bi-check-circle"></i>
-                </div>
-
-                <h3>Active Departments</h3>
-
-                <div class="value" id="activeDepartments">
-                    0
-                </div>
-
-            </div>
-
-            <div class="stat-card">
-
-                <div class="stat-icon">
-                    <i class="bi bi-pause-circle"></i>
-                </div>
-
-                <h3>Inactive Departments</h3>
-
-                <div class="value" id="inactiveDepartments">
-                    0
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="toolbar">
-
-            <div class="search-box">
-
-                <i class="bi bi-search"></i>
-
-                <input type="search" class="form-control" id="searchInput" placeholder="Search departments..."
-                    autocomplete="off">
-
-            </div>
-
-            <div class="filter-box">
-
-                <select class="form-select" id="statusFilter">
-
-                    <option value="">All Statuses</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-
-                </select>
-
-            </div>
-
-        </div>
-
-        <div class="table-container">
-
-            <div id="loadingState" class="loading">
-
-                <div class="spinner-border text-primary mb-3" role="status">
-                    <span class="visually-hidden">Loading...</span>
+                <div class="brand-icon">
+                    <i class="bi bi-mortarboard-fill"></i>
                 </div>
 
                 <div>
-                    Loading departments...
+                    <div class="brand-title">
+                        School Management
+                    </div>
+
+                    <span class="brand-subtitle">
+                        Administration Portal
+                    </span>
                 </div>
 
             </div>
 
-            <div class="table-responsive">
+            <div class="sidebar-content">
 
-                <table id="departmentsTable" class="table align-middle" style="display: none;">
+                <div class="sidebar-section">
+                    Main
+                </div>
 
-                    <thead>
+                <a href="/pages/dashboard.html" class="sidebar-link">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Dashboard</span>
+                </a>
 
-                        <tr>
+                <a href="/pages/students.html" class="sidebar-link">
+                    <i class="bi bi-people-fill"></i>
+                    <span>Students</span>
+                </a>
 
-                            <th>Department</th>
-                            <th>Code</th>
-                            <th>Description</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                <a href="/pages/staff.html" class="sidebar-link">
+                    <i class="bi bi-person-badge-fill"></i>
+                    <span>Staff</span>
+                </a>
 
-                        </tr>
+                <a href="/pages/guardians.html" class="sidebar-link">
+                    <i class="bi bi-person-hearts"></i>
+                    <span>Guardians</span>
+                </a>
 
-                    </thead>
+                <div class="sidebar-section">
+                    Academic
+                </div>
 
-                    <tbody id="departmentsTableBody"></tbody>
+                <a href="/pages/classes.html" class="sidebar-link">
+                    <i class="bi bi-building"></i>
+                    <span>Classes</span>
+                </a>
 
-                </table>
+                <a href="/pages/class-arms.html" class="sidebar-link">
+                    <i class="bi bi-diagram-3-fill"></i>
+                    <span>Class Arms</span>
+                </a>
+
+                <a href="/pages/departments.html" class="sidebar-link active">
+                    <i class="bi bi-diagram-3"></i>
+                    <span>Departments</span>
+                </a>
+
+                <a href="/pages/subjects.html" class="sidebar-link">
+                    <i class="bi bi-book-fill"></i>
+                    <span>Subjects</span>
+                </a>
+
+                <a href="/pages/academic-sessions.html" class="sidebar-link">
+                    <i class="bi bi-calendar3"></i>
+                    <span>Academic Sessions</span>
+                </a>
+
+                <a href="/pages/terms.html" class="sidebar-link">
+                    <i class="bi bi-calendar-week"></i>
+                    <span>Terms</span>
+                </a>
+
+                <a href="/pages/attendance.html" class="sidebar-link">
+                    <i class="bi bi-calendar-check-fill"></i>
+                    <span>Attendance</span>
+                </a>
+
+                <a href="/pages/results.html" class="sidebar-link">
+                    <i class="bi bi-bar-chart-fill"></i>
+                    <span>Results</span>
+                </a>
+
+                <div class="sidebar-section">
+                    Finance &amp; Records
+                </div>
+
+                <a href="/pages/fees.html" class="sidebar-link">
+                    <i class="bi bi-cash-stack"></i>
+                    <span>Fees &amp; Payments</span>
+                </a>
+
+                <a href="/pages/documents.html" class="sidebar-link">
+                    <i class="bi bi-folder-fill"></i>
+                    <span>Documents</span>
+                </a>
+
+                <a href="/pages/reports.html" class="sidebar-link">
+                    <i class="bi bi-file-earmark-bar-graph-fill"></i>
+                    <span>Reports</span>
+                </a>
+
+                <div class="sidebar-section">
+                    Administration
+                </div>
+
+                <a href="/pages/users.html" class="sidebar-link">
+                    <i class="bi bi-person-lines-fill"></i>
+                    <span>Users</span>
+                </a>
+
+                <a href="/pages/roles.html" class="sidebar-link">
+                    <i class="bi bi-shield-lock-fill"></i>
+                    <span>Roles</span>
+                </a>
+
+                <a href="/pages/permissions.html" class="sidebar-link">
+                    <i class="bi bi-key-fill"></i>
+                    <span>Permissions</span>
+                </a>
+
+                <a href="/pages/profile.html" class="sidebar-link">
+                    <i class="bi bi-person-circle"></i>
+                    <span>My Profile</span>
+                </a>
+
+                <a href="/pages/settings.html" class="sidebar-link">
+                    <i class="bi bi-gear-fill"></i>
+                    <span>Settings</span>
+                </a>
 
             </div>
 
-            <div id="emptyState" class="empty-state" style="display: none;">
+        </aside>
 
-                <i class="bi bi-diagram-3"></i>
+        <!-- SIDEBAR OVERLAY -->
+        <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
-                <h3>No Departments Found</h3>
+        <!-- MAIN -->
+        <main class="sms-main">
 
-                <p class="mb-0">
-                    Create a department to get started.
-                </p>
+            <!-- HEADER -->
+            <header class="sms-header">
 
-            </div>
+                <div class="header-inner">
 
-        </div>
+                    <div class="header-left">
+
+                        <button id="sidebarToggle" type="button" class="btn btn-light border mobile-menu-button"
+                            aria-label="Open navigation">
+                            <i class="bi bi-list fs-5"></i>
+                        </button>
+
+                        <div class="page-heading">
+
+                            <h1>
+                                Departments
+                            </h1>
+
+                            <p>
+                                Academic and administrative department management
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="header-actions">
+
+                        <div class="header-user">
+
+                            <div id="userAvatar" class="user-avatar" aria-label="User avatar">
+                                SA
+                            </div>
+
+                            <div class="user-details">
+
+                                <div id="currentUserName" class="user-name" data-user-name>
+                                    School Administrator
+                                </div>
+
+                                <span class="user-role" data-user-role>
+                                    School Administrator
+                                </span>
+
+                            </div>
+
+                            <button id="logoutButton" type="button"
+                                class="btn btn-outline-danger btn-sm d-none d-md-inline-flex align-items-center gap-1">
+                                <i class="bi bi-box-arrow-right"></i>
+                                Logout
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </header>
+
+            <!-- PAGE CONTENT -->
+            <section class="sms-content">
+
+                <div class="page-container">
+
+                    <div class="page-header">
+
+                        <div class="page-title">
+
+                            <div class="d-flex align-items-center gap-2 mb-2">
+
+                                <span class="badge text-bg-primary rounded-pill px-3 py-2">
+                                    <i class="bi bi-diagram-3 me-1"></i>
+                                    Academic Structure
+                                </span>
+
+                            </div>
+
+                            <h1>
+                                Departments
+                            </h1>
+
+                            <p>
+                                Manage academic and administrative departments in the school.
+                            </p>
+
+                        </div>
+
+                        <div class="header-actions">
+
+                            <button type="button" class="btn btn-primary px-4 py-2" id="addDepartmentBtn">
+                                <i class="bi bi-plus-lg me-2"></i>
+                                Add Department
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    <div id="alertMessage" class="alert d-none" role="alert"></div>
+
+                    <!-- STATISTICS -->
+                    <div class="stats-grid">
+
+                        <div class="stat-card">
+
+                            <div class="stat-icon">
+                                <i class="bi bi-diagram-3"></i>
+                            </div>
+
+                            <h3>
+                                Total Departments
+                            </h3>
+
+                            <div class="value" id="totalDepartments">
+                                0
+                            </div>
+
+                        </div>
+
+                        <div class="stat-card">
+
+                            <div class="stat-icon">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+
+                            <h3>
+                                Active Departments
+                            </h3>
+
+                            <div class="value" id="activeDepartments">
+                                0
+                            </div>
+
+                        </div>
+
+                        <div class="stat-card">
+
+                            <div class="stat-icon">
+                                <i class="bi bi-pause-circle"></i>
+                            </div>
+
+                            <h3>
+                                Inactive Departments
+                            </h3>
+
+                            <div class="value" id="inactiveDepartments">
+                                0
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- TOOLBAR -->
+                    <div class="toolbar">
+
+                        <div class="search-box">
+
+                            <i class="bi bi-search"></i>
+
+                            <input type="search" class="form-control" id="searchInput"
+                                placeholder="Search departments..." autocomplete="off">
+
+                        </div>
+
+                        <div class="filter-box">
+
+                            <select class="form-select" id="statusFilter">
+                                <option value="">
+                                    All Statuses
+                                </option>
+
+                                <option value="active">
+                                    Active
+                                </option>
+
+                                <option value="inactive">
+                                    Inactive
+                                </option>
+                            </select>
+
+                        </div>
+
+                    </div>
+
+                    <!-- DEPARTMENT TABLE -->
+                    <div class="table-container">
+
+                        <div id="loadingState" class="loading">
+
+                            <div class="spinner-border text-primary mb-3" role="status" aria-hidden="true"></div>
+
+                            <div>
+                                Loading departments...
+                            </div>
+
+                        </div>
+
+                        <div class="table-responsive">
+
+                            <table id="departmentsTable" class="table align-middle" style="display: none;">
+
+                                <thead>
+
+                                    <tr>
+                                        <th>Department</th>
+                                        <th>Code</th>
+                                        <th>Description</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+
+                                </thead>
+
+                                <tbody id="departmentsTableBody"></tbody>
+
+                            </table>
+
+                        </div>
+
+                        <div id="emptyState" class="empty-state" style="display: none;">
+
+                            <i class="bi bi-diagram-3"></i>
+
+                            <h3>
+                                No Departments Found
+                            </h3>
+
+                            <p class="mb-0">
+                                Create a department to get started.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
 
     </div>
 
+    <!-- DEPARTMENT MODAL -->
     <div class="modal fade" id="departmentModal" tabindex="-1" aria-hidden="true">
 
         <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -500,10 +1038,8 @@
                 <div class="modal-header">
 
                     <h2 class="modal-title fs-5" id="modalTitle">
-
                         <i class="bi bi-diagram-3 me-2 text-primary"></i>
                         Add Department
-
                     </h2>
 
                     <button type="button" class="btn-close" id="closeModalBtn" aria-label="Close"></button>
@@ -575,10 +1111,8 @@
                         </button>
 
                         <button type="submit" class="btn btn-primary px-4" id="saveDepartmentBtn">
-
                             <i class="bi bi-check-lg me-2"></i>
                             Save Department
-
                         </button>
 
                     </div>
@@ -591,11 +1125,175 @@
 
     </div>
 
+    <!-- SCRIPTS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../js/api.js"></script>
     <script src="../js/auth.js"></script>
     <script src="../js/departments.js"></script>
-    ```
+
+    <script>
+        (function () {
+            "use strict";
+
+            const sidebar = document.getElementById("smsSidebar");
+            const sidebarToggle = document.getElementById("sidebarToggle");
+            const sidebarOverlay = document.getElementById("sidebarOverlay");
+            const logoutButton = document.getElementById("logoutButton");
+
+            function openSidebar() {
+                if (!sidebar || !sidebarOverlay) {
+                    return;
+                }
+
+                sidebar.classList.add("show");
+                sidebarOverlay.classList.add("show");
+            }
+
+            function closeSidebar() {
+                if (!sidebar || !sidebarOverlay) {
+                    return;
+                }
+
+                sidebar.classList.remove("show");
+                sidebarOverlay.classList.remove("show");
+            }
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener(
+                    "click",
+                    openSidebar
+                );
+            }
+
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener(
+                    "click",
+                    closeSidebar
+                );
+            }
+
+            document.querySelectorAll(".sidebar-link").forEach(function (link) {
+                link.addEventListener("click", function () {
+                    closeSidebar();
+                });
+            });
+
+            window.addEventListener("resize", function () {
+                if (window.innerWidth > 900) {
+                    closeSidebar();
+                }
+            });
+
+            function getStoredUser() {
+                const rawUser =
+                    localStorage.getItem("school_management_user") ||
+                    sessionStorage.getItem("school_management_user");
+
+                if (!rawUser) {
+                    return null;
+                }
+
+                try {
+                    return JSON.parse(rawUser);
+                } catch (error) {
+                    return null;
+                }
+            }
+
+            function updateUserDisplay() {
+                const user = getStoredUser();
+
+                const nameElement =
+                    document.getElementById("currentUserName");
+
+                const roleElement =
+                    document.querySelector("[data-user-role]");
+
+                const avatarElement =
+                    document.getElementById("userAvatar");
+
+                if (!user) {
+                    return;
+                }
+
+                const name =
+                    user.name ||
+                    user.fullName ||
+                    user.full_name ||
+                    user.username ||
+                    user.email ||
+                    "School Administrator";
+
+                const role =
+                    user.roleName ||
+                    user.role_name ||
+                    user.role ||
+                    user.userRole ||
+                    "School Administrator";
+
+                if (nameElement) {
+                    nameElement.textContent = name;
+                }
+
+                if (roleElement) {
+                    roleElement.textContent = role;
+                }
+
+                if (avatarElement) {
+                    const initials = String(name)
+                        .trim()
+                        .split(/\s+/)
+                        .slice(0, 2)
+                        .map(function (part) {
+                            return part.charAt(0).toUpperCase();
+                        })
+                        .join("");
+
+                    avatarElement.textContent =
+                        initials || "SA";
+                }
+            }
+
+            async function handleLogout() {
+                try {
+                    if (typeof logout === "function") {
+                        await logout();
+                        return;
+                    }
+                } catch (error) {
+                    console.error("Logout error:", error);
+                }
+
+                localStorage.removeItem(
+                    "school_management_token"
+                );
+
+                localStorage.removeItem(
+                    "school_management_user"
+                );
+
+                sessionStorage.removeItem(
+                    "school_management_token"
+                );
+
+                sessionStorage.removeItem(
+                    "school_management_user"
+                );
+
+                window.location.href =
+                    "/pages/login.html";
+            }
+
+            if (logoutButton) {
+                logoutButton.addEventListener(
+                    "click",
+                    handleLogout
+                );
+            }
+
+            updateUserDisplay();
+        })();
+    </script>
 
 </body>
 

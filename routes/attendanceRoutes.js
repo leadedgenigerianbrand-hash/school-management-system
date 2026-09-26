@@ -5,17 +5,30 @@ const express = require("express");
 const {
     createAttendance,
     createBulkAttendance,
+
     getAttendance,
     getAttendanceById,
+
     getStudentAttendance,
+    getStaffAttendance,
+
     getClassAttendance,
+
     getAttendanceByDate,
+    getStaffAttendanceByDate,
+    getAllAttendanceByDate,
+
     updateAttendance,
     deleteAttendance,
+
     getStudentAttendanceSummary,
+    getStaffAttendanceSummary,
     getClassAttendanceSummary,
+
     getSchoolAttendanceSummary,
+
     searchAttendance,
+
     getAttendanceStatistics
 } = require("../controllers/attendanceController");
 
@@ -31,20 +44,7 @@ const router = express.Router();
 | Base URL:
 | /api/attendance
 |
-| Authentication:
-| All Attendance routes require an authenticated user.
-|
-|--------------------------------------------------------------------------
-*/
-
-/*
-|--------------------------------------------------------------------------
-| AUTHENTICATION
-|--------------------------------------------------------------------------
-|
-| Apply authentication once to the entire Attendance router.
-|
-| This ensures that every Attendance endpoint is protected.
+| All attendance routes require authentication.
 |
 |--------------------------------------------------------------------------
 */
@@ -57,8 +57,6 @@ router.use(authMiddleware);
 |--------------------------------------------------------------------------
 |
 | GET /api/attendance/statistics
-|
-| Returns school-level attendance statistics.
 |
 |--------------------------------------------------------------------------
 */
@@ -75,8 +73,6 @@ router.get(
 |
 | GET /api/attendance/summary
 |
-| Returns the school's attendance summary.
-|
 |--------------------------------------------------------------------------
 */
 
@@ -92,7 +88,8 @@ router.get(
 |
 | GET /api/attendance/search
 |
-| Compatibility/search endpoint handled by the Attendance controller.
+| Supports student, staff, or all attendance searches depending
+| on the controller query parameters.
 |
 |--------------------------------------------------------------------------
 */
@@ -134,6 +131,71 @@ router.get(
 
 /*
 |--------------------------------------------------------------------------
+| STAFF ATTENDANCE SUMMARY
+|--------------------------------------------------------------------------
+|
+| GET /api/attendance/staff/:staffId/summary
+|
+| Covers both teaching and non-teaching staff.
+|
+|--------------------------------------------------------------------------
+*/
+
+router.get(
+    "/staff/:staffId/summary",
+    getStaffAttendanceSummary
+);
+
+/*
+|--------------------------------------------------------------------------
+| STAFF ATTENDANCE
+|--------------------------------------------------------------------------
+|
+| GET /api/attendance/staff/:staffId
+|
+| Returns attendance records for a specific staff member.
+|
+|--------------------------------------------------------------------------
+*/
+
+/*
+|--------------------------------------------------------------------------
+| STAFF ATTENDANCE BY DATE
+|--------------------------------------------------------------------------
+|
+| GET /api/attendance/staff/date?date=YYYY-MM-DD
+|
+| IMPORTANT:
+| This route must come before /staff/:staffId.
+|
+| Otherwise Express treats "date" as the staffId.
+|
+|--------------------------------------------------------------------------
+*/
+
+router.get(
+    "/staff/date",
+    getStaffAttendanceByDate
+);
+
+/*
+|--------------------------------------------------------------------------
+| STAFF ATTENDANCE
+|--------------------------------------------------------------------------
+|
+| GET /api/attendance/staff/:staffId
+|
+| Returns attendance records for a specific staff member.
+|
+|--------------------------------------------------------------------------
+*/
+
+router.get(
+    "/staff/:staffId",
+    getStaffAttendance
+);
+/*
+|--------------------------------------------------------------------------
 | CLASS ATTENDANCE SUMMARY
 |--------------------------------------------------------------------------
 |
@@ -164,13 +226,29 @@ router.get(
 
 /*
 |--------------------------------------------------------------------------
+| ALL ATTENDANCE BY DATE
+|--------------------------------------------------------------------------
+|
+| GET /api/attendance/all/date?date=YYYY-MM-DD
+|
+| Returns attendance records covering students and staff.
+|
+|--------------------------------------------------------------------------
+*/
+
+router.get(
+    "/all/date",
+    getAllAttendanceByDate
+);
+
+/*
+|--------------------------------------------------------------------------
 | ATTENDANCE BY DATE
 |--------------------------------------------------------------------------
 |
-| GET /api/attendance/date?date=YYYY-MM-DD
-|
-| The date is supplied through the query string because the finalized
-| Attendance controller reads the selected date from req.query.
+| GET /api/attendance/date?date=YYYY-MM-DD&type=student
+| GET /api/attendance/date?date=YYYY-MM-DD&type=staff
+| GET /api/attendance/date?date=YYYY-MM-DD&type=all
 |
 |--------------------------------------------------------------------------
 */
@@ -182,13 +260,18 @@ router.get(
 
 /*
 |--------------------------------------------------------------------------
-| GET ALL ATTENDANCE
+| GET ATTENDANCE
 |--------------------------------------------------------------------------
 |
 | GET /api/attendance
 |
-| The controller determines the appropriate attendance query from
-| the supplied request parameters.
+| Supported types:
+|
+| ?type=student
+| ?type=staff
+| ?type=all
+|
+| The controller also handles the existing student/class/date filters.
 |
 |--------------------------------------------------------------------------
 */
@@ -205,6 +288,16 @@ router.get(
 |
 | POST /api/attendance
 |
+| Supports either:
+|
+| studentId
+|
+| OR
+|
+| staffId
+|
+| but never both in the same attendance record.
+|
 |--------------------------------------------------------------------------
 */
 
@@ -219,6 +312,8 @@ router.post(
 |--------------------------------------------------------------------------
 |
 | POST /api/attendance/bulk
+|
+| Supports mixed student/staff attendance records.
 |
 |--------------------------------------------------------------------------
 */
@@ -235,7 +330,7 @@ router.post(
 |
 | GET /api/attendance/:id
 |
-| This parameter route is deliberately placed after all specific routes.
+| This parameter route must remain after all specific routes above.
 |
 |--------------------------------------------------------------------------
 */

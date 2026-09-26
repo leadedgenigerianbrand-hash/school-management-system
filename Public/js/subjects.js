@@ -4,7 +4,6 @@
 const API_BASE = "/api";
 const SUBJECTS_API = `${API_BASE}/subjects`;
 
-```
 const PAGE_SIZE = 10;
 
 let subjects = [];
@@ -1331,6 +1330,5 @@ if (
 } else {
     initialize();
 }
-```
 
 })();

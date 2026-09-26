@@ -17,7 +17,6 @@ async function initialiseStudentForm() {
 setupFormEvents();
 setupPhotoPreview();
 
-```
 try {
     await loadAcademicLevels();
     await loadAcademicSessions();
@@ -45,14 +44,12 @@ try {
         "danger"
     );
 }
-```
 
 }
 
 function setupFormEvents() {
 const form = document.getElementById("studentForm");
 
-```
 if (form) {
     form.addEventListener("submit", handleFormSubmit);
 }
@@ -87,7 +84,6 @@ if (classSelect) {
         await loadClassArms();
     });
 }
-```
 
 }
 
@@ -95,7 +91,6 @@ function setupPhotoPreview() {
 const photoInput = document.getElementById("photo");
 const preview = document.getElementById("photoPreview");
 
-```
 if (!photoInput) {
     return;
 }
@@ -132,14 +127,12 @@ photoInput.addEventListener("change", function () {
         reader.readAsDataURL(file);
     }
 });
-```
 
 }
 
 async function loadAcademicLevels() {
 const select = document.getElementById("academic_level");
 
-```
 if (!select) {
     return;
 }
@@ -162,14 +155,12 @@ populateSelect(
         );
     }
 );
-```
 
 }
 
 async function loadAcademicSessions() {
 const select = document.getElementById("academic_session");
 
-```
 if (!select) {
     return;
 }
@@ -193,14 +184,12 @@ populateSelect(
         );
     }
 );
-```
 
 }
 
 async function loadDepartments() {
 const select = document.getElementById("department");
 
-```
 if (!select) {
     return;
 }
@@ -230,14 +219,12 @@ try {
     select.innerHTML =
         '<option value="">Select department</option>';
 }
-```
 
 }
 
 async function loadClasses() {
 const select = document.getElementById("class_name");
 
-```
 if (!select) {
     return;
 }
@@ -300,14 +287,12 @@ try {
     select.innerHTML =
         '<option value="">Select class</option>';
 }
-```
 
 }
 
 async function loadClassArms() {
 const select = document.getElementById("class_arm");
 
-```
 if (!select) {
     return;
 }
@@ -367,7 +352,6 @@ try {
     select.innerHTML =
         '<option value="">Select class arm</option>';
 }
-```
 
 }
 
@@ -376,7 +360,6 @@ const response = await apiRequest(
 STUDENT_API + "/" + encodeURIComponent(studentId)
 );
 
-```
 existingStudent = extractObject(response);
 
 if (!existingStudent) {
@@ -391,7 +374,6 @@ const enrollment =
 if (enrollment) {
     populateEnrollmentForm(enrollment);
 }
-```
 
 }
 
@@ -403,7 +385,6 @@ ENROLLMENT_API +
 encodeURIComponent(studentId)
 );
 
-```
     return extractObject(response);
 } catch (error) {
     if (
@@ -420,7 +401,6 @@ encodeURIComponent(studentId)
 
     return null;
 }
-```
 
 }
 
@@ -432,7 +412,6 @@ student.admissionNumber ??
 ""
 );
 
-```
 setValue(
     "first_name",
     student.first_name ??
@@ -529,7 +508,6 @@ setValue(
 );
 
 displayExistingPhoto(student);
-```
 
 }
 
@@ -541,7 +519,6 @@ enrollment.level_id ??
 enrollment.levelId ??
 "";
 
-```
 const sessionValue =
     enrollment.academic_session_id ??
     enrollment.academicSessionId ??
@@ -584,14 +561,12 @@ loadClasses()
     });
 
 setValue("department", departmentValue);
-```
 
 }
 
 function displayExistingPhoto(student) {
 const preview = document.getElementById("photoPreview");
 
-```
 if (!preview) {
     return;
 }
@@ -622,14 +597,12 @@ if (
 
 preview.src = photoUrl;
 preview.style.display = "block";
-```
 
 }
 
 async function handleFormSubmit(event) {
 event.preventDefault();
 
-```
 const form = event.currentTarget;
 
 if (!form.checkValidity()) {
@@ -692,7 +665,6 @@ try {
 } finally {
     setSubmitState(submitButton, false);
 }
-```
 
 }
 
@@ -701,7 +673,6 @@ const photoInput = document.getElementById("photo");
 const photoFile =
 photoInput?.files?.[0] || null;
 
-```
 return {
     admission_number:
         getValue("admission_number"),
@@ -750,7 +721,6 @@ return {
 
     photoFile
 };
-```
 
 }
 
@@ -759,7 +729,6 @@ if (!data.admission_number) {
 throw new Error("Admission number is required.");
 }
 
-```
 if (!data.first_name) {
     throw new Error("First name is required.");
 }
@@ -785,14 +754,12 @@ if (data.photoFile) {
         );
     }
 }
-```
 
 }
 
 async function createStudent(data) {
 const formData = buildStudentFormData(data);
 
-```
 const response = await apiRequest(
     STUDENT_API,
     {
@@ -808,14 +775,12 @@ return getStudentIdFromObject(
 ) || getStudentIdFromObject(
     response
 );
-```
 
 }
 
 async function updateStudent(data) {
 const formData = buildStudentFormData(data);
 
-```
 const response = await apiRequest(
     STUDENT_API +
     "/" +
@@ -833,14 +798,12 @@ return (
     getStudentIdFromObject(response) ||
     editingStudentId
 );
-```
 
 }
 
 function buildStudentFormData(data) {
 const formData = new FormData();
 
-```
 appendFormValue(
     formData,
     "admission_number",
@@ -939,7 +902,6 @@ if (data.photoFile) {
 }
 
 return formData;
-```
 
 }
 
@@ -947,7 +909,6 @@ function collectEnrollmentData() {
 const academicSession =
 getValue("academic_session");
 
-```
 const classId =
     getValue("class_name");
 
@@ -1003,7 +964,6 @@ return {
         getValue("status") ||
         "Active"
 };
-```
 
 }
 
@@ -1017,7 +977,6 @@ ENROLLMENT_API +
 "/" +
 encodeURIComponent(studentId);
 
-```
 const response = await apiRequest(
     url,
     {
@@ -1047,14 +1006,12 @@ const response = await apiRequest(
 );
 
 return extractObject(response);
-```
 
 }
 
 function handleReset() {
 const form = document.getElementById("studentForm");
 
-```
 if (!form) {
     return;
 }
@@ -1073,7 +1030,6 @@ if (preview) {
     preview.src = "";
     preview.style.display = "none";
 }
-```
 
 }
 
@@ -1086,7 +1042,6 @@ textGetter
 ) {
 const currentValue = select.value;
 
-```
 select.innerHTML = "";
 
 const placeholderOption =
@@ -1121,7 +1076,6 @@ items.forEach(function (item) {
 if (currentValue) {
     select.value = currentValue;
 }
-```
 
 }
 
@@ -1147,7 +1101,6 @@ if (Array.isArray(response)) {
 return response;
 }
 
-```
 if (!response || typeof response !== "object") {
     return [];
 }
@@ -1173,7 +1126,6 @@ if (Array.isArray(response.results)) {
 }
 
 return [];
-```
 
 }
 
@@ -1182,7 +1134,6 @@ if (!response || typeof response !== "object") {
 return null;
 }
 
-```
 if (
     response.data &&
     typeof response.data === "object" &&
@@ -1213,7 +1164,6 @@ if (
 }
 
 return response;
-```
 
 }
 
@@ -1222,7 +1172,6 @@ if (!object || typeof object !== "object") {
 return null;
 }
 
-```
 return (
     object.id ??
     object.student_id ??
@@ -1232,7 +1181,6 @@ return (
     object.data?.studentId ??
     null
 );
-```
 
 }
 
@@ -1247,7 +1195,6 @@ headers: {
 }
 };
 
-```
 const token =
     getStoredToken();
 
@@ -1299,7 +1246,6 @@ if (!response.ok) {
 }
 
 return payload;
-```
 
 }
 
@@ -1331,7 +1277,6 @@ function setValue(id, value) {
 const element =
 document.getElementById(id);
 
-```
 if (!element) {
     return;
 }
@@ -1341,7 +1286,6 @@ element.value =
     value === null
         ? ""
         : value;
-```
 
 }
 
@@ -1349,13 +1293,11 @@ function getValue(id) {
 const element =
 document.getElementById(id);
 
-```
 if (!element) {
     return "";
 }
 
 return String(element.value || "").trim();
-```
 
 }
 
@@ -1364,7 +1306,6 @@ if (!value) {
 return "";
 }
 
-```
 const stringValue =
     String(value);
 
@@ -1403,7 +1344,6 @@ return (
     "-" +
     day
 );
-```
 
 }
 
@@ -1421,7 +1361,6 @@ if (!button) {
 return;
 }
 
-```
 if (loading) {
     button.dataset.originalText =
         button.textContent;
@@ -1438,7 +1377,6 @@ if (loading) {
             button.dataset.originalText;
     }
 }
-```
 
 }
 
@@ -1446,7 +1384,6 @@ function setPageMode(title) {
 document.title =
 title + " | School Management System";
 
-```
 const heading =
     document.querySelector(
         "h1, h2, .page-title"
@@ -1460,7 +1397,6 @@ if (
 ) {
     heading.textContent = title;
 }
-```
 
 }
 
@@ -1473,7 +1409,6 @@ document.getElementById(
 "pageMessage"
 );
 
-```
 if (pageMessage) {
     pageMessage.className =
         "alert alert-" + type;
@@ -1520,7 +1455,6 @@ document.body.appendChild(
 setTimeout(function () {
     alertBox.remove();
 }, 5000);
-```
 
 }
 

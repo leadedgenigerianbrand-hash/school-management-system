@@ -2,7 +2,6 @@
 
 (function () {
 
-```
 const DOCUMENTS_API =
     "/api/documents";
 
@@ -3113,6 +3112,5 @@ if (
     initialize();
 
 }
-```
 
 })();

@@ -51,7 +51,6 @@ const keys = [
 "accessToken"
 ];
 
-```
 for (const key of keys) {
     const sessionToken =
         sessionStorage.getItem(key);
@@ -69,7 +68,6 @@ for (const key of keys) {
 }
 
 return null;
-```
 
 }
 
@@ -78,7 +76,6 @@ const headers = {
 ...(options.headers || {})
 };
 
-```
 if (!headers["Content-Type"] && options.body !== undefined) {
     headers["Content-Type"] =
         "application/json";
@@ -92,7 +89,6 @@ if (token) {
 }
 
 return headers;
-```
 
 }
 
@@ -102,7 +98,6 @@ const requestOptions = {
 headers: buildHeaders(options)
 };
 
-```
 const response = await fetch(
     url,
     requestOptions
@@ -149,7 +144,6 @@ if (!response.ok) {
 }
 
 return data;
-```
 
 }
 
@@ -158,7 +152,6 @@ if (Array.isArray(data)) {
 return data;
 }
 
-```
 if (!data || typeof data !== "object") {
     return [];
 }
@@ -174,7 +167,6 @@ if (Array.isArray(data.data)) {
 }
 
 return [];
-```
 
 }
 
@@ -186,7 +178,6 @@ if (!alertMessage) {
 return;
 }
 
-```
 alertMessage.className =
     "alert alert-" + type;
 
@@ -213,7 +204,6 @@ showAlert.timeoutId =
         alertMessage.style.display =
             "none";
     }, 4000);
-```
 
 }
 
@@ -226,7 +216,6 @@ document.getElementById(
 "formAlertMessage"
 );
 
-```
 if (!formAlert) {
     showAlert(message, type);
     return;
@@ -241,7 +230,6 @@ formAlert.textContent =
 formAlert.classList.remove(
     "d-none"
 );
-```
 
 }
 
@@ -251,7 +239,6 @@ document.getElementById(
 "formAlertMessage"
 );
 
-```
 if (!formAlert) {
     return;
 }
@@ -260,7 +247,6 @@ formAlert.textContent = "";
 
 formAlert.className =
     "alert d-none";
-```
 
 }
 
@@ -272,7 +258,6 @@ value === undefined
 return "";
 }
 
-```
 return String(value)
     .replace(
         /&/g,
@@ -294,7 +279,6 @@ return String(value)
         /'/g,
         "&#039;"
     );
-```
 
 }
 
@@ -340,7 +324,6 @@ classArm?.studentCapacity ??
 classArm?.student_capacity ??
 null;
 
-```
 if (
     value === null ||
     value === undefined ||
@@ -350,7 +333,6 @@ if (
 }
 
 return value;
-```
 
 }
 
@@ -371,7 +353,6 @@ classArm.status
 ).toLowerCase();
 }
 
-```
 if (
     classArm?.isActive !== undefined &&
     classArm?.isActive !== null
@@ -391,7 +372,6 @@ if (
 }
 
 return "active";
-```
 
 }
 
@@ -404,14 +384,12 @@ classArm?.students_count ??
 classArm?.studentsAssigned ??
 0;
 
-```
 const number =
     Number(value);
 
 return Number.isFinite(number)
     ? number
     : 0;
-```
 
 }
 
@@ -428,7 +406,6 @@ function updateStatistics() {
 const total =
 classArms.length;
 
-```
 const active =
     classArms.filter(
         arm =>
@@ -466,7 +443,6 @@ if (studentsAssigned) {
     studentsAssigned.textContent =
         students;
 }
-```
 
 }
 
@@ -479,7 +455,6 @@ a?.className ||
 a?.class_name ||
 "";
 
-```
         const nameB =
             b?.className ||
             b?.class_name ||
@@ -494,7 +469,6 @@ a?.class_name ||
             }
         );
     });
-```
 
 }
 
@@ -503,7 +477,6 @@ if (!classFilter) {
 return;
 }
 
-```
 const currentValue =
     classFilter.value;
 
@@ -553,7 +526,6 @@ if (
     classFilter.value =
         currentValue;
 }
-```
 
 }
 
@@ -564,7 +536,6 @@ if (!classIdInput) {
 return;
 }
 
-```
 classIdInput.innerHTML =
     '<option value="">Select Class</option>';
 
@@ -605,7 +576,6 @@ sortClasses(classes)
             option
         );
     });
-```
 
 }
 
@@ -618,7 +588,6 @@ if (
 return;
 }
 
-```
 const searchTerm =
     searchInput
         ? searchInput.value
@@ -805,7 +774,6 @@ filtered.forEach(arm => {
 });
 
 attachRowActions();
-```
 
 }
 
@@ -825,7 +793,6 @@ button.dataset.id
 );
 });
 
-```
 document
     .querySelectorAll(
         ".delete-arm-btn"
@@ -840,7 +807,6 @@ document
             }
         );
     });
-```
 
 }
 
@@ -849,7 +815,6 @@ if (!classArmForm) {
 return;
 }
 
-```
 classArmForm.reset();
 
 editingClassArmId = null;
@@ -883,20 +848,17 @@ if (classIdInput) {
     classIdInput.value =
         "";
 }
-```
 
 }
 
 function openAddModal() {
 resetForm();
 
-```
 renderClassDropdown();
 
 if (bootstrapModal) {
     bootstrapModal.show();
 }
-```
 
 }
 
@@ -910,7 +872,6 @@ getClassArmId(item)
 String(id)
 );
 
-```
 if (!arm) {
     showAlert(
         "Class arm could not be found.",
@@ -987,7 +948,6 @@ if (saveClassArmBtn) {
 if (bootstrapModal) {
     bootstrapModal.show();
 }
-```
 
 }
 
@@ -997,7 +957,6 @@ await apiRequest(
 CLASSES_API
 );
 
-```
 classes =
     extractArray(
         data,
@@ -1010,7 +969,6 @@ classes =
 
 renderClassDropdown();
 renderClassFilter();
-```
 
 }
 
@@ -1020,7 +978,6 @@ await apiRequest(
 CLASS_ARMS_API
 );
 
-```
 classArms =
     extractArray(
         data,
@@ -1034,7 +991,6 @@ classArms =
 
 updateStatistics();
 renderTable();
-```
 
 }
 
@@ -1045,7 +1001,6 @@ table.style.display =
 "none";
 }
 
-```
     if (emptyState) {
         emptyState.style.display =
             "none";
@@ -1091,14 +1046,12 @@ table.style.display =
             "none";
     }
 }
-```
 
 }
 
 async function saveClassArm(event) {
 event.preventDefault();
 
-```
 clearFormAlert();
 
 const classId =
@@ -1345,7 +1298,6 @@ try {
                 : '<i class="bi bi-check2-circle me-2"></i>Save Class Arm';
     }
 }
-```
 
 }
 
@@ -1359,7 +1311,6 @@ getClassArmId(item)
 String(id)
 );
 
-```
 if (!arm) {
     showAlert(
         "Class arm could not be found.",
@@ -1427,7 +1378,6 @@ try {
         );
     }
 }
-```
 
 }
 

@@ -2,154 +2,76 @@
 
 const attendanceModel = require("../models/attendanceModel");
 
-/*
-|--------------------------------------------------------------------------
-| ATTENDANCE CONTROLLER
-|--------------------------------------------------------------------------
-|
-| This controller is the HTTP/API layer for attendance.
-|
-| It communicates with the attendance model for:
-|
-| - Recording attendance
-| - Bulk attendance
-| - Retrieving attendance
-| - Student attendance
-| - Class attendance
-| - Attendance by date
-| - Updating attendance
-| - Deleting attendance
-| - Attendance summaries
-| - Attendance statistics
-|
-|--------------------------------------------------------------------------
-*/
-
-/*
-|--------------------------------------------------------------------------
-| GET SCHOOL ID
-|--------------------------------------------------------------------------
-|
-| Authenticated user's school ID is preferred.
-| Body/query fallbacks are retained for compatibility with the current
-| project while the authentication layer is being finalized.
-|
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   HELPERS
+========================================================================== */
 
 function getSchoolId(req) {
     return (
         req.user?.schoolId ||
         req.user?.school_id ||
         req.body?.schoolId ||
+        req.body?.school_id ||
         req.query?.schoolId ||
+        req.query?.school_id ||
         null
     );
 }
 
-/*
-|--------------------------------------------------------------------------
-| GET USER ID
-|--------------------------------------------------------------------------
-*/
+function getQueryValue(req, ...keys) {
+    for (const key of keys) {
+        const value = req.query?.[key];
 
-function getUserId(req) {
-    return (
-        req.user?.id ||
-        req.user?.userId ||
-        null
-    );
+        if (
+            value !== undefined &&
+            value !== null &&
+            String(value).trim() !== ""
+        ) {
+            return value;
+        }
+    }
+
+    return null;
 }
 
-/*
-|--------------------------------------------------------------------------
-| CREATE ATTENDANCE
-|--------------------------------------------------------------------------
-*/
+function sendSuccess(res, data = [], status = 200) {
+    return res.status(status).json({
+        success: true,
+        count: Array.isArray(data) ? data.length : 0,
+        data
+    });
+}
+
+function sendError(res, message, status = 400) {
+    return res.status(status).json({
+        success: false,
+        message
+    });
+}
+
+/* ==========================================================================
+   CREATE ATTENDANCE
+========================================================================== */
 
 async function createAttendance(req, res, next) {
     try {
         const schoolId = getSchoolId(req);
-        const recordedBy = getUserId(req);
-
-        const {
-            studentId,
-            attendanceDate,
-            status,
-            remarks,
-            remark,
-            classId,
-            classArmId,
-            sessionId,
-            termId
-        } = req.body;
 
         if (!schoolId) {
-            return res.status(400).json({
-                success: false,
-                message: "School ID is required."
-            });
+            return sendError(
+                res,
+                "School ID is required.",
+                400
+            );
         }
 
-        if (!studentId) {
-            return res.status(400).json({
-                success: false,
-                message: "Student ID is required."
-            });
-        }
-
-        if (!classId) {
-            return res.status(400).json({
-                success: false,
-                message: "Class ID is required."
-            });
-        }
-
-        if (!sessionId) {
-            return res.status(400).json({
-                success: false,
-                message: "Academic session is required."
-            });
-        }
-
-        if (!termId) {
-            return res.status(400).json({
-                success: false,
-                message: "Term is required."
-            });
-        }
-
-        if (!attendanceDate) {
-            return res.status(400).json({
-                success: false,
-                message: "Attendance date is required."
-            });
-        }
-
-        if (!status) {
-            return res.status(400).json({
-                success: false,
-                message: "Attendance status is required."
-            });
-        }
+        const body = {
+            ...req.body,
+            schoolId
+        };
 
         const attendance =
-            await attendanceModel.recordAttendance({
-                schoolId,
-                studentId,
-                classId,
-                classArmId:
-                    classArmId || null,
-                sessionId,
-                termId,
-                attendanceDate,
-                status,
-                remarks:
-                    remarks !== undefined
-                        ? remarks
-                        : (remark || null),
-                recordedBy
-            });
+            await attendanceModel.createAttendance(body);
 
         return res.status(201).json({
             success: true,
@@ -166,142 +88,37 @@ async function createAttendance(req, res, next) {
     }
 }
 
-/*
-|--------------------------------------------------------------------------
-| CREATE BULK ATTENDANCE
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   CREATE BULK ATTENDANCE
+========================================================================== */
 
 async function createBulkAttendance(req, res, next) {
     try {
         const schoolId = getSchoolId(req);
-        const recordedBy = getUserId(req);
-
-        const {
-            attendanceDate,
-            records,
-            classId,
-            classArmId,
-            sessionId,
-            termId
-        } = req.body;
 
         if (!schoolId) {
-            return res.status(400).json({
-                success: false,
-                message: "School ID is required."
-            });
-        }
-
-        if (!attendanceDate) {
-            return res.status(400).json({
-                success: false,
-                message: "Attendance date is required."
-            });
-        }
-
-        if (!classId) {
-            return res.status(400).json({
-                success: false,
-                message: "Class ID is required."
-            });
-        }
-
-        if (!sessionId) {
-            return res.status(400).json({
-                success: false,
-                message: "Academic session is required."
-            });
-        }
-
-        if (!termId) {
-            return res.status(400).json({
-                success: false,
-                message: "Term is required."
-            });
-        }
-
-        if (!Array.isArray(records) || records.length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: "Attendance records are required."
-            });
-        }
-
-        const normalizedRecords = records.map((record) => ({
-            schoolId,
-
-            studentId:
-                record.studentId ||
-                record.student_id,
-
-            classId:
-                record.classId ||
-                record.class_id ||
-                classId,
-
-            classArmId:
-                record.classArmId ||
-                record.class_arm_id ||
-                classArmId ||
-                null,
-
-            sessionId:
-                record.sessionId ||
-                record.academicSessionId ||
-                record.academic_session_id ||
-                sessionId,
-
-            termId:
-                record.termId ||
-                record.term_id ||
-                termId,
-
-            attendanceDate:
-                record.attendanceDate ||
-                record.attendance_date ||
-                attendanceDate,
-
-            status:
-                record.status,
-
-            remarks:
-                record.remarks !== undefined
-                    ? record.remarks
-                    : (
-                        record.remark !== undefined
-                            ? record.remark
-                            : null
-                    ),
-
-            recordedBy
-        }));
-
-        const invalidRecord =
-            normalizedRecords.find(
-                (record) =>
-                    !record.studentId ||
-                    !record.status
+            return sendError(
+                res,
+                "School ID is required.",
+                400
             );
-
-        if (invalidRecord) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Every attendance record must contain a student ID and attendance status."
-            });
         }
+
+        const body = {
+            ...req.body,
+            schoolId
+        };
 
         const attendance =
-            await attendanceModel.recordBulkAttendance(
-                normalizedRecords
-            );
+            await attendanceModel.createBulkAttendance(body);
 
         return res.status(201).json({
             success: true,
             message:
                 "Bulk attendance recorded successfully.",
-            count: attendance.length,
+            count: Array.isArray(attendance)
+                ? attendance.length
+                : 0,
             data: attendance
         });
     } catch (error) {
@@ -314,42 +131,214 @@ async function createBulkAttendance(req, res, next) {
     }
 }
 
-/*
-|--------------------------------------------------------------------------
-| GET ATTENDANCE BY ID
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   GET ATTENDANCE
+========================================================================== */
+
+async function getAttendance(req, res, next) {
+    try {
+        const schoolId = getSchoolId(req);
+
+        if (!schoolId) {
+            return sendError(
+                res,
+                "School ID is required.",
+                400
+            );
+        }
+
+        const studentId = getQueryValue(
+            req,
+            "studentId",
+            "student_id"
+        );
+
+        const staffId = getQueryValue(
+            req,
+            "staffId",
+            "staff_id"
+        );
+
+        const date = getQueryValue(
+            req,
+            "date",
+            "attendanceDate",
+            "attendance_date"
+        );
+
+        const sessionId = getQueryValue(
+            req,
+            "sessionId",
+            "session_id"
+        );
+
+        const termId = getQueryValue(
+            req,
+            "termId",
+            "term_id"
+        );
+
+        const classId = getQueryValue(
+            req,
+            "classId",
+            "class_id"
+        );
+
+        const type = getQueryValue(
+            req,
+            "type",
+            "attendanceType",
+            "personType"
+        );
+
+        if (studentId) {
+            const attendance =
+                await attendanceModel.getStudentAttendance(
+                    schoolId,
+                    studentId,
+                    sessionId,
+                    termId
+                );
+
+            return sendSuccess(
+                res,
+                attendance
+            );
+        }
+
+        if (staffId) {
+            const attendance =
+                await attendanceModel.getStaffAttendance(
+                    schoolId,
+                    staffId,
+                    sessionId,
+                    termId
+                );
+
+            return sendSuccess(
+                res,
+                attendance
+            );
+        }
+
+        if (
+            type === "staff" &&
+            date
+        ) {
+            const attendance =
+                await attendanceModel.getStaffAttendanceByDate({
+                    schoolId,
+                    attendanceDate: date,
+                    sessionId,
+                    termId
+                });
+
+            return sendSuccess(
+                res,
+                attendance
+            );
+        }
+
+        if (
+            type === "all" &&
+            date
+        ) {
+            const attendance =
+                await attendanceModel.getAllAttendanceByDate({
+                    schoolId,
+                    attendanceDate: date,
+                    sessionId,
+                    termId,
+                    classId
+                });
+
+            return sendSuccess(
+                res,
+                attendance
+            );
+        }
+
+        if (date) {
+            const attendance =
+                await attendanceModel.getAttendanceByDate(
+                    schoolId,
+                    date,
+                    sessionId,
+                    termId,
+                    classId
+                );
+
+            return sendSuccess(
+                res,
+                attendance
+            );
+        }
+
+        const attendance =
+            await attendanceModel.getAttendance({
+                schoolId,
+                studentId,
+                staffId,
+                sessionId,
+                termId,
+                classId,
+                attendanceDate: date,
+                type
+            });
+
+        return sendSuccess(
+            res,
+            attendance
+        );
+    } catch (error) {
+        console.error(
+            "Get attendance error:",
+            error
+        );
+
+        next(error);
+    }
+}
+
+/* ==========================================================================
+   GET ATTENDANCE BY ID
+========================================================================== */
 
 async function getAttendanceById(req, res, next) {
     try {
         const schoolId = getSchoolId(req);
-        const { id } = req.params;
 
         if (!schoolId) {
-            return res.status(400).json({
-                success: false,
-                message: "School ID is required."
-            });
+            return sendError(
+                res,
+                "School ID is required.",
+                400
+            );
         }
 
-        if (!id) {
-            return res.status(400).json({
-                success: false,
-                message: "Attendance ID is required."
-            });
+        const attendanceId =
+            req.params.id;
+
+        if (!attendanceId) {
+            return sendError(
+                res,
+                "Attendance ID is required.",
+                400
+            );
         }
 
         const attendance =
-            await attendanceModel.findAttendanceById(
-                id,
-                schoolId
+            await attendanceModel.getAttendanceById(
+                schoolId,
+                attendanceId
             );
 
         if (!attendance) {
-            return res.status(404).json({
-                success: false,
-                message: "Attendance record not found."
-            });
+            return sendError(
+                res,
+                "Attendance record not found.",
+                404
+            );
         }
 
         return res.status(200).json({
@@ -366,63 +355,57 @@ async function getAttendanceById(req, res, next) {
     }
 }
 
-/*
-|--------------------------------------------------------------------------
-| GET STUDENT ATTENDANCE
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   GET STUDENT ATTENDANCE
+========================================================================== */
 
 async function getStudentAttendance(req, res, next) {
     try {
         const schoolId = getSchoolId(req);
-        const { studentId } = req.params;
-
-        const {
-            startDate,
-            endDate,
-            sessionId,
-            termId,
-            limit = 100,
-            offset = 0
-        } = req.query;
 
         if (!schoolId) {
-            return res.status(400).json({
-                success: false,
-                message: "School ID is required."
-            });
+            return sendError(
+                res,
+                "School ID is required.",
+                400
+            );
         }
+
+        const studentId =
+            req.params.studentId;
 
         if (!studentId) {
-            return res.status(400).json({
-                success: false,
-                message: "Student ID is required."
-            });
+            return sendError(
+                res,
+                "Student ID is required.",
+                400
+            );
         }
 
+        const sessionId = getQueryValue(
+            req,
+            "sessionId",
+            "session_id"
+        );
+
+        const termId = getQueryValue(
+            req,
+            "termId",
+            "term_id"
+        );
+
         const attendance =
-            await attendanceModel.getStudentAttendance({
+            await attendanceModel.getStudentAttendance(
                 schoolId,
                 studentId,
-                startDate:
-                    startDate || null,
-                endDate:
-                    endDate || null,
-                sessionId:
-                    sessionId || null,
-                termId:
-                    termId || null,
-                limit:
-                    Number(limit),
-                offset:
-                    Number(offset)
-            });
+                sessionId,
+                termId
+            );
 
-        return res.status(200).json({
-            success: true,
-            count: attendance.length,
-            data: attendance
-        });
+        return sendSuccess(
+            res,
+            attendance
+        );
     } catch (error) {
         console.error(
             "Get student attendance error:",
@@ -433,78 +416,118 @@ async function getStudentAttendance(req, res, next) {
     }
 }
 
-/*
-|--------------------------------------------------------------------------
-| GET CLASS ATTENDANCE
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   GET STAFF ATTENDANCE
+========================================================================== */
+
+async function getStaffAttendance(req, res, next) {
+    try {
+        const schoolId = getSchoolId(req);
+
+        if (!schoolId) {
+            return sendError(
+                res,
+                "School ID is required.",
+                400
+            );
+        }
+
+        const staffId =
+            req.params.staffId;
+
+        if (!staffId) {
+            return sendError(
+                res,
+                "Staff ID is required.",
+                400
+            );
+        }
+
+        const sessionId = getQueryValue(
+            req,
+            "sessionId",
+            "session_id"
+        );
+
+        const termId = getQueryValue(
+            req,
+            "termId",
+            "term_id"
+        );
+
+        const attendance =
+            await attendanceModel.getStaffAttendance(
+                schoolId,
+                staffId,
+                sessionId,
+                termId
+            );
+
+        return sendSuccess(
+            res,
+            attendance
+        );
+    } catch (error) {
+        console.error(
+            "Get staff attendance error:",
+            error
+        );
+
+        next(error);
+    }
+}
+
+/* ==========================================================================
+   GET CLASS ATTENDANCE
+========================================================================== */
 
 async function getClassAttendance(req, res, next) {
     try {
         const schoolId = getSchoolId(req);
-        const { classId } = req.params;
-
-        const {
-            attendanceDate,
-            classArmId,
-            sessionId,
-            termId
-        } = req.query;
 
         if (!schoolId) {
-            return res.status(400).json({
-                success: false,
-                message: "School ID is required."
-            });
+            return sendError(
+                res,
+                "School ID is required.",
+                400
+            );
         }
+
+        const classId =
+            req.params.classId;
 
         if (!classId) {
-            return res.status(400).json({
-                success: false,
-                message: "Class ID is required."
-            });
+            return sendError(
+                res,
+                "Class ID is required.",
+                400
+            );
         }
 
-        if (!attendanceDate) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Attendance date is required."
-            });
-        }
+        const sessionId = getQueryValue(
+            req,
+            "sessionId",
+            "session_id"
+        );
 
-        if (!sessionId) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Academic session is required."
-            });
-        }
-
-        if (!termId) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Term is required."
-            });
-        }
+        const termId = getQueryValue(
+            req,
+            "termId",
+            "term_id"
+        );
 
         const attendance =
-            await attendanceModel.getClassAttendance({
+            await attendanceModel.getClassAttendance(
                 schoolId,
                 classId,
-                classArmId:
-                    classArmId || null,
-                attendanceDate,
                 sessionId,
                 termId
-            });
+            );
 
-        return res.status(200).json({
-            success: true,
-            count: attendance.length,
-            data: attendance
-        });
+        return sendSuccess(
+            res,
+            attendance
+        );
     } catch (error) {
         console.error(
             "Get class attendance error:",
@@ -515,53 +538,106 @@ async function getClassAttendance(req, res, next) {
     }
 }
 
-/*
-|--------------------------------------------------------------------------
-| GET ATTENDANCE BY DATE
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   GET ATTENDANCE BY DATE
+========================================================================== */
 
 async function getAttendanceByDate(req, res, next) {
     try {
         const schoolId = getSchoolId(req);
 
-        const {
-            date,
-            attendanceDate,
-            classId
-        } = req.query;
-
-        const selectedDate =
-            date ||
-            attendanceDate;
-
         if (!schoolId) {
-            return res.status(400).json({
-                success: false,
-                message: "School ID is required."
-            });
+            return sendError(
+                res,
+                "School ID is required.",
+                400
+            );
         }
 
+        const selectedDate = getQueryValue(
+            req,
+            "date",
+            "attendanceDate",
+            "attendance_date"
+        );
+
+        const selectedSessionId = getQueryValue(
+            req,
+            "sessionId",
+            "session_id"
+        );
+
+        const selectedTermId = getQueryValue(
+            req,
+            "termId",
+            "term_id"
+        );
+
+        const selectedClassId = getQueryValue(
+            req,
+            "classId",
+            "class_id"
+        );
+
+        const selectedType = getQueryValue(
+            req,
+            "type",
+            "attendanceType",
+            "personType"
+        );
+
         if (!selectedDate) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Attendance date is required."
-            });
+            return sendError(
+                res,
+                "Attendance date is required.",
+                400
+            );
+        }
+
+        if (selectedType === "staff") {
+            const attendance =
+                await attendanceModel.getStaffAttendanceByDate({
+                    schoolId,
+                    attendanceDate: selectedDate,
+                    sessionId: selectedSessionId,
+                    termId: selectedTermId
+                });
+
+            return sendSuccess(
+                res,
+                attendance
+            );
+        }
+
+        if (selectedType === "all") {
+            const attendance =
+                await attendanceModel.getAllAttendanceByDate({
+                    schoolId,
+                    attendanceDate: selectedDate,
+                    sessionId: selectedSessionId,
+                    termId: selectedTermId,
+                    classId: selectedClassId
+                });
+
+            return sendSuccess(
+                res,
+                attendance
+            );
         }
 
         const attendance =
             await attendanceModel.getAttendanceByDate(
                 schoolId,
                 selectedDate,
-                classId || null
+                selectedSessionId,
+                selectedTermId,
+                selectedClassId
             );
 
-        return res.status(200).json({
-            success: true,
-            count: attendance.length,
-            data: attendance
-        });
+        return sendSuccess(
+            res,
+            attendance
+        );
     } catch (error) {
         console.error(
             "Get attendance by date error:",
@@ -572,128 +648,68 @@ async function getAttendanceByDate(req, res, next) {
     }
 }
 
-/*
-|--------------------------------------------------------------------------
-| GET ATTENDANCE
-|--------------------------------------------------------------------------
-|
-| General attendance endpoint.
-|
-| The finalized model intentionally does not contain a generic
-| findAttendance() function.
-|
-| Therefore this controller routes the request to the appropriate
-| finalized model function according to the supplied filters.
-|
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   GET STAFF ATTENDANCE BY DATE
+========================================================================== */
 
-async function getAttendance(req, res, next) {
+async function getStaffAttendanceByDate(
+    req,
+    res,
+    next
+) {
     try {
         const schoolId = getSchoolId(req);
 
-        const {
-            studentId,
-            classId,
-            classArmId,
-            attendanceDate,
-            date,
-            startDate,
-            endDate,
-            sessionId,
-            termId,
-            limit = 100,
-            offset = 0
-        } = req.query;
-
         if (!schoolId) {
-            return res.status(400).json({
-                success: false,
-                message: "School ID is required."
-            });
+            return sendError(
+                res,
+                "School ID is required.",
+                400
+            );
         }
 
-        if (studentId) {
-            const attendance =
-                await attendanceModel.getStudentAttendance({
-                    schoolId,
-                    studentId,
-                    sessionId:
-                        sessionId || null,
-                    termId:
-                        termId || null,
-                    startDate:
-                        startDate || null,
-                    endDate:
-                        endDate || null,
-                    limit:
-                        Number(limit),
-                    offset:
-                        Number(offset)
-                });
+        const selectedDate = getQueryValue(
+            req,
+            "date",
+            "attendanceDate",
+            "attendance_date"
+        );
 
-            return res.status(200).json({
-                success: true,
-                count: attendance.length,
-                data: attendance
-            });
+        const selectedSessionId = getQueryValue(
+            req,
+            "sessionId",
+            "session_id"
+        );
+
+        const selectedTermId = getQueryValue(
+            req,
+            "termId",
+            "term_id"
+        );
+
+        if (!selectedDate) {
+            return sendError(
+                res,
+                "Attendance date is required.",
+                400
+            );
         }
 
-        const selectedDate =
-            attendanceDate ||
-            date;
-
-        if (classId && selectedDate) {
-            if (!sessionId || !termId) {
-                return res.status(400).json({
-                    success: false,
-                    message:
-                        "Academic session and term are required for class attendance."
-                });
-            }
-
-            const attendance =
-                await attendanceModel.getClassAttendance({
-                    schoolId,
-                    classId,
-                    classArmId:
-                        classArmId || null,
-                    attendanceDate:
-                        selectedDate,
-                    sessionId,
-                    termId
-                });
-
-            return res.status(200).json({
-                success: true,
-                count: attendance.length,
-                data: attendance
+        const attendance =
+            await attendanceModel.getStaffAttendanceByDate({
+                schoolId,
+                attendanceDate: selectedDate,
+                sessionId: selectedSessionId,
+                termId: selectedTermId
             });
-        }
 
-        if (selectedDate) {
-            const attendance =
-                await attendanceModel.getAttendanceByDate(
-                    schoolId,
-                    selectedDate,
-                    classId || null
-                );
-
-            return res.status(200).json({
-                success: true,
-                count: attendance.length,
-                data: attendance
-            });
-        }
-
-        return res.status(400).json({
-            success: false,
-            message:
-                "Provide a student ID or attendance date."
-        });
+        return sendSuccess(
+            res,
+            attendance
+        );
     } catch (error) {
         console.error(
-            "Get attendance error:",
+            "Get staff attendance by date error:",
             error
         );
 
@@ -701,98 +717,127 @@ async function getAttendance(req, res, next) {
     }
 }
 
-/*
-|--------------------------------------------------------------------------
-| UPDATE ATTENDANCE
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   GET ALL ATTENDANCE BY DATE
+========================================================================== */
+
+async function getAllAttendanceByDate(
+    req,
+    res,
+    next
+) {
+    try {
+        const schoolId = getSchoolId(req);
+
+        if (!schoolId) {
+            return sendError(
+                res,
+                "School ID is required.",
+                400
+            );
+        }
+
+        const selectedDate = getQueryValue(
+            req,
+            "date",
+            "attendanceDate",
+            "attendance_date"
+        );
+
+        const selectedSessionId = getQueryValue(
+            req,
+            "sessionId",
+            "session_id"
+        );
+
+        const selectedTermId = getQueryValue(
+            req,
+            "termId",
+            "term_id"
+        );
+
+        const selectedClassId = getQueryValue(
+            req,
+            "classId",
+            "class_id"
+        );
+
+        if (!selectedDate) {
+            return sendError(
+                res,
+                "Attendance date is required.",
+                400
+            );
+        }
+
+        const attendance =
+            await attendanceModel.getAllAttendanceByDate({
+                schoolId,
+                attendanceDate: selectedDate,
+                sessionId: selectedSessionId,
+                termId: selectedTermId,
+                classId: selectedClassId
+            });
+
+        return sendSuccess(
+            res,
+            attendance
+        );
+    } catch (error) {
+        console.error(
+            "Get all attendance by date error:",
+            error
+        );
+
+        next(error);
+    }
+}
+
+/* ==========================================================================
+   UPDATE ATTENDANCE
+========================================================================== */
 
 async function updateAttendance(req, res, next) {
     try {
         const schoolId = getSchoolId(req);
-        const { id } = req.params;
-
-        const {
-            attendanceDate,
-            status,
-            remarks,
-            remark,
-            classId,
-            sessionId,
-            termId
-        } = req.body;
 
         if (!schoolId) {
-            return res.status(400).json({
-                success: false,
-                message: "School ID is required."
-            });
+            return sendError(
+                res,
+                "School ID is required.",
+                400
+            );
         }
 
-        if (!id) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Attendance ID is required."
-            });
+        const attendanceId =
+            req.params.id;
+
+        if (!attendanceId) {
+            return sendError(
+                res,
+                "Attendance ID is required.",
+                400
+            );
         }
 
-        const data = {};
-
-        if (attendanceDate !== undefined) {
-            data.attendanceDate =
-                attendanceDate;
-        }
-
-        if (status !== undefined) {
-            data.status =
-                status;
-        }
-
-        if (remarks !== undefined) {
-            data.remarks =
-                remarks;
-        } else if (remark !== undefined) {
-            data.remark =
-                remark;
-        }
-
-        if (classId !== undefined) {
-            data.classId =
-                classId;
-        }
-
-        if (sessionId !== undefined) {
-            data.sessionId =
-                sessionId;
-        }
-
-        if (termId !== undefined) {
-            data.termId =
-                termId;
-        }
-
-        if (Object.keys(data).length === 0) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "No valid fields supplied for update."
-            });
-        }
+        const body = {
+            ...req.body,
+            schoolId
+        };
 
         const attendance =
             await attendanceModel.updateAttendance(
-                id,
                 schoolId,
-                data
+                attendanceId,
+                body
             );
 
         if (!attendance) {
-            return res.status(404).json({
-                success: false,
-                message:
-                    "Attendance record not found."
-            });
+            return sendError(
+                res,
+                "Attendance record not found.",
+                404
+            );
         }
 
         return res.status(200).json({
@@ -811,51 +856,51 @@ async function updateAttendance(req, res, next) {
     }
 }
 
-/*
-|--------------------------------------------------------------------------
-| DELETE ATTENDANCE
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   DELETE ATTENDANCE
+========================================================================== */
 
 async function deleteAttendance(req, res, next) {
     try {
         const schoolId = getSchoolId(req);
-        const { id } = req.params;
 
         if (!schoolId) {
-            return res.status(400).json({
-                success: false,
-                message: "School ID is required."
-            });
+            return sendError(
+                res,
+                "School ID is required.",
+                400
+            );
         }
 
-        if (!id) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Attendance ID is required."
-            });
+        const attendanceId =
+            req.params.id;
+
+        if (!attendanceId) {
+            return sendError(
+                res,
+                "Attendance ID is required.",
+                400
+            );
         }
 
-        const attendance =
+        const deleted =
             await attendanceModel.deleteAttendance(
-                id,
-                schoolId
+                schoolId,
+                attendanceId
             );
 
-        if (!attendance) {
-            return res.status(404).json({
-                success: false,
-                message:
-                    "Attendance record not found."
-            });
+        if (!deleted) {
+            return sendError(
+                res,
+                "Attendance record not found.",
+                404
+            );
         }
 
         return res.status(200).json({
             success: true,
             message:
-                "Attendance record deleted successfully.",
-            data: attendance
+                "Attendance deleted successfully."
         });
     } catch (error) {
         console.error(
@@ -867,11 +912,9 @@ async function deleteAttendance(req, res, next) {
     }
 }
 
-/*
-|--------------------------------------------------------------------------
-| GET STUDENT ATTENDANCE SUMMARY
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   STUDENT ATTENDANCE SUMMARY
+========================================================================== */
 
 async function getStudentAttendanceSummary(
     req,
@@ -880,43 +923,45 @@ async function getStudentAttendanceSummary(
 ) {
     try {
         const schoolId = getSchoolId(req);
-        const { studentId } = req.params;
-
-        const {
-            startDate,
-            endDate,
-            sessionId,
-            termId
-        } = req.query;
 
         if (!schoolId) {
-            return res.status(400).json({
-                success: false,
-                message: "School ID is required."
-            });
+            return sendError(
+                res,
+                "School ID is required.",
+                400
+            );
         }
+
+        const studentId =
+            req.params.studentId;
 
         if (!studentId) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Student ID is required."
-            });
+            return sendError(
+                res,
+                "Student ID is required.",
+                400
+            );
         }
 
+        const sessionId = getQueryValue(
+            req,
+            "sessionId",
+            "session_id"
+        );
+
+        const termId = getQueryValue(
+            req,
+            "termId",
+            "term_id"
+        );
+
         const summary =
-            await attendanceModel.getStudentAttendanceSummary({
+            await attendanceModel.getAttendanceSummary(
                 schoolId,
                 studentId,
-                startDate:
-                    startDate || null,
-                endDate:
-                    endDate || null,
-                sessionId:
-                    sessionId || null,
-                termId:
-                    termId || null
-            });
+                sessionId,
+                termId
+            );
 
         return res.status(200).json({
             success: true,
@@ -932,11 +977,74 @@ async function getStudentAttendanceSummary(
     }
 }
 
-/*
-|--------------------------------------------------------------------------
-| GET CLASS ATTENDANCE SUMMARY
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   STAFF ATTENDANCE SUMMARY
+========================================================================== */
+
+async function getStaffAttendanceSummary(
+    req,
+    res,
+    next
+) {
+    try {
+        const schoolId = getSchoolId(req);
+
+        if (!schoolId) {
+            return sendError(
+                res,
+                "School ID is required.",
+                400
+            );
+        }
+
+        const staffId =
+            req.params.staffId;
+
+        if (!staffId) {
+            return sendError(
+                res,
+                "Staff ID is required.",
+                400
+            );
+        }
+
+        const sessionId = getQueryValue(
+            req,
+            "sessionId",
+            "session_id"
+        );
+
+        const termId = getQueryValue(
+            req,
+            "termId",
+            "term_id"
+        );
+
+        const summary =
+            await attendanceModel.getStaffAttendanceSummary(
+                schoolId,
+                staffId,
+                sessionId,
+                termId
+            );
+
+        return res.status(200).json({
+            success: true,
+            data: summary
+        });
+    } catch (error) {
+        console.error(
+            "Get staff attendance summary error:",
+            error
+        );
+
+        next(error);
+    }
+}
+
+/* ==========================================================================
+   CLASS ATTENDANCE SUMMARY
+========================================================================== */
 
 async function getClassAttendanceSummary(
     req,
@@ -945,57 +1053,45 @@ async function getClassAttendanceSummary(
 ) {
     try {
         const schoolId = getSchoolId(req);
-        const { classId } = req.params;
-
-        const {
-            startDate,
-            endDate,
-            sessionId,
-            termId
-        } = req.query;
 
         if (!schoolId) {
-            return res.status(400).json({
-                success: false,
-                message: "School ID is required."
-            });
+            return sendError(
+                res,
+                "School ID is required.",
+                400
+            );
         }
+
+        const classId =
+            req.params.classId;
 
         if (!classId) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Class ID is required."
-            });
+            return sendError(
+                res,
+                "Class ID is required.",
+                400
+            );
         }
 
-        if (!sessionId) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Academic session is required."
-            });
-        }
+        const sessionId = getQueryValue(
+            req,
+            "sessionId",
+            "session_id"
+        );
 
-        if (!termId) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Term is required."
-            });
-        }
+        const termId = getQueryValue(
+            req,
+            "termId",
+            "term_id"
+        );
 
         const summary =
-            await attendanceModel.getClassAttendanceSummary({
+            await attendanceModel.getClassAttendanceSummary(
                 schoolId,
                 classId,
-                startDate:
-                    startDate || null,
-                endDate:
-                    endDate || null,
                 sessionId,
                 termId
-            });
+            );
 
         return res.status(200).json({
             success: true,
@@ -1011,19 +1107,9 @@ async function getClassAttendanceSummary(
     }
 }
 
-/*
-|--------------------------------------------------------------------------
-| GET SCHOOL ATTENDANCE SUMMARY
-|--------------------------------------------------------------------------
-|
-| The finalized attendance model does not contain a separate
-| getSchoolAttendanceSummary() function.
-|
-| School-level totals are therefore provided by the finalized
-| getAttendanceStatistics() function.
-|
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   SCHOOL ATTENDANCE SUMMARY
+========================================================================== */
 
 async function getSchoolAttendanceSummary(
     req,
@@ -1033,32 +1119,36 @@ async function getSchoolAttendanceSummary(
     try {
         const schoolId = getSchoolId(req);
 
-        const {
-            attendanceDate,
-            date
-        } = req.query;
-
         if (!schoolId) {
-            return res.status(400).json({
-                success: false,
-                message: "School ID is required."
-            });
+            return sendError(
+                res,
+                "School ID is required.",
+                400
+            );
         }
 
-        const selectedDate =
-            attendanceDate ||
-            date ||
-            null;
+        const sessionId = getQueryValue(
+            req,
+            "sessionId",
+            "session_id"
+        );
 
-        const statistics =
-            await attendanceModel.getAttendanceStatistics(
+        const termId = getQueryValue(
+            req,
+            "termId",
+            "term_id"
+        );
+
+        const summary =
+            await attendanceModel.getSchoolAttendanceSummary(
                 schoolId,
-                selectedDate
+                sessionId,
+                termId
             );
 
         return res.status(200).json({
             success: true,
-            data: statistics
+            data: summary
         });
     } catch (error) {
         console.error(
@@ -1070,116 +1160,9 @@ async function getSchoolAttendanceSummary(
     }
 }
 
-/*
-|--------------------------------------------------------------------------
-| SEARCH ATTENDANCE
-|--------------------------------------------------------------------------
-|
-| There is intentionally no fake search function in the finalized
-| attendance model.
-|
-| Attendance search is handled through the supported filters:
-|
-| - studentId
-| - classId
-| - attendanceDate
-| - sessionId
-| - termId
-|
-|--------------------------------------------------------------------------
-*/
-
-async function searchAttendance(req, res, next) {
-    try {
-        const schoolId = getSchoolId(req);
-
-        const {
-            studentId,
-            classId,
-            attendanceDate,
-            date,
-            sessionId,
-            termId,
-            limit = 100,
-            offset = 0
-        } = req.query;
-
-        if (!schoolId) {
-            return res.status(400).json({
-                success: false,
-                message: "School ID is required."
-            });
-        }
-
-        if (studentId) {
-            const attendance =
-                await attendanceModel.getStudentAttendance({
-                    schoolId,
-                    studentId,
-                    sessionId:
-                        sessionId || null,
-                    termId:
-                        termId || null,
-                    limit:
-                        Number(limit),
-                    offset:
-                        Number(offset)
-                });
-
-            return res.status(200).json({
-                success: true,
-                count: attendance.length,
-                data: attendance
-            });
-        }
-
-        const selectedDate =
-            attendanceDate ||
-            date;
-
-        if (selectedDate) {
-            const attendance =
-                await attendanceModel.getAttendanceByDate(
-                    schoolId,
-                    selectedDate,
-                    classId || null
-                );
-
-            return res.status(200).json({
-                success: true,
-                count: attendance.length,
-                data: attendance
-            });
-        }
-
-        if (classId) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Attendance date is required when searching by class."
-            });
-        }
-
-        return res.status(400).json({
-            success: false,
-            message:
-                "Provide a student ID or attendance date."
-        });
-    } catch (error) {
-        console.error(
-            "Search attendance error:",
-            error
-        );
-
-        next(error);
-    }
-}
-
-/*
-|--------------------------------------------------------------------------
-| GET ATTENDANCE STATISTICS
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   ATTENDANCE STATISTICS
+========================================================================== */
 
 async function getAttendanceStatistics(
     req,
@@ -1189,28 +1172,53 @@ async function getAttendanceStatistics(
     try {
         const schoolId = getSchoolId(req);
 
-        const {
-            attendanceDate,
-            date
-        } = req.query;
-
         if (!schoolId) {
-            return res.status(400).json({
-                success: false,
-                message: "School ID is required."
-            });
+            return sendError(
+                res,
+                "School ID is required.",
+                400
+            );
         }
 
-        const selectedDate =
-            attendanceDate ||
-            date ||
-            null;
+        const sessionId = getQueryValue(
+            req,
+            "sessionId",
+            "session_id"
+        );
+
+        const termId = getQueryValue(
+            req,
+            "termId",
+            "term_id"
+        );
+
+        const classId = getQueryValue(
+            req,
+            "classId",
+            "class_id"
+        );
+
+        const startDate = getQueryValue(
+            req,
+            "startDate",
+            "start_date"
+        );
+
+        const endDate = getQueryValue(
+            req,
+            "endDate",
+            "end_date"
+        );
 
         const statistics =
-            await attendanceModel.getAttendanceStatistics(
+            await attendanceModel.getAttendanceStatistics({
                 schoolId,
-                selectedDate
-            );
+                sessionId,
+                termId,
+                classId,
+                startDate,
+                endDate
+            });
 
         return res.status(200).json({
             success: true,
@@ -1226,25 +1234,165 @@ async function getAttendanceStatistics(
     }
 }
 
-/*
-|--------------------------------------------------------------------------
-| EXPORTS
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   SEARCH ATTENDANCE
+========================================================================== */
+
+async function searchAttendance(
+    req,
+    res,
+    next
+) {
+    try {
+        const schoolId = getSchoolId(req);
+
+        if (!schoolId) {
+            return sendError(
+                res,
+                "School ID is required.",
+                400
+            );
+        }
+
+        const search = getQueryValue(
+            req,
+            "q",
+            "search"
+        );
+
+        const selectedDate = getQueryValue(
+            req,
+            "date",
+            "attendanceDate",
+            "attendance_date"
+        );
+
+        const selectedSessionId = getQueryValue(
+            req,
+            "sessionId",
+            "session_id"
+        );
+
+        const selectedTermId = getQueryValue(
+            req,
+            "termId",
+            "term_id"
+        );
+
+        const selectedType = getQueryValue(
+            req,
+            "type",
+            "attendanceType",
+            "personType"
+        );
+
+        if (!search) {
+            return sendError(
+                res,
+                "Search term is required.",
+                400
+            );
+        }
+
+        if (
+            selectedType === "staff" &&
+            selectedDate
+        ) {
+            const attendance =
+                await attendanceModel.getStaffAttendanceByDate({
+                    schoolId,
+                    attendanceDate: selectedDate,
+                    sessionId: selectedSessionId,
+                    termId: selectedTermId
+                });
+
+            const normalizedSearch =
+                String(search)
+                    .trim()
+                    .toLowerCase();
+
+            const filtered =
+                Array.isArray(attendance)
+                    ? attendance.filter(record => {
+                          const searchableText = [
+                              record.first_name,
+                              record.middle_name,
+                              record.last_name,
+                              record.staff_number,
+                              record.department,
+                              record.department_name,
+                              record.position,
+                              record.employment_type
+                          ]
+                              .filter(Boolean)
+                              .join(" ")
+                              .toLowerCase();
+
+                          return searchableText.includes(
+                              normalizedSearch
+                          );
+                      })
+                    : [];
+
+            return sendSuccess(
+                res,
+                filtered
+            );
+        }
+
+        const attendance =
+            await attendanceModel.searchAttendance({
+                schoolId,
+                search,
+                attendanceDate: selectedDate,
+                sessionId: selectedSessionId,
+                termId: selectedTermId,
+                type: selectedType
+            });
+
+        return sendSuccess(
+            res,
+            attendance
+        );
+    } catch (error) {
+        console.error(
+            "Search attendance error:",
+            error
+        );
+
+        next(error);
+    }
+}
+
+/* ==========================================================================
+   EXPORTS
+========================================================================== */
 
 module.exports = {
     createAttendance,
     createBulkAttendance,
+
     getAttendance,
     getAttendanceById,
+
     getStudentAttendance,
+    getStaffAttendance,
     getClassAttendance,
+
     getAttendanceByDate,
+    getStaffAttendanceByDate,
+    getAllAttendanceByDate,
+
     updateAttendance,
     deleteAttendance,
+
     getStudentAttendanceSummary,
+    getStaffAttendanceSummary,
     getClassAttendanceSummary,
+
     getSchoolAttendanceSummary,
+
     searchAttendance,
+
     getAttendanceStatistics
 };
