@@ -351,6 +351,22 @@ async function getStaffStatistics(schoolId) {
 |--------------------------------------------------------------------------
 | Staff By Department
 |--------------------------------------------------------------------------
+|
+| IMPORTANT DATABASE DESIGN
+| -------------------------
+| The live staff table stores the department as TEXT:
+|
+|     staff.department
+|
+| The departments table stores:
+|
+|     departments.id
+|     departments.department_name
+|
+| Therefore the report must match the department name rather than
+| using a nonexistent staff.department_id column.
+|
+|--------------------------------------------------------------------------
 */
 
 async function getStaffByDepartment(schoolId) {
@@ -362,17 +378,20 @@ async function getStaffByDepartment(schoolId) {
     const sql = `
         SELECT
             d.id AS department_id,
+
             COALESCE(
                 NULLIF(TRIM(d.department_name), ''),
                 'Unassigned'
             ) AS department_name,
+
             COUNT(s.id)::INTEGER AS staff_count
 
         FROM departments d
 
         LEFT JOIN staff s
-            ON s.department_id = d.id
-           AND s.school_id = d.school_id
+            ON s.school_id = d.school_id
+           AND LOWER(TRIM(COALESCE(s.department, ''))) =
+               LOWER(TRIM(COALESCE(d.department_name, '')))
 
         WHERE d.school_id = $1
 
@@ -735,6 +754,17 @@ async function getResultStatistics(
 |--------------------------------------------------------------------------
 | Academic Session Report
 |--------------------------------------------------------------------------
+|
+| IMPORTANT DATABASE DESIGN
+| -------------------------
+| The live terms table does NOT contain academic_session_id.
+|
+| Terms are currently school-level configuration records. Therefore
+| totalTerms represents the number of active terms configured for the
+| school, while enrollments/students remain specific to the selected
+| academic session.
+|
+|--------------------------------------------------------------------------
 */
 
 async function getAcademicSessionReport(
@@ -764,7 +794,7 @@ async function getAcademicSessionReport(
                 SELECT COUNT(*)
                 FROM terms t
                 WHERE t.school_id = s.school_id
-                  AND t.academic_session_id = s.id
+                  AND t.is_active = true
             )::INTEGER AS total_terms,
 
             (
