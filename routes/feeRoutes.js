@@ -20,7 +20,8 @@ const {
     refreshStudentFeeBalance,
     getStudentFeeSummary,
     getSchoolFeeSummary,
-    searchStudentFees
+        searchStudentFees,
+    getPaymentHistory
 } = require("../controllers/feeController");
 
 const {
@@ -103,30 +104,7 @@ router.get(
 
 router.get(
     "/student/:studentId/payments",
-    async (req, res, next) => {
-        try {
-            const studentId =
-                req.params.studentId;
-
-            if (!studentId) {
-                return res.status(400).json({
-                    success: false,
-                    message:
-                        "Student ID is required."
-                });
-            }
-
-            req.query.studentId = studentId;
-
-            return getStudentFeePayments(
-                req,
-                res,
-                next
-            );
-        } catch (error) {
-            next(error);
-        }
-    }
+    getPaymentHistory
 );
 
 /*
