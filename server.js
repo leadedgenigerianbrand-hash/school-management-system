@@ -63,6 +63,7 @@ const routeMap = {
     roleRoutes: "/api/roles",
     permissionRoutes: "/api/permissions",
     schoolRoutes: "/api/schools",
+    schoolSettingRoutes: "/api/school-settings",
     academicSessionRoutes: "/api/academic-sessions",
     termRoutes: "/api/terms",
     academicLevelRoutes: "/api/academic-levels",

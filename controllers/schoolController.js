@@ -1,6 +1,7 @@
 "use strict";
 
-const schoolModel = require("../models/schoolModel");
+const schoolModel =
+    require("../models/schoolModel");
 
 function getSchoolId(req) {
     const schoolId =
@@ -9,7 +10,7 @@ function getSchoolId(req) {
     if (
         schoolId === undefined ||
         schoolId === null ||
-        schoolId === ""
+        String(schoolId).trim() === ""
     ) {
         const error = new Error(
             "School ID is required."
@@ -20,11 +21,26 @@ function getSchoolId(req) {
         throw error;
     }
 
+    const normalizedSchoolId =
+        String(schoolId).trim();
+
+    /*
+    |--------------------------------------------------------------------------
+    | PostgreSQL school IDs are UUIDs.
+    |--------------------------------------------------------------------------
+    |
+    | The schools.id column is UUID, not an integer.
+    | Keep the UUID as a string so PostgreSQL can compare it correctly.
+    |
+    */
+
+    const uuidPattern =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
     if (
-        !Number.isInteger(
-            Number(schoolId)
-        ) ||
-        Number(schoolId) <= 0
+        !uuidPattern.test(
+            normalizedSchoolId
+        )
     ) {
         const error = new Error(
             "Invalid school ID."
@@ -35,7 +51,7 @@ function getSchoolId(req) {
         throw error;
     }
 
-    return Number(schoolId);
+    return normalizedSchoolId;
 }
 
 function handleDatabaseError(
@@ -78,6 +94,21 @@ function handleDatabaseError(
         );
     }
 
+    if (
+        error?.code === "22P02"
+    ) {
+        return next(
+            Object.assign(
+                new Error(
+                    "Invalid school ID."
+                ),
+                {
+                    statusCode: 400
+                }
+            )
+        );
+    }
+
     return next(error);
 }
 
@@ -111,15 +142,21 @@ async function getAllSchools(
                 await schoolModel.findSchools({
                     status:
                         status
-                            ? String(status).trim()
+                            ? String(
+                                status
+                            ).trim()
                             : null,
                     state:
                         state
-                            ? String(state).trim()
+                            ? String(
+                                state
+                            ).trim()
                             : null,
                     schoolType:
                         schoolType
-                            ? String(schoolType).trim()
+                            ? String(
+                                schoolType
+                            ).trim()
                             : null,
                     limit:
                         limit !== undefined
@@ -229,42 +266,67 @@ async function createSchool(
         const school =
             await schoolModel.createSchool({
                 schoolCode:
-                    String(schoolCode).trim(),
+                    String(
+                        schoolCode
+                    ).trim(),
+
                 schoolName:
-                    String(schoolName).trim(),
+                    String(
+                        schoolName
+                    ).trim(),
+
                 registrationNumber:
                     body.registrationNumber ??
                     body.registration_number ??
                     null,
+
                 address:
-                    body.address ?? null,
+                    body.address ??
+                    null,
+
                 city:
-                    body.city ?? null,
+                    body.city ??
+                    null,
+
                 state:
-                    body.state ?? null,
+                    body.state ??
+                    null,
+
                 country:
                     body.country ??
                     "Nigeria",
+
                 phone:
-                    body.phone ?? null,
+                    body.phone ??
+                    null,
+
                 email:
-                    body.email ?? null,
+                    body.email ??
+                    null,
+
                 website:
-                    body.website ?? null,
+                    body.website ??
+                    null,
+
                 logoUrl:
                     body.logoUrl ??
                     body.logo_url ??
                     null,
+
                 motto:
-                    body.motto ?? null,
+                    body.motto ??
+                    null,
+
                 principalName:
                     body.principalName ??
                     body.principal_name ??
                     null,
+
                 schoolType:
                     body.schoolType ??
                     body.school_type ??
                     "Secondary School",
+
                 status:
                     body.status ??
                     "Active"
@@ -300,42 +362,84 @@ async function updateSchool(
         const data = {};
 
         const fieldMap = {
-            schoolCode: "schoolCode",
-            school_code: "schoolCode",
-            schoolName: "schoolName",
-            school_name: "schoolName",
+            schoolCode:
+                "schoolCode",
+
+            school_code:
+                "schoolCode",
+
+            schoolName:
+                "schoolName",
+
+            school_name:
+                "schoolName",
+
             registrationNumber:
                 "registrationNumber",
+
             registration_number:
                 "registrationNumber",
-            address: "address",
-            city: "city",
-            state: "state",
-            country: "country",
-            phone: "phone",
-            email: "email",
-            website: "website",
-            logoUrl: "logoUrl",
-            logo_url: "logoUrl",
-            motto: "motto",
+
+            address:
+                "address",
+
+            city:
+                "city",
+
+            state:
+                "state",
+
+            country:
+                "country",
+
+            phone:
+                "phone",
+
+            email:
+                "email",
+
+            website:
+                "website",
+
+            logoUrl:
+                "logoUrl",
+
+            logo_url:
+                "logoUrl",
+
+            motto:
+                "motto",
+
             principalName:
                 "principalName",
+
             principal_name:
                 "principalName",
+
             schoolType:
                 "schoolType",
+
             school_type:
                 "schoolType",
-            status: "status"
+
+            status:
+                "status"
         };
 
         for (
-            const [inputKey, modelKey]
-            of Object.entries(fieldMap)
+            const [
+                inputKey,
+                modelKey
+            ]
+            of Object.entries(
+                fieldMap
+            )
         ) {
             if (
-                body[inputKey] !== undefined &&
-                data[modelKey] === undefined
+                body[inputKey] !==
+                    undefined &&
+                data[modelKey] ===
+                    undefined
             ) {
                 data[modelKey] =
                     body[inputKey];
@@ -538,7 +642,9 @@ async function checkSchoolCode(
 
         const exists =
             await schoolModel.schoolCodeExists(
-                String(schoolCode).trim(),
+                String(
+                    schoolCode
+                ).trim(),
                 excludeSchoolId
             );
 

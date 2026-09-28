@@ -775,6 +775,56 @@ CREATE TABLE IF NOT EXISTS result_settings (
     )
 );
 
+/*
+===============================================================================
+ 20A. SCHOOL SETTINGS
+===============================================================================
+*/
+
+CREATE TABLE IF NOT EXISTS school_settings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    school_id UUID NOT NULL
+        REFERENCES schools(id)
+        ON DELETE CASCADE,
+
+    grading_system VARCHAR(50) NOT NULL
+        DEFAULT 'standard_nigerian'
+        CHECK (
+            grading_system IN (
+                'standard_nigerian',
+                'custom'
+            )
+        ),
+
+    pass_mark NUMERIC(5,2) NOT NULL DEFAULT 40
+        CHECK (
+            pass_mark >= 0
+            AND pass_mark <= 100
+        ),
+
+    notify_fees BOOLEAN NOT NULL DEFAULT TRUE,
+
+    notify_results BOOLEAN NOT NULL DEFAULT TRUE,
+
+    notify_attendance BOOLEAN NOT NULL DEFAULT TRUE,
+
+    notify_announcements BOOLEAN NOT NULL DEFAULT TRUE,
+
+    require_strong_password BOOLEAN NOT NULL DEFAULT TRUE,
+
+    session_timeout_minutes INTEGER NOT NULL DEFAULT 30
+        CHECK (
+            session_timeout_minutes >= 5
+            AND session_timeout_minutes <= 1440
+        ),
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE(school_id)
+);
 
 /*
 ===============================================================================

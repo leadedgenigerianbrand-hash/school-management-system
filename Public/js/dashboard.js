@@ -116,10 +116,11 @@ function updateDashboardStatistics(stats) {
         {};
 
     const financeStats =
-        stats.finance ||
-        stats.financial ||
-        {};
-
+    stats.fees ||
+    stats.finance ||
+    stats.financial ||
+    {};
+    
     const mappings = {
         totalStudents: [
             "totalStudents",
@@ -156,25 +157,28 @@ function updateDashboardStatistics(stats) {
         ],
 
         totalFees: [
-            "totalFees",
-            "total_fees",
-            "feesTotal",
-            "fees_total"
-        ],
+    "totalFees",
+    "total_fees",
+    "feesTotal",
+    "fees_total",
+    "totalBilled"
+],
 
-        outstandingFees: [
-            "outstandingFees",
-            "outstanding_fees",
-            "feesOutstanding",
-            "fees_outstanding"
-        ],
+outstandingFees: [
+    "outstandingFees",
+    "outstanding_fees",
+    "feesOutstanding",
+    "fees_outstanding",
+    "totalOutstanding"
+],
 
-        totalPayments: [
-            "totalPayments",
-            "total_payments",
-            "paymentsTotal",
-            "payments_total"
-        ]
+totalPayments: [
+    "totalPayments",
+    "total_payments",
+    "paymentsTotal",
+    "payments_total",
+    "totalPaid"
+]
     };
 
     Object.keys(mappings).forEach(
@@ -388,6 +392,39 @@ async function loadCurrentUser() {
             user
         );
 
+        /*
+        |--------------------------------------------------------------------------
+        | IMPORTANT
+        |--------------------------------------------------------------------------
+        | The /auth/me response is authoritative.
+        |
+        | Preserve the COMPLETE authenticated user object, including:
+        |
+        | - id
+        | - schoolId
+        | - roleId
+        | - roleName
+        | - username
+        | - email
+        | - firstName
+        | - middleName
+        | - lastName
+        | - phone
+        | - profilePhotoUrl
+        | - isActive
+        | - lastLoginAt
+        | - schoolName
+        | - schoolCode
+        |
+        | This is especially important for Settings, because Settings
+        | needs schoolId.
+        |--------------------------------------------------------------------------
+        */
+
+        preserveAuthenticatedUser(
+            user
+        );
+
         const userRole =
             getAuthenticatedUserRole(
                 user
@@ -411,7 +448,8 @@ async function loadCurrentUser() {
 
         updateCurrentUserDisplay(
             userName,
-            userRole
+            userRole,
+            user
         );
     } catch (error) {
         console.error(
@@ -513,6 +551,162 @@ function hasUserIdentity(user) {
         user.lastName ||
         user.last_name
     );
+}
+
+/*
+|--------------------------------------------------------------------------
+| PRESERVE COMPLETE AUTHENTICATED USER
+|--------------------------------------------------------------------------
+|
+| The dashboard must never reduce the stored authenticated user to only
+| displayName / role fields.
+|
+| This function stores the complete /auth/me object in whichever storage
+| currently owns the active login.
+|
+|--------------------------------------------------------------------------
+*/
+
+function preserveAuthenticatedUser(
+    user
+) {
+    if (
+        !user ||
+        typeof user !==
+            "object"
+    ) {
+        return;
+    }
+
+    try {
+        const userJson =
+            JSON.stringify(
+                user
+            );
+
+        const localToken =
+            localStorage.getItem(
+                "school_management_token"
+            );
+
+        const sessionToken =
+            sessionStorage.getItem(
+                "school_management_token"
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Remember Me / localStorage login
+        |--------------------------------------------------------------------------
+        */
+
+        if (localToken) {
+            localStorage.setItem(
+                "school_management_user",
+                userJson
+            );
+
+            /*
+            | If an old session copy exists, remove it so the two copies
+            | cannot become inconsistent.
+            */
+
+            sessionStorage.removeItem(
+                "school_management_user"
+            );
+
+            console.log(
+                "Dashboard preserved complete authenticated user in localStorage."
+            );
+
+            return;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Normal sessionStorage login
+        |--------------------------------------------------------------------------
+        */
+
+        if (sessionToken) {
+            sessionStorage.setItem(
+                "school_management_user",
+                userJson
+            );
+
+            /*
+            | Remove an old localStorage copy so Settings and other pages
+            | do not accidentally read stale user information.
+            */
+
+            localStorage.removeItem(
+                "school_management_user"
+            );
+
+            console.log(
+                "Dashboard preserved complete authenticated user in sessionStorage."
+            );
+
+            return;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | No token found
+        |--------------------------------------------------------------------------
+        |
+        | Preserve the complete user in the existing storage location if one
+        | already exists. This prevents unnecessary creation of a new login
+        | state.
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            localStorage.getItem(
+                "school_management_user"
+            )
+        ) {
+            localStorage.setItem(
+                "school_management_user",
+                userJson
+            );
+
+            return;
+        }
+
+        if (
+            sessionStorage.getItem(
+                "school_management_user"
+            )
+        ) {
+            sessionStorage.setItem(
+                "school_management_user",
+                userJson
+            );
+
+            return;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Last-resort compatibility fallback
+        |--------------------------------------------------------------------------
+        */
+
+        sessionStorage.setItem(
+            "school_management_user",
+            userJson
+        );
+
+        console.log(
+            "Dashboard preserved complete authenticated user in sessionStorage as fallback."
+        );
+    } catch (error) {
+        console.warn(
+            "Unable to preserve complete authenticated user:",
+            error
+        );
+    }
 }
 
 /*
@@ -621,10 +815,6 @@ function getAuthenticatedUserName(
     |--------------------------------------------------------------------------
     | Administrator account handling
     |--------------------------------------------------------------------------
-    |
-    | "admin" is the login identifier.
-    | It should not be displayed as the person's dashboard name.
-    |
     */
 
     const username =
@@ -710,8 +900,7 @@ function getAuthenticatedUserName(
 
     /*
     |--------------------------------------------------------------------------
-    | Preserve the meaningful dashboard value instead of replacing it
-    | with "User".
+    | Preserve meaningful existing name
     |--------------------------------------------------------------------------
     */
 
@@ -800,10 +989,6 @@ function getMeaningfulStoredOrDomName(
     |--------------------------------------------------------------------------
     | First check the current dashboard HTML.
     |--------------------------------------------------------------------------
-    |
-    | The dashboard HTML already contains "Administrator".
-    | Do not replace that meaningful value with "User".
-    |
     */
 
     const dashboardNameElement =
@@ -831,20 +1016,20 @@ function getMeaningfulStoredOrDomName(
 
     /*
     |--------------------------------------------------------------------------
-    | Then check stored user information.
+    | Then check localStorage.
     |--------------------------------------------------------------------------
     */
 
     try {
-        const storedUser =
+        const localStoredUser =
             localStorage.getItem(
                 "school_management_user"
             );
 
-        if (storedUser) {
+        if (localStoredUser) {
             const parsedUser =
                 JSON.parse(
-                    storedUser
+                    localStoredUser
                 );
 
             if (
@@ -898,7 +1083,7 @@ function getMeaningfulStoredOrDomName(
                     )
                         .trim()
                         .toLowerCase() ===
-                        "administrator"
+                    "administrator"
                 ) {
                     return "Administrator";
                 }
@@ -906,12 +1091,95 @@ function getMeaningfulStoredOrDomName(
         }
     } catch (error) {
         console.warn(
-            "Unable to read stored dashboard user:",
+            "Unable to read localStorage dashboard user:",
             error
         );
     }
 
-    return fallbackName || "Administrator";
+    /*
+    |--------------------------------------------------------------------------
+    | Then check sessionStorage.
+    |--------------------------------------------------------------------------
+    */
+
+    try {
+        const sessionStoredUser =
+            sessionStorage.getItem(
+                "school_management_user"
+            );
+
+        if (sessionStoredUser) {
+            const parsedUser =
+                JSON.parse(
+                    sessionStoredUser
+                );
+
+            if (
+                parsedUser &&
+                typeof parsedUser ===
+                    "object"
+            ) {
+                const storedName =
+                    parsedUser.name ||
+                    parsedUser.fullName ||
+                    parsedUser.full_name ||
+                    parsedUser.displayName ||
+                    parsedUser.display_name;
+
+                if (
+                    isMeaningfulUserName(
+                        storedName
+                    )
+                ) {
+                    return String(
+                        storedName
+                    ).trim();
+                }
+
+                const storedUsername =
+                    parsedUser.username ||
+                    parsedUser.userName ||
+                    parsedUser.user_name ||
+                    "";
+
+                if (
+                    storedUsername &&
+                    !isGenericUserValue(
+                        storedUsername
+                    )
+                ) {
+                    return String(
+                        storedUsername
+                    ).trim();
+                }
+
+                const storedRole =
+                    parsedUser.roleName ||
+                    parsedUser.role_name ||
+                    parsedUser.role ||
+                    "";
+
+                if (
+                    String(
+                        storedRole
+                    )
+                        .trim()
+                        .toLowerCase() ===
+                    "administrator"
+                ) {
+                    return "Administrator";
+                }
+            }
+        }
+    } catch (error) {
+        console.warn(
+            "Unable to read sessionStorage dashboard user:",
+            error
+        );
+    }
+
+    return fallbackName ||
+        "Administrator";
 }
 
 /*
@@ -1062,35 +1330,35 @@ function normalizeRoleDisplay(
 
     if (
         normalized ===
-            "staff"
+        "staff"
     ) {
         return "Staff";
     }
 
     if (
         normalized ===
-            "teacher"
+        "teacher"
     ) {
         return "Teacher";
     }
 
     if (
         normalized ===
-            "student"
+        "student"
     ) {
         return "Student";
     }
 
     if (
         normalized ===
-            "guardian"
+        "guardian"
     ) {
         return "Guardian";
     }
 
     if (
         normalized ===
-            "management"
+        "management"
     ) {
         return "Management";
     }
@@ -1108,7 +1376,8 @@ function normalizeRoleDisplay(
 
 function updateCurrentUserDisplay(
     userName,
-    userRole
+    userRole,
+    authenticatedUser
 ) {
     let safeUserName =
         userName &&
@@ -1160,7 +1429,7 @@ function updateCurrentUserDisplay(
         )
             .trim()
             .toLowerCase() ===
-            "admin"
+        "admin"
     ) {
         safeUserRole =
             "Administrator";
@@ -1242,27 +1511,114 @@ function updateCurrentUserDisplay(
 
     /*
     |--------------------------------------------------------------------------
-    | Save corrected normalized user information locally.
+    | IMPORTANT STORAGE FIX
+    |--------------------------------------------------------------------------
+    |
+    | NEVER replace the complete authenticated object with only:
+    |
+    | name
+    | full_name
+    | displayName
+    | role
+    | roleName
+    |
+    | The complete authenticated user is required by Settings and other
+    | school-aware pages.
     |--------------------------------------------------------------------------
     */
 
+    if (
+        authenticatedUser &&
+        typeof authenticatedUser ===
+            "object"
+    ) {
+        preserveAuthenticatedUser(
+            authenticatedUser
+        );
+    } else {
+        /*
+        |--------------------------------------------------------------------------
+        | Compatibility fallback
+        |--------------------------------------------------------------------------
+        |
+        | If this function is called by an older page path without the third
+        | argument, preserve the existing object instead of destroying it.
+        |--------------------------------------------------------------------------
+        */
+
+        preserveExistingUserDisplayFields(
+            safeUserName,
+            safeUserRole
+        );
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| PRESERVE EXISTING USER DISPLAY FIELDS
+|--------------------------------------------------------------------------
+|
+| Compatibility helper for any existing dashboard call that may still call
+| updateCurrentUserDisplay(userName, userRole).
+|
+| It merges display fields into the existing COMPLETE user object.
+| It never creates a reduced user object.
+|--------------------------------------------------------------------------
+*/
+
+function preserveExistingUserDisplayFields(
+    safeUserName,
+    safeUserRole
+) {
     try {
-        const storedUser =
+        let storageType = null;
+        let storedUser = null;
+
+        const localToken =
             localStorage.getItem(
-                "school_management_user"
+                "school_management_token"
             );
 
-        let parsedUser = {};
+        const sessionToken =
+            sessionStorage.getItem(
+                "school_management_token"
+            );
+
+        if (localToken) {
+            storageType =
+                "localStorage";
+
+            storedUser =
+                localStorage.getItem(
+                    "school_management_user"
+                );
+        } else if (sessionToken) {
+            storageType =
+                "sessionStorage";
+
+            storedUser =
+                sessionStorage.getItem(
+                    "school_management_user"
+                );
+        } else {
+            storedUser =
+                localStorage.getItem(
+                    "school_management_user"
+                ) ||
+                sessionStorage.getItem(
+                    "school_management_user"
+                );
+        }
+
+        let existingUser = {};
 
         if (storedUser) {
             try {
-                parsedUser =
+                existingUser =
                     JSON.parse(
                         storedUser
                     ) || {};
-            } catch (
-                parseError
-            ) {
+            } catch (parseError) {
                 console.warn(
                     "Stored user data could not be parsed:",
                     parseError
@@ -1270,34 +1626,81 @@ function updateCurrentUserDisplay(
             }
         }
 
-        const normalizedUser =
+        const mergedUser =
             Object.assign(
                 {},
-                parsedUser,
-                {
-                    name:
-                        safeUserName,
-                    full_name:
-                        safeUserName,
-                    displayName:
-                        safeUserName,
-                    role:
-                        safeUserRole,
-                    roleName:
-                        safeUserRole
-                }
+                existingUser
             );
 
-        localStorage.setItem(
-            "school_management_user",
-            JSON.stringify(
-                normalizedUser
+        if (
+            safeUserName &&
+            !isGenericUserValue(
+                safeUserName
             )
-        );
-    } catch (storageError) {
+        ) {
+            mergedUser.name =
+                safeUserName;
+
+            mergedUser.full_name =
+                safeUserName;
+
+            mergedUser.displayName =
+                safeUserName;
+        }
+
+        if (
+            safeUserRole &&
+            !isGenericUserValue(
+                safeUserRole
+            )
+        ) {
+            mergedUser.role =
+                safeUserRole;
+
+            mergedUser.roleName =
+                safeUserRole;
+        }
+
+        const userJson =
+            JSON.stringify(
+                mergedUser
+            );
+
+        if (
+            storageType ===
+            "localStorage"
+        ) {
+            localStorage.setItem(
+                "school_management_user",
+                userJson
+            );
+        } else if (
+            storageType ===
+            "sessionStorage"
+        ) {
+            sessionStorage.setItem(
+                "school_management_user",
+                userJson
+            );
+        } else if (
+            localStorage.getItem(
+                "school_management_user"
+            )
+        ) {
+            localStorage.setItem(
+                "school_management_user",
+                userJson
+            );
+        } else {
+            sessionStorage.setItem(
+                "school_management_user",
+                userJson
+            );
+        }
+    } catch (error) {
         console.warn(
-            "Unable to save normalized dashboard user:",
-            storageError
+            "Unable to preserve existing dashboard user:",
+            error
         );
     }
 }
@@ -1314,10 +1717,27 @@ function updateCurrentUserDisplay(
 
 function loadStoredUserFallback() {
     try {
-        const storedUser =
+        let storedUser = null;
+
+        const localStoredUser =
             localStorage.getItem(
                 "school_management_user"
             );
+
+        const sessionStoredUser =
+            sessionStorage.getItem(
+                "school_management_user"
+            );
+
+        if (localStoredUser) {
+            storedUser =
+                localStoredUser;
+        } else if (
+            sessionStoredUser
+        ) {
+            storedUser =
+                sessionStoredUser;
+        }
 
         if (!storedUser) {
             return;
@@ -1349,7 +1769,8 @@ function loadStoredUserFallback() {
 
         updateCurrentUserDisplay(
             userName,
-            userRole
+            userRole,
+            user
         );
     } catch (error) {
         console.error(
@@ -2364,7 +2785,7 @@ function setupDashboardNavigation() {
         sidebarOverlay &&
         sidebarOverlay.dataset
             .dashboardOverlayInitialized !==
-        "true"
+            "true"
     ) {
         sidebarOverlay.dataset
             .dashboardOverlayInitialized =
@@ -2468,7 +2889,7 @@ function setupDashboardNavigation() {
                             typeof window
                                 .Auth
                                 .logout ===
-                            "function"
+                                "function"
                         ) {
                             await window.Auth.logout();
 
@@ -2492,8 +2913,18 @@ function setupDashboardNavigation() {
                             "school_management_user"
                         );
 
+                        sessionStorage.removeItem(
+                            "school_management_token"
+                        );
+
+                        sessionStorage.removeItem(
+                            "school_management_user"
+                        );
+
                         window.location.href =
                             "/pages/login.html";
+
+                        return;
                     } catch (
                         error
                     ) {
@@ -2507,6 +2938,14 @@ function setupDashboardNavigation() {
                         );
 
                         localStorage.removeItem(
+                            "school_management_user"
+                        );
+
+                        sessionStorage.removeItem(
+                            "school_management_token"
+                        );
+
+                        sessionStorage.removeItem(
                             "school_management_user"
                         );
 

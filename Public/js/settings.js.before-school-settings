@@ -9,24 +9,10 @@
     let currentSession = null;
     let currentTerm = null;
 
-    let schoolSettings = {
-        gradingSystem: "standard_nigerian",
-        passMark: 40,
-        notifyFees: true,
-        notifyResults: true,
-        notifyAttendance: true,
-        notifyAnnouncements: true,
-        requireStrongPassword: true,
-        sessionTimeoutMinutes: 30
-    };
-
-    let settingsSaving = false;
-
     const SCHOOL_LIST_ENDPOINT = "/schools";
     const AUTH_ME_ENDPOINT = "/auth/me";
     const ACADEMIC_SESSIONS_ENDPOINT = "/academic-sessions";
     const TERMS_ENDPOINT = "/terms";
-    const SCHOOL_SETTINGS_ENDPOINT = "/school-settings";
 
     /* ==========================================================================
        INITIALIZATION
@@ -37,7 +23,6 @@
         setupSidebar();
         setupSchoolForm();
         setupResetButton();
-        setupSchoolSettingsControls();
         setupLogout();
 
         currentUser = getStoredUser();
@@ -47,7 +32,6 @@
         await loadCurrentUser();
         await loadSchool();
         await loadAcademicSettings();
-        await loadSchoolSettings();
     }
 
     /* ==========================================================================
@@ -286,7 +270,7 @@
     }
 
     /* ==========================================================================
-       SCHOOL INFORMATION
+       SCHOOL SETTINGS
     ========================================================================== */
 
     function setupSchoolForm() {
@@ -817,13 +801,6 @@
             );
 
         if (!element) {
-            element =
-                document.getElementById(
-                    "currentSessionSelect"
-                );
-        }
-
-        if (!element) {
             return;
         }
 
@@ -1238,297 +1215,23 @@
         }
     }
 
-    /* ==========================================================================
-       SCHOOL-WIDE SETTINGS
-    ========================================================================== */
-
-    async function loadSchoolSettings() {
-        try {
-            const response =
-                await apiRequest(
-                    SCHOOL_SETTINGS_ENDPOINT
-                );
-
-            const returnedSettings =
-                extractEntity(
-                    response,
-                    [
-                        "settings",
-                        "schoolSettings"
-                    ]
-                );
-
-            schoolSettings = normalizeSchoolSettings(
-                returnedSettings
-            );
-
-            enableSchoolSettingsControls();
-            populateSchoolSettingsControls();
-
-            return schoolSettings;
-        } catch (error) {
-            console.error(
-                "Unable to load school settings:",
-                error
-            );
-
-            showMessage(
-                error.message ||
-                    "Unable to load school settings.",
-                "danger"
-            );
-
-            return schoolSettings;
-        }
-    }
-
-    function normalizeSchoolSettings(settings) {
-        const source =
-            settings &&
-            typeof settings === "object"
-                ? settings
-                : {};
-
-        return {
-            gradingSystem:
-                normalizeGradingSystem(
-                    source.gradingSystem ??
-                        source.grading_system ??
-                        "standard_nigerian"
-                ),
-
-            passMark:
-                normalizeNumber(
-                    source.passMark ??
-                        source.pass_mark ??
-                        40,
-                    40
-                ),
-
-            notifyFees:
-                normalizeBoolean(
-                    source.notifyFees ??
-                        source.notify_fees,
-                    true
-                ),
-
-            notifyResults:
-                normalizeBoolean(
-                    source.notifyResults ??
-                        source.notify_results,
-                    true
-                ),
-
-            notifyAttendance:
-                normalizeBoolean(
-                    source.notifyAttendance ??
-                        source.notify_attendance,
-                    true
-                ),
-
-            notifyAnnouncements:
-                normalizeBoolean(
-                    source.notifyAnnouncements ??
-                        source.notify_announcements,
-                    true
-                ),
-
-            requireStrongPassword:
-                normalizeBoolean(
-                    source.requireStrongPassword ??
-                        source.require_strong_password,
-                    true
-                ),
-
-            sessionTimeoutMinutes:
-                normalizeNumber(
-                    source.sessionTimeoutMinutes ??
-                        source.session_timeout_minutes ??
-                        30,
-                    30
-                )
-        };
-    }
-
-    function normalizeGradingSystem(value) {
-        const normalized =
-            String(
-                value || ""
-            )
-                .trim()
-                .toLowerCase();
-
-        if (
-            normalized ===
-                "custom" ||
-            normalized ===
-                "custom_grading"
-        ) {
-            return "custom";
-        }
-
-        return "standard_nigerian";
-    }
-
-    function normalizeBoolean(
-        value,
-        fallback
-    ) {
-        if (
-            value === true ||
-            value === false
-        ) {
-            return value;
-        }
-
-        if (
-            value === "true" ||
-            value === 1 ||
-            value === "1"
-        ) {
-            return true;
-        }
-
-        if (
-            value === "false" ||
-            value === 0 ||
-            value === "0"
-        ) {
-            return false;
-        }
-
-        return fallback;
-    }
-
-    function normalizeNumber(
-        value,
-        fallback
-    ) {
-        const number =
-            Number(value);
-
-        return Number.isFinite(
-            number
-        )
-            ? number
-            : fallback;
-    }
-
-    function setupSchoolSettingsControls() {
-        setupAcademicSettingControls();
-        setupNotificationSettings();
-        setupSecuritySettings();
-    }
-
-    function enableSchoolSettingsControls() {
-        const controls =
-            document.querySelectorAll(
-                "#academic input, #academic select, #notifications input, #security input, #security select"
-            );
-
-        controls.forEach(
-            (control) => {
-                if (
-                    control.id ===
-                    "currentSession"
-                ) {
-                    return;
-                }
-
-                if (
-                    control.id ===
-                    "currentSessionSelect"
-                ) {
-                    return;
-                }
-
-                control.disabled =
-                    false;
-            }
-        );
-
+    function updatePassMarkControl() {
         const passMark =
             document.getElementById(
                 "passMark"
             );
 
-        if (passMark) {
-            passMark.readOnly = false;
-            passMark.disabled = false;
-            passMark.min = "0";
-            passMark.max = "100";
-            passMark.step = "0.01";
+        if (!passMark) {
+            return;
         }
 
-        const timeoutMinutes =
-            document.getElementById(
-                "timeoutMinutes"
-            );
-
-        if (timeoutMinutes) {
-            timeoutMinutes.readOnly = false;
-            timeoutMinutes.disabled = false;
-            timeoutMinutes.min = "5";
-            timeoutMinutes.max = "1440";
-            timeoutMinutes.step = "1";
-        }
-    }
-
-    function populateSchoolSettingsControls() {
-        updateGradingSystemControl();
-        updatePassMarkControl();
-        updateNotificationControls();
-        updateSecurityControls();
-    }
-
-    /* ==========================================================================
-       ACADEMIC SCHOOL SETTINGS
-    ========================================================================== */
-
-    function setupAcademicSettingControls() {
-        const gradingSystem =
-            document.getElementById(
-                "gradingSystem"
-            );
-
-        const passMark =
-            document.getElementById(
-                "passMark"
-            );
-
-        if (gradingSystem) {
-            gradingSystem.disabled = false;
-
-            gradingSystem.onchange =
-                async function () {
-                    const selectedValue =
-                        normalizeGradingSystem(
-                            gradingSystem.value
-                        );
-
-                    await saveSchoolSettings(
-                        {
-                            gradingSystem:
-                                selectedValue
-                        },
-                        "Grading system updated successfully."
-                    );
-                };
-        }
-
-        if (passMark) {
-            passMark.readOnly = false;
-            passMark.disabled = false;
-            passMark.min = "0";
-            passMark.max = "100";
-            passMark.step = "0.01";
-
-            passMark.onchange =
-                handlePassMarkChange;
-
-            passMark.onblur =
-                handlePassMarkChange;
-        }
+        /*
+         * The current backend does not yet expose
+         * a school-level pass-mark setting.
+         *
+         * Keep the existing value visible until
+         * a dedicated settings endpoint is added.
+         */
     }
 
     function updateGradingSystemControl() {
@@ -1541,614 +1244,16 @@
             return;
         }
 
-        const desiredValue =
-            normalizeGradingSystem(
-                schoolSettings.gradingSystem
-            );
-
-        const hasDesiredOption =
-            Array.from(
-                gradingSystem.options
-            ).some(
-                (option) =>
-                    option.value ===
-                    desiredValue
-            );
-
-        if (!hasDesiredOption) {
-            console.warn(
-                `Grading system option "${desiredValue}" is not present in the HTML select.`
-            );
-            return;
-        }
-
-        gradingSystem.value =
-            desiredValue;
-
-        gradingSystem.disabled = false;
+        /*
+         * The current result-settings backend
+         * handles grading bands rather than a
+         * global grading-system selector.
+         *
+         * Therefore this control remains untouched
+         * until the corresponding backend setting
+         * is implemented.
+         */
     }
-
-    function updatePassMarkControl() {
-        const passMark =
-            document.getElementById(
-                "passMark"
-            );
-
-        if (!passMark) {
-            return;
-        }
-
-        passMark.value =
-            String(
-                schoolSettings.passMark
-            );
-
-        passMark.readOnly = false;
-        passMark.disabled = false;
-        passMark.min = "0";
-        passMark.max = "100";
-        passMark.step = "0.01";
-    }
-
-    async function handlePassMarkChange(event) {
-        const input =
-            event.target;
-
-        let value =
-            Number(
-                input.value
-            );
-
-        if (
-            !Number.isFinite(
-                value
-            )
-        ) {
-            value =
-                schoolSettings.passMark;
-        }
-
-        if (value < 0) {
-            value = 0;
-        }
-
-        if (value > 100) {
-            value = 100;
-        }
-
-        value =
-            Math.round(
-                value * 100
-            ) / 100;
-
-        input.value =
-            String(value);
-
-        if (
-            Number(
-                schoolSettings.passMark
-            ) === value
-        ) {
-            return;
-        }
-
-        await saveSchoolSettings(
-            {
-                passMark: value
-            },
-            `Pass mark updated to ${value}%.`
-        );
-    }
-
-    /* ==========================================================================
-       NOTIFICATION SETTINGS
-    ========================================================================== */
-
-    function setupNotificationSettings() {
-        const mappings = [
-            {
-                id: "notifyFees",
-                property:
-                    "notifyFees",
-                label:
-                    "Fee notifications"
-            },
-            {
-                id: "notifyResults",
-                property:
-                    "notifyResults",
-                label:
-                    "Result notifications"
-            },
-            {
-                id: "notifyAttendance",
-                property:
-                    "notifyAttendance",
-                label:
-                    "Attendance notifications"
-            },
-            {
-                id: "notifyAnnouncements",
-                property:
-                    "notifyAnnouncements",
-                label:
-                    "Announcement notifications"
-            }
-        ];
-
-        mappings.forEach(
-            (item) => {
-                const input =
-                    document.getElementById(
-                        item.id
-                    );
-
-                if (!input) {
-                    return;
-                }
-
-                input.disabled =
-                    false;
-
-                input.onchange =
-                    async function () {
-                        const newValue =
-                            Boolean(
-                                input.checked
-                            );
-
-                        await saveSchoolSettings(
-                            {
-                                [item.property]:
-                                    newValue
-                            },
-                            `${item.label} ${newValue ? "enabled" : "disabled"}.`
-                        );
-                    };
-            }
-        );
-    }
-
-    function updateNotificationControls() {
-        const mappings = [
-            [
-                "notifyFees",
-                "notifyFees"
-            ],
-            [
-                "notifyResults",
-                "notifyResults"
-            ],
-            [
-                "notifyAttendance",
-                "notifyAttendance"
-            ],
-            [
-                "notifyAnnouncements",
-                "notifyAnnouncements"
-            ]
-        ];
-
-        mappings.forEach(
-            ([elementId, property]) => {
-                const input =
-                    document.getElementById(
-                        elementId
-                    );
-
-                if (!input) {
-                    return;
-                }
-
-                input.checked =
-                    Boolean(
-                        schoolSettings[
-                            property
-                        ]
-                    );
-
-                input.disabled =
-                    false;
-            }
-        );
-    }
-
-    /* ==========================================================================
-       SECURITY SETTINGS
-    ========================================================================== */
-
-    function setupSecuritySettings() {
-        const timeoutInput =
-            document.getElementById(
-                "timeoutMinutes"
-            );
-
-        const strongPassword =
-            document.getElementById(
-                "requireStrongPassword"
-            );
-
-        const sessionTimeout =
-            document.getElementById(
-                "sessionTimeout"
-            );
-
-        if (timeoutInput) {
-            timeoutInput.readOnly =
-                false;
-
-            timeoutInput.disabled =
-                false;
-
-            timeoutInput.min =
-                "5";
-
-            timeoutInput.max =
-                "1440";
-
-            timeoutInput.step =
-                "1";
-
-            timeoutInput.onchange =
-                handleTimeoutChange;
-
-            timeoutInput.onblur =
-                handleTimeoutChange;
-        }
-
-        if (strongPassword) {
-            strongPassword.disabled =
-                false;
-
-            strongPassword.onchange =
-                async function () {
-                    await saveSchoolSettings(
-                        {
-                            requireStrongPassword:
-                                Boolean(
-                                    strongPassword.checked
-                                )
-                        },
-                        `Strong-password policy ${strongPassword.checked ? "enabled" : "disabled"}.`
-                    );
-                };
-        }
-
-        if (sessionTimeout) {
-            sessionTimeout.disabled =
-                false;
-
-            sessionTimeout.onchange =
-                async function () {
-                    /*
-                     * The database stores the actual timeout
-                     * as sessionTimeoutMinutes. There is no
-                     * separate enabled column in school_settings.
-                     *
-                     * Therefore:
-                     * - checked = timeout is considered active
-                     * - unchecked = restore the default 30-minute
-                     *   configured value
-                     *
-                     * The actual server-side enforcement will
-                     * be implemented separately.
-                     */
-
-                    if (
-                        sessionTimeout.checked
-                    ) {
-                        const currentMinutes =
-                            getTimeoutMinutes();
-
-                        await saveSchoolSettings(
-                            {
-                                sessionTimeoutMinutes:
-                                    currentMinutes
-                            },
-                            "Session timeout enabled."
-                        );
-                    } else {
-                        await saveSchoolSettings(
-                            {
-                                sessionTimeoutMinutes:
-                                    30
-                            },
-                            "Session timeout reset to 30 minutes."
-                        );
-                    }
-                };
-        }
-    }
-
-    function updateSecurityControls() {
-        const timeoutInput =
-            document.getElementById(
-                "timeoutMinutes"
-            );
-
-        const strongPassword =
-            document.getElementById(
-                "requireStrongPassword"
-            );
-
-        const sessionTimeout =
-            document.getElementById(
-                "sessionTimeout"
-            );
-
-        if (timeoutInput) {
-            timeoutInput.value =
-                String(
-                    schoolSettings.sessionTimeoutMinutes
-                );
-
-            timeoutInput.readOnly =
-                false;
-
-            timeoutInput.disabled =
-                false;
-
-            timeoutInput.min =
-                "5";
-
-            timeoutInput.max =
-                "1440";
-
-            timeoutInput.step =
-                "1";
-        }
-
-        if (strongPassword) {
-            strongPassword.checked =
-                Boolean(
-                    schoolSettings.requireStrongPassword
-                );
-
-            strongPassword.disabled =
-                false;
-        }
-
-        if (sessionTimeout) {
-            sessionTimeout.checked =
-                true;
-
-            sessionTimeout.disabled =
-                false;
-        }
-    }
-
-    async function handleTimeoutChange(event) {
-        const input =
-            event.target;
-
-        let minutes =
-            Number(
-                input.value
-            );
-
-        if (
-            !Number.isFinite(
-                minutes
-            )
-        ) {
-            minutes =
-                schoolSettings.sessionTimeoutMinutes;
-        }
-
-        minutes =
-            Math.round(
-                minutes
-            );
-
-        if (minutes < 5) {
-            minutes = 5;
-        }
-
-        if (minutes > 1440) {
-            minutes = 1440;
-        }
-
-        input.value =
-            String(minutes);
-
-        if (
-            Number(
-                schoolSettings.sessionTimeoutMinutes
-            ) === minutes
-        ) {
-            return;
-        }
-
-        await saveSchoolSettings(
-            {
-                sessionTimeoutMinutes:
-                    minutes
-            },
-            `Session timeout updated to ${formatTimeout(minutes)}.`
-        );
-    }
-
-    function getTimeoutMinutes() {
-        const input =
-            document.getElementById(
-                "timeoutMinutes"
-            );
-
-        if (!input) {
-            return (
-                Number(
-                    schoolSettings.sessionTimeoutMinutes
-                ) || 30
-            );
-        }
-
-        let minutes =
-            Number(
-                input.value
-            );
-
-        if (
-            !Number.isFinite(
-                minutes
-            )
-        ) {
-            minutes =
-                Number(
-                    schoolSettings.sessionTimeoutMinutes
-                ) || 30;
-        }
-
-        if (minutes < 5) {
-            minutes = 5;
-        }
-
-        if (minutes > 1440) {
-            minutes = 1440;
-        }
-
-        return Math.round(
-            minutes
-        );
-    }
-
-    function formatTimeout(minutes) {
-        const value =
-            Number(minutes);
-
-        if (
-            !Number.isFinite(
-                value
-            )
-        ) {
-            return "30 minutes";
-        }
-
-        if (value === 60) {
-            return "1 hour";
-        }
-
-        if (
-            value > 60 &&
-            value % 60 === 0
-        ) {
-            return `${value / 60} hours`;
-        }
-
-        return `${value} minutes`;
-    }
-
-    /* ==========================================================================
-       SAVE SCHOOL SETTINGS
-    ========================================================================== */
-
-    async function saveSchoolSettings(
-        changes,
-        successMessage
-    ) {
-        if (
-            !changes ||
-            typeof changes !==
-                "object"
-        ) {
-            return;
-        }
-
-        if (settingsSaving) {
-            return;
-        }
-
-        settingsSaving = true;
-
-        const originalSettings = {
-            ...schoolSettings
-        };
-
-        schoolSettings = {
-            ...schoolSettings,
-            ...normalizeSchoolSettings(
-                {
-                    ...schoolSettings,
-                    ...changes
-                }
-            )
-        };
-
-        updateSettingsControlsWithoutEvents();
-
-        try {
-            const response =
-                await apiRequest(
-                    SCHOOL_SETTINGS_ENDPOINT,
-                    {
-                        method: "PUT",
-                        body:
-                            JSON.stringify(
-                                changes
-                            )
-                    }
-                );
-
-            const returnedSettings =
-                extractEntity(
-                    response,
-                    [
-                        "settings",
-                        "schoolSettings"
-                    ]
-                );
-
-            schoolSettings =
-                normalizeSchoolSettings(
-                    returnedSettings &&
-                        Object.keys(
-                            returnedSettings
-                        ).length
-                        ? returnedSettings
-                        : schoolSettings
-                );
-
-            updateSettingsControlsWithoutEvents();
-
-            showMessage(
-                successMessage ||
-                    "Settings saved successfully.",
-                "success"
-            );
-
-            return schoolSettings;
-        } catch (error) {
-            console.error(
-                "Unable to save school settings:",
-                error
-            );
-
-            schoolSettings =
-                originalSettings;
-
-            updateSettingsControlsWithoutEvents();
-
-            showMessage(
-                error.message ||
-                    "Unable to save school settings.",
-                "danger"
-            );
-
-            return null;
-        } finally {
-            settingsSaving = false;
-        }
-    }
-
-    function updateSettingsControlsWithoutEvents() {
-        updateGradingSystemControl();
-        updatePassMarkControl();
-        updateNotificationControls();
-        updateSecurityControls();
-    }
-
-    /* ==========================================================================
-       ACADEMIC DISPLAY HELPERS
-    ========================================================================== */
 
     function getSessionName(session) {
         return (
@@ -2204,6 +1309,89 @@
                 },
                 5000
             );
+    }
+
+    /* ==========================================================================
+       NOTIFICATION SETTINGS
+    ========================================================================== */
+
+    function setupNotificationSettings() {
+        const notificationInputs =
+            document.querySelectorAll(
+                "#notifications input[type='checkbox']"
+            );
+
+        notificationInputs.forEach(
+            (input) => {
+                input.onchange =
+                    function () {
+                        showMessage(
+                            "Notification settings are not connected to a backend setting yet.",
+                            "info"
+                        );
+
+                        input.checked =
+                            input.defaultChecked;
+                    };
+            }
+        );
+    }
+
+    /* ==========================================================================
+       SECURITY SETTINGS
+    ========================================================================== */
+
+    function setupSecuritySettings() {
+        const timeoutInput =
+            document.getElementById(
+                "timeoutMinutes"
+            );
+
+        const strongPassword =
+            document.getElementById(
+                "requireStrongPassword"
+            );
+
+        const sessionTimeout =
+            document.getElementById(
+                "sessionTimeout"
+            );
+
+        if (timeoutInput) {
+            timeoutInput.onchange =
+                function () {
+                    showMessage(
+                        "Session timeout is not connected to a backend security setting yet.",
+                        "info"
+                    );
+                };
+        }
+
+        if (strongPassword) {
+            strongPassword.onchange =
+                function () {
+                    showMessage(
+                        "Strong-password policy is not connected to a backend security setting yet.",
+                        "info"
+                    );
+
+                    strongPassword.checked =
+                        strongPassword.defaultChecked;
+                };
+        }
+
+        if (sessionTimeout) {
+            sessionTimeout.onchange =
+                function () {
+                    showMessage(
+                        "Session timeout policy is not connected to a backend security setting yet.",
+                        "info"
+                    );
+
+                    sessionTimeout.checked =
+                        sessionTimeout.defaultChecked;
+                };
+        }
     }
 
     /* ==========================================================================
@@ -2480,8 +1668,6 @@
         loadAcademicSettings,
         loadAcademicSessions,
         loadTerms,
-        loadSchoolSettings,
-        saveSchoolSettings,
         populateSchoolForm,
         populateSessionSelect,
         populateTermSelect,
@@ -2500,6 +1686,8 @@
         document.addEventListener(
             "DOMContentLoaded",
             function () {
+                setupNotificationSettings();
+                setupSecuritySettings();
                 initialize();
             },
             {
@@ -2507,6 +1695,8 @@
             }
         );
     } else {
+        setupNotificationSettings();
+        setupSecuritySettings();
         initialize();
     }
 })();

@@ -2,6 +2,9 @@
 
 const { query } = require("../config/database");
 
+const UUID_PATTERN =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 function normalizeText(value) {
     if (value === undefined || value === null) {
         return null;
@@ -17,11 +20,12 @@ function normalizeText(value) {
 }
 
 function validateSchoolId(schoolId) {
+    const normalized =
+        normalizeText(schoolId);
+
     if (
-        schoolId === undefined ||
-        schoolId === null ||
-        schoolId === "" ||
-        Number.isNaN(Number(schoolId))
+        !normalized ||
+        !UUID_PATTERN.test(normalized)
     ) {
         const error = new Error(
             "Valid school ID is required."
@@ -32,7 +36,7 @@ function validateSchoolId(schoolId) {
         throw error;
     }
 
-    return Number(schoolId);
+    return normalized;
 }
 
 function validateSchoolCode(schoolCode) {
@@ -466,7 +470,7 @@ async function updateSchool(
 
         if (
             existingSchool &&
-            Number(existingSchool.id) !== id
+            String(existingSchool.id) !== String(id)
         ) {
             const error = new Error(
                 "School code already exists."
