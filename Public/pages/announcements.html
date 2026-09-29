@@ -6,7 +6,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    ```
     <title>Announcements | School Management System</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -57,148 +56,316 @@
             color: #0d6efd;
         }
     </style>
-    ```
 
+    <link rel="stylesheet" href="../css/sidebar.css">
 </head>
 
 <body>
 
     <div class="d-flex" id="app">
 
-        ```
-        <aside id="sidebar" class="sidebar">
-            <div class="sidebar-header">
-                <h4 class="mb-0">
-                    School Management
-                </h4>
+
+
+        <aside id="smsSidebar" class="sms-sidebar">
+
+
+            <!-- =================================================
+             SIDEBAR BRAND
+        ================================================== -->
+
+            <div class="sidebar-brand">
+
+                <div class="brand-icon">
+
+                    <i class="bi bi-mortarboard-fill"></i>
+
+                </div>
+
+
+                <div>
+
+                    <div class="brand-title">
+                        School Management
+                    </div>
+
+                    <span class="brand-subtitle">
+                        Administration Portal
+                    </span>
+
+                </div>
+
             </div>
 
-            <nav class="sidebar-nav">
 
-                <a href="/pages/dashboard.html">
+            <!-- =================================================
+             SIDEBAR CONTENT
+        ================================================== -->
+
+            <div class="sidebar-content">
+
+
+                <!-- =================================================
+                 MAIN
+            ================================================== -->
+
+                <div class="sidebar-section">
+                    Main
+                </div>
+
+
+                <a href="/pages/dashboard.html" class="sidebar-link">
+
                     <i class="bi bi-speedometer2"></i>
-                    <span>Dashboard</span>
+
+                    <span>
+                        Dashboard
+                    </span>
+
                 </a>
 
-                <a href="/pages/students.html">
+
+                <a href="/pages/students.html" class="sidebar-link">
+
                     <i class="bi bi-people"></i>
-                    <span>Students</span>
+
+                    <span>
+                        Students
+                    </span>
+
                 </a>
 
-                <a href="/pages/staff.html">
+
+                <a href="/pages/staff.html" class="sidebar-link">
+
                     <i class="bi bi-person-badge"></i>
-                    <span>Staff</span>
+
+                    <span>
+                        Staff
+                    </span>
+
                 </a>
 
-                <a href="/pages/guardians.html">
+
+                <a href="/pages/guardians.html" class="sidebar-link">
+
                     <i class="bi bi-person-hearts"></i>
-                    <span>Guardians</span>
+
+                    <span>
+                        Guardians
+                    </span>
+
                 </a>
 
-                <a href="/pages/classes.html">
+
+                <!-- =================================================
+                 ACADEMIC
+            ================================================== -->
+
+                <div class="sidebar-section">
+                    Academic
+                </div>
+
+
+                <a href="/pages/classes.html" class="sidebar-link">
+
                     <i class="bi bi-building"></i>
-                    <span>Classes</span>
+
+                    <span>
+                        Classes
+                    </span>
+
                 </a>
 
-                <a href="/pages/class-arms.html">
+
+                <a href="/pages/class-arms.html" class="sidebar-link">
+
                     <i class="bi bi-diagram-3"></i>
-                    <span>Class Arms</span>
+
+                    <span>
+                        Class Arms
+                    </span>
+
                 </a>
 
-                <a href="/pages/departments.html">
+
+                <a href="/pages/departments.html" class="sidebar-link">
+
                     <i class="bi bi-diagram-2"></i>
-                    <span>Departments</span>
+
+                    <span>
+                        Departments
+                    </span>
+
                 </a>
 
-                <a href="/pages/subjects.html">
+
+                <a href="/pages/subjects.html" class="sidebar-link">
+
                     <i class="bi bi-book"></i>
-                    <span>Subjects</span>
+
+                    <span>
+                        Subjects
+                    </span>
+
                 </a>
 
-                <a href="/pages/academic-levels.html">
-                    <i class="bi bi-layers"></i>
-                    <span>Academic Levels</span>
-                </a>
 
-                <a href="/pages/academic-sessions.html">
+                <a href="/pages/academic-sessions.html" class="sidebar-link">
+
                     <i class="bi bi-calendar3"></i>
-                    <span>Academic Sessions</span>
+
+                    <span>
+                        Academic Sessions
+                    </span>
+
                 </a>
 
-                <a href="/pages/terms.html">
-                    <i class="bi bi-calendar-week"></i>
-                    <span>Terms</span>
+
+                <a href="/pages/terms.html" class="sidebar-link">
+
+                    <i class="bi bi-calendar2-week"></i>
+
+                    <span>
+                        Terms
+                    </span>
+
                 </a>
 
-                <a href="/pages/timetable.html">
-                    <i class="bi bi-clock-history"></i>
-                    <span>Timetable</span>
-                </a>
 
-                <a href="/pages/attendance.html">
+                <a href="/pages/attendance.html" class="sidebar-link">
+
                     <i class="bi bi-calendar-check"></i>
-                    <span>Attendance</span>
+
+                    <span>
+                        Attendance
+                    </span>
+
                 </a>
 
-                <a href="/pages/results.html">
+
+                <a href="/pages/results.html" class="sidebar-link">
+
                     <i class="bi bi-bar-chart"></i>
-                    <span>Results</span>
+
+                    <span>
+                        Results
+                    </span>
+
                 </a>
 
-                <a href="/pages/student-fees.html">
+
+                <!-- =================================================
+                 FINANCE & RECORDS
+            ================================================== -->
+
+                <div class="sidebar-section">
+                    Finance &amp; Records
+                </div>
+
+
+                <a href="/pages/fees.html" class="sidebar-link">
+
                     <i class="bi bi-cash-stack"></i>
-                    <span>Fees &amp; Payments</span>
+
+                    <span>
+                        Fees &amp; Payments
+                    </span>
+
                 </a>
 
-                <a href="/pages/documents.html">
-                    <i class="bi bi-file-earmark-text"></i>
-                    <span>Documents</span>
+
+                <a href="/pages/documents.html" class="sidebar-link">
+
+                    <i class="bi bi-folder2-open"></i>
+
+                    <span>
+                        Documents
+                    </span>
+
                 </a>
 
-                <a href="/pages/reports.html">
+
+                <a href="/pages/reports.html" class="sidebar-link">
+
                     <i class="bi bi-file-earmark-bar-graph"></i>
-                    <span>Reports</span>
+
+                    <span>
+                        Reports
+                    </span>
+
                 </a>
 
-                <a href="/pages/notifications.html">
-                    <i class="bi bi-bell"></i>
-                    <span>Notifications</span>
-                </a>
 
-                <a href="/pages/announcements.html" class="active">
-                    <i class="bi bi-megaphone"></i>
-                    <span>Announcements</span>
-                </a>
+                <!-- =================================================
+                 ADMINISTRATION
+            ================================================== -->
 
-                <a href="/pages/users.html">
+                <div class="sidebar-section">
+                    Administration
+                </div>
+
+
+                <a href="/pages/users.html" class="sidebar-link">
+
                     <i class="bi bi-person-gear"></i>
-                    <span>Users</span>
+
+                    <span>
+                        Users
+                    </span>
+
                 </a>
 
-                <a href="/pages/roles.html">
-                    <i class="bi bi-shield-lock"></i>
-                    <span>Roles</span>
+
+                <a href="/pages/roles.html" class="sidebar-link">
+
+                    <i class="bi bi-shield-check"></i>
+
+                    <span>
+                        Roles
+                    </span>
+
                 </a>
 
-                <a href="/pages/permissions.html">
+
+                <a href="/pages/permissions.html" class="sidebar-link">
+
                     <i class="bi bi-key"></i>
-                    <span>Permissions</span>
+
+                    <span>
+                        Permissions
+                    </span>
+
                 </a>
 
-                <a href="/pages/profile.html">
+
+                <a href="/pages/profile.html" class="sidebar-link">
+
                     <i class="bi bi-person-circle"></i>
-                    <span>My Profile</span>
+
+                    <span>
+                        My Profile
+                    </span>
+
                 </a>
 
-                <a href="/pages/settings.html">
+
+                <a href="/pages/settings.html" class="sidebar-link">
+
                     <i class="bi bi-gear"></i>
-                    <span>Settings</span>
+
+                    <span>
+                        Settings
+                    </span>
+
                 </a>
 
-            </nav>
+            </div>
+
         </aside>
 
-        <main class="main-content flex-grow-1">
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+<main class="main-content flex-grow-1 sms-main">
 
             <header class="topbar">
                 <div class="d-flex align-items-center gap-3">
@@ -489,14 +656,12 @@
             </div>
 
         </main>
-        ```
 
     </div>
 
     <div class="modal fade" id="announcementModal" tabindex="-1" aria-labelledby="announcementModalLabel"
         aria-hidden="true">
 
-        ```
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
 
             <div class="modal-content">
@@ -635,7 +800,6 @@
             </div>
 
         </div>
-        ```
 
     </div>
 
@@ -644,6 +808,7 @@
     <script src="/js/auth.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/sidebar.js"></script>
 
     <script src="../js/announcements.js"></script>
 

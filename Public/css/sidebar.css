@@ -1,0 +1,251 @@
+/* ==========================================================================
+   SCHOOL MANAGEMENT SYSTEM — SHARED SIDEBAR
+   Dashboard-standard navigation
+   ========================================================================== */
+
+:root {
+    --sms-sidebar-width: 260px;
+    --sms-sidebar-hover: rgba(255, 255, 255, 0.09);
+    --sms-sidebar-bg-start: #111827;
+    --sms-sidebar-bg-middle: #172033;
+    --sms-sidebar-bg-end: #0f172a;
+    --sms-sidebar-active: rgba(13, 110, 253, 0.9);
+}
+
+/* ==========================================================================
+   SIDEBAR
+   ========================================================================== */
+
+.sms-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: var(--sms-sidebar-width);
+    background:
+        linear-gradient(
+            180deg,
+            var(--sms-sidebar-bg-start) 0%,
+            var(--sms-sidebar-bg-middle) 55%,
+            var(--sms-sidebar-bg-end) 100%
+        );
+    color: #fff;
+    z-index: 1040;
+    overflow-y: auto;
+    transition: transform 0.25s ease;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
+}
+
+/* ==========================================================================
+   BRAND
+   ========================================================================== */
+
+.sidebar-brand {
+    min-height: 76px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.brand-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 21px;
+    flex-shrink: 0;
+}
+
+.brand-title {
+    font-weight: 700;
+    font-size: 15px;
+    line-height: 1.2;
+}
+
+.brand-subtitle {
+    display: block;
+    margin-top: 3px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+/* ==========================================================================
+   SIDEBAR CONTENT
+   ========================================================================== */
+
+.sidebar-content {
+    padding: 16px 12px 28px;
+}
+
+.sidebar-section {
+    margin-top: 20px;
+    margin-bottom: 7px;
+    padding: 0 10px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.sidebar-section:first-child {
+    margin-top: 2px;
+}
+
+/* ==========================================================================
+   SIDEBAR LINKS
+   ========================================================================== */
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 43px;
+    padding: 9px 11px;
+    margin-bottom: 3px;
+    border-radius: 9px;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.sidebar-link i {
+    width: 21px;
+    text-align: center;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.sidebar-link:hover {
+    background: var(--sms-sidebar-hover);
+    color: #fff;
+}
+
+.sidebar-link:hover i {
+    color: #fff;
+}
+
+.sidebar-link.active {
+    background: var(--sms-sidebar-active);
+    color: #fff;
+    box-shadow: 0 5px 14px rgba(13, 110, 253, 0.18);
+}
+
+.sidebar-link.active i {
+    color: #fff;
+}
+
+/* ==========================================================================
+   MAIN CONTENT
+   ========================================================================== */
+
+.sms-main {
+    margin-left: var(--sms-sidebar-width);
+    min-height: 100vh;
+}
+
+/* ==========================================================================
+   MOBILE OVERLAY
+   ========================================================================== */
+
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 1030;
+}
+
+.sidebar-overlay.show {
+    display: block;
+}
+
+/* ==========================================================================
+   MOBILE MENU BUTTON
+   ========================================================================== */
+
+.mobile-menu-button {
+    display: none;
+}
+
+/* ==========================================================================
+   SCROLLBAR
+   ========================================================================== */
+
+.sms-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sms-sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sms-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+}
+
+.sms-sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 991.98px) {
+
+    .sms-sidebar {
+        transform: translateX(-100%);
+    }
+
+    .sms-sidebar.show {
+        transform: translateX(0);
+    }
+
+    .sms-main {
+        margin-left: 0;
+    }
+
+    .mobile-menu-button {
+        display: inline-flex;
+        width: 40px;
+        height: 40px;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+/* ==========================================================================
+   ACCESSIBILITY
+   ========================================================================== */
+
+.sidebar-link:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.8);
+    outline-offset: 2px;
+}
+
+/* ==========================================================================
+   PRINT
+   ========================================================================== */
+
+@media print {
+
+    .sms-sidebar,
+    .sidebar-overlay,
+    .mobile-menu-button {
+        display: none !important;
+    }
+
+    .sms-main {
+        margin-left: 0 !important;
+    }
+}

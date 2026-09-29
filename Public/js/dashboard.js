@@ -120,7 +120,7 @@ function updateDashboardStatistics(stats) {
     stats.finance ||
     stats.financial ||
     {};
-    
+
     const mappings = {
         totalStudents: [
             "totalStudents",
@@ -2454,17 +2454,23 @@ function getPaymentStudentName(
     }
 
     return [
-        payment.firstName ||
-            payment.first_name ||
-            "",
+        payment.studentFirstName ||
+    payment.student_first_name ||
+    payment.firstName ||
+    payment.first_name ||
+    "",
 
-        payment.middleName ||
-            payment.middle_name ||
-            "",
+        payment.studentMiddleName ||
+    payment.student_middle_name ||
+    payment.middleName ||
+    payment.middle_name ||
+    "",
 
-        payment.lastName ||
-            payment.last_name ||
-            ""
+        payment.studentLastName ||
+    payment.student_last_name ||
+    payment.lastName ||
+    payment.last_name ||
+    ""
     ]
         .filter(
             function (value) {

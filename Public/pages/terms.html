@@ -54,46 +54,7 @@
            SIDEBAR
         ========================================================= */
 
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            width: var(--sidebar-width);
-            z-index: 1040;
-            overflow-y: auto;
-            background:
-                linear-gradient(180deg,
-                    #111827 0%,
-                    #0f172a 100%);
-            color: #ffffff;
-            box-shadow: 4px 0 18px rgba(15, 23, 42, 0.08);
-            transition: transform 0.25s ease;
-        }
-
-        .sidebar::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .sidebar::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .sidebar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 10px;
-        }
-
-        .sidebar-brand {
-            min-height: 76px;
-            padding: 16px 18px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .brand-icon {
+.brand-icon {
             width: 42px;
             height: 42px;
             flex: 0 0 42px;
@@ -128,72 +89,11 @@
             white-space: nowrap;
         }
 
-        .sidebar-section {
-            padding: 18px 12px 0;
-        }
-
-        .sidebar-label {
-            padding: 0 10px 8px;
-            color: rgba(255, 255, 255, 0.42);
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 0.09em;
-            text-transform: uppercase;
-        }
-
-        .sidebar-link {
-            min-height: 42px;
-            margin-bottom: 4px;
-            padding: 10px 12px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border-radius: 8px;
-            color: rgba(255, 255, 255, 0.72);
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 500;
-            transition:
-                background-color 0.18s ease,
-                color 0.18s ease,
-                transform 0.18s ease;
-        }
-
-        .sidebar-link i {
-            width: 20px;
-            flex: 0 0 20px;
-            text-align: center;
-            font-size: 16px;
-        }
-
-        .sidebar-link:hover {
-            background: var(--sidebar-hover);
-            color: #ffffff;
-        }
-
-        .sidebar-link.active {
-            background: rgba(13, 110, 253, 0.18);
-            color: #ffffff;
-            box-shadow: inset 3px 0 0 #0d6efd;
-        }
-
-        .sidebar-link.active i {
-            color: #60a5fa;
-        }
-
-        /* =========================================================
+/* =========================================================
            SIDEBAR OVERLAY
         ========================================================= */
 
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            z-index: 1035;
-            background: rgba(15, 23, 42, 0.48);
-        }
-
-        /* =========================================================
+/* =========================================================
            MAIN AREA
         ========================================================= */
 
@@ -243,25 +143,7 @@
             font-size: 12px;
         }
 
-        .sidebar-toggle {
-            display: none;
-            width: 40px;
-            height: 40px;
-            padding: 0;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            background: #ffffff;
-            color: #374151;
-            align-items: center;
-            justify-content: center;
-            font-size: 21px;
-        }
-
-        .sidebar-toggle:hover {
-            background: #f8fafc;
-        }
-
-        .user-area {
+.user-area {
             display: flex;
             align-items: center;
             gap: 11px;
@@ -599,11 +481,7 @@
         ========================================================= */
 
         @media (max-width: 991.98px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-
-            .sidebar.show {
+.sidebar.show {
                 transform: translateX(0);
             }
 
@@ -615,11 +493,7 @@
                 margin-left: 0;
             }
 
-            .sidebar-toggle {
-                display: inline-flex;
-            }
-
-            .topbar {
+.topbar {
                 padding: 12px 20px;
             }
 
@@ -677,11 +551,7 @@
                 font-size: 10px;
             }
 
-            .sidebar {
-                width: 280px;
-            }
-
-            .stat-card {
+.stat-card {
                 min-height: 125px;
             }
 
@@ -698,6 +568,7 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="../css/sidebar.css">
 </head>
 
 <body>
@@ -707,155 +578,320 @@
         <!-- =====================================================
              SIDEBAR
         ====================================================== -->
-        <aside id="sidebar" class="sidebar">
 
-            <div class="sidebar-brand">
-                <div class="brand-icon">
-                    <i class="bi bi-mortarboard-fill"></i>
-                </div>
 
-                <div class="brand-text">
-                    <strong>School Management</strong>
-                    <small>Administration Portal</small>
-                </div>
-            </div>
 
-            <div class="sidebar-section">
-                <div class="sidebar-label">Main</div>
-
-                <a href="/pages/dashboard.html" class="sidebar-link">
-                    <i class="bi bi-grid-1x2-fill"></i>
-                    <span>Dashboard</span>
-                </a>
-
-                <a href="/pages/students.html" class="sidebar-link">
-                    <i class="bi bi-people-fill"></i>
-                    <span>Students</span>
-                </a>
-
-                <a href="/pages/staff.html" class="sidebar-link">
-                    <i class="bi bi-person-badge-fill"></i>
-                    <span>Staff</span>
-                </a>
-
-                <a href="/pages/guardians.html" class="sidebar-link">
-                    <i class="bi bi-person-hearts"></i>
-                    <span>Guardians</span>
-                </a>
-            </div>
-
-            <div class="sidebar-section">
-                <div class="sidebar-label">Academic</div>
-
-                <a href="/pages/classes.html" class="sidebar-link">
-                    <i class="bi bi-building"></i>
-                    <span>Classes</span>
-                </a>
-
-                <a href="/pages/class-arms.html" class="sidebar-link">
-                    <i class="bi bi-diagram-3-fill"></i>
-                    <span>Class Arms</span>
-                </a>
-
-                <a href="/pages/departments.html" class="sidebar-link">
-                    <i class="bi bi-diagram-2-fill"></i>
-                    <span>Departments</span>
-                </a>
-
-                <a href="/pages/subjects.html" class="sidebar-link">
-                    <i class="bi bi-book-fill"></i>
-                    <span>Subjects</span>
-                </a>
-
-                <a href="/pages/academic-sessions.html" class="sidebar-link">
-                    <i class="bi bi-calendar3"></i>
-                    <span>Academic Sessions</span>
-                </a>
-
-                <a href="/pages/terms.html" class="sidebar-link active">
-                    <i class="bi bi-calendar2-week-fill"></i>
-                    <span>Terms</span>
-                </a>
-
-                <a href="/pages/attendance.html" class="sidebar-link">
-                    <i class="bi bi-calendar-check-fill"></i>
-                    <span>Attendance</span>
-                </a>
-
-                <a href="/pages/results.html" class="sidebar-link">
-                    <i class="bi bi-bar-chart-fill"></i>
-                    <span>Results</span>
-                </a>
-            </div>
-
-            <div class="sidebar-section">
-                <div class="sidebar-label">Finance & Records</div>
-
-                <a href="/pages/fees.html" class="sidebar-link">
-                    <i class="bi bi-wallet2"></i>
-                    <span>Fees & Payments</span>
-                </a>
-
-                <a href="/pages/documents.html" class="sidebar-link">
-                    <i class="bi bi-folder-fill"></i>
-                    <span>Documents</span>
-                </a>
-
-                <a href="/pages/reports.html" class="sidebar-link">
-                    <i class="bi bi-file-earmark-bar-graph-fill"></i>
-                    <span>Reports</span>
-                </a>
-            </div>
-
-            <div class="sidebar-section">
-                <div class="sidebar-label">Administration</div>
-
-                <a href="/pages/users.html" class="sidebar-link">
-                    <i class="bi bi-person-gear"></i>
-                    <span>Users</span>
-                </a>
-
-                <a href="/pages/roles.html" class="sidebar-link">
-                    <i class="bi bi-shield-lock-fill"></i>
-                    <span>Roles</span>
-                </a>
-
-                <a href="/pages/permissions.html" class="sidebar-link">
-                    <i class="bi bi-key-fill"></i>
-                    <span>Permissions</span>
-                </a>
-
-                <a href="/pages/profile.html" class="sidebar-link">
-                    <i class="bi bi-person-circle"></i>
-                    <span>My Profile</span>
-                </a>
-
-                <a href="/pages/settings.html" class="sidebar-link">
-                    <i class="bi bi-gear-fill"></i>
-                    <span>Settings</span>
-                </a>
-
-                <a href="#" id="logoutButton" class="sidebar-link">
-                    <i class="bi bi-box-arrow-right"></i>
-                    <span>Logout</span>
-                </a>
-            </div>
-
-        </aside>
-
-        <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
         <!-- =====================================================
              MAIN CONTENT
         ====================================================== -->
-        <main class="main-content">
+        <aside id="smsSidebar" class="sms-sidebar">
+
+
+            <!-- =================================================
+             SIDEBAR BRAND
+        ================================================== -->
+
+            <div class="sidebar-brand">
+
+                <div class="brand-icon">
+
+                    <i class="bi bi-mortarboard-fill"></i>
+
+                </div>
+
+
+                <div>
+
+                    <div class="brand-title">
+                        School Management
+                    </div>
+
+                    <span class="brand-subtitle">
+                        Administration Portal
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+             SIDEBAR CONTENT
+        ================================================== -->
+
+            <div class="sidebar-content">
+
+
+                <!-- =================================================
+                 MAIN
+            ================================================== -->
+
+                <div class="sidebar-section">
+                    Main
+                </div>
+
+
+                <a href="/pages/dashboard.html" class="sidebar-link">
+
+                    <i class="bi bi-speedometer2"></i>
+
+                    <span>
+                        Dashboard
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/students.html" class="sidebar-link">
+
+                    <i class="bi bi-people"></i>
+
+                    <span>
+                        Students
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/staff.html" class="sidebar-link">
+
+                    <i class="bi bi-person-badge"></i>
+
+                    <span>
+                        Staff
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/guardians.html" class="sidebar-link">
+
+                    <i class="bi bi-person-hearts"></i>
+
+                    <span>
+                        Guardians
+                    </span>
+
+                </a>
+
+
+                <!-- =================================================
+                 ACADEMIC
+            ================================================== -->
+
+                <div class="sidebar-section">
+                    Academic
+                </div>
+
+
+                <a href="/pages/classes.html" class="sidebar-link">
+
+                    <i class="bi bi-building"></i>
+
+                    <span>
+                        Classes
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/class-arms.html" class="sidebar-link">
+
+                    <i class="bi bi-diagram-3"></i>
+
+                    <span>
+                        Class Arms
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/departments.html" class="sidebar-link">
+
+                    <i class="bi bi-diagram-2"></i>
+
+                    <span>
+                        Departments
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/subjects.html" class="sidebar-link">
+
+                    <i class="bi bi-book"></i>
+
+                    <span>
+                        Subjects
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/academic-sessions.html" class="sidebar-link">
+
+                    <i class="bi bi-calendar3"></i>
+
+                    <span>
+                        Academic Sessions
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/terms.html" class="sidebar-link">
+
+                    <i class="bi bi-calendar2-week"></i>
+
+                    <span>
+                        Terms
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/attendance.html" class="sidebar-link">
+
+                    <i class="bi bi-calendar-check"></i>
+
+                    <span>
+                        Attendance
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/results.html" class="sidebar-link">
+
+                    <i class="bi bi-bar-chart"></i>
+
+                    <span>
+                        Results
+                    </span>
+
+                </a>
+
+
+                <!-- =================================================
+                 FINANCE & RECORDS
+            ================================================== -->
+
+                <div class="sidebar-section">
+                    Finance &amp; Records
+                </div>
+
+
+                <a href="/pages/fees.html" class="sidebar-link">
+
+                    <i class="bi bi-cash-stack"></i>
+
+                    <span>
+                        Fees &amp; Payments
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/documents.html" class="sidebar-link">
+
+                    <i class="bi bi-folder2-open"></i>
+
+                    <span>
+                        Documents
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/reports.html" class="sidebar-link">
+
+                    <i class="bi bi-file-earmark-bar-graph"></i>
+
+                    <span>
+                        Reports
+                    </span>
+
+                </a>
+
+
+                <!-- =================================================
+                 ADMINISTRATION
+            ================================================== -->
+
+                <div class="sidebar-section">
+                    Administration
+                </div>
+
+
+                <a href="/pages/users.html" class="sidebar-link">
+
+                    <i class="bi bi-person-gear"></i>
+
+                    <span>
+                        Users
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/roles.html" class="sidebar-link">
+
+                    <i class="bi bi-shield-check"></i>
+
+                    <span>
+                        Roles
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/permissions.html" class="sidebar-link">
+
+                    <i class="bi bi-key"></i>
+
+                    <span>
+                        Permissions
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/profile.html" class="sidebar-link">
+
+                    <i class="bi bi-person-circle"></i>
+
+                    <span>
+                        My Profile
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/settings.html" class="sidebar-link">
+
+                    <i class="bi bi-gear"></i>
+
+                    <span>
+                        Settings
+                    </span>
+
+                </a>
+
+            </div>
+
+        </aside>
+
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+<main class="main-content sms-main">
 
             <!-- TOPBAR -->
             <header class="topbar">
 
                 <div class="topbar-title">
 
-                    <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="Open navigation">
+                    <button id="sidebarToggle" class="mobile-menu-button" type="button" aria-label="Open navigation">
 
                         <i class="bi bi-list"></i>
 
@@ -1264,64 +1300,13 @@
          SCRIPTS
     ========================================================== -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/sidebar.js"></script>
     <script src="../js/api.js"></script>
     <script src="../js/auth.js"></script>
     <script src="../js/terms.js"></script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const sidebar = document.getElementById("sidebar");
-            const sidebarToggle = document.getElementById("sidebarToggle");
-            const sidebarOverlay = document.getElementById("sidebarOverlay");
-
-            function openSidebar() {
-                if (!sidebar) return;
-
-                sidebar.classList.add("show");
-
-                if (sidebarOverlay) {
-                    sidebarOverlay.classList.add("show");
-                }
-            }
-
-            function closeSidebar() {
-                if (!sidebar) return;
-
-                sidebar.classList.remove("show");
-
-                if (sidebarOverlay) {
-                    sidebarOverlay.classList.remove("show");
-                }
-            }
-
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener(
-                    "click",
-                    openSidebar
-                );
-            }
-
-            if (sidebarOverlay) {
-                sidebarOverlay.addEventListener(
-                    "click",
-                    closeSidebar
-                );
-            }
-
-            document.querySelectorAll(".sidebar-link").forEach(function (link) {
-                link.addEventListener("click", function () {
-                    if (window.innerWidth < 992) {
-                        closeSidebar();
-                    }
-                });
-            });
-
-            window.addEventListener("resize", function () {
-                if (window.innerWidth >= 992) {
-                    closeSidebar();
-                }
-            });
-
             const storedUser =
                 localStorage.getItem("school_management_user");
 

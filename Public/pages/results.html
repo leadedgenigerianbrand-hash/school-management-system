@@ -847,6 +847,7 @@
         }
     </style>
 
+    <link rel="stylesheet" href="../css/sidebar.css">
 </head>
 
 <body>
@@ -860,15 +861,19 @@
 
         <aside id="smsSidebar" class="sms-sidebar">
 
-            <!-- =====================================================
-                 SIDEBAR BRAND
-            ====================================================== -->
+
+            <!-- =================================================
+             SIDEBAR BRAND
+        ================================================== -->
 
             <div class="sidebar-brand">
 
                 <div class="brand-icon">
+
                     <i class="bi bi-mortarboard-fill"></i>
+
                 </div>
+
 
                 <div>
 
@@ -884,19 +889,22 @@
 
             </div>
 
-            <!-- =====================================================
-                 SIDEBAR CONTENT
-            ====================================================== -->
+
+            <!-- =================================================
+             SIDEBAR CONTENT
+        ================================================== -->
 
             <div class="sidebar-content">
 
+
                 <!-- =================================================
-                     MAIN
-                ================================================== -->
+                 MAIN
+            ================================================== -->
 
                 <div class="sidebar-section">
                     Main
                 </div>
+
 
                 <a href="/pages/dashboard.html" class="sidebar-link">
 
@@ -908,6 +916,7 @@
 
                 </a>
 
+
                 <a href="/pages/students.html" class="sidebar-link">
 
                     <i class="bi bi-people"></i>
@@ -917,6 +926,7 @@
                     </span>
 
                 </a>
+
 
                 <a href="/pages/staff.html" class="sidebar-link">
 
@@ -928,6 +938,7 @@
 
                 </a>
 
+
                 <a href="/pages/guardians.html" class="sidebar-link">
 
                     <i class="bi bi-person-hearts"></i>
@@ -938,13 +949,15 @@
 
                 </a>
 
+
                 <!-- =================================================
-                     ACADEMIC
-                ================================================== -->
+                 ACADEMIC
+            ================================================== -->
 
                 <div class="sidebar-section">
                     Academic
                 </div>
+
 
                 <a href="/pages/classes.html" class="sidebar-link">
 
@@ -956,6 +969,7 @@
 
                 </a>
 
+
                 <a href="/pages/class-arms.html" class="sidebar-link">
 
                     <i class="bi bi-diagram-3"></i>
@@ -965,6 +979,7 @@
                     </span>
 
                 </a>
+
 
                 <a href="/pages/departments.html" class="sidebar-link">
 
@@ -976,6 +991,7 @@
 
                 </a>
 
+
                 <a href="/pages/subjects.html" class="sidebar-link">
 
                     <i class="bi bi-book"></i>
@@ -985,6 +1001,7 @@
                     </span>
 
                 </a>
+
 
                 <a href="/pages/academic-sessions.html" class="sidebar-link">
 
@@ -996,6 +1013,7 @@
 
                 </a>
 
+
                 <a href="/pages/terms.html" class="sidebar-link">
 
                     <i class="bi bi-calendar2-week"></i>
@@ -1005,6 +1023,7 @@
                     </span>
 
                 </a>
+
 
                 <a href="/pages/attendance.html" class="sidebar-link">
 
@@ -1016,7 +1035,8 @@
 
                 </a>
 
-                <a href="/pages/results.html" class="sidebar-link active">
+
+                <a href="/pages/results.html" class="sidebar-link">
 
                     <i class="bi bi-bar-chart"></i>
 
@@ -1026,13 +1046,15 @@
 
                 </a>
 
+
                 <!-- =================================================
-                     FINANCE & RECORDS
-                ================================================== -->
+                 FINANCE & RECORDS
+            ================================================== -->
 
                 <div class="sidebar-section">
                     Finance &amp; Records
                 </div>
+
 
                 <a href="/pages/fees.html" class="sidebar-link">
 
@@ -1044,6 +1066,7 @@
 
                 </a>
 
+
                 <a href="/pages/documents.html" class="sidebar-link">
 
                     <i class="bi bi-folder2-open"></i>
@@ -1053,6 +1076,7 @@
                     </span>
 
                 </a>
+
 
                 <a href="/pages/reports.html" class="sidebar-link">
 
@@ -1064,13 +1088,15 @@
 
                 </a>
 
+
                 <!-- =================================================
-                     ADMINISTRATION
-                ================================================== -->
+                 ADMINISTRATION
+            ================================================== -->
 
                 <div class="sidebar-section">
                     Administration
                 </div>
+
 
                 <a href="/pages/users.html" class="sidebar-link">
 
@@ -1082,6 +1108,7 @@
 
                 </a>
 
+
                 <a href="/pages/roles.html" class="sidebar-link">
 
                     <i class="bi bi-shield-check"></i>
@@ -1091,6 +1118,7 @@
                     </span>
 
                 </a>
+
 
                 <a href="/pages/permissions.html" class="sidebar-link">
 
@@ -1102,6 +1130,7 @@
 
                 </a>
 
+
                 <a href="/pages/profile.html" class="sidebar-link">
 
                     <i class="bi bi-person-circle"></i>
@@ -1111,6 +1140,7 @@
                     </span>
 
                 </a>
+
 
                 <a href="/pages/settings.html" class="sidebar-link">
 
@@ -1137,6 +1167,16 @@
         ========================================================== -->
 
         <main class="sms-main">
+            <button
+                type="button"
+                id="sidebarToggle"
+                class="btn btn-light border mobile-menu-button"
+                aria-label="Open navigation"
+                aria-expanded="false"
+            >
+                <i class="bi bi-list"></i>
+            </button>
+
 
             <!-- =====================================================
                  HEADER
@@ -1471,172 +1511,9 @@
          MOBILE SIDEBAR CONTROL
     ========================================================== -->
 
-    <script>
 
-        "use strict";
 
-        document.addEventListener(
-            "DOMContentLoaded",
-            function () {
-
-                var sidebar =
-                    document.getElementById(
-                        "smsSidebar"
-                    );
-
-                var sidebarToggle =
-                    document.getElementById(
-                        "mobileSidebarBtn"
-                    );
-
-                var sidebarOverlay =
-                    document.getElementById(
-                        "sidebarOverlay"
-                    );
-
-                function openSidebar() {
-
-                    if (sidebar) {
-
-                        sidebar.classList.add(
-                            "show"
-                        );
-
-                    }
-
-                    if (sidebarOverlay) {
-
-                        sidebarOverlay.classList.add(
-                            "show"
-                        );
-
-                    }
-
-                }
-
-                function closeSidebar() {
-
-                    if (sidebar) {
-
-                        sidebar.classList.remove(
-                            "show"
-                        );
-
-                    }
-
-                    if (sidebarOverlay) {
-
-                        sidebarOverlay.classList.remove(
-                            "show"
-                        );
-
-                    }
-
-                }
-
-                if (sidebarToggle) {
-
-                    sidebarToggle.addEventListener(
-                        "click",
-                        function () {
-
-                            if (
-                                sidebar &&
-                                sidebar.classList.contains(
-                                    "show"
-                                )
-                            ) {
-
-                                closeSidebar();
-
-                            } else {
-
-                                openSidebar();
-
-                            }
-
-                        }
-                    );
-
-                }
-
-                if (sidebarOverlay) {
-
-                    sidebarOverlay.addEventListener(
-                        "click",
-                        closeSidebar
-                    );
-
-                }
-
-                if (sidebar) {
-
-                    sidebar
-                        .querySelectorAll(
-                            ".sidebar-link"
-                        )
-                        .forEach(
-                            function (link) {
-
-                                link.addEventListener(
-                                    "click",
-                                    function () {
-
-                                        if (
-                                            window.innerWidth <=
-                                            991.98
-                                        ) {
-
-                                            closeSidebar();
-
-                                        }
-
-                                    }
-                                );
-
-                            }
-                        );
-
-                }
-
-                window.addEventListener(
-                    "resize",
-                    function () {
-
-                        if (
-                            window.innerWidth >
-                            991.98
-                        ) {
-
-                            closeSidebar();
-
-                        }
-
-                    }
-                );
-
-                document.addEventListener(
-                    "keydown",
-                    function (event) {
-
-                        if (
-                            event.key === "Escape" &&
-                            window.innerWidth <=
-                            991.98
-                        ) {
-
-                            closeSidebar();
-
-                        }
-
-                    }
-                );
-
-            }
-        );
-
-    </script>
-
+    <script src="../js/sidebar.js"></script>
 </body>
 
 </html>
