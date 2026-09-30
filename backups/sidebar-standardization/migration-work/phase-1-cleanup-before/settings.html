@@ -1,0 +1,1613 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Settings | School Management System</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --sidebar-bg: #111827;
+            --sidebar-hover: #1f2937;
+            --sidebar-active: #2563eb;
+            --main-bg: #f3f4f6;
+            --card-radius: 14px;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            min-height: 100%;
+            margin: 0;
+        }
+
+        body {
+            background: var(--main-bg);
+            color: #111827;
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Helvetica,
+                Arial,
+                sans-serif;
+        }
+
+        /* ==========================================================
+           SIDEBAR
+        ========================================================== */
+
+        .sms-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            color: #fff;
+            z-index: 1040;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: transform 0.25s ease;
+        }
+
+        .sidebar-brand {
+            min-height: 78px;
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            flex-shrink: 0;
+        }
+
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #2563eb;
+            color: #fff;
+            font-size: 21px;
+            flex-shrink: 0;
+        }
+
+        .brand-title {
+            font-size: 15px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .brand-subtitle {
+            display: block;
+            margin-top: 3px;
+            color: #9ca3af;
+            font-size: 11px;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px 10px 20px;
+        }
+
+        .sidebar-content::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+        }
+
+        .sidebar-section {
+            padding: 12px 10px 7px;
+            color: #6b7280;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            min-height: 42px;
+            padding: 9px 12px;
+            margin-bottom: 3px;
+            border-radius: 9px;
+            color: #d1d5db;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition:
+                background-color 0.15s ease,
+                color 0.15s ease;
+        }
+
+        .sidebar-link i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-link:hover {
+            background: var(--sidebar-hover);
+            color: #fff;
+        }
+
+        .sidebar-link.active {
+            background: var(--sidebar-active);
+            color: #fff;
+        }
+
+        /* ==========================================================
+           MAIN AREA
+        ========================================================== */
+
+        .sms-main {
+            min-height: 100vh;
+            margin-left: var(--sidebar-width);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sms-topbar {
+            min-height: 72px;
+            padding: 12px 24px;
+            background: #fff;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .sidebar-toggle {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: #fff;
+            color: #374151;
+            border-radius: 9px;
+            align-items: center;
+            justify-content: center;
+            font-size: 19px;
+        }
+
+        .page-heading {
+            min-width: 0;
+        }
+
+        .page-heading h1 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .page-heading p {
+            margin: 3px 0 0;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .topbar-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .topbar-user-info {
+            text-align: right;
+        }
+
+        .topbar-user-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .topbar-user-role {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .topbar-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #eff6ff;
+            color: #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        /* ==========================================================
+           CONTENT
+        ========================================================== */
+
+        .sms-content {
+            width: 100%;
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .settings-layout {
+            display: grid;
+            grid-template-columns: 220px minmax(0, 1fr);
+            gap: 20px;
+            align-items: start;
+        }
+
+        .settings-navigation {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-radius);
+            padding: 10px;
+            position: sticky;
+            top: 96px;
+        }
+
+        .settings-tab {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 0;
+            background: transparent;
+            color: #4b5563;
+            text-align: left;
+            padding: 11px 12px;
+            border-radius: 9px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 3px;
+            cursor: pointer;
+        }
+
+        .settings-tab i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .settings-tab:hover {
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        .settings-tab.active {
+            background: #eff6ff;
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .settings-tab:last-child {
+            margin-bottom: 0;
+        }
+
+        .settings-panel {
+            min-width: 0;
+        }
+
+        .settings-section {
+            display: none;
+        }
+
+        .settings-section.active {
+            display: block;
+        }
+
+        .settings-card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-radius);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .settings-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .settings-card-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .settings-card-header h2 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .settings-card-header p {
+            margin: 5px 0 0;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .settings-card-body {
+            padding: 20px;
+        }
+
+        .form-label {
+            margin-bottom: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-control,
+        .form-select {
+            min-height: 42px;
+            border-color: #d1d5db;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.12);
+        }
+
+        .form-text {
+            font-size: 11px;
+            color: #6b7280;
+        }
+
+        .settings-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding-top: 18px;
+            margin-top: 4px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .settings-actions-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn {
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            min-height: 40px;
+        }
+
+        .settings-status {
+            min-height: 20px;
+            font-size: 12px;
+        }
+
+        .settings-info-box {
+            border: 1px solid #dbeafe;
+            background: #eff6ff;
+            color: #1e40af;
+            border-radius: 10px;
+            padding: 13px 14px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 15px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .setting-row:first-child {
+            padding-top: 0;
+        }
+
+        .setting-row:last-child {
+            padding-bottom: 0;
+            border-bottom: 0;
+        }
+
+        .setting-row-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .setting-row-description {
+            margin-top: 3px;
+            font-size: 11px;
+            color: #6b7280;
+            line-height: 1.45;
+        }
+
+        .form-check-input {
+            width: 2.4em;
+            height: 1.25em;
+            cursor: pointer;
+        }
+
+        .form-check-input:checked {
+            background-color: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .security-timeout-control {
+            width: 120px;
+        }
+
+        /* ==========================================================
+           OVERLAY
+        ========================================================== */
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.5);
+            z-index: 1030;
+        }
+
+        /* ==========================================================
+           RESPONSIVE
+        ========================================================== */
+
+        @media (max-width: 991.98px) {
+
+            .sms-sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sms-sidebar.sidebar-open {
+                transform: translateX(0);
+            }
+
+            .sms-main {
+                margin-left: 0;
+            }
+
+            .sidebar-toggle {
+                display: flex;
+            }
+
+            .sidebar-overlay.show {
+                display: block;
+            }
+
+            .settings-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .settings-navigation {
+                position: static;
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 5px;
+            }
+
+            .settings-tab {
+                margin-bottom: 0;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+
+            .sms-topbar {
+                padding: 10px 15px;
+            }
+
+            .sms-content {
+                padding: 15px;
+            }
+
+            .page-heading h1 {
+                font-size: 19px;
+            }
+
+            .page-heading p {
+                display: none;
+            }
+
+            .topbar-user-info {
+                display: none;
+            }
+
+            .settings-navigation {
+                grid-template-columns: 1fr;
+            }
+
+            .settings-card-body {
+                padding: 16px;
+            }
+
+            .settings-card-header {
+                padding: 16px;
+            }
+
+            .settings-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .settings-actions-right {
+                justify-content: flex-end;
+            }
+
+            .setting-row {
+                align-items: flex-start;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="../css/sidebar.css">
+</head>
+
+<body>
+
+    <!-- ==========================================================
+         MOBILE SIDEBAR OVERLAY
+    =========================================================== -->
+
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <!-- ==========================================================
+         DASHBOARD-STYLE SIDEBAR
+    =========================================================== -->
+
+    <aside id="smsSidebar" class="sms-sidebar">
+
+
+            <!-- =================================================
+             SIDEBAR BRAND
+        ================================================== -->
+
+            <div class="sidebar-brand">
+
+                <div class="brand-icon">
+
+                    <i class="bi bi-mortarboard-fill"></i>
+
+                </div>
+
+
+                <div>
+
+                    <div class="brand-title">
+                        School Management
+                    </div>
+
+                    <span class="brand-subtitle">
+                        Administration Portal
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+             SIDEBAR CONTENT
+        ================================================== -->
+
+            <div class="sidebar-content">
+
+
+                <!-- =================================================
+                 MAIN
+            ================================================== -->
+
+                <div class="sidebar-section">
+                    Main
+                </div>
+
+
+                <a href="/pages/dashboard.html" class="sidebar-link">
+
+                    <i class="bi bi-speedometer2"></i>
+
+                    <span>
+                        Dashboard
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/students.html" class="sidebar-link">
+
+                    <i class="bi bi-people"></i>
+
+                    <span>
+                        Students
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/staff.html" class="sidebar-link">
+
+                    <i class="bi bi-person-badge"></i>
+
+                    <span>
+                        Staff
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/guardians.html" class="sidebar-link">
+
+                    <i class="bi bi-person-hearts"></i>
+
+                    <span>
+                        Guardians
+                    </span>
+
+                </a>
+
+
+                <!-- =================================================
+                 ACADEMIC
+            ================================================== -->
+
+                <div class="sidebar-section">
+                    Academic
+                </div>
+
+
+                <a href="/pages/classes.html" class="sidebar-link">
+
+                    <i class="bi bi-building"></i>
+
+                    <span>
+                        Classes
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/class-arms.html" class="sidebar-link">
+
+                    <i class="bi bi-diagram-3"></i>
+
+                    <span>
+                        Class Arms
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/departments.html" class="sidebar-link">
+
+                    <i class="bi bi-diagram-2"></i>
+
+                    <span>
+                        Departments
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/subjects.html" class="sidebar-link">
+
+                    <i class="bi bi-book"></i>
+
+                    <span>
+                        Subjects
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/academic-sessions.html" class="sidebar-link">
+
+                    <i class="bi bi-calendar3"></i>
+
+                    <span>
+                        Academic Sessions
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/terms.html" class="sidebar-link">
+
+                    <i class="bi bi-calendar2-week"></i>
+
+                    <span>
+                        Terms
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/attendance.html" class="sidebar-link">
+
+                    <i class="bi bi-calendar-check"></i>
+
+                    <span>
+                        Attendance
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/results.html" class="sidebar-link">
+
+                    <i class="bi bi-bar-chart"></i>
+
+                    <span>
+                        Results
+                    </span>
+
+                </a>
+
+
+                <!-- =================================================
+                 FINANCE & RECORDS
+            ================================================== -->
+
+                <div class="sidebar-section">
+                    Finance &amp; Records
+                </div>
+
+
+                <a href="/pages/fees.html" class="sidebar-link">
+
+                    <i class="bi bi-cash-stack"></i>
+
+                    <span>
+                        Fees &amp; Payments
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/documents.html" class="sidebar-link">
+
+                    <i class="bi bi-folder2-open"></i>
+
+                    <span>
+                        Documents
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/reports.html" class="sidebar-link">
+
+                    <i class="bi bi-file-earmark-bar-graph"></i>
+
+                    <span>
+                        Reports
+                    </span>
+
+                </a>
+
+
+                <!-- =================================================
+                 ADMINISTRATION
+            ================================================== -->
+
+                <div class="sidebar-section">
+                    Administration
+                </div>
+
+
+                <a href="/pages/users.html" class="sidebar-link">
+
+                    <i class="bi bi-person-gear"></i>
+
+                    <span>
+                        Users
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/roles.html" class="sidebar-link">
+
+                    <i class="bi bi-shield-check"></i>
+
+                    <span>
+                        Roles
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/permissions.html" class="sidebar-link">
+
+                    <i class="bi bi-key"></i>
+
+                    <span>
+                        Permissions
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/profile.html" class="sidebar-link">
+
+                    <i class="bi bi-person-circle"></i>
+
+                    <span>
+                        My Profile
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/settings.html" class="sidebar-link">
+
+                    <i class="bi bi-gear"></i>
+
+                    <span>
+                        Settings
+                    </span>
+
+                </a>
+
+            </div>
+
+        </aside>
+
+    <!-- ==========================================================
+         MAIN
+    =========================================================== -->
+
+    <main class="sms-main">
+
+        <header class="sms-topbar">
+
+            <div class="topbar-left">
+
+                <button type="button" id="sidebarToggle" class="sidebar-toggle" aria-label="Open navigation">
+
+                    <i class="bi bi-list"></i>
+
+                </button>
+
+                <div class="page-heading">
+
+                    <h1>Settings</h1>
+
+                    <p>
+                        Manage school, academic, notification and security settings.
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div class="topbar-user">
+
+                <div class="topbar-user-info">
+
+                    <div id="userName" class="topbar-user-name">
+                        Administrator
+                    </div>
+
+                    <div id="userRole" class="topbar-user-role">
+                        Administrator
+                    </div>
+
+                </div>
+
+                <div class="topbar-avatar">
+                    <i class="bi bi-person-circle"></i>
+                </div>
+
+                <button type="button" id="logoutButton" class="btn btn-outline-secondary btn-sm" title="Sign out">
+
+                    <i class="bi bi-box-arrow-right"></i>
+
+                </button>
+
+            </div>
+
+        </header>
+
+        <div class="sms-content">
+
+            <div id="settingsMessage" class="settings-status mb-3"></div>
+
+            <div class="settings-layout">
+
+                <!-- ==================================================
+                     SETTINGS NAVIGATION
+                =================================================== -->
+
+                <nav class="settings-navigation" aria-label="Settings sections">
+
+                    <button type="button" class="settings-tab active" data-section="school">
+
+                        <i class="bi bi-building"></i>
+                        <span>School Settings</span>
+
+                    </button>
+
+                    <button type="button" class="settings-tab" data-section="academic">
+
+                        <i class="bi bi-mortarboard"></i>
+                        <span>Academic Settings</span>
+
+                    </button>
+
+                    <button type="button" class="settings-tab" data-section="notifications">
+
+                        <i class="bi bi-bell"></i>
+                        <span>Notifications</span>
+
+                    </button>
+
+                    <button type="button" class="settings-tab" data-section="security">
+
+                        <i class="bi bi-shield-lock"></i>
+                        <span>Security</span>
+
+                    </button>
+
+                </nav>
+
+                <div class="settings-panel">
+
+                    <!-- ==================================================
+                         SCHOOL SETTINGS
+                    =================================================== -->
+
+                    <section id="school" class="settings-section active" data-section-content="school">
+
+                        <div class="settings-card">
+
+                            <div class="settings-card-header">
+
+                                <h2>School Information</h2>
+
+                                <p>
+                                    Maintain the school's basic identity and contact information.
+                                </p>
+
+                            </div>
+
+                            <div class="settings-card-body">
+
+                                <form id="schoolSettingsForm" novalidate>
+
+                                    <div class="row g-3">
+
+                                        <div class="col-md-6">
+
+                                            <label for="schoolName" class="form-label">
+                                                School Name
+                                            </label>
+
+                                            <input type="text" id="schoolName" class="form-control"
+                                                placeholder="School name">
+
+                                        </div>
+
+                                        <div class="col-md-6">
+
+                                            <label for="schoolCode" class="form-label">
+                                                School Code
+                                            </label>
+
+                                            <input type="text" id="schoolCode" class="form-control"
+                                                placeholder="School code">
+
+                                        </div>
+
+                                        <div class="col-md-6">
+
+                                            <label for="registrationNumber" class="form-label">
+                                                Registration Number
+                                            </label>
+
+                                            <input type="text" id="registrationNumber" class="form-control"
+                                                placeholder="Registration number">
+
+                                        </div>
+
+                                        <div class="col-md-6">
+
+                                            <label for="schoolEmail" class="form-label">
+                                                School Email
+                                            </label>
+
+                                            <input type="email" id="schoolEmail" class="form-control"
+                                                placeholder="school@example.com">
+
+                                        </div>
+
+                                        <div class="col-md-6">
+
+                                            <label for="schoolPhone" class="form-label">
+                                                School Phone
+                                            </label>
+
+                                            <input type="tel" id="schoolPhone" class="form-control"
+                                                placeholder="School phone number">
+
+                                        </div>
+
+                                        <div class="col-md-6">
+
+                                            <label for="schoolWebsite" class="form-label">
+                                                School Website
+                                            </label>
+
+                                            <input type="url" id="schoolWebsite" class="form-control"
+                                                placeholder="https://example.com">
+
+                                        </div>
+
+                                        <div class="col-md-4">
+
+                                            <label for="schoolType" class="form-label">
+                                                School Type
+                                            </label>
+
+                                            <select id="schoolType" class="form-select">
+
+                                                <option value="">
+                                                    Select school type
+                                                </option>
+
+                                                <option value="Primary">
+                                                    Primary
+                                                </option>
+
+                                                <option value="Secondary">
+                                                    Secondary
+                                                </option>
+
+                                                <option value="Primary & Secondary">
+                                                    Primary & Secondary
+                                                </option>
+
+                                                <option value="University">
+                                                    University
+                                                </option>
+
+                                                <option value="College">
+                                                    College
+                                                </option>
+
+                                                <option value="Polytechnic">
+                                                    Polytechnic
+                                                </option>
+
+                                                <option value="Other">
+                                                    Other
+                                                </option>
+
+                                            </select>
+
+                                        </div>
+
+                                        <div class="col-md-4">
+
+                                            <label for="schoolState" class="form-label">
+                                                State
+                                            </label>
+
+                                            <input type="text" id="schoolState" class="form-control"
+                                                placeholder="State">
+
+                                        </div>
+
+                                        <div class="col-md-4">
+
+                                            <label for="schoolCity" class="form-label">
+                                                City
+                                            </label>
+
+                                            <input type="text" id="schoolCity" class="form-control" placeholder="City">
+
+                                        </div>
+
+                                        <div class="col-md-8">
+
+                                            <label for="schoolAddress" class="form-label">
+                                                School Address
+                                            </label>
+
+                                            <input type="text" id="schoolAddress" class="form-control"
+                                                placeholder="Full school address">
+
+                                        </div>
+
+                                        <div class="col-md-4">
+
+                                            <label for="schoolCountry" class="form-label">
+                                                Country
+                                            </label>
+
+                                            <input type="text" id="schoolCountry" class="form-control" value="Nigeria"
+                                                placeholder="Country">
+
+                                        </div>
+
+                                        <div class="col-md-6">
+
+                                            <label for="principalName" class="form-label">
+                                                Principal / Head of School
+                                            </label>
+
+                                            <input type="text" id="principalName" class="form-control"
+                                                placeholder="Principal or head of school">
+
+                                        </div>
+
+                                        <div class="col-md-6">
+
+                                            <label for="schoolMotto" class="form-label">
+                                                School Motto
+                                            </label>
+
+                                            <input type="text" id="schoolMotto" class="form-control"
+                                                placeholder="School motto">
+
+                                        </div>
+
+                                        <div class="col-12">
+
+                                            <label for="schoolLogoUrl" class="form-label">
+                                                School Logo URL
+                                            </label>
+
+                                            <input type="url" id="schoolLogoUrl" class="form-control"
+                                                placeholder="https://example.com/logo.png">
+
+                                            <div class="form-text">
+                                                A school logo upload can be connected later if required.
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="settings-actions">
+
+                                        <div>
+                                            <div id="schoolSettingsStatus" class="settings-status">
+                                            </div>
+                                        </div>
+
+                                        <div class="settings-actions-right">
+
+                                            <button type="button" id="resetSchoolButton"
+                                                class="btn btn-outline-secondary">
+
+                                                <i class="bi bi-arrow-counterclockwise me-1"></i>
+                                                Reset
+
+                                            </button>
+
+                                            <button type="submit" id="saveSchoolButton" class="btn btn-primary">
+
+                                                <i class="bi bi-check2-circle me-1"></i>
+                                                Save School Settings
+
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+
+                                </form>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+                    <!-- ==================================================
+                         ACADEMIC SETTINGS
+                    =================================================== -->
+
+                    <section id="academic" class="settings-section" data-section-content="academic">
+
+                        <div class="settings-card">
+
+                            <div class="settings-card-header">
+
+                                <h2>Academic Settings</h2>
+
+                                <p>
+                                    Select the academic session and current term used by the school.
+                                </p>
+
+                            </div>
+
+                            <div class="row g-3">
+
+                                <div class="col-md-6">
+
+                                    <label for="currentSession" class="form-label">
+                                        Current Academic Session
+                                    </label>
+
+                                    <input type="text" id="currentSession" class="form-control"
+                                        placeholder="Loading academic sessions..." readonly>
+
+                                    <div class="form-text">
+                                        Select the session currently being used by the school.
+                                    </div>
+
+                                </div>
+
+                                <div class="col-md-6">
+
+                                    <label for="currentTerm" class="form-label">
+                                        Current Term
+                                    </label>
+
+                                    <select id="currentTerm" class="form-select">
+
+                                        <option value="">
+                                            Loading terms...
+                                        </option>
+
+                                    </select>
+
+                                    <div class="form-text">
+                                        The active term for academic operations.
+                                    </div>
+
+                                </div>
+
+                                <div class="col-md-6">
+
+                                    <label for="gradingSystem" class="form-label">
+                                        Grading System
+                                    </label>
+
+                                    <select id="gradingSystem" class="form-select" disabled>
+
+                                        <option value="standard_nigerian">
+                                            Standard Nigerian Grading
+                                        </option>
+
+                                        <option value="custom">
+                                            Custom Grading
+                                        </option>
+
+                                    </select>
+
+                                    <div class="form-text">
+                                        Grading bands are currently managed through Result Settings.
+                                    </div>
+
+                                </div>
+
+                                <div class="col-md-6">
+
+                                    <label for="passMark" class="form-label">
+                                        Pass Mark
+                                    </label>
+
+                                    <input type="number" id="passMark" class="form-control" value="40" min="0" max="100"
+                                        readonly>
+
+                                    <div class="form-text">
+                                        Result grading configuration is managed separately.
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="settings-actions mt-4">
+
+                                <div>
+
+                                    <a href="/pages/academic-sessions.html" class="btn btn-outline-primary">
+
+                                        <i class="bi bi-calendar3 me-1"></i>
+                                        Manage Academic Sessions
+
+                                    </a>
+
+                                </div>
+
+                                <div class="settings-actions-right">
+
+                                    <a href="/pages/terms.html" class="btn btn-outline-secondary">
+
+                                        <i class="bi bi-calendar-week me-1"></i>
+                                        Manage Terms
+
+                                    </a>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                </div>
+
+                </section>
+
+                <!-- ==================================================
+                         NOTIFICATION SETTINGS
+                    =================================================== -->
+
+                <section id="notifications" class="settings-section" data-section-content="notifications">
+
+                    <div class="settings-card">
+
+                        <div class="settings-card-header">
+
+                            <h2>Notification Settings</h2>
+
+                            <p>
+                                Control the notification categories used by the school system.
+                            </p>
+
+                        </div>
+
+                        <div class="settings-card-body">
+
+                            <div class="setting-row">
+
+                                <div>
+
+                                    <div class="setting-row-title">
+                                        Fee Notifications
+                                    </div>
+
+                                    <div class="setting-row-description">
+                                        Notify relevant users about fee and payment events.
+                                    </div>
+
+                                </div>
+
+                                <div class="form-check form-switch m-0">
+
+                                    <input class="form-check-input" type="checkbox" id="notifyFees" checked disabled>
+
+                                </div>
+
+                            </div>
+
+                            <div class="setting-row">
+
+                                <div>
+
+                                    <div class="setting-row-title">
+                                        Result Notifications
+                                    </div>
+
+                                    <div class="setting-row-description">
+                                        Notify users when academic results become available.
+                                    </div>
+
+                                </div>
+
+                                <div class="form-check form-switch m-0">
+
+                                    <input class="form-check-input" type="checkbox" id="notifyResults" checked disabled>
+
+                                </div>
+
+                            </div>
+
+                            <div class="setting-row">
+
+                                <div>
+
+                                    <div class="setting-row-title">
+                                        Attendance Notifications
+                                    </div>
+
+                                    <div class="setting-row-description">
+                                        Notify relevant users about attendance events.
+                                    </div>
+
+                                </div>
+
+                                <div class="form-check form-switch m-0">
+
+                                    <input class="form-check-input" type="checkbox" id="notifyAttendance" checked
+                                        disabled>
+
+                                </div>
+
+                            </div>
+
+                            <div class="setting-row">
+
+                                <div>
+
+                                    <div class="setting-row-title">
+                                        Announcement Notifications
+                                    </div>
+
+                                    <div class="setting-row-description">
+                                        Notify users when school announcements are published.
+                                    </div>
+
+                                </div>
+
+                                <div class="form-check form-switch m-0">
+
+                                    <input class="form-check-input" type="checkbox" id="notifyAnnouncements" checked
+                                        disabled>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+                <!-- ==================================================
+                         SECURITY SETTINGS
+                    =================================================== -->
+
+                <section id="security" class="settings-section" data-section-content="security">
+
+                    <div class="settings-card">
+
+                        <div class="settings-card-header">
+
+                            <h2>Security Settings</h2>
+
+                            <p>
+                                Configure authentication and session security for school users.
+                            </p>
+
+                        </div>
+
+                        <div class="settings-card-body">
+
+                            <div class="setting-row">
+
+                                <div>
+
+                                    <div class="setting-row-title">
+                                        Require Strong Passwords
+                                    </div>
+
+                                    <div class="setting-row-description">
+                                        Require users to meet the school's password policy.
+                                    </div>
+
+                                </div>
+
+                                <div class="form-check form-switch m-0">
+
+                                    <input class="form-check-input" type="checkbox" id="requireStrongPassword" checked
+                                        disabled>
+
+                                </div>
+
+                            </div>
+
+                            <div class="setting-row">
+
+                                <div>
+
+                                    <div class="setting-row-title">
+                                        Enable Session Timeout
+                                    </div>
+
+                                    <div class="setting-row-description">
+                                        Require users to authenticate again after the configured
+                                        session timeout period.
+                                    </div>
+
+                                </div>
+
+                                <div class="form-check form-switch m-0">
+
+                                    <input class="form-check-input" type="checkbox" id="sessionTimeout" checked
+                                        disabled>
+
+                                </div>
+
+                            </div>
+
+                            <div class="setting-row">
+
+                                <div>
+
+                                    <div class="setting-row-title">
+                                        Session Timeout
+                                    </div>
+
+                                    <div class="setting-row-description">
+                                        Configure the session timeout period for school users.
+                                    </div>
+
+                                </div>
+
+                                <div class="d-flex align-items-center gap-2">
+
+                                    <input type="number" id="timeoutMinutes"
+                                        class="form-control security-timeout-control" value="30" min="5" max="1440"
+                                        readonly>
+
+                                    <span class="small text-muted">
+                                        minutes
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+        </div>
+
+        </div>
+
+    </main>
+
+    <!-- ==========================================================
+         SCRIPTS
+    =========================================================== -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/settings.js"></script>
+
+    
+
+    <script src="../js/sidebar.js"></script>
+</body>
+
+</html>

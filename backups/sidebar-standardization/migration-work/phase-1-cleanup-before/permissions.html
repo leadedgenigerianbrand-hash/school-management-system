@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Permissions | School Management System</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --sidebar-bg: #111827;
+            --sidebar-hover: #1f2937;
+            --sidebar-active: #0d6efd;
+            --page-bg: #f5f7fb;
+            --border-color: #e5e7eb;
+            --text-dark: #111827;
+            --text-muted: #6b7280;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            min-height: 100%;
+        }
+
+        body {
+            margin: 0;
+            background: var(--page-bg);
+            color: var(--text-dark);
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Helvetica,
+                Arial,
+                sans-serif;
+        }
+
+        /* ==========================================================
+           SIDEBAR
+        ========================================================== */
+
+        .sms-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--sidebar-bg);
+            color: #fff;
+            z-index: 1040;
+            overflow-y: auto;
+            transition: transform 0.25s ease;
+        }
+
+        .sidebar-brand {
+            min-height: 76px;
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            flex: 0 0 42px;
+            border-radius: 12px;
+            background: rgba(13, 110, 253, 0.18);
+            color: #6ea8fe;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .brand-title {
+            font-size: 15px;
+            line-height: 1.2;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .brand-subtitle {
+            display: block;
+            margin-top: 3px;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .sidebar-content {
+            padding: 14px 10px 24px;
+        }
+
+        .sidebar-section {
+            padding: 14px 10px 7px;
+            color: #6b7280;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            width: 100%;
+            min-height: 42px;
+            padding: 9px 12px;
+            margin-bottom: 3px;
+            border-radius: 8px;
+            color: #d1d5db;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition:
+                background-color 0.18s ease,
+                color 0.18s ease;
+        }
+
+        .sidebar-link i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+            flex: 0 0 20px;
+        }
+
+        .sidebar-link:hover {
+            color: #fff;
+            background: var(--sidebar-hover);
+        }
+
+        .sidebar-link.active {
+            color: #fff;
+            background: var(--sidebar-active);
+            box-shadow: 0 4px 10px rgba(13, 110, 253, 0.22);
+        }
+
+        /* ==========================================================
+           MAIN AREA
+        ========================================================== */
+
+        .sms-main {
+            min-height: 100vh;
+            margin-left: var(--sidebar-width);
+            transition: margin-left 0.25s ease;
+        }
+
+        .topbar {
+            min-height: 76px;
+            padding: 15px 24px;
+            background: #fff;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+        }
+
+        .topbar h1 {
+            color: var(--text-dark);
+        }
+
+        .page-content {
+            padding: 24px;
+        }
+
+        .content-card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+            overflow: hidden;
+        }
+
+        .toolbar {
+            padding: 18px;
+        }
+
+        .form-control,
+        .form-select,
+        .input-group-text {
+            border-color: #dfe3e8;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.12);
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table thead th {
+            padding: 13px 16px;
+            background: #f8fafc;
+            color: #475569;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .table tbody td {
+            padding: 13px 16px;
+            color: #374151;
+            font-size: 13px;
+            border-color: #edf0f3;
+            vertical-align: middle;
+        }
+
+        .table tbody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .permission-name {
+            color: #111827;
+            font-weight: 600;
+        }
+
+        .module-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 9px;
+            border-radius: 999px;
+            background: #eef4ff;
+            color: #0d6efd;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .permission-id {
+            color: #6b7280;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .action-buttons {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .action-buttons .btn {
+            min-width: 34px;
+            height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 9px;
+        }
+
+        .action-buttons .btn-primary {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+            color: #fff;
+        }
+
+        .action-buttons .btn-primary:hover,
+        .action-buttons .btn-primary:focus {
+            background-color: #0b5ed7;
+            border-color: #0a58ca;
+            color: #fff;
+        }
+
+        .empty-state {
+            padding: 52px 20px;
+            text-align: center;
+            color: #6b7280;
+        }
+
+        .empty-state i {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 32px;
+            color: #9ca3af;
+        }
+
+        #message {
+            display: none;
+        }
+
+        /* ==========================================================
+           MODAL
+        ========================================================== */
+
+        .modal-content {
+            border: 0;
+            border-radius: 14px;
+        }
+
+        .modal-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            padding: 14px 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* ==========================================================
+           MOBILE OVERLAY
+        ========================================================== */
+
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            z-index: 1035;
+            display: none;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        /* ==========================================================
+           RESPONSIVE
+        ========================================================== */
+
+        @media (max-width: 991.98px) {
+            .sms-sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sms-sidebar.show {
+                transform: translateX(0);
+            }
+
+            .sms-main {
+                margin-left: 0;
+            }
+
+            .topbar {
+                padding: 14px 18px;
+            }
+
+            .page-content {
+                padding: 18px;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .topbar {
+                min-height: 70px;
+            }
+
+            .page-content {
+                padding: 14px;
+            }
+
+            .toolbar {
+                padding: 14px;
+            }
+
+            .table thead th,
+            .table tbody td {
+                padding: 11px 12px;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .topbar {
+                padding: 12px 14px;
+            }
+
+            .page-content {
+                padding: 12px;
+            }
+
+            .content-card {
+                border-radius: 10px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="../css/sidebar.css">
+</head>
+
+<body>
+
+    <!-- ==========================================================
+         SIDEBAR
+    ========================================================== -->
+
+    <aside id="smsSidebar" class="sms-sidebar">
+
+
+            <!-- =================================================
+             SIDEBAR BRAND
+        ================================================== -->
+
+            <div class="sidebar-brand">
+
+                <div class="brand-icon">
+
+                    <i class="bi bi-mortarboard-fill"></i>
+
+                </div>
+
+
+                <div>
+
+                    <div class="brand-title">
+                        School Management
+                    </div>
+
+                    <span class="brand-subtitle">
+                        Administration Portal
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+             SIDEBAR CONTENT
+        ================================================== -->
+
+            <div class="sidebar-content">
+
+
+                <!-- =================================================
+                 MAIN
+            ================================================== -->
+
+                <div class="sidebar-section">
+                    Main
+                </div>
+
+
+                <a href="/pages/dashboard.html" class="sidebar-link">
+
+                    <i class="bi bi-speedometer2"></i>
+
+                    <span>
+                        Dashboard
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/students.html" class="sidebar-link">
+
+                    <i class="bi bi-people"></i>
+
+                    <span>
+                        Students
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/staff.html" class="sidebar-link">
+
+                    <i class="bi bi-person-badge"></i>
+
+                    <span>
+                        Staff
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/guardians.html" class="sidebar-link">
+
+                    <i class="bi bi-person-hearts"></i>
+
+                    <span>
+                        Guardians
+                    </span>
+
+                </a>
+
+
+                <!-- =================================================
+                 ACADEMIC
+            ================================================== -->
+
+                <div class="sidebar-section">
+                    Academic
+                </div>
+
+
+                <a href="/pages/classes.html" class="sidebar-link">
+
+                    <i class="bi bi-building"></i>
+
+                    <span>
+                        Classes
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/class-arms.html" class="sidebar-link">
+
+                    <i class="bi bi-diagram-3"></i>
+
+                    <span>
+                        Class Arms
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/departments.html" class="sidebar-link">
+
+                    <i class="bi bi-diagram-2"></i>
+
+                    <span>
+                        Departments
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/subjects.html" class="sidebar-link">
+
+                    <i class="bi bi-book"></i>
+
+                    <span>
+                        Subjects
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/academic-sessions.html" class="sidebar-link">
+
+                    <i class="bi bi-calendar3"></i>
+
+                    <span>
+                        Academic Sessions
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/terms.html" class="sidebar-link">
+
+                    <i class="bi bi-calendar2-week"></i>
+
+                    <span>
+                        Terms
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/attendance.html" class="sidebar-link">
+
+                    <i class="bi bi-calendar-check"></i>
+
+                    <span>
+                        Attendance
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/results.html" class="sidebar-link">
+
+                    <i class="bi bi-bar-chart"></i>
+
+                    <span>
+                        Results
+                    </span>
+
+                </a>
+
+
+                <!-- =================================================
+                 FINANCE & RECORDS
+            ================================================== -->
+
+                <div class="sidebar-section">
+                    Finance &amp; Records
+                </div>
+
+
+                <a href="/pages/fees.html" class="sidebar-link">
+
+                    <i class="bi bi-cash-stack"></i>
+
+                    <span>
+                        Fees &amp; Payments
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/documents.html" class="sidebar-link">
+
+                    <i class="bi bi-folder2-open"></i>
+
+                    <span>
+                        Documents
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/reports.html" class="sidebar-link">
+
+                    <i class="bi bi-file-earmark-bar-graph"></i>
+
+                    <span>
+                        Reports
+                    </span>
+
+                </a>
+
+
+                <!-- =================================================
+                 ADMINISTRATION
+            ================================================== -->
+
+                <div class="sidebar-section">
+                    Administration
+                </div>
+
+
+                <a href="/pages/users.html" class="sidebar-link">
+
+                    <i class="bi bi-person-gear"></i>
+
+                    <span>
+                        Users
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/roles.html" class="sidebar-link">
+
+                    <i class="bi bi-shield-check"></i>
+
+                    <span>
+                        Roles
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/permissions.html" class="sidebar-link">
+
+                    <i class="bi bi-key"></i>
+
+                    <span>
+                        Permissions
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/profile.html" class="sidebar-link">
+
+                    <i class="bi bi-person-circle"></i>
+
+                    <span>
+                        My Profile
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/settings.html" class="sidebar-link">
+
+                    <i class="bi bi-gear"></i>
+
+                    <span>
+                        Settings
+                    </span>
+
+                </a>
+
+            </div>
+
+        </aside>
+
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <!-- ==========================================================
+         MAIN CONTENT
+    ========================================================== -->
+
+    <div class="sms-main">
+
+        <header class="topbar">
+
+            <div class="w-100 d-flex align-items-center justify-content-between gap-3">
+
+                <div class="d-flex align-items-center gap-3">
+
+                    <button class="btn btn-light d-lg-none" type="button" id="sidebarToggle"
+                        aria-label="Open navigation">
+
+                        <i class="bi bi-list fs-5"></i>
+
+                    </button>
+
+                    <div>
+                        <h1 class="h4 mb-1 fw-bold">Permissions</h1>
+
+                        <p class="text-secondary small mb-0">
+                            Manage system permissions used to control access.
+                        </p>
+                    </div>
+
+                </div>
+
+                <div class="d-flex align-items-center gap-3">
+
+                    <div class="text-end d-none d-md-block">
+                        <div class="fw-semibold small" id="userName">
+                            Administrator
+                        </div>
+
+                        <div class="text-secondary small" id="userRole">
+                            Administrator
+                        </div>
+                    </div>
+
+                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                        style="width:40px;height:40px;">
+
+                        <i class="bi bi-person"></i>
+
+                    </div>
+
+                    <button type="button" class="btn btn-primary" id="openCreatePermissionButton">
+
+                        <i class="bi bi-plus-lg me-1"></i>
+
+                        <span class="d-none d-sm-inline">
+                            Add Permission
+                        </span>
+
+                        <span class="d-sm-none">
+                            Add
+                        </span>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </header>
+
+        <main class="page-content sms-main">
+
+            <div id="message" class="alert mb-4" role="alert"></div>
+
+            <!-- ==================================================
+                 SEARCH / FILTER TOOLBAR
+            ================================================== -->
+
+            <section class="content-card mb-4">
+
+                <div class="toolbar">
+
+                    <div class="row g-3 align-items-center">
+
+                        <div class="col-lg-7">
+
+                            <div class="input-group">
+
+                                <span class="input-group-text bg-white">
+                                    <i class="bi bi-search"></i>
+                                </span>
+
+                                <input type="search" class="form-control" id="searchInput"
+                                    placeholder="Search permissions..." autocomplete="off">
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6 col-lg-3">
+
+                            <select class="form-select" id="moduleFilter">
+
+                                <option value="">
+                                    All Modules
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="col-md-6 col-lg-2">
+
+                            <button type="button" class="btn btn-outline-secondary w-100" id="refreshPermissionsButton">
+
+                                <i class="bi bi-arrow-clockwise me-1"></i>
+                                Refresh
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- ==================================================
+                 PERMISSIONS TABLE
+            ================================================== -->
+
+            <section class="content-card">
+
+                <div class="p-3 px-md-4 border-bottom">
+
+                    <div class="d-flex align-items-center justify-content-between gap-3">
+
+                        <div>
+
+                            <h2 class="h6 mb-1 fw-bold">
+                                Permission List
+                            </h2>
+
+                            <small class="text-secondary">
+                                System access permissions
+                            </small>
+
+                        </div>
+
+                        <span class="text-secondary small text-nowrap" id="permissionCount">
+
+                            0 permissions
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle mb-0">
+
+                        <thead>
+
+                            <tr>
+                                <th>ID</th>
+                                <th>Permission</th>
+                                <th>Module</th>
+                                <th>Description</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="permissionsTableBody">
+
+                            <tr>
+
+                                <td colspan="6" class="text-center py-5 text-secondary">
+
+                                    <div class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true">
+                                    </div>
+
+                                    Loading permissions...
+
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <!-- ==========================================================
+         PERMISSION MODAL
+    ========================================================== -->
+
+    <div class="modal fade" id="permissionModal" tabindex="-1" aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered">
+
+            <div class="modal-content shadow-lg">
+
+                <div class="modal-header">
+
+                    <div>
+
+                        <h2 class="modal-title fs-5" id="modalTitle">
+
+                            Add Permission
+
+                        </h2>
+
+                        <small class="text-secondary">
+                            Configure a system access permission.
+                        </small>
+
+                    </div>
+
+                    <button type="button" class="btn-close" id="closePermissionModalButton" aria-label="Close">
+                    </button>
+
+                </div>
+
+                <form id="permissionForm">
+
+                    <div class="modal-body">
+
+                        <input type="hidden" id="permissionId">
+
+                        <div class="mb-3">
+
+                            <label for="permissionName" class="form-label fw-semibold">
+
+                                Permission Name
+                                <span class="text-danger">*</span>
+
+                            </label>
+
+                            <input type="text" class="form-control" id="permissionName"
+                                placeholder="Example: students.view" required maxlength="150" autocomplete="off">
+
+                            <div class="form-text">
+                                Use the format module.action, such as
+                                students.view or fees.create.
+                            </div>
+
+                        </div>
+
+                        <div>
+
+                            <label for="permissionDescription" class="form-label fw-semibold">
+
+                                Description
+
+                            </label>
+
+                            <textarea class="form-control" id="permissionDescription" rows="4" maxlength="500"
+                                placeholder="Describe what this permission allows."></textarea>
+
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+
+                        <button type="button" class="btn btn-light" id="cancelPermissionButton">
+
+                            Cancel
+
+                        </button>
+
+                        <button type="submit" class="btn btn-primary" id="savePermissionButton">
+
+                            <i class="bi bi-check-lg me-1"></i>
+                            Save Permission
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ==========================================================
+         SCRIPTS
+    ========================================================== -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/permissions.js"></script>
+
+    
+
+    <script src="../js/sidebar.js"></script>
+</body>
+
+</html>

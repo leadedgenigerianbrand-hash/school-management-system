@@ -1,6 +1,9 @@
 "use strict";
 
 const announcementModel = require("../models/announcementModel");
+const {
+    sendAnnouncementToGuardians
+} = require("../services/emailService");
 
 /*
 |--------------------------------------------------------------------------
@@ -14,6 +17,7 @@ const announcementModel = require("../models/announcementModel");
 | - Resolve the authenticated user
 | - Validate request input
 | - Call announcementModel
+| - Send guardian notification when an announcement becomes published
 | - Return consistent HTTP responses
 |
 | Database operations belong in:
@@ -80,6 +84,76 @@ function sendError(res, statusCode, message, error = null) {
 
 /*
 |--------------------------------------------------------------------------
+| GUARDIAN EMAIL NOTIFICATION
+|--------------------------------------------------------------------------
+|
+| Email delivery must never undo a successful database publication.
+|
+| Therefore:
+| - publication happens first
+| - email is attempted afterwards
+| - email failure is logged
+| - the API still reports the announcement as successfully published
+|
+|--------------------------------------------------------------------------
+*/
+
+async function notifyGuardiansOfPublishedAnnouncement(
+    schoolId,
+    announcement
+) {
+    if (!schoolId || !announcement) {
+        return null;
+    }
+
+    try {
+        const result =
+            await sendAnnouncementToGuardians({
+                schoolId,
+                title: announcement.title,
+                content: announcement.content
+            });
+
+        console.log(
+            "Announcement guardian email result:",
+            {
+                announcementId:
+                    announcement.id,
+                schoolId,
+                sent: result.sent,
+                recipients:
+                    result.recipients,
+                message:
+                    result.message
+            }
+        );
+
+        return result;
+    } catch (error) {
+        console.error(
+            "Announcement guardian email failed:",
+            {
+                announcementId:
+                    announcement.id,
+                schoolId,
+                error:
+                    error.message ||
+                    String(error)
+            }
+        );
+
+        return {
+            sent: 0,
+            recipients: 0,
+            failed: true,
+            message:
+                "Announcement was published, but guardian email delivery failed."
+        };
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
 | CREATE ANNOUNCEMENT
 |--------------------------------------------------------------------------
 */
@@ -90,7 +164,11 @@ async function createAnnouncement(req, res, next) {
         const createdBy = getCurrentUserId(req);
 
         if (!schoolId) {
-            return sendError(res, 400, "schoolId is required");
+            return sendError(
+                res,
+                400,
+                "schoolId is required"
+            );
         }
 
         if (!createdBy) {
@@ -113,12 +191,26 @@ async function createAnnouncement(req, res, next) {
             endDate
         } = req.body || {};
 
-        if (!title || String(title).trim() === "") {
-            return sendError(res, 400, "title is required");
+        if (
+            !title ||
+            String(title).trim() === ""
+        ) {
+            return sendError(
+                res,
+                400,
+                "title is required"
+            );
         }
 
-        if (!content || String(content).trim() === "") {
-            return sendError(res, 400, "content is required");
+        if (
+            !content ||
+            String(content).trim() === ""
+        ) {
+            return sendError(
+                res,
+                400,
+                "content is required"
+            );
         }
 
         const announcement =
@@ -136,6 +228,20 @@ async function createAnnouncement(req, res, next) {
                 createdBy
             });
 
+        /*
+         * If an announcement is created directly as Published,
+         * notify guardians after the database save succeeds.
+         */
+        if (
+            announcement &&
+            announcement.is_published === true
+        ) {
+            await notifyGuardiansOfPublishedAnnouncement(
+                schoolId,
+                announcement
+            );
+        }
+
         return sendCreated(
             res,
             announcement,
@@ -152,13 +258,21 @@ async function createAnnouncement(req, res, next) {
 |--------------------------------------------------------------------------
 */
 
-async function createBulkAnnouncements(req, res, next) {
+async function createBulkAnnouncements(
+    req,
+    res,
+    next
+) {
     try {
         const schoolId = resolveSchoolId(req);
         const createdBy = getCurrentUserId(req);
 
         if (!schoolId) {
-            return sendError(res, 400, "schoolId is required");
+            return sendError(
+                res,
+                400,
+                "schoolId is required"
+            );
         }
 
         if (!createdBy) {
@@ -169,9 +283,13 @@ async function createBulkAnnouncements(req, res, next) {
             );
         }
 
-        const announcements = req.body?.announcements;
+        const announcements =
+            req.body?.announcements;
 
-        if (!Array.isArray(announcements) || announcements.length === 0) {
+        if (
+            !Array.isArray(announcements) ||
+            announcements.length === 0
+        ) {
             return sendError(
                 res,
                 400,
@@ -179,16 +297,24 @@ async function createBulkAnnouncements(req, res, next) {
             );
         }
 
-        const preparedAnnouncements = announcements.map((announcement) => ({
-            ...announcement,
-            schoolId,
-            createdBy
-        }));
+        const preparedAnnouncements =
+            announcements.map(
+                (announcement) => ({
+                    ...announcement,
+                    schoolId,
+                    createdBy
+                })
+            );
 
-        for (const announcement of preparedAnnouncements) {
+        for (
+            const announcement
+            of preparedAnnouncements
+        ) {
             if (
                 !announcement.title ||
-                String(announcement.title).trim() === ""
+                String(
+                    announcement.title
+                ).trim() === ""
             ) {
                 return sendError(
                     res,
@@ -199,7 +325,9 @@ async function createBulkAnnouncements(req, res, next) {
 
             if (
                 !announcement.content ||
-                String(announcement.content).trim() === ""
+                String(
+                    announcement.content
+                ).trim() === ""
             ) {
                 return sendError(
                     res,
@@ -210,9 +338,20 @@ async function createBulkAnnouncements(req, res, next) {
         }
 
         const createdAnnouncements =
-            await announcementModel.createBulkAnnouncements(
-                preparedAnnouncements
-            );
+            await announcementModel
+                .createBulkAnnouncements(
+                    preparedAnnouncements
+                );
+
+        /*
+         * Bulk email delivery is intentionally not triggered here.
+         *
+         * The existing bulk endpoint can create multiple records at once,
+         * and automatically sending multiple school-wide emails from this
+         * endpoint could produce unintended duplicate notifications.
+         *
+         * Published announcements can use the normal publication workflow.
+         */
 
         return sendCreated(
             res,
@@ -230,31 +369,44 @@ async function createBulkAnnouncements(req, res, next) {
 |--------------------------------------------------------------------------
 */
 
-async function getAnnouncements(req, res, next) {
+async function getAnnouncements(
+    req,
+    res,
+    next
+) {
     try {
-        const schoolId = resolveSchoolId(req);
+        const schoolId =
+            resolveSchoolId(req);
 
         if (!schoolId) {
-            return sendError(res, 400, "schoolId is required");
+            return sendError(
+                res,
+                400,
+                "schoolId is required"
+            );
         }
 
         const filters = {
             type: req.query.type,
             priority: req.query.priority,
             audience: req.query.audience,
-            isPublished: req.query.isPublished,
+            isPublished:
+                req.query.isPublished,
             search: req.query.search,
-            fromDate: req.query.fromDate,
-            toDate: req.query.toDate,
+            fromDate:
+                req.query.fromDate,
+            toDate:
+                req.query.toDate,
             limit: req.query.limit,
             offset: req.query.offset
         };
 
         const announcements =
-            await announcementModel.getAnnouncements(
-                schoolId,
-                filters
-            );
+            await announcementModel
+                .getAnnouncements(
+                    schoolId,
+                    filters
+                );
 
         return sendSuccess(
             res,
@@ -272,12 +424,21 @@ async function getAnnouncements(req, res, next) {
 |--------------------------------------------------------------------------
 */
 
-async function getPublishedAnnouncements(req, res, next) {
+async function getPublishedAnnouncements(
+    req,
+    res,
+    next
+) {
     try {
-        const schoolId = resolveSchoolId(req);
+        const schoolId =
+            resolveSchoolId(req);
 
         if (!schoolId) {
-            return sendError(res, 400, "schoolId is required");
+            return sendError(
+                res,
+                400,
+                "schoolId is required"
+            );
         }
 
         const filters = {
@@ -285,17 +446,20 @@ async function getPublishedAnnouncements(req, res, next) {
             priority: req.query.priority,
             audience: req.query.audience,
             search: req.query.search,
-            fromDate: req.query.fromDate,
-            toDate: req.query.toDate,
+            fromDate:
+                req.query.fromDate,
+            toDate:
+                req.query.toDate,
             limit: req.query.limit,
             offset: req.query.offset
         };
 
         const announcements =
-            await announcementModel.getPublishedAnnouncements(
-                schoolId,
-                filters
-            );
+            await announcementModel
+                .getPublishedAnnouncements(
+                    schoolId,
+                    filters
+                );
 
         return sendSuccess(
             res,
@@ -313,13 +477,24 @@ async function getPublishedAnnouncements(req, res, next) {
 |--------------------------------------------------------------------------
 */
 
-async function getAnnouncementById(req, res, next) {
+async function getAnnouncementById(
+    req,
+    res,
+    next
+) {
     try {
-        const schoolId = resolveSchoolId(req);
-        const announcementId = req.params.id;
+        const schoolId =
+            resolveSchoolId(req);
+
+        const announcementId =
+            req.params.id;
 
         if (!schoolId) {
-            return sendError(res, 400, "schoolId is required");
+            return sendError(
+                res,
+                400,
+                "schoolId is required"
+            );
         }
 
         if (!announcementId) {
@@ -331,10 +506,11 @@ async function getAnnouncementById(req, res, next) {
         }
 
         const announcement =
-            await announcementModel.getAnnouncementById(
-                announcementId,
-                schoolId
-            );
+            await announcementModel
+                .getAnnouncementById(
+                    announcementId,
+                    schoolId
+                );
 
         if (!announcement) {
             return sendError(
@@ -360,13 +536,24 @@ async function getAnnouncementById(req, res, next) {
 |--------------------------------------------------------------------------
 */
 
-async function updateAnnouncement(req, res, next) {
+async function updateAnnouncement(
+    req,
+    res,
+    next
+) {
     try {
-        const schoolId = resolveSchoolId(req, false);
-        const announcementId = req.params.id;
+        const schoolId =
+            resolveSchoolId(req, false);
+
+        const announcementId =
+            req.params.id;
 
         if (!schoolId) {
-            return sendError(res, 400, "schoolId is required");
+            return sendError(
+                res,
+                400,
+                "schoolId is required"
+            );
         }
 
         if (!announcementId) {
@@ -411,38 +598,87 @@ async function updateAnnouncement(req, res, next) {
             title !== undefined &&
             String(title).trim() === ""
         ) {
-            return sendError(res, 400, "title cannot be empty");
+            return sendError(
+                res,
+                400,
+                "title cannot be empty"
+            );
         }
 
         if (
             content !== undefined &&
             String(content).trim() === ""
         ) {
-            return sendError(res, 400, "content cannot be empty");
+            return sendError(
+                res,
+                400,
+                "content cannot be empty"
+            );
         }
 
-        const announcement =
-            await announcementModel.updateAnnouncement(
-                announcementId,
-                schoolId,
-                {
-                    title,
-                    content,
-                    type,
-                    priority,
-                    audience,
-                    isPublished,
-                    publishedAt,
-                    startDate,
-                    endDate
-                }
+        /*
+         * Read the current record first so that we only send an email
+         * when the announcement actually transitions from unpublished
+         * to published.
+         */
+        const existingAnnouncement =
+            await announcementModel
+                .getAnnouncementById(
+                    announcementId,
+                    schoolId
+                );
+
+        if (!existingAnnouncement) {
+            return sendError(
+                res,
+                404,
+                "Announcement not found"
             );
+        }
+
+        const wasPublished =
+            existingAnnouncement.is_published === true;
+
+        const announcement =
+            await announcementModel
+                .updateAnnouncement(
+                    announcementId,
+                    schoolId,
+                    {
+                        title,
+                        content,
+                        type,
+                        priority,
+                        audience,
+                        isPublished,
+                        publishedAt,
+                        startDate,
+                        endDate
+                    }
+                );
 
         if (!announcement) {
             return sendError(
                 res,
                 404,
                 "Announcement not found"
+            );
+        }
+
+        const isNowPublished =
+            announcement.is_published === true;
+
+        /*
+         * Only notify when this update changed the announcement
+         * from Draft/unpublished to Published.
+         */
+        if (
+            !wasPublished &&
+            isNowPublished
+        ) {
+            await notifyGuardiansOfPublishedAnnouncement(
+                schoolId,
+                announcement
             );
         }
 
@@ -462,13 +698,24 @@ async function updateAnnouncement(req, res, next) {
 |--------------------------------------------------------------------------
 */
 
-async function publishAnnouncement(req, res, next) {
+async function publishAnnouncement(
+    req,
+    res,
+    next
+) {
     try {
-        const schoolId = resolveSchoolId(req, false);
-        const announcementId = req.params.id;
+        const schoolId =
+            resolveSchoolId(req, false);
+
+        const announcementId =
+            req.params.id;
 
         if (!schoolId) {
-            return sendError(res, 400, "schoolId is required");
+            return sendError(
+                res,
+                400,
+                "schoolId is required"
+            );
         }
 
         if (!announcementId) {
@@ -479,17 +726,50 @@ async function publishAnnouncement(req, res, next) {
             );
         }
 
-        const announcement =
-            await announcementModel.publishAnnouncement(
-                announcementId,
-                schoolId
+        /*
+         * Check the current state first so repeatedly clicking
+         * Publish does not resend the same guardian email.
+         */
+        const existingAnnouncement =
+            await announcementModel
+                .getAnnouncementById(
+                    announcementId,
+                    schoolId
+                );
+
+        if (!existingAnnouncement) {
+            return sendError(
+                res,
+                404,
+                "Announcement not found"
             );
+        }
+
+        const wasPublished =
+            existingAnnouncement.is_published === true;
+
+        const announcement =
+            await announcementModel
+                .publishAnnouncement(
+                    announcementId,
+                    schoolId
+                );
 
         if (!announcement) {
             return sendError(
                 res,
                 404,
                 "Announcement not found"
+            );
+        }
+
+        /*
+         * Send only on the transition from unpublished to published.
+         */
+        if (!wasPublished) {
+            await notifyGuardiansOfPublishedAnnouncement(
+                schoolId,
+                announcement
             );
         }
 
@@ -509,13 +789,24 @@ async function publishAnnouncement(req, res, next) {
 |--------------------------------------------------------------------------
 */
 
-async function unpublishAnnouncement(req, res, next) {
+async function unpublishAnnouncement(
+    req,
+    res,
+    next
+) {
     try {
-        const schoolId = resolveSchoolId(req, false);
-        const announcementId = req.params.id;
+        const schoolId =
+            resolveSchoolId(req, false);
+
+        const announcementId =
+            req.params.id;
 
         if (!schoolId) {
-            return sendError(res, 400, "schoolId is required");
+            return sendError(
+                res,
+                400,
+                "schoolId is required"
+            );
         }
 
         if (!announcementId) {
@@ -527,10 +818,11 @@ async function unpublishAnnouncement(req, res, next) {
         }
 
         const announcement =
-            await announcementModel.unpublishAnnouncement(
-                announcementId,
-                schoolId
-            );
+            await announcementModel
+                .unpublishAnnouncement(
+                    announcementId,
+                    schoolId
+                );
 
         if (!announcement) {
             return sendError(
@@ -556,13 +848,24 @@ async function unpublishAnnouncement(req, res, next) {
 |--------------------------------------------------------------------------
 */
 
-async function deleteAnnouncement(req, res, next) {
+async function deleteAnnouncement(
+    req,
+    res,
+    next
+) {
     try {
-        const schoolId = resolveSchoolId(req, false);
-        const announcementId = req.params.id;
+        const schoolId =
+            resolveSchoolId(req, false);
+
+        const announcementId =
+            req.params.id;
 
         if (!schoolId) {
-            return sendError(res, 400, "schoolId is required");
+            return sendError(
+                res,
+                400,
+                "schoolId is required"
+            );
         }
 
         if (!announcementId) {
@@ -574,10 +877,11 @@ async function deleteAnnouncement(req, res, next) {
         }
 
         const announcement =
-            await announcementModel.deleteAnnouncement(
-                announcementId,
-                schoolId
-            );
+            await announcementModel
+                .deleteAnnouncement(
+                    announcementId,
+                    schoolId
+                );
 
         if (!announcement) {
             return sendError(
@@ -603,22 +907,34 @@ async function deleteAnnouncement(req, res, next) {
 |--------------------------------------------------------------------------
 */
 
-async function countAnnouncements(req, res, next) {
+async function countAnnouncements(
+    req,
+    res,
+    next
+) {
     try {
-        const schoolId = resolveSchoolId(req);
+        const schoolId =
+            resolveSchoolId(req);
 
         if (!schoolId) {
-            return sendError(res, 400, "schoolId is required");
+            return sendError(
+                res,
+                400,
+                "schoolId is required"
+            );
         }
 
         const count =
-            await announcementModel.countAnnouncements(
-                schoolId,
-                {
-                    isPublished: req.query.isPublished,
-                    type: req.query.type
-                }
-            );
+            await announcementModel
+                .countAnnouncements(
+                    schoolId,
+                    {
+                        isPublished:
+                            req.query.isPublished,
+                        type:
+                            req.query.type
+                    }
+                );
 
         return sendSuccess(
             res,

@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Dashboard | School Management System</title>
+
+    <meta name="description" content="School Management System dashboard">
+    <meta name="theme-color" content="#0d6efd">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --primary: #0d6efd;
+            --sidebar-bg: #111827;
+            --sidebar-hover: rgba(255, 255, 255, 0.09);
+            --page-bg: #f5f7fb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--page-bg);
+            color: #1f2937;
+            font-family:
+                Inter,
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        .sms-wrapper {
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR */
+        .sms-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            background:
+                linear-gradient(180deg, #111827 0%, #172033 55%, #0f172a 100%);
+            color: #fff;
+            z-index: 1040;
+            overflow-y: auto;
+            transition: transform 0.25s ease;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .sidebar-brand {
+            min-height: 76px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 21px;
+            flex-shrink: 0;
+        }
+
+        .brand-title {
+            font-weight: 700;
+            font-size: 15px;
+            line-height: 1.2;
+        }
+
+        .brand-subtitle {
+            display: block;
+            margin-top: 3px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.55);
+        }
+
+        .sidebar-content {
+            padding: 16px 12px 28px;
+        }
+
+        .sidebar-section {
+            margin-top: 20px;
+            margin-bottom: 7px;
+            padding: 0 10px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .sidebar-section:first-child {
+            margin-top: 2px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            min-height: 43px;
+            padding: 9px 11px;
+            margin-bottom: 3px;
+            border-radius: 9px;
+            color: rgba(255, 255, 255, 0.72);
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-link i {
+            width: 21px;
+            text-align: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-link:hover {
+            background: var(--sidebar-hover);
+            color: #fff;
+        }
+
+        .sidebar-link.active {
+            background: rgba(13, 110, 253, 0.9);
+            color: #fff;
+            box-shadow: 0 5px 14px rgba(13, 110, 253, 0.18);
+        }
+
+        /* MAIN */
+        .sms-main {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        /* HEADER */
+        .sms-header {
+            height: 76px;
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+            background: rgba(255, 255, 255, 0.96);
+            border-bottom: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+        }
+
+        .header-inner {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 0 28px;
+        }
+
+        .mobile-menu-button {
+            display: none;
+        }
+
+        .page-heading h1 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .page-heading p {
+            margin: 3px 0 0;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .header-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0d6efd, #6610f2);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .user-details {
+            line-height: 1.2;
+        }
+
+        .user-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .user-role {
+            display: block;
+            margin-top: 3px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* CONTENT */
+        .sms-content {
+            padding: 28px;
+        }
+
+        .welcome-card {
+            border: 0;
+            border-radius: 16px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0d6efd 0%, #174ea6 100%);
+            color: #fff;
+            box-shadow: 0 10px 28px rgba(13, 110, 253, 0.15);
+        }
+
+        .welcome-card .card-body {
+            padding: 24px;
+        }
+
+        .welcome-title {
+            margin: 0 0 6px;
+            font-size: 21px;
+            font-weight: 700;
+        }
+
+        .welcome-text {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+        }
+
+        .school-details {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .school-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 11px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.12);
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .welcome-icon {
+            width: 74px;
+            height: 74px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            font-size: 36px;
+        }
+
+        /* STAT CARDS */
+        .stat-card {
+            height: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+        }
+
+        .stat-card .card-body {
+            padding: 18px;
+        }
+
+        .stat-icon {
+            width: 43px;
+            height: 43px;
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #eef5ff;
+            color: var(--primary);
+            font-size: 19px;
+        }
+
+        .stat-label {
+            margin-top: 14px;
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .stat-value {
+            margin-top: 3px;
+            font-size: 23px;
+            line-height: 1.1;
+            font-weight: 750;
+            color: #111827;
+        }
+
+        .stat-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 9px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        /* PANELS */
+        .panel-card {
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+            height: 100%;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 17px 18px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .panel-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+            font-size: 14px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .panel-title i {
+            color: var(--primary);
+        }
+
+        .panel-body {
+            padding: 18px;
+        }
+
+        .recent-list {
+            min-height: 180px;
+        }
+
+        .recent-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 11px 0;
+            border-bottom: 1px solid #f0f1f3;
+        }
+
+        .recent-item:last-child {
+            border-bottom: 0;
+        }
+
+        .recent-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 9px;
+            background: #eef5ff;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .recent-info {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .recent-name {
+            font-size: 12px;
+            font-weight: 650;
+            color: #111827;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .recent-meta {
+            margin-top: 3px;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .recent-amount {
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* QUICK ACTIONS */
+        .quick-action {
+            width: 100%;
+            min-height: 84px;
+            padding: 13px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: #fff;
+            color: #374151;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .quick-action:hover {
+            border-color: #b9d3ff;
+            background: #f7faff;
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .quick-action i {
+            font-size: 21px;
+            color: var(--primary);
+        }
+
+        .quick-action span {
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* EMPTY / LOADING */
+        .empty-state {
+            min-height: 170px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            margin-bottom: 10px;
+            font-size: 28px;
+            opacity: 0.45;
+        }
+
+        .empty-state p {
+            margin: 0;
+            font-size: 12px;
+        }
+
+        /* MOBILE OVERLAY */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            z-index: 1030;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1199.98px) {
+            .sms-content {
+                padding: 22px;
+            }
+
+            .header-inner {
+                padding: 0 22px;
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .sms-sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sms-sidebar.show {
+                transform: translateX(0);
+            }
+
+            .sms-main {
+                margin-left: 0;
+            }
+
+            .mobile-menu-button {
+                display: inline-flex;
+                width: 40px;
+                height: 40px;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .header-left {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .user-details {
+                display: none;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .sms-header {
+                height: 68px;
+            }
+
+            .header-inner {
+                padding: 0 15px;
+            }
+
+            .page-heading h1 {
+                font-size: 18px;
+            }
+
+            .page-heading p {
+                display: none;
+            }
+
+            .sms-content {
+                padding: 15px;
+            }
+
+            .welcome-card .card-body {
+                padding: 19px;
+            }
+
+            .welcome-icon {
+                display: none;
+            }
+
+            .welcome-title {
+                font-size: 18px;
+            }
+
+            .stat-card .card-body {
+                padding: 15px;
+            }
+
+            .stat-value {
+                font-size: 20px;
+            }
+
+            .panel-header,
+            .panel-body {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sms-wrapper">
+
+
+
+
+        <!-- =====================================================
+         SIDEBAR
+         EXACT DASHBOARD-STYLE NAVIGATION
+    ====================================================== -->
+
+        <aside id="smsSidebar" class="sms-sidebar">
+
+
+            <!-- =================================================
+             SIDEBAR BRAND
+        ================================================== -->
+
+            <div class="sidebar-brand">
+
+                <div class="brand-icon">
+
+                    <i class="bi bi-mortarboard-fill"></i>
+
+                </div>
+
+
+                <div>
+
+                    <div class="brand-title">
+                        School Management
+                    </div>
+
+                    <span class="brand-subtitle">
+                        Administration Portal
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+             SIDEBAR CONTENT
+        ================================================== -->
+
+            <div class="sidebar-content">
+
+
+                <!-- =================================================
+                 MAIN
+            ================================================== -->
+
+                <div class="sidebar-section">
+                    Main
+                </div>
+
+
+                <a href="/pages/dashboard.html" class="sidebar-link">
+
+                    <i class="bi bi-speedometer2"></i>
+
+                    <span>
+                        Dashboard
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/students.html" class="sidebar-link active">
+
+                    <i class="bi bi-people"></i>
+
+                    <span>
+                        Students
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/staff.html" class="sidebar-link">
+
+                    <i class="bi bi-person-badge"></i>
+
+                    <span>
+                        Staff
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/guardians.html" class="sidebar-link">
+
+                    <i class="bi bi-person-hearts"></i>
+
+                    <span>
+                        Guardians
+                    </span>
+
+                </a>
+
+
+                <!-- =================================================
+                 ACADEMIC
+            ================================================== -->
+
+                <div class="sidebar-section">
+                    Academic
+                </div>
+
+
+                <a href="/pages/classes.html" class="sidebar-link">
+
+                    <i class="bi bi-building"></i>
+
+                    <span>
+                        Classes
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/class-arms.html" class="sidebar-link">
+
+                    <i class="bi bi-diagram-3"></i>
+
+                    <span>
+                        Class Arms
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/departments.html" class="sidebar-link">
+
+                    <i class="bi bi-diagram-2"></i>
+
+                    <span>
+                        Departments
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/subjects.html" class="sidebar-link">
+
+                    <i class="bi bi-book"></i>
+
+                    <span>
+                        Subjects
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/academic-sessions.html" class="sidebar-link">
+
+                    <i class="bi bi-calendar3"></i>
+
+                    <span>
+                        Academic Sessions
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/terms.html" class="sidebar-link">
+
+                    <i class="bi bi-calendar2-week"></i>
+
+                    <span>
+                        Terms
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/attendance.html" class="sidebar-link">
+
+                    <i class="bi bi-calendar-check"></i>
+
+                    <span>
+                        Attendance
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/results.html" class="sidebar-link">
+
+                    <i class="bi bi-bar-chart"></i>
+
+                    <span>
+                        Results
+                    </span>
+
+                </a>
+
+
+                <!-- =================================================
+                 FINANCE & RECORDS
+            ================================================== -->
+
+                <div class="sidebar-section">
+                    Finance &amp; Records
+                </div>
+
+
+                <a href="/pages/fees.html" class="sidebar-link">
+
+                    <i class="bi bi-cash-stack"></i>
+
+                    <span>
+                        Fees &amp; Payments
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/documents.html" class="sidebar-link">
+
+                    <i class="bi bi-folder2-open"></i>
+
+                    <span>
+                        Documents
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/reports.html" class="sidebar-link">
+
+                    <i class="bi bi-file-earmark-bar-graph"></i>
+
+                    <span>
+                        Reports
+                    </span>
+
+                </a>
+
+
+                <!-- =================================================
+                 ADMINISTRATION
+            ================================================== -->
+
+                <div class="sidebar-section">
+                    Administration
+                </div>
+
+
+                <a href="/pages/users.html" class="sidebar-link">
+
+                    <i class="bi bi-person-gear"></i>
+
+                    <span>
+                        Users
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/roles.html" class="sidebar-link">
+
+                    <i class="bi bi-shield-check"></i>
+
+                    <span>
+                        Roles
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/permissions.html" class="sidebar-link">
+
+                    <i class="bi bi-key"></i>
+
+                    <span>
+                        Permissions
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/profile.html" class="sidebar-link">
+
+                    <i class="bi bi-person-circle"></i>
+
+                    <span>
+                        My Profile
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/settings.html" class="sidebar-link">
+
+                    <i class="bi bi-gear"></i>
+
+                    <span>
+                        Settings
+                    </span>
+
+                </a>
+
+            </div>
+
+        </aside>
+
+
+        <!-- SIDEBAR OVERLAY -->
+        <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+
+        <!-- MAIN -->
+        <main class="sms-main">
+
+            <!-- HEADER -->
+            <header class="sms-header">
+
+                <div class="header-inner">
+
+                    <div class="header-left">
+
+                        <button id="sidebarToggle" type="button" class="btn btn-light border mobile-menu-button"
+                            aria-label="Open navigation">
+                            <i class="bi bi-list fs-5"></i>
+                        </button>
+
+                        <div class="page-heading">
+                            <h1>Dashboard</h1>
+                            <p>School administration overview</p>
+                        </div>
+
+                    </div>
+
+
+                    <div class="header-actions">
+
+                        <button id="refreshDashboard" type="button"
+                            class="btn btn-light border btn-sm d-flex align-items-center gap-2"
+                            title="Refresh dashboard">
+                            <i class="bi bi-arrow-clockwise"></i>
+                            <span class="d-none d-sm-inline">Refresh</span>
+                        </button>
+
+
+                        <div class="header-user">
+
+                            <div id="userAvatar" class="user-avatar" aria-label="User avatar">
+                                U
+                            </div>
+
+                            <div class="user-details">
+                                <div id="currentUserName" class="user-name" data-user-name>
+                                    Administrator
+                                </div>
+
+                                <span class="user-role" data-user-role>
+                                    Administrator
+                                </span>
+                            </div>
+
+                            <button id="logoutButton" type="button"
+                                class="btn btn-outline-danger btn-sm d-none d-md-inline-flex align-items-center gap-1">
+                                <i class="bi bi-box-arrow-right"></i>
+                                Logout
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </header>
+
+
+            <!-- CONTENT -->
+            <section class="sms-content">
+
+                <!-- WELCOME -->
+                <div class="card welcome-card mb-4">
+
+                    <div class="card-body">
+
+                        <div class="row align-items-center">
+
+                            <div class="col">
+
+                                <h2 class="welcome-title">
+                                    Welcome back,
+                                    <span data-user-name>Administrator</span>
+                                </h2>
+
+                                <p class="welcome-text">
+                                    Manage your school's students, staff, academics,
+                                    attendance, finances and records from one place.
+                                </p>
+
+                                <div class="school-details">
+
+                                    <span class="school-badge">
+                                        <i class="bi bi-building"></i>
+                                        <span data-school-name>
+                                            School Management System
+                                        </span>
+                                    </span>
+
+                                    <span class="school-badge">
+                                        <i class="bi bi-hash"></i>
+                                        <span data-school-code>
+                                            —
+                                        </span>
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-auto">
+                                <div class="welcome-icon">
+                                    <i class="bi bi-mortarboard-fill"></i>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- STATISTICS -->
+                <div class="row g-3 mb-4">
+
+                    <!-- STUDENTS -->
+                    <div class="col-6 col-xl-3">
+
+                        <div class="card stat-card">
+
+                            <div class="card-body">
+
+                                <div class="stat-icon">
+                                    <i class="bi bi-people-fill"></i>
+                                </div>
+
+                                <div class="stat-label">
+                                    Total Students
+                                </div>
+
+                                <div id="totalStudents" class="stat-value" data-dashboard data-stat>
+                                    0
+                                </div>
+
+                                <a href="/pages/students.html" class="stat-link">
+                                    View students
+                                    <i class="bi bi-arrow-right"></i>
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- STAFF -->
+                    <div class="col-6 col-xl-3">
+
+                        <div class="card stat-card">
+
+                            <div class="card-body">
+
+                                <div class="stat-icon">
+                                    <i class="bi bi-person-badge-fill"></i>
+                                </div>
+
+                                <div class="stat-label">
+                                    Total Staff
+                                </div>
+
+                                <div id="totalStaff" class="stat-value" data-dashboard data-stat>
+                                    0
+                                </div>
+
+                                <a href="/pages/staff.html" class="stat-link">
+                                    View staff
+                                    <i class="bi bi-arrow-right"></i>
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- CLASSES -->
+                    <div class="col-6 col-xl-3">
+
+                        <div class="card stat-card">
+
+                            <div class="card-body">
+
+                                <div class="stat-icon">
+                                    <i class="bi bi-building"></i>
+                                </div>
+
+                                <div class="stat-label">
+                                    Total Classes
+                                </div>
+
+                                <div id="totalClasses" class="stat-value" data-dashboard data-stat>
+                                    0
+                                </div>
+
+                                <a href="/pages/classes.html" class="stat-link">
+                                    View classes
+                                    <i class="bi bi-arrow-right"></i>
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- SUBJECTS -->
+                    <div class="col-6 col-xl-3">
+
+                        <div class="card stat-card">
+
+                            <div class="card-body">
+
+                                <div class="stat-icon">
+                                    <i class="bi bi-book-half"></i>
+                                </div>
+
+                                <div class="stat-label">
+                                    Total Subjects
+                                </div>
+
+                                <div id="totalSubjects" class="stat-value" data-dashboard data-stat>
+                                    0
+                                </div>
+
+                                <a href="/pages/subjects.html" class="stat-link">
+                                    View subjects
+                                    <i class="bi bi-arrow-right"></i>
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- GUARDIANS -->
+                    <div class="col-6 col-xl-3">
+
+                        <div class="card stat-card">
+
+                            <div class="card-body">
+
+                                <div class="stat-icon">
+                                    <i class="bi bi-person-hearts"></i>
+                                </div>
+
+                                <div class="stat-label">
+                                    Total Guardians
+                                </div>
+
+                                <div id="totalGuardians" class="stat-value" data-dashboard data-stat>
+                                    0
+                                </div>
+
+                                <a href="/pages/guardians.html" class="stat-link">
+                                    View guardians
+                                    <i class="bi bi-arrow-right"></i>
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- FEES -->
+                    <div class="col-6 col-xl-3">
+
+                        <div class="card stat-card">
+
+                            <div class="card-body">
+
+                                <div class="stat-icon">
+                                    <i class="bi bi-wallet2"></i>
+                                </div>
+
+                                <div class="stat-label">
+                                    Total Fees
+                                </div>
+
+                                <div id="totalFees" class="stat-value" data-dashboard data-stat>
+                                    ₦0
+                                </div>
+
+                                <a href="/pages/fees.html" class="stat-link">
+                                    View fees
+                                    <i class="bi bi-arrow-right"></i>
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- OUTSTANDING -->
+                    <div class="col-6 col-xl-3">
+
+                        <div class="card stat-card">
+
+                            <div class="card-body">
+
+                                <div class="stat-icon">
+                                    <i class="bi bi-exclamation-circle-fill"></i>
+                                </div>
+
+                                <div class="stat-label">
+                                    Outstanding Fees
+                                </div>
+
+                                <div id="outstandingFees" class="stat-value" data-dashboard data-stat>
+                                    ₦0
+                                </div>
+
+                                <a href="/pages/fees.html" class="stat-link">
+                                    Review payments
+                                    <i class="bi bi-arrow-right"></i>
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- PAYMENTS -->
+                    <div class="col-6 col-xl-3">
+
+                        <div class="card stat-card">
+
+                            <div class="card-body">
+
+                                <div class="stat-icon">
+                                    <i class="bi bi-cash-stack"></i>
+                                </div>
+
+                                <div class="stat-label">
+                                    Total Payments
+                                </div>
+
+                                <div id="totalPayments" class="stat-value" data-dashboard data-stat>
+                                    ₦0
+                                </div>
+
+                                <a href="/pages/fees.html" class="stat-link">
+                                    View payments
+                                    <i class="bi bi-arrow-right"></i>
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- RECENT ACTIVITY -->
+                <div class="row g-3 mb-4">
+
+                    <!-- RECENT STUDENTS -->
+                    <div class="col-lg-6">
+
+                        <div class="panel-card">
+
+                            <div class="panel-header">
+
+                                <h3 class="panel-title">
+                                    <i class="bi bi-person-plus-fill"></i>
+                                    Recent Students
+                                </h3>
+
+                                <a href="/pages/students.html" class="btn btn-sm btn-outline-primary">
+                                    View all
+                                </a>
+
+                            </div>
+
+                            <div class="panel-body">
+
+                                <div class="recent-list" data-recent-students>
+
+                                    <div class="empty-state">
+
+                                        <div class="spinner-border spinner-border-sm text-primary mb-2" role="status">
+                                        </div>
+
+                                        <p>Loading students...</p>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- RECENT PAYMENTS -->
+                    <div class="col-lg-6">
+
+                        <div class="panel-card">
+
+                            <div class="panel-header">
+
+                                <h3 class="panel-title">
+                                    <i class="bi bi-cash-coin"></i>
+                                    Recent Payments
+                                </h3>
+
+                                <a href="/pages/fees.html" class="btn btn-sm btn-outline-primary">
+                                    View all
+                                </a>
+
+                            </div>
+
+                            <div class="panel-body">
+
+                                <div class="recent-list" data-recent-payments>
+
+                                    <div class="empty-state">
+
+                                        <div class="spinner-border spinner-border-sm text-primary mb-2" role="status">
+                                        </div>
+
+                                        <p>Loading payments...</p>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- QUICK ACTIONS -->
+                <div class="panel-card">
+
+                    <div class="panel-header">
+
+                        <h3 class="panel-title">
+                            <i class="bi bi-lightning-charge-fill"></i>
+                            Quick Actions
+                        </h3>
+
+                    </div>
+
+                    <div class="panel-body">
+
+                        <div class="row g-2">
+
+                            <div class="col-6 col-sm-4 col-lg-2">
+
+                                <button type="button" class="quick-action" data-action="add-student">
+                                    <i class="bi bi-person-plus-fill"></i>
+                                    <span>Add Student</span>
+                                </button>
+
+                            </div>
+
+
+                            <div class="col-6 col-sm-4 col-lg-2">
+
+                                <button type="button" class="quick-action" data-action="students">
+                                    <i class="bi bi-people-fill"></i>
+                                    <span>Students</span>
+                                </button>
+
+                            </div>
+
+
+                            <div class="col-6 col-sm-4 col-lg-2">
+
+                                <button type="button" class="quick-action" data-action="staff">
+                                    <i class="bi bi-person-badge-fill"></i>
+                                    <span>Staff</span>
+                                </button>
+
+                            </div>
+
+
+                            <div class="col-6 col-sm-4 col-lg-2">
+
+                                <button type="button" class="quick-action" data-action="classes">
+                                    <i class="bi bi-building"></i>
+                                    <span>Classes</span>
+                                </button>
+
+                            </div>
+
+
+                            <div class="col-6 col-sm-4 col-lg-2">
+
+                                <button type="button" class="quick-action" data-action="subjects">
+                                    <i class="bi bi-book-half"></i>
+                                    <span>Subjects</span>
+                                </button>
+
+                            </div>
+
+
+                            <div class="col-6 col-sm-4 col-lg-2">
+
+                                <button type="button" class="quick-action" data-action="attendance">
+                                    <i class="bi bi-calendar-check-fill"></i>
+                                    <span>Attendance</span>
+                                </button>
+
+                            </div>
+
+
+                            <div class="col-6 col-sm-4 col-lg-2">
+
+                                <button type="button" class="quick-action" data-action="results">
+                                    <i class="bi bi-bar-chart-fill"></i>
+                                    <span>Results</span>
+                                </button>
+
+                            </div>
+
+
+                            <div class="col-6 col-sm-4 col-lg-2">
+
+                                <button type="button" class="quick-action" data-action="fees">
+                                    <i class="bi bi-wallet2"></i>
+                                    <span>Fees</span>
+                                </button>
+
+                            </div>
+
+
+                            <div class="col-6 col-sm-4 col-lg-2">
+
+                                <button type="button" class="quick-action" data-action="guardians">
+                                    <i class="bi bi-person-hearts"></i>
+                                    <span>Guardians</span>
+                                </button>
+
+                            </div>
+
+
+                            <div class="col-6 col-sm-4 col-lg-2">
+
+                                <button type="button" class="quick-action" data-action="settings">
+                                    <i class="bi bi-gear-fill"></i>
+                                    <span>Settings</span>
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+
+    <!-- BOOTSTRAP -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+
+
+    <!-- APPLICATION SCRIPTS -->
+    <script src="../js/api.js" defer></script>
+
+    <script src="../js/app.js" defer></script>
+
+    <script src="../js/auth.js" defer></script>
+
+    <script src="../js/dashboard.js" defer></script>
+
+
+    <!-- MOBILE SIDEBAR / LOGOUT -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const sidebar = document.getElementById("smsSidebar");
+            const sidebarToggle = document.getElementById("sidebarToggle");
+            const sidebarOverlay = document.getElementById("sidebarOverlay");
+
+            function closeSidebar() {
+                if (sidebar) {
+                    sidebar.classList.remove("show");
+                }
+
+                if (sidebarOverlay) {
+                    sidebarOverlay.classList.remove("show");
+                }
+            }
+
+            function openSidebar() {
+                if (sidebar) {
+                    sidebar.classList.add("show");
+                }
+
+                if (sidebarOverlay) {
+                    sidebarOverlay.classList.add("show");
+                }
+            }
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener("click", function () {
+
+                    if (sidebar && sidebar.classList.contains("show")) {
+                        closeSidebar();
+                    } else {
+                        openSidebar();
+                    }
+
+                });
+            }
+
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener("click", closeSidebar);
+            }
+
+            document.querySelectorAll("[data-dashboard-link]").forEach(function (link) {
+
+                link.addEventListener("click", function () {
+                    closeSidebar();
+                });
+
+            });
+
+
+            const logoutButton = document.getElementById("logoutButton");
+
+            if (logoutButton) {
+
+                logoutButton.addEventListener("click", async function () {
+
+                    try {
+
+                        if (typeof logoutUser === "function") {
+                            await logoutUser();
+                            return;
+                        }
+
+                        if (typeof logout === "function") {
+                            await logout();
+                            return;
+                        }
+
+                        localStorage.removeItem("school_management_token");
+                        localStorage.removeItem("school_management_user");
+
+                        window.location.href = "/pages/login.html";
+
+                    } catch (error) {
+
+                        console.error("Logout error:", error);
+
+                        localStorage.removeItem("school_management_token");
+                        localStorage.removeItem("school_management_user");
+
+                        window.location.href = "/pages/login.html";
+                    }
+
+                });
+
+            }
+
+        });
+    </script>
+
+</body>
+
+</html>

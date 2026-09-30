@@ -3272,8 +3272,17 @@ function navigateQuickAction(
         notifications:
             "/pages/notifications.html",
 
-        announcements:
+                announcements:
             "/pages/announcements.html",
+
+        enrollment:
+            "/pages/enrollment.html",
+
+        "student-documents":
+            "/pages/student-documents.html",
+
+        timetable:
+            "/pages/timetable.html",
 
         users:
             "/pages/users.html",

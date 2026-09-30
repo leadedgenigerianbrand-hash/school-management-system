@@ -6,9 +6,9 @@
 :root {
     --sms-sidebar-width: 260px;
     --sms-sidebar-hover: rgba(255, 255, 255, 0.09);
-    --sms-sidebar-bg-start: #111827;
-    --sms-sidebar-bg-middle: #172033;
-    --sms-sidebar-bg-end: #0f172a;
+    --sms-sidebar-bg-start: #172554;
+    --sms-sidebar-bg-middle: #1e3a8a;
+    --sms-sidebar-bg-end: #172554;
     --sms-sidebar-active: rgba(13, 110, 253, 0.9);
 }
 
@@ -23,12 +23,10 @@
     bottom: 0;
     width: var(--sms-sidebar-width);
     background:
-        linear-gradient(
-            180deg,
+        linear-gradient(180deg,
             var(--sms-sidebar-bg-start) 0%,
             var(--sms-sidebar-bg-middle) 55%,
-            var(--sms-sidebar-bg-end) 100%
-        );
+            var(--sms-sidebar-bg-end) 100%);
     color: #fff;
     z-index: 1040;
     overflow-y: auto;

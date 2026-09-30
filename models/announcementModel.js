@@ -116,12 +116,12 @@ function buildAnnouncementSelect() {
             a.updated_at,
             CONCAT_WS(
                 ' ',
-                s.first_name,
-                s.last_name
+                u.first_name,
+                u.last_name
             ) AS created_by_name
         FROM announcements a
-        LEFT JOIN staff s
-            ON s.id = a.created_by
+        LEFT JOIN users u
+            ON u.id = a.created_by
     `;
 }
 

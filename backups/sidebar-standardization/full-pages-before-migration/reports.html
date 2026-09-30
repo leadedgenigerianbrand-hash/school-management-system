@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Reports | School Management System</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --primary: #2563eb;
+            --page-bg: #f5f7fb;
+            --border: #e5e7eb;
+            --text: #1f2937;
+            --muted: #6b7280;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--page-bg);
+            color: var(--text);
+            font-family: Inter, Arial, Helvetica, sans-serif;
+        }
+
+        .app-layout {
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            width: var(--sidebar-width);
+            background: #111827;
+            color: #fff;
+            z-index: 1040;
+            overflow-y: auto;
+        }
+
+        .sidebar-brand {
+            padding: 22px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .sidebar-brand-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 21px;
+        }
+
+        .sidebar-brand small {
+            color: #9ca3af;
+        }
+
+        .sidebar-section {
+            padding: 18px 12px 6px;
+            color: #6b7280;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+        }
+
+        .sidebar .nav-link {
+            color: #d1d5db;
+            border-radius: 8px;
+            padding: 10px 13px;
+            margin: 2px 8px;
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            font-size: 13px;
+        }
+
+        .sidebar .nav-link i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            color: #fff;
+            background: rgba(37, 99, 235, 0.9);
+        }
+
+        .main-wrapper {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        .topbar {
+            height: 70px;
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .mobile-toggle {
+            display: none;
+        }
+
+        .page-content {
+            padding: 28px;
+        }
+
+        .page-heading h1 {
+            font-size: 25px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .page-heading p {
+            color: var(--muted);
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .card {
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+        }
+
+        .filter-card,
+        .report-card,
+        .results-card {
+            border-radius: 12px;
+        }
+
+        .section-heading {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-control,
+        .form-select {
+            min-height: 42px;
+            border-color: #d1d5db;
+            font-size: 14px;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.12);
+        }
+
+        .report-card {
+            height: 100%;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .report-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+        }
+
+        .report-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: #dbeafe;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .report-card h3 {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .report-card p {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+            min-height: 62px;
+        }
+
+        .results-header {
+            padding: 18px 20px;
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .results-body {
+            padding: 20px;
+            background: #fff;
+        }
+
+        .summary-item {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            height: 100%;
+        }
+
+        .summary-item span {
+            display: block;
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 7px;
+        }
+
+        .summary-item strong {
+            display: block;
+            font-size: 21px;
+        }
+
+        .table-responsive {
+            border: 1px solid var(--border);
+            border-radius: 9px;
+        }
+
+        .dynamic-table {
+            min-width: 800px;
+            margin-bottom: 0;
+        }
+
+        .dynamic-table th {
+            background: #f9fafb;
+            color: #374151;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+        }
+
+        .dynamic-table td {
+            font-size: 13px;
+            vertical-align: middle;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 55px 20px;
+            color: var(--muted);
+        }
+
+        .empty-state-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            background: #eff6ff;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 25px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 45px;
+            color: var(--muted);
+        }
+
+        .report-message {
+            background: #f9fafb;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            padding: 18px;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .user-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #dbeafe;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        #alert {
+            display: none;
+        }
+
+        #alert.show {
+            display: block;
+        }
+
+        #sidebarOverlay {
+            display: none;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 9px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        @media (max-width: 991.98px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.25s ease;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-wrapper {
+                margin-left: 0;
+            }
+
+            .mobile-toggle {
+                display: inline-flex;
+            }
+
+            #sidebarOverlay.show {
+                display: block;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.45);
+                z-index: 1030;
+            }
+
+            .topbar {
+                padding: 0 18px;
+            }
+
+            .page-content {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .page-content {
+                padding: 16px;
+            }
+
+            .topbar {
+                height: 62px;
+            }
+
+            .page-heading h1 {
+                font-size: 22px;
+            }
+
+            .report-card p {
+                min-height: auto;
+            }
+        }
+
+        @media print {
+
+            .sidebar,
+            .topbar,
+            .filter-card,
+            .reports-section,
+            .no-print,
+            #alert {
+                display: none !important;
+            }
+
+            .main-wrapper {
+                margin-left: 0;
+            }
+
+            .page-content {
+                padding: 0;
+            }
+
+            .results-card {
+                border: 0;
+                box-shadow: none;
+            }
+
+            .results-body {
+                padding: 0;
+            }
+
+            body {
+                background: #fff;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="sidebarOverlay"></div>
+
+    <aside class="sidebar" id="sidebar">
+
+        <div class="sidebar-brand">
+            <div class="d-flex align-items-center gap-3">
+
+                <div class="sidebar-brand-icon">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
+
+                <div>
+                    <div class="fw-bold">
+                        School Management
+                    </div>
+
+                    <small>
+                        Administration System
+                    </small>
+                </div>
+
+            </div>
+        </div>
+
+        <nav class="py-2">
+
+            <div class="sidebar-section">
+                Main
+            </div>
+
+            <a class="nav-link" href="dashboard.html">
+                <i class="bi bi-grid-1x2-fill"></i>
+                Dashboard
+            </a>
+
+            <a class="nav-link" href="students.html">
+                <i class="bi bi-people-fill"></i>
+                Students
+            </a>
+
+            <a class="nav-link" href="staff.html">
+                <i class="bi bi-person-badge-fill"></i>
+                Staff
+            </a>
+
+            <a class="nav-link" href="guardians.html">
+                <i class="bi bi-person-hearts"></i>
+                Guardians
+            </a>
+
+            <div class="sidebar-section">
+                Academic
+            </div>
+
+            <a class="nav-link" href="classes.html">
+                <i class="bi bi-building"></i>
+                Classes
+            </a>
+
+            <a class="nav-link" href="class-arms.html">
+                <i class="bi bi-diagram-3-fill"></i>
+                Class Arms
+            </a>
+
+            <a class="nav-link" href="departments.html">
+                <i class="bi bi-diagram-2-fill"></i>
+                Departments
+            </a>
+
+            <a class="nav-link" href="subjects.html">
+                <i class="bi bi-book-fill"></i>
+                Subjects
+            </a>
+
+            <a class="nav-link" href="academic-sessions.html">
+                <i class="bi bi-calendar3"></i>
+                Sessions
+            </a>
+
+            <a class="nav-link" href="terms.html">
+                <i class="bi bi-calendar2-week-fill"></i>
+                Terms
+            </a>
+
+            <a class="nav-link" href="attendance.html">
+                <i class="bi bi-calendar-check-fill"></i>
+                Attendance
+            </a>
+
+            <a class="nav-link" href="results.html">
+                <i class="bi bi-journal-check"></i>
+                Results
+            </a>
+
+            <div class="sidebar-section">
+                Finance and Records
+            </div>
+
+            <a class="nav-link" href="fees.html">
+                <i class="bi bi-cash-stack"></i>
+                Fees
+            </a>
+
+            <a class="nav-link" href="documents.html">
+                <i class="bi bi-folder-fill"></i>
+                Documents
+            </a>
+
+            <a class="nav-link active" href="reports.html">
+                <i class="bi bi-bar-chart-fill"></i>
+                Reports
+            </a>
+
+            <div class="sidebar-section">
+                Administration
+            </div>
+
+            <a class="nav-link" href="users.html">
+                <i class="bi bi-person-gear"></i>
+                Users
+            </a>
+
+            <a class="nav-link" href="roles.html">
+                <i class="bi bi-shield-lock-fill"></i>
+                Roles
+            </a>
+
+            <a class="nav-link" href="permissions.html">
+                <i class="bi bi-key-fill"></i>
+                Permissions
+            </a>
+
+            <a class="nav-link" href="profile.html">
+                <i class="bi bi-person-circle"></i>
+                Profile
+            </a>
+
+            <a class="nav-link" href="settings.html">
+                <i class="bi bi-gear-fill"></i>
+                Settings
+            </a>
+
+        </nav>
+    </aside>
+
+    <div class="main-wrapper">
+
+        <header class="topbar">
+
+            <div class="d-flex align-items-center gap-3">
+
+                <button type="button" class="btn btn-light mobile-toggle" id="sidebarToggle">
+                    <i class="bi bi-list fs-5"></i>
+                </button>
+
+                <div class="d-none d-md-block">
+                    <span class="fw-semibold">
+                        Reports
+                    </span>
+                </div>
+
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+
+                <div class="user-avatar">
+                    <i class="bi bi-person-fill"></i>
+                </div>
+
+                <div class="d-none d-sm-block">
+
+                    <div class="fw-semibold small" id="userName">
+                        Administrator
+                    </div>
+
+                    <div class="text-muted" style="font-size: 11px;">
+                        School Administrator
+                    </div>
+
+                </div>
+
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="logoutButton">
+                    <i class="bi bi-box-arrow-right me-1"></i>
+                    Logout
+                </button>
+
+            </div>
+
+        </header>
+
+        <main class="page-content">
+
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+
+                <div class="page-heading">
+
+                    <h1>
+                        Reports
+                    </h1>
+
+                    <p>
+                        Generate and review school management reports.
+                    </p>
+
+                </div>
+
+                <div class="d-flex gap-2 no-print">
+
+                    <button type="button" class="btn btn-outline-secondary" id="printReportButton">
+                        <i class="bi bi-printer me-1"></i>
+                        Print
+                    </button>
+
+                    <button type="button" class="btn btn-primary" id="refreshReportsButton">
+                        <i class="bi bi-arrow-clockwise me-1"></i>
+                        Refresh
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div id="alert" class="alert mb-4" role="alert"></div>
+
+            <!-- ==========================================================
+                 REPORT FILTERS
+                 ========================================================== -->
+
+            <section class="card filter-card mb-4 no-print">
+
+                <div class="card-body p-4">
+
+                    <div class="d-flex align-items-center gap-2 mb-4">
+
+                        <i class="bi bi-funnel-fill text-primary"></i>
+
+                        <h2 class="section-heading mb-0">
+                            Report Filters
+                        </h2>
+
+                    </div>
+
+                    <div class="row g-3">
+
+                        <div class="col-12 col-md-4">
+
+                            <label class="form-label" for="reportType">
+                                Report Type
+                            </label>
+
+                            <select id="reportType" class="form-select">
+
+                                <option value="dashboard">
+                                    School Dashboard
+                                </option>
+
+                                <option value="students">
+                                    Student Report
+                                </option>
+
+                                <option value="academic">
+                                    Academic Report
+                                </option>
+
+                                <option value="attendance">
+                                    Attendance Report
+                                </option>
+
+                                <option value="fees">
+                                    Fees Report
+                                </option>
+
+                                <option value="staff">
+                                    Staff Report
+                                </option>
+
+                                <option value="complete">
+                                    Complete School Report
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="col-12 col-md-4">
+
+                            <label class="form-label" for="sessionId">
+                                Academic Session
+                            </label>
+
+                            <select id="sessionId" class="form-select">
+
+                                <option value="">
+                                    Loading Academic Sessions...
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="col-12 col-md-4">
+
+                            <label class="form-label" for="termId">
+                                Term
+                            </label>
+
+                            <select id="termId" class="form-select">
+
+                                <option value="">
+                                    Loading Terms...
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="col-12 col-md-6">
+
+                            <label class="form-label" for="classId">
+                                Class
+                            </label>
+
+                            <select id="classId" class="form-select">
+
+                                <option value="">
+                                    Loading Classes...
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="col-12 col-md-3">
+
+                            <label class="form-label" for="startDate">
+                                Start Date
+                            </label>
+
+                            <input type="date" id="startDate" class="form-control">
+
+                        </div>
+
+                        <div class="col-12 col-md-3">
+
+                            <label class="form-label" for="endDate">
+                                End Date
+                            </label>
+
+                            <input type="date" id="endDate" class="form-control">
+
+                        </div>
+
+                        <div class="col-12 d-flex flex-wrap gap-2">
+
+                            <button type="button" class="btn btn-primary" id="generateReportButton">
+                                <i class="bi bi-file-earmark-bar-graph me-1"></i>
+                                Generate Report
+                            </button>
+
+                            <button type="button" class="btn btn-outline-secondary" id="clearFiltersButton">
+                                <i class="bi bi-x-circle me-1"></i>
+                                Clear Filters
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- ==========================================================
+                 AVAILABLE REPORTS
+                 ========================================================== -->
+
+            <section class="reports-section mb-4">
+
+                <div class="d-flex align-items-center gap-2 mb-3">
+
+                    <i class="bi bi-files text-primary"></i>
+
+                    <h2 class="section-heading mb-0">
+                        Available Reports
+                    </h2>
+
+                </div>
+
+                <div class="row g-3">
+
+                    <div class="col-12 col-md-6 col-xl-4">
+
+                        <div class="card report-card">
+
+                            <div class="card-body p-4">
+
+                                <div class="report-icon mb-3">
+                                    <i class="bi bi-speedometer2"></i>
+                                </div>
+
+                                <h3>
+                                    School Dashboard
+                                </h3>
+
+                                <p>
+                                    View the main school statistics,
+                                    including students, staff, fees,
+                                    attendance and academic information.
+                                </p>
+
+                                <button class="btn btn-primary w-100 report-action" data-report-type="dashboard">
+                                    <i class="bi bi-play-fill me-1"></i>
+                                    Generate
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+
+                        <div class="card report-card">
+
+                            <div class="card-body p-4">
+
+                                <div class="report-icon mb-3">
+                                    <i class="bi bi-mortarboard-fill"></i>
+                                </div>
+
+                                <h3>
+                                    Student Report
+                                </h3>
+
+                                <p>
+                                    Review student statistics and
+                                    student distribution by class.
+                                </p>
+
+                                <button class="btn btn-primary w-100 report-action" data-report-type="students">
+                                    <i class="bi bi-play-fill me-1"></i>
+                                    Generate
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+
+                        <div class="card report-card">
+
+                            <div class="card-body p-4">
+
+                                <div class="report-icon mb-3">
+                                    <i class="bi bi-calendar-check-fill"></i>
+                                </div>
+
+                                <h3>
+                                    Attendance Report
+                                </h3>
+
+                                <p>
+                                    Review attendance totals, attendance
+                                    rates and attendance performance.
+                                </p>
+
+                                <button class="btn btn-primary w-100 report-action" data-report-type="attendance">
+                                    <i class="bi bi-play-fill me-1"></i>
+                                    Generate
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+
+                        <div class="card report-card">
+
+                            <div class="card-body p-4">
+
+                                <div class="report-icon mb-3">
+                                    <i class="bi bi-journal-check"></i>
+                                </div>
+
+                                <h3>
+                                    Academic Report
+                                </h3>
+
+                                <p>
+                                    Review academic result statistics
+                                    for the selected session, term or class.
+                                </p>
+
+                                <button class="btn btn-primary w-100 report-action" data-report-type="academic">
+                                    <i class="bi bi-play-fill me-1"></i>
+                                    Generate
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+
+                        <div class="card report-card">
+
+                            <div class="card-body p-4">
+
+                                <div class="report-icon mb-3">
+                                    <i class="bi bi-cash-stack"></i>
+                                </div>
+
+                                <h3>
+                                    Fees Report
+                                </h3>
+
+                                <p>
+                                    Review fee structures, amounts due,
+                                    amounts paid and outstanding balances.
+                                </p>
+
+                                <button class="btn btn-primary w-100 report-action" data-report-type="fees">
+                                    <i class="bi bi-play-fill me-1"></i>
+                                    Generate
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+
+                        <div class="card report-card">
+
+                            <div class="card-body p-4">
+
+                                <div class="report-icon mb-3">
+                                    <i class="bi bi-person-badge-fill"></i>
+                                </div>
+
+                                <h3>
+                                    Staff Report
+                                </h3>
+
+                                <p>
+                                    Review staff numbers and staff
+                                    distribution by department.
+                                </p>
+
+                                <button class="btn btn-primary w-100 report-action" data-report-type="staff">
+                                    <i class="bi bi-play-fill me-1"></i>
+                                    Generate
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-4">
+
+                        <div class="card report-card">
+
+                            <div class="card-body p-4">
+
+                                <div class="report-icon mb-3">
+                                    <i class="bi bi-file-earmark-bar-graph"></i>
+                                </div>
+
+                                <h3>
+                                    Complete School Report
+                                </h3>
+
+                                <p>
+                                    Generate a combined report covering
+                                    school overview, students, staff,
+                                    fees, attendance and results.
+                                </p>
+
+                                <button class="btn btn-primary w-100 report-action" data-report-type="complete">
+                                    <i class="bi bi-play-fill me-1"></i>
+                                    Generate
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- ==========================================================
+                 REPORT RESULTS
+                 ========================================================== -->
+
+            <section class="card results-card">
+
+                <div class="results-header">
+
+                    <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
+
+                        <div>
+
+                            <div class="d-flex align-items-center gap-2">
+
+                                <h2 id="resultsTitle" class="h5 fw-bold mb-1">
+                                    Report Results
+                                </h2>
+
+                                <span id="reportTypeBadge" class="report-badge d-none">
+                                    Report
+                                </span>
+
+                            </div>
+
+                            <div id="resultsDate" class="text-muted small">
+                                No report generated
+                            </div>
+
+                        </div>
+
+                        <div class="no-print">
+
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="printResultsButton">
+                                <i class="bi bi-printer me-1"></i>
+                                Print Results
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div id="resultsBody" class="results-body">
+
+                    <div class="empty-state">
+
+                        <div class="empty-state-icon">
+                            <i class="bi bi-file-earmark-bar-graph"></i>
+                        </div>
+
+                        <h3 class="h5 fw-bold text-dark">
+                            No report generated yet
+                        </h3>
+
+                        <p class="mb-0">
+                            Select a report above or choose a report type
+                            and generate it.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <!-- ==============================================================
+         JAVASCRIPT
+         ============================================================== -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="../js/api.js"></script>
+
+    <script src="../js/auth.js"></script>
+
+    <script src="../js/reports.js"></script>
+
+</body>
+
+</html>

@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
@@ -19,34 +18,78 @@
             padding-bottom: 40px;
         }
 
-        .page-header {
-            margin-bottom: 24px;
-        }
+        /*
+        |--------------------------------------------------------------------------
+        | TIMETABLE PAGE HEADER
+        |--------------------------------------------------------------------------
+        */
 
-        .page-header-content {
-            display: flex;
-            justify-content: space-between;
+        .timetable-topbar {
+            height: auto;
+            min-height: 104px;
+            padding: 14px 28px;
             align-items: center;
-            gap: 20px;
-            flex-wrap: wrap;
         }
 
-        .page-title {
+        .timetable-topbar-layout {
+            width: 100%;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+            column-gap: 28px;
+        }
+
+        .timetable-heading {
+            min-width: 0;
+        }
+
+        .timetable-heading .page-title {
             margin: 0;
             font-size: 28px;
             font-weight: 700;
+            line-height: 1.2;
         }
 
-        .page-subtitle {
+        .timetable-heading .page-subtitle {
             margin: 6px 0 0;
             color: #6c757d;
+            line-height: 1.4;
+        }
+
+        .timetable-topbar-right {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        .timetable-topbar-right .topbar-right {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            white-space: nowrap;
         }
 
         .page-actions {
             display: flex;
+            align-items: center;
+            justify-content: flex-end;
             gap: 10px;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
+            white-space: nowrap;
         }
+
+        .page-actions .btn {
+            white-space: nowrap;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | TIMETABLE CONTENT
+        |--------------------------------------------------------------------------
+        */
 
         .timetable-card {
             border: 1px solid #dee2e6;
@@ -245,9 +288,43 @@
             margin-bottom: 4px;
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | RESPONSIVE
+        |--------------------------------------------------------------------------
+        */
+
         @media (max-width: 1200px) {
             .filter-grid {
                 grid-template-columns: repeat(2, minmax(180px, 1fr));
+            }
+
+            .timetable-topbar-layout {
+                column-gap: 20px;
+            }
+
+            .timetable-heading .page-title {
+                font-size: 25px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .timetable-topbar {
+                min-height: auto;
+                padding: 14px 20px;
+            }
+
+            .timetable-topbar-layout {
+                grid-template-columns: 1fr;
+                row-gap: 14px;
+            }
+
+            .timetable-topbar-right {
+                align-items: flex-end;
+            }
+
+            .timetable-heading .page-title {
+                font-size: 24px;
             }
         }
 
@@ -256,23 +333,66 @@
                 grid-template-columns: 1fr;
             }
 
-            .page-title {
-                font-size: 24px;
+            .timetable-topbar {
+                padding: 12px 16px;
+            }
+
+            .timetable-heading .page-title {
+                font-size: 22px;
+            }
+
+            .timetable-heading .page-subtitle {
+                font-size: 14px;
+            }
+
+            .timetable-topbar-right {
+                width: 100%;
+                align-items: stretch;
+            }
+
+            .timetable-topbar-right .topbar-right {
+                width: 100%;
+                justify-content: flex-end;
             }
 
             .page-actions {
                 width: 100%;
+                justify-content: flex-end;
+                flex-wrap: wrap;
             }
 
             .page-actions .btn {
-                flex: 1;
+                flex: 1 1 auto;
             }
         }
+
+        @media (max-width: 480px) {
+            .timetable-topbar-right .topbar-right {
+                flex-wrap: wrap;
+            }
+
+            .page-actions {
+                display: grid;
+                grid-template-columns: 1fr;
+                width: 100%;
+            }
+
+            .page-actions .btn {
+                width: 100%;
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | PRINT
+        |--------------------------------------------------------------------------
+        */
 
         @media print {
 
             .sidebar,
             .topbar,
+            .timetable-topbar,
             .page-actions,
             .filters-section,
             .timetable-card-header .btn,
@@ -307,380 +427,383 @@
 
 <body>
 
-<aside id="smsSidebar" class="sms-sidebar">
+    <aside id="smsSidebar" class="sms-sidebar">
 
-
-            <!-- =================================================
+        <!-- =================================================
              SIDEBAR BRAND
         ================================================== -->
 
-            <div class="sidebar-brand">
+        <div class="sidebar-brand">
 
-                <div class="brand-icon">
+            <div class="brand-icon">
+                <i class="bi bi-mortarboard-fill"></i>
+            </div>
 
-                    <i class="bi bi-mortarboard-fill"></i>
+            <div>
 
+                <div class="brand-title">
+                    School Management
                 </div>
 
-
-                <div>
-
-                    <div class="brand-title">
-                        School Management
-                    </div>
-
-                    <span class="brand-subtitle">
-                        Administration Portal
-                    </span>
-
-                </div>
+                <span class="brand-subtitle">
+                    Administration Portal
+                </span>
 
             </div>
 
+        </div>
 
-            <!-- =================================================
+        <!-- =================================================
              SIDEBAR CONTENT
         ================================================== -->
 
-            <div class="sidebar-content">
+        <div class="sidebar-content">
 
-
-                <!-- =================================================
+            <!-- =================================================
                  MAIN
             ================================================== -->
 
-                <div class="sidebar-section">
-                    Main
-                </div>
+            <div class="sidebar-section">
+                Main
+            </div>
 
+            <a href="/pages/dashboard.html" class="sidebar-link">
 
-                <a href="/pages/dashboard.html" class="sidebar-link">
+                <i class="bi bi-speedometer2"></i>
 
-                    <i class="bi bi-speedometer2"></i>
+                <span>
+                    Dashboard
+                </span>
 
-                    <span>
-                        Dashboard
-                    </span>
+            </a>
 
-                </a>
+            <a href="/pages/students.html" class="sidebar-link">
 
+                <i class="bi bi-people"></i>
 
-                <a href="/pages/students.html" class="sidebar-link">
+                <span>
+                    Students
+                </span>
 
-                    <i class="bi bi-people"></i>
+            </a>
 
-                    <span>
-                        Students
-                    </span>
+            <a href="/pages/staff.html" class="sidebar-link">
 
-                </a>
+                <i class="bi bi-person-badge"></i>
 
+                <span>
+                    Staff
+                </span>
 
-                <a href="/pages/staff.html" class="sidebar-link">
+            </a>
 
-                    <i class="bi bi-person-badge"></i>
+            <a href="/pages/guardians.html" class="sidebar-link">
 
-                    <span>
-                        Staff
-                    </span>
+                <i class="bi bi-person-hearts"></i>
 
-                </a>
+                <span>
+                    Guardians
+                </span>
 
+            </a>
 
-                <a href="/pages/guardians.html" class="sidebar-link">
-
-                    <i class="bi bi-person-hearts"></i>
-
-                    <span>
-                        Guardians
-                    </span>
-
-                </a>
-
-
-                <!-- =================================================
+            <!-- =================================================
                  ACADEMIC
             ================================================== -->
 
-                <div class="sidebar-section">
-                    Academic
-                </div>
+            <div class="sidebar-section">
+                Academic
+            </div>
 
+            <a href="/pages/classes.html" class="sidebar-link">
 
-                <a href="/pages/classes.html" class="sidebar-link">
+                <i class="bi bi-building"></i>
 
-                    <i class="bi bi-building"></i>
+                <span>
+                    Classes
+                </span>
 
-                    <span>
-                        Classes
-                    </span>
+            </a>
 
-                </a>
+            <a href="/pages/class-arms.html" class="sidebar-link">
 
+                <i class="bi bi-diagram-3"></i>
 
-                <a href="/pages/class-arms.html" class="sidebar-link">
+                <span>
+                    Class Arms
+                </span>
 
-                    <i class="bi bi-diagram-3"></i>
+            </a>
 
-                    <span>
-                        Class Arms
-                    </span>
+            <a href="/pages/departments.html" class="sidebar-link">
 
-                </a>
+                <i class="bi bi-diagram-2"></i>
 
+                <span>
+                    Departments
+                </span>
 
-                <a href="/pages/departments.html" class="sidebar-link">
+            </a>
 
-                    <i class="bi bi-diagram-2"></i>
+            <a href="/pages/subjects.html" class="sidebar-link">
 
-                    <span>
-                        Departments
-                    </span>
+                <i class="bi bi-book"></i>
 
-                </a>
+                <span>
+                    Subjects
+                </span>
 
+            </a>
 
-                <a href="/pages/subjects.html" class="sidebar-link">
+            <a href="/pages/academic-sessions.html" class="sidebar-link">
 
-                    <i class="bi bi-book"></i>
+                <i class="bi bi-calendar3"></i>
 
-                    <span>
-                        Subjects
-                    </span>
+                <span>
+                    Academic Sessions
+                </span>
 
-                </a>
+            </a>
 
+            <a href="/pages/terms.html" class="sidebar-link">
 
-                <a href="/pages/academic-sessions.html" class="sidebar-link">
+                <i class="bi bi-calendar2-week"></i>
 
-                    <i class="bi bi-calendar3"></i>
+                <span>
+                    Terms
+                </span>
 
-                    <span>
-                        Academic Sessions
-                    </span>
+            </a>
 
-                </a>
+            <a href="/pages/attendance.html" class="sidebar-link">
 
+                <i class="bi bi-calendar-check"></i>
 
-                <a href="/pages/terms.html" class="sidebar-link">
+                <span>
+                    Attendance
+                </span>
 
-                    <i class="bi bi-calendar2-week"></i>
+            </a>
 
-                    <span>
-                        Terms
-                    </span>
+            <a href="/pages/results.html" class="sidebar-link">
 
-                </a>
+                <i class="bi bi-bar-chart"></i>
 
+                <span>
+                    Results
+                </span>
 
-                <a href="/pages/attendance.html" class="sidebar-link">
+            </a>
 
-                    <i class="bi bi-calendar-check"></i>
-
-                    <span>
-                        Attendance
-                    </span>
-
-                </a>
-
-
-                <a href="/pages/results.html" class="sidebar-link">
-
-                    <i class="bi bi-bar-chart"></i>
-
-                    <span>
-                        Results
-                    </span>
-
-                </a>
-
-
-                <!-- =================================================
+            <!-- =================================================
                  FINANCE & RECORDS
             ================================================== -->
 
-                <div class="sidebar-section">
-                    Finance &amp; Records
-                </div>
+            <div class="sidebar-section">
+                Finance &amp; Records
+            </div>
 
+            <a href="/pages/fees.html" class="sidebar-link">
 
-                <a href="/pages/fees.html" class="sidebar-link">
+                <i class="bi bi-cash-stack"></i>
 
-                    <i class="bi bi-cash-stack"></i>
+                <span>
+                    Fees &amp; Payments
+                </span>
 
-                    <span>
-                        Fees &amp; Payments
-                    </span>
+            </a>
 
-                </a>
+            <a href="/pages/documents.html" class="sidebar-link">
 
+                <i class="bi bi-folder2-open"></i>
 
-                <a href="/pages/documents.html" class="sidebar-link">
+                <span>
+                    Documents
+                </span>
 
-                    <i class="bi bi-folder2-open"></i>
+            </a>
 
-                    <span>
-                        Documents
-                    </span>
+            <a href="/pages/reports.html" class="sidebar-link">
 
-                </a>
+                <i class="bi bi-file-earmark-bar-graph"></i>
 
+                <span>
+                    Reports
+                </span>
 
-                <a href="/pages/reports.html" class="sidebar-link">
+            </a>
 
-                    <i class="bi bi-file-earmark-bar-graph"></i>
-
-                    <span>
-                        Reports
-                    </span>
-
-                </a>
-
-
-                <!-- =================================================
+            <!-- =================================================
                  ADMINISTRATION
             ================================================== -->
 
-                <div class="sidebar-section">
-                    Administration
-                </div>
-
-
-                <a href="/pages/users.html" class="sidebar-link">
-
-                    <i class="bi bi-person-gear"></i>
-
-                    <span>
-                        Users
-                    </span>
-
-                </a>
-
-
-                <a href="/pages/roles.html" class="sidebar-link">
-
-                    <i class="bi bi-shield-check"></i>
-
-                    <span>
-                        Roles
-                    </span>
-
-                </a>
-
-
-                <a href="/pages/permissions.html" class="sidebar-link">
-
-                    <i class="bi bi-key"></i>
-
-                    <span>
-                        Permissions
-                    </span>
-
-                </a>
-
-
-                <a href="/pages/profile.html" class="sidebar-link">
-
-                    <i class="bi bi-person-circle"></i>
-
-                    <span>
-                        My Profile
-                    </span>
-
-                </a>
-
-
-                <a href="/pages/settings.html" class="sidebar-link">
-
-                    <i class="bi bi-gear"></i>
-
-                    <span>
-                        Settings
-                    </span>
-
-                </a>
-
+            <div class="sidebar-section">
+                Administration
             </div>
 
-        </aside>
+            <a href="/pages/users.html" class="sidebar-link">
 
-<div id="sidebarOverlay" class="sidebar-overlay"></div>
+                <i class="bi bi-person-gear"></i>
 
-    <div class="app-layout sms-main">
+                <span>
+                    Users
+                </span>
 
+            </a>
 
+            <a href="/pages/roles.html" class="sidebar-link">
+
+                <i class="bi bi-shield-check"></i>
+
+                <span>
+                    Roles
+                </span>
+
+            </a>
+
+            <a href="/pages/permissions.html" class="sidebar-link">
+
+                <i class="bi bi-key"></i>
+
+                <span>
+                    Permissions
+                </span>
+
+            </a>
+
+            <a href="/pages/profile.html" class="sidebar-link">
+
+                <i class="bi bi-person-circle"></i>
+
+                <span>
+                    My Profile
+                </span>
+
+            </a>
+
+            <a href="/pages/settings.html" class="sidebar-link">
+
+                <i class="bi bi-gear"></i>
+
+                <span>
+                    Settings
+                </span>
+
+            </a>
+
+        </div>
+
+    </aside>
+
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="app-layout">
 
         <main class="main-content sms-main">
-        <button type="button" class="btn btn-light mobile-menu-button" id="sidebarToggle" aria-label="Open navigation" aria-expanded="false"><i class="bi bi-list"></i></button>
 
+            <button type="button" class="btn btn-light mobile-menu-button" id="sidebarToggle"
+                aria-label="Open navigation" aria-expanded="false">
+                <i class="bi bi-list"></i>
+            </button>
 
-            <header class="topbar">
+            <!-- =================================================
+                 TIMETABLE HEADER
+            ================================================== -->
 
+            <header class="topbar timetable-topbar">
 
+                <div class="timetable-topbar-layout">
 
-                <div class="topbar-right">
-                    <span id="userName">User</span>
+                    <div class="timetable-heading">
 
-                    <button type="button" class="btn btn-outline-secondary btn-sm" id="logoutButton">
-                        <i class="bi bi-box-arrow-right"></i>
-                        Logout
-                    </button>
+                        <h1 class="page-title">
+                            School Timetable
+                        </h1>
+
+                        <p class="page-subtitle">
+                            Manage class schedules, subjects, teachers and periods.
+                        </p>
+
+                    </div>
+
+                    <div class="timetable-topbar-right">
+
+                        <div class="topbar-right">
+
+                            <span id="userName">
+                                User
+                            </span>
+
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="logoutButton">
+
+                                <i class="bi bi-box-arrow-right"></i>
+
+                                Logout
+
+                            </button>
+
+                        </div>
+
+                        <div class="page-actions">
+
+                            <button type="button" class="btn btn-outline-secondary" id="printTimetableButton">
+
+                                <i class="bi bi-printer"></i>
+
+                                Print
+
+                            </button>
+
+                            <button type="button" class="btn btn-outline-primary" id="refreshTimetableButton">
+
+                                <i class="bi bi-arrow-clockwise"></i>
+
+                                Refresh
+
+                            </button>
+
+                            <button type="button" class="btn btn-primary" id="addTimetableButton">
+
+                                <i class="bi bi-plus-lg"></i>
+
+                                Add Timetable Entry
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
                 </div>
 
             </header>
 
             <div class="container-fluid timetable-page py-4">
 
-                <div class="page-header">
-
-                    <div class="page-header-content">
-
-                        <div>
-                            <h1 class="page-title">School Timetable</h1>
-                            <p class="page-subtitle">
-                                Manage class schedules, subjects, teachers and periods.
-                            </p>
-                        </div>
-
-                        <div class="page-actions">
-
-                            <button type="button" class="btn btn-outline-secondary" id="printTimetableButton">
-                                <i class="bi bi-printer"></i>
-                                Print
-                            </button>
-
-                            <button type="button" class="btn btn-outline-primary" id="refreshTimetableButton">
-                                <i class="bi bi-arrow-clockwise"></i>
-                                Refresh
-                            </button>
-
-                            <button type="button" class="btn btn-primary" id="addTimetableButton">
-                                <i class="bi bi-plus-lg"></i>
-                                Add Timetable Entry
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
                 <div id="messageContainer" class="message-container" aria-live="polite"></div>
 
                 <div id="loadingContainer" class="loading-container">
+
                     <div class="spinner-border" role="status">
-                        <span class="visually-hidden">Loading...</span>
+
+                        <span class="visually-hidden">
+                            Loading...
+                        </span>
+
                     </div>
 
                     <p class="mt-3 mb-0">
                         Loading timetable...
                     </p>
+
                 </div>
 
                 <div class="row g-3 mb-4">
 
                     <div class="col-md-6 col-xl-3">
+
                         <div class="stat-card">
+
                             <div class="stat-label">
                                 Total Entries
                             </div>
@@ -688,11 +811,15 @@
                             <div class="stat-value" id="totalTimetableEntries">
                                 0
                             </div>
+
                         </div>
+
                     </div>
 
                     <div class="col-md-6 col-xl-3">
+
                         <div class="stat-card">
+
                             <div class="stat-label">
                                 Classes
                             </div>
@@ -700,11 +827,15 @@
                             <div class="stat-value" id="totalTimetableClasses">
                                 0
                             </div>
+
                         </div>
+
                     </div>
 
                     <div class="col-md-6 col-xl-3">
+
                         <div class="stat-card">
+
                             <div class="stat-label">
                                 Subjects
                             </div>
@@ -712,11 +843,15 @@
                             <div class="stat-value" id="totalTimetableSubjects">
                                 0
                             </div>
+
                         </div>
+
                     </div>
 
                     <div class="col-md-6 col-xl-3">
+
                         <div class="stat-card">
+
                             <div class="stat-label">
                                 Teachers
                             </div>
@@ -724,7 +859,9 @@
                             <div class="stat-value" id="totalTimetableTeachers">
                                 0
                             </div>
+
                         </div>
+
                     </div>
 
                 </div>
@@ -734,8 +871,11 @@
                     <div class="timetable-card-header">
 
                         <h5>
+
                             <i class="bi bi-funnel"></i>
+
                             Timetable Filters
+
                         </h5>
 
                         <button type="button" class="btn btn-sm btn-outline-secondary" id="clearFiltersButton">
@@ -749,95 +889,144 @@
                         <div class="filter-grid">
 
                             <div>
+
                                 <label for="academicSessionFilter" class="form-label">
                                     Academic Session
                                 </label>
 
                                 <select id="academicSessionFilter" class="form-select">
+
                                     <option value="">
                                         All Sessions
                                     </option>
+
                                 </select>
+
                             </div>
 
                             <div>
+
                                 <label for="classFilter" class="form-label">
                                     Class
                                 </label>
 
                                 <select id="classFilter" class="form-select">
+
                                     <option value="">
                                         All Classes
                                     </option>
+
                                 </select>
+
                             </div>
 
                             <div>
+
                                 <label for="classArmFilter" class="form-label">
                                     Class Arm
                                 </label>
 
                                 <select id="classArmFilter" class="form-select">
+
                                     <option value="">
                                         All Class Arms
                                     </option>
+
                                 </select>
+
                             </div>
 
                             <div>
+
                                 <label for="teacherFilter" class="form-label">
                                     Teacher
                                 </label>
 
                                 <select id="teacherFilter" class="form-select">
+
                                     <option value="">
                                         All Teachers
                                     </option>
+
                                 </select>
+
                             </div>
 
                             <div>
+
                                 <label for="subjectFilter" class="form-label">
                                     Subject
                                 </label>
 
                                 <select id="subjectFilter" class="form-select">
+
                                     <option value="">
                                         All Subjects
                                     </option>
+
                                 </select>
+
                             </div>
 
                             <div>
+
                                 <label for="dayFilter" class="form-label">
                                     Day
                                 </label>
 
                                 <select id="dayFilter" class="form-select">
-                                    <option value="">All Days</option>
-                                    <option value="Monday">Monday</option>
-                                    <option value="Tuesday">Tuesday</option>
-                                    <option value="Wednesday">Wednesday</option>
-                                    <option value="Thursday">Thursday</option>
-                                    <option value="Friday">Friday</option>
-                                    <option value="Saturday">Saturday</option>
+
+                                    <option value="">
+                                        All Days
+                                    </option>
+
+                                    <option value="Monday">
+                                        Monday
+                                    </option>
+
+                                    <option value="Tuesday">
+                                        Tuesday
+                                    </option>
+
+                                    <option value="Wednesday">
+                                        Wednesday
+                                    </option>
+
+                                    <option value="Thursday">
+                                        Thursday
+                                    </option>
+
+                                    <option value="Friday">
+                                        Friday
+                                    </option>
+
+                                    <option value="Saturday">
+                                        Saturday
+                                    </option>
+
                                 </select>
+
                             </div>
 
                             <div>
+
                                 <label for="searchTimetable" class="form-label">
                                     Search
                                 </label>
 
                                 <input type="search" id="searchTimetable" class="form-control"
                                     placeholder="Search subject, teacher or room">
+
                             </div>
 
                             <div class="filter-actions">
 
                                 <button type="button" class="btn btn-primary w-100" id="applyFiltersButton">
+
                                     <i class="bi bi-search"></i>
+
                                     Apply Filters
+
                                 </button>
 
                             </div>
@@ -853,6 +1042,7 @@
                     <div class="timetable-card-header">
 
                         <div>
+
                             <h5>
                                 Weekly Timetable
                             </h5>
@@ -860,6 +1050,7 @@
                             <small id="timetablePeriodLabel" class="text-muted">
                                 All timetable entries
                             </small>
+
                         </div>
 
                     </div>
@@ -867,18 +1058,25 @@
                     <div class="timetable-card-body p-0">
 
                         <div id="emptyTimetableContainer" class="empty-timetable">
+
                             <i class="bi bi-calendar3"></i>
 
-                            <h5>No timetable entries</h5>
+                            <h5>
+                                No timetable entries
+                            </h5>
 
                             <p class="mb-3">
                                 No timetable entries match the selected filters.
                             </p>
 
                             <button type="button" class="btn btn-primary" id="emptyAddTimetableButton">
+
                                 <i class="bi bi-plus-lg"></i>
+
                                 Add Timetable Entry
+
                             </button>
+
                         </div>
 
                         <div id="timetableTableContainer" class="timetable-table-wrapper d-none">
@@ -886,7 +1084,9 @@
                             <table class="timetable-table">
 
                                 <thead>
+
                                     <tr>
+
                                         <th class="time-cell">
                                             Time
                                         </th>
@@ -914,7 +1114,9 @@
                                         <th>
                                             Saturday
                                         </th>
+
                                     </tr>
+
                                 </thead>
 
                                 <tbody id="timetableTableBody">
@@ -933,6 +1135,10 @@
         </main>
 
     </div>
+
+    <!-- =================================================
+         TIMETABLE MODAL
+    ================================================== -->
 
     <div class="modal fade" id="timetableModal" tabindex="-1" aria-labelledby="timetableModalLabel" aria-hidden="true">
 
@@ -957,8 +1163,11 @@
                         <input type="hidden" id="timetableId" name="timetableId">
 
                         <div id="selectedEntryInfo" class="selected-entry-info">
+
                             <strong id="selectedEntryTitle"></strong>
+
                             <span id="selectedEntryDescription"></span>
+
                         </div>
 
                         <div class="row g-3">
@@ -970,9 +1179,11 @@
                                 </label>
 
                                 <select id="academicSessionId" name="academicSessionId" class="form-select" required>
+
                                     <option value="">
                                         Select academic session
                                     </option>
+
                                 </select>
 
                             </div>
@@ -984,9 +1195,11 @@
                                 </label>
 
                                 <select id="classId" name="classId" class="form-select" required>
+
                                     <option value="">
                                         Select class
                                     </option>
+
                                 </select>
 
                             </div>
@@ -998,9 +1211,11 @@
                                 </label>
 
                                 <select id="classArmId" name="classArmId" class="form-select" required>
+
                                     <option value="">
                                         Select class arm
                                     </option>
+
                                 </select>
 
                                 <div class="form-help">
@@ -1016,9 +1231,11 @@
                                 </label>
 
                                 <select id="subjectId" name="subjectId" class="form-select" required>
+
                                     <option value="">
                                         Select subject
                                     </option>
+
                                 </select>
 
                             </div>
@@ -1030,9 +1247,11 @@
                                 </label>
 
                                 <select id="teacherId" name="teacherId" class="form-select" required>
+
                                     <option value="">
                                         Select teacher
                                     </option>
+
                                 </select>
 
                             </div>
@@ -1044,15 +1263,35 @@
                                 </label>
 
                                 <select id="dayOfWeek" name="dayOfWeek" class="form-select" required>
+
                                     <option value="">
                                         Select day
                                     </option>
-                                    <option value="Monday">Monday</option>
-                                    <option value="Tuesday">Tuesday</option>
-                                    <option value="Wednesday">Wednesday</option>
-                                    <option value="Thursday">Thursday</option>
-                                    <option value="Friday">Friday</option>
-                                    <option value="Saturday">Saturday</option>
+
+                                    <option value="Monday">
+                                        Monday
+                                    </option>
+
+                                    <option value="Tuesday">
+                                        Tuesday
+                                    </option>
+
+                                    <option value="Wednesday">
+                                        Wednesday
+                                    </option>
+
+                                    <option value="Thursday">
+                                        Thursday
+                                    </option>
+
+                                    <option value="Friday">
+                                        Friday
+                                    </option>
+
+                                    <option value="Saturday">
+                                        Saturday
+                                    </option>
+
                                 </select>
 
                             </div>
@@ -1103,13 +1342,19 @@
                         </button>
 
                         <button type="button" class="btn btn-outline-danger d-none" id="deleteTimetableButton">
+
                             <i class="bi bi-trash"></i>
+
                             Delete
+
                         </button>
 
                         <button type="submit" class="btn btn-primary" id="saveTimetableButton">
+
                             <i class="bi bi-check-lg"></i>
+
                             Save Timetable Entry
+
                         </button>
 
                     </div>
@@ -1125,10 +1370,13 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script src="/js/api.js"></script>
+
     <script src="/js/auth.js"></script>
+
     <script src="../js/timetable.js"></script>
 
     <script src="../js/sidebar.js"></script>
+
 </body>
 
 </html>

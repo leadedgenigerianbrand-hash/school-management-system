@@ -2,8 +2,6 @@
 
 (function () {
 const ANNOUNCEMENTS_API = "/api/announcements";
-
-```
 let announcements = [];
 let initialized = false;
 let editingAnnouncementId = null;
@@ -1174,11 +1172,17 @@ function getFormPayload() {
             "announcementEndDate"
         )?.value;
 
+    let isPublished = false;
+
+    if (status === "Published") {
+        isPublished = true;
+    }
+
     return {
         title,
-        message,
+        content: message,
         priority,
-        status,
+        isPublished,
         startDate:
             startDate || null,
         endDate:
@@ -1320,12 +1324,9 @@ async function publishAnnouncement(
         await request(
             `${ANNOUNCEMENTS_API}/${encodeURIComponent(
                 id
-            )}`,
+            )}/publish`,
             {
-                method: "PUT",
-                body: JSON.stringify({
-                    status: "Published"
-                })
+                method: "PATCH"
             }
         );
 
@@ -1356,37 +1357,10 @@ async function archiveAnnouncement(
         return;
     }
 
-    try {
-        await request(
-            `${ANNOUNCEMENTS_API}/${encodeURIComponent(
-                id
-            )}`,
-            {
-                method: "PUT",
-                body: JSON.stringify({
-                    status: "Archived"
-                })
-            }
-        );
-
-        showMessage(
-            "Announcement archived successfully.",
-            "success"
-        );
-
-        await loadAnnouncements();
-    } catch (error) {
-        console.error(
-            "Archive announcement error:",
-            error
-        );
-
-        showMessage(
-            error.message ||
-            "Unable to archive announcement.",
-            "danger"
-        );
-    }
+    showMessage(
+        "Archive is not available yet. The announcement database currently supports Draft and Published statuses.",
+        "warning"
+    );
 }
 
 async function deleteAnnouncement(
@@ -1657,6 +1631,5 @@ if (
 } else {
     initialize();
 }
-```
 
 })();

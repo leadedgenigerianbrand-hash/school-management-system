@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    ```
+    <title>Student History | School Management System</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/forms.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    <link rel="stylesheet" href="../css/students.css">
+
+    <style>
+        .history-page {
+            padding: 24px;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .history-header h1 {
+            margin: 0;
+        }
+
+        .student-summary {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        .student-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .summary-item {
+            padding: 12px;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+
+        .summary-label {
+            display: block;
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 4px;
+        }
+
+        .summary-value {
+            display: block;
+            font-weight: 600;
+            color: #212529;
+            word-break: break-word;
+        }
+
+        .history-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+        }
+
+        .history-card-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .history-card-header h2 {
+            font-size: 18px;
+            margin: 0;
+        }
+
+        .history-table-wrapper {
+            overflow-x: auto;
+        }
+
+        .history-table {
+            width: 100%;
+            min-width: 900px;
+            margin: 0;
+        }
+
+        .history-table th {
+            white-space: nowrap;
+            font-size: 13px;
+            background: #f8f9fa;
+        }
+
+        .history-table td {
+            vertical-align: middle;
+        }
+
+        .history-empty {
+            padding: 48px 20px;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .history-loading {
+            padding: 48px 20px;
+            text-align: center;
+        }
+
+        .history-error {
+            margin-bottom: 20px;
+        }
+
+        .history-status {
+            white-space: nowrap;
+        }
+
+        .history-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 992px) {
+            .student-summary-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 576px) {
+            .history-page {
+                padding: 16px;
+            }
+
+            .student-summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .history-header {
+                align-items: flex-start;
+            }
+        }
+    </style>
+    ```
+
+</head>
+
+<body>
+
+    <div class="app-container">
+
+        ```
+        <aside class="sidebar" id="sidebar">
+
+            <div class="sidebar-header">
+                <div class="brand">
+                    <span class="brand-title">School Management</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+
+                <a href="/pages/dashboard.html" class="nav-link">
+                    Dashboard
+                </a>
+
+                <a href="/pages/students.html" class="nav-link active">
+                    Students
+                </a>
+
+                <a href="/pages/staff.html" class="nav-link">
+                    Staff
+                </a>
+
+                <a href="/pages/guardians.html" class="nav-link">
+                    Guardians
+                </a>
+
+                <a href="/pages/classes.html" class="nav-link">
+                    Classes
+                </a>
+
+                <a href="/pages/class-arms.html" class="nav-link">
+                    Class Arms
+                </a>
+
+                <a href="/pages/departments.html" class="nav-link">
+                    Departments
+                </a>
+
+                <a href="/pages/subjects.html" class="nav-link">
+                    Subjects
+                </a>
+
+                <a href="/pages/academic-levels.html" class="nav-link">
+                    Academic Levels
+                </a>
+
+                <a href="/pages/academic-sessions.html" class="nav-link">
+                    Academic Sessions
+                </a>
+
+                <a href="/pages/terms.html" class="nav-link">
+                    Terms
+                </a>
+
+                <a href="/pages/attendance.html" class="nav-link">
+                    Attendance
+                </a>
+
+                <a href="/pages/results.html" class="nav-link">
+                    Results
+                </a>
+
+                <a href="/pages/fees.html" class="nav-link">
+                    Fees
+                </a>
+
+                <a href="/pages/documents.html" class="nav-link">
+                    Documents
+                </a>
+
+                <a href="/pages/reports.html" class="nav-link">
+                    Reports
+                </a>
+
+                <a href="/pages/users.html" class="nav-link">
+                    Users
+                </a>
+
+                <a href="/pages/roles.html" class="nav-link">
+                    Roles
+                </a>
+
+                <a href="/pages/permissions.html" class="nav-link">
+                    Permissions
+                </a>
+
+                <a href="/pages/profile.html" class="nav-link">
+                    Profile
+                </a>
+
+                <a href="/pages/settings.html" class="nav-link">
+                    Settings
+                </a>
+
+            </nav>
+
+        </aside>
+
+        <main class="main-content">
+
+            <header class="topbar">
+
+                <button type="button" class="btn btn-outline-secondary d-lg-none" id="mobileSidebarButton"
+                    aria-label="Open navigation">
+                    ☰
+                </button>
+
+                <div class="topbar-title">
+                    <span>Student History</span>
+                </div>
+
+                <div class="topbar-user">
+                    <span id="loggedInUser">User</span>
+                </div>
+
+            </header>
+
+            <section class="history-page">
+
+                <div class="history-header">
+
+                    <div>
+                        <h1>Student History</h1>
+                        <p class="text-muted mb-0">
+                            View the student's academic and enrollment history.
+                        </p>
+                    </div>
+
+                    <div class="history-actions">
+
+                        <button type="button" class="btn btn-outline-secondary" id="backToProfileButton">
+                            Back to Profile
+                        </button>
+
+                        <button type="button" class="btn btn-outline-primary" id="printHistoryButton">
+                            Print History
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div id="historyMessage" class="alert d-none" role="alert"></div>
+
+                <div id="historyLoading" class="history-loading">
+                    <div class="spinner-border" role="status" aria-hidden="true"></div>
+
+                    <p class="mt-3 mb-0">
+                        Loading student history...
+                    </p>
+                </div>
+
+                <div id="historyContent" class="d-none">
+
+                    <section class="student-summary">
+
+                        <div class="student-summary-grid">
+
+                            <div class="summary-item">
+                                <span class="summary-label">
+                                    Student Name
+                                </span>
+
+                                <span class="summary-value" id="studentName">
+                                    —
+                                </span>
+                            </div>
+
+                            <div class="summary-item">
+                                <span class="summary-label">
+                                    Student Number
+                                </span>
+
+                                <span class="summary-value" id="studentNumber">
+                                    —
+                                </span>
+                            </div>
+
+                            <div class="summary-item">
+                                <span class="summary-label">
+                                    Current Class
+                                </span>
+
+                                <span class="summary-value" id="studentClass">
+                                    —
+                                </span>
+                            </div>
+
+                            <div class="summary-item">
+                                <span class="summary-label">
+                                    Current Academic Session
+                                </span>
+
+                                <span class="summary-value" id="studentSession">
+                                    —
+                                </span>
+                            </div>
+
+                        </div>
+
+                    </section>
+
+                    <section class="history-card">
+
+                        <div class="history-card-header">
+
+                            <div>
+                                <h2>Academic & Enrollment History</h2>
+                            </div>
+
+                            <div>
+                                <span class="badge bg-secondary" id="historyCount">
+                                    0 records
+                                </span>
+                            </div>
+
+                        </div>
+
+                        <div class="history-table-wrapper">
+
+                            <table class="table table-hover history-table">
+
+                                <thead>
+
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Academic Session</th>
+                                        <th>Academic Level</th>
+                                        <th>Class</th>
+                                        <th>Class Arm</th>
+                                        <th>Department</th>
+                                        <th>Enrollment Date</th>
+                                        <th>Exit Date</th>
+                                        <th>Status</th>
+                                    </tr>
+
+                                </thead>
+
+                                <tbody id="historyTableBody">
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                        <div id="historyEmpty" class="history-empty d-none">
+                            <h5>No History Found</h5>
+
+                            <p class="mb-0">
+                                No academic or enrollment history is currently
+                                available for this student.
+                            </p>
+                        </div>
+
+                    </section>
+
+                </div>
+
+                <div id="historyError" class="alert alert-danger history-error d-none" role="alert">
+                    <strong>Unable to load student history.</strong>
+
+                    <div id="historyErrorMessage" class="mt-1"></div>
+
+                    <button type="button" class="btn btn-sm btn-outline-danger mt-3" id="retryHistoryButton">
+                        Try Again
+                    </button>
+                </div>
+
+            </section>
+
+        </main>
+        ```
+
+    </div>
+
+    <script src="../js/api.js"></script>
+
+    <script src="../js/auth.js"></script>
+
+    <script src="../js/student-history.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>

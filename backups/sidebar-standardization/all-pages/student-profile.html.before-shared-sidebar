@@ -1,0 +1,2127 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    ```
+    <title>Student Profile | School Management System</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --sidebar: #172033;
+            --background: #f5f7fb;
+            --border: #e5e7eb;
+            --text: #1f2937;
+            --muted: #64748b;
+            --success: #198754;
+            --warning: #b7791f;
+            --danger: #dc3545;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--background);
+            color: var(--text);
+            font-family:
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Arial,
+                sans-serif;
+        }
+
+        .app-sidebar {
+            width: 260px;
+            min-height: 100vh;
+            background: var(--sidebar);
+            position: fixed;
+            inset: 0 auto 0 0;
+            z-index: 1040;
+            overflow-y: auto;
+        }
+
+        .sidebar-brand {
+            padding: 22px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+        }
+
+        .sidebar-brand-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: var(--primary);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 21px;
+        }
+
+        .sidebar-section {
+            padding: 18px 15px 5px;
+            color: #7f8ba3;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 2px 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: #c7cfdd;
+            text-decoration: none;
+            font-size: 14px;
+            transition: .2s ease;
+        }
+
+        .sidebar-link:hover,
+        .sidebar-link.active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .sidebar-link i {
+            width: 20px;
+            font-size: 16px;
+        }
+
+        .main-wrapper {
+            margin-left: 260px;
+            min-height: 100vh;
+        }
+
+        .topbar {
+            min-height: 70px;
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 28px;
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+        }
+
+        .page-content {
+            max-width: 1400px;
+            margin: auto;
+            padding: 28px;
+        }
+
+        .profile-header {
+            background: #fff;
+            border: 0;
+            box-shadow: 0 4px 20px rgba(15, 23, 42, .07);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .profile-header-body {
+            padding: 30px;
+        }
+
+        .profile-header-grid {
+            display: grid;
+            grid-template-columns: auto minmax(260px, 1fr) minmax(300px, 380px);
+            align-items: center;
+            gap: 32px;
+        }
+
+        .student-photo-section {
+            width: 180px;
+        }
+
+        .student-photo-frame {
+            width: 180px;
+            height: 210px;
+            border-radius: 14px;
+            overflow: hidden;
+            background: #f1f5f9;
+            border: 1px solid #dbe3ec;
+            box-shadow: 0 5px 18px rgba(15, 23, 42, .08);
+            position: relative;
+        }
+
+        #studentPhoto {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+            object-position: center;
+            background: #f1f5f9;
+        }
+
+        #studentInitials {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 54px;
+            font-weight: 800;
+            color: var(--primary);
+            background: #eff6ff;
+        }
+
+        #studentInitials[hidden],
+        #studentPhoto[hidden],
+        #profileContent[hidden],
+        #profileLoading[hidden],
+        #profileError[hidden] {
+            display: none !important;
+        }
+
+        .profile-identity-content {
+            min-width: 0;
+        }
+
+        .profile-name {
+            font-size: 32px;
+            line-height: 1.2;
+            font-weight: 750;
+            color: #111827;
+            margin-bottom: 12px;
+            word-break: break-word;
+        }
+
+        .profile-admission {
+            color: var(--primary);
+            font-size: 15px;
+            font-weight: 650;
+            margin-bottom: 13px;
+        }
+
+        .profile-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 9px;
+        }
+
+        .meta-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: #475569;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .meta-item i {
+            color: var(--primary);
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            border-radius: 20px;
+            padding: 7px 13px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: capitalize;
+        }
+
+        .status::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .status-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-graduated {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .status-withdrawn {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-transferred {
+            background: #f3e8ff;
+            color: #7e22ce;
+        }
+
+        .status-suspended {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .profile-photo-action {
+            margin-top: 12px;
+        }
+
+        .profile-photo-action .btn {
+            width: 180px;
+        }
+
+        .photo-caption {
+            color: var(--muted);
+            font-size: 11px;
+            margin-top: 7px;
+            text-align: center;
+        }
+
+        .record-summary {
+            border-left: 1px solid var(--border);
+            padding-left: 30px;
+        }
+
+        .record-summary-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .record-summary-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 9px;
+            background: #eff6ff;
+            color: var(--primary);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 38px;
+        }
+
+        .record-summary-title {
+            font-size: 17px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .record-summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px 24px;
+        }
+
+        .record-item {
+            min-width: 0;
+        }
+
+        .record-label {
+            display: block;
+            font-size: 10px;
+            color: #6b7280;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            font-weight: 600;
+        }
+
+        .record-value {
+            display: block;
+            font-size: 13px;
+            color: #1f2937;
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        .content-card {
+            background: #fff;
+            border: 0;
+            border-radius: 14px;
+            box-shadow: 0 3px 15px rgba(15, 23, 42, .05);
+        }
+
+        .section-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 9px;
+            background: #eff6ff;
+            color: var(--primary);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 38px;
+        }
+
+        .card-title-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+
+        .content-card h2 {
+            font-size: 17px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .detail {
+            border-bottom: 1px solid #eef0f3;
+            padding-bottom: 12px;
+        }
+
+        .detail-label {
+            display: block;
+            font-size: 10px;
+            color: #6b7280;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            color: #1f2937;
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        .quick-action {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 105px;
+            text-decoration: none;
+            padding: 15px;
+            border-radius: 10px;
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            color: #1f2937;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            transition: .2s ease;
+        }
+
+        .quick-action i {
+            font-size: 22px;
+            color: var(--primary);
+        }
+
+        .quick-action:hover {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+            color: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .integration-summary {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 15px;
+        }
+
+        .integration-stat {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #f8fafc;
+            padding: 16px;
+            min-width: 0;
+        }
+
+        .integration-stat-label {
+            font-size: 11px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .integration-stat-value {
+            font-size: 21px;
+            line-height: 1.2;
+            font-weight: 750;
+            color: #1f2937;
+            word-break: break-word;
+        }
+
+        .integration-stat-subtitle {
+            margin-top: 5px;
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .record-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .record-list-item {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 13px 15px;
+            background: #fff;
+        }
+
+        .record-list-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .record-list-item-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .record-list-item-meta {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 3px;
+        }
+
+        .record-list-item-value {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1f2937;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .record-empty {
+            border: 1px dashed #cbd5e1;
+            border-radius: 10px;
+            padding: 24px;
+            text-align: center;
+            color: #64748b;
+            background: #f8fafc;
+            font-size: 13px;
+        }
+
+        .record-loading {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            color: #64748b;
+            background: #f8fafc;
+            font-size: 13px;
+        }
+
+        .record-error {
+            border: 1px solid #fecaca;
+            border-radius: 10px;
+            padding: 18px;
+            color: #991b1b;
+            background: #fef2f2;
+            font-size: 13px;
+        }
+
+        .guardian-card {
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            padding: 15px;
+            background: #fff;
+        }
+
+        .guardian-card+.guardian-card {
+            margin-top: 10px;
+        }
+
+        .guardian-name {
+            font-weight: 700;
+            color: #1f2937;
+            font-size: 14px;
+        }
+
+        .guardian-relationship {
+            display: inline-block;
+            margin-top: 5px;
+            padding: 4px 9px;
+            border-radius: 20px;
+            background: #eff6ff;
+            color: var(--primary-dark);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .guardian-contact {
+            margin-top: 10px;
+            display: grid;
+            gap: 5px;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .export-card {
+            background: linear-gradient(135deg, #f8fafc, #ffffff);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+        }
+
+        .export-card-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #eff6ff;
+            color: var(--primary);
+            font-size: 20px;
+            flex: 0 0 42px;
+        }
+
+        .export-card-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .export-card-description {
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .export-card .btn {
+            margin-top: 14px;
+        }
+
+        #profileLoading {
+            background: #fff;
+            border-radius: 14px;
+            padding: 50px;
+            text-align: center;
+        }
+
+        #profileError {
+            background: #fff;
+            border-radius: 14px;
+            padding: 40px;
+        }
+
+        #sidebarOverlay {
+            display: none;
+        }
+
+        @media (max-width: 1100px) {
+            .profile-header-grid {
+                grid-template-columns: auto minmax(220px, 1fr);
+            }
+
+            .record-summary {
+                grid-column: 1 / -1;
+                border-left: 0;
+                border-top: 1px solid var(--border);
+                padding-left: 0;
+                padding-top: 24px;
+            }
+
+            .integration-summary {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .app-sidebar {
+                transform: translateX(-100%);
+                transition: transform .25s ease;
+            }
+
+            .app-sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-wrapper {
+                margin-left: 0;
+            }
+
+            #sidebarOverlay.show {
+                display: block;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, .45);
+                z-index: 1035;
+            }
+
+            .page-content {
+                padding: 20px;
+            }
+
+            .profile-header-grid {
+                gap: 24px;
+            }
+
+            .student-photo-section {
+                width: 150px;
+            }
+
+            .student-photo-frame {
+                width: 150px;
+                height: 180px;
+            }
+
+            .profile-photo-action .btn {
+                width: 150px;
+            }
+
+            .profile-name {
+                font-size: 27px;
+            }
+        }
+
+        @media (max-width: 650px) {
+            .topbar {
+                padding: 12px 16px;
+            }
+
+            .page-content {
+                padding: 15px;
+            }
+
+            .profile-header-body {
+                padding: 22px;
+            }
+
+            .profile-header-grid {
+                grid-template-columns: 1fr;
+                gap: 22px;
+                align-items: start;
+            }
+
+            .student-photo-section {
+                width: 120px;
+            }
+
+            .student-photo-frame {
+                width: 120px;
+                height: 145px;
+            }
+
+            .profile-photo-action .btn {
+                width: 120px;
+                font-size: 11px;
+            }
+
+            .profile-name {
+                font-size: 23px;
+                margin-bottom: 10px;
+            }
+
+            .profile-admission {
+                font-size: 13px;
+            }
+
+            .profile-meta {
+                gap: 8px;
+            }
+
+            .record-summary {
+                width: 100%;
+            }
+
+            .record-summary-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
+            }
+
+            .integration-summary {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .record-list-item-header {
+                flex-direction: column;
+                gap: 6px;
+            }
+
+            .record-list-item-value {
+                text-align: left;
+            }
+        }
+
+        @media (max-width: 420px) {
+
+            .record-summary-grid,
+            .integration-summary {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    ```
+
+</head>
+
+<body>
+
+    ```
+    <div id="sidebarOverlay"></div>
+
+    <aside id="sidebar" class="app-sidebar">
+
+        <div class="sidebar-brand">
+            <div class="d-flex align-items-center gap-3">
+
+                <div class="sidebar-brand-icon">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
+
+                <div>
+                    <div class="text-white fw-bold">
+                        School Management
+                    </div>
+
+                    <small class="text-secondary">
+                        Administration System
+                    </small>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="sidebar-section">
+            Main
+        </div>
+
+        <a href="dashboard.html" class="sidebar-link">
+            <i class="bi bi-grid-1x2-fill"></i>
+            <span>Dashboard</span>
+        </a>
+
+        <a href="students.html" class="sidebar-link active">
+            <i class="bi bi-people-fill"></i>
+            <span>Students</span>
+        </a>
+
+        <a href="staff.html" class="sidebar-link">
+            <i class="bi bi-person-badge-fill"></i>
+            <span>Staff</span>
+        </a>
+
+        <a href="guardians.html" class="sidebar-link">
+            <i class="bi bi-person-hearts"></i>
+            <span>Guardians</span>
+        </a>
+
+        <div class="sidebar-section">
+            Academic
+        </div>
+
+        <a href="classes.html" class="sidebar-link">
+            <i class="bi bi-building"></i>
+            <span>Classes</span>
+        </a>
+
+        <a href="class-arms.html" class="sidebar-link">
+            <i class="bi bi-diagram-3-fill"></i>
+            <span>Class Arms</span>
+        </a>
+
+        <a href="departments.html" class="sidebar-link">
+            <i class="bi bi-diagram-2-fill"></i>
+            <span>Departments</span>
+        </a>
+
+        <a href="subjects.html" class="sidebar-link">
+            <i class="bi bi-book-fill"></i>
+            <span>Subjects</span>
+        </a>
+
+        <a href="academic-sessions.html" class="sidebar-link">
+            <i class="bi bi-calendar3"></i>
+            <span>Sessions</span>
+        </a>
+
+        <a href="terms.html" class="sidebar-link">
+            <i class="bi bi-calendar-event"></i>
+            <span>Terms</span>
+        </a>
+
+        <a href="attendance.html" class="sidebar-link">
+            <i class="bi bi-calendar-check-fill"></i>
+            <span>Attendance</span>
+        </a>
+
+        <a href="results.html" class="sidebar-link">
+            <i class="bi bi-bar-chart-fill"></i>
+            <span>Results</span>
+        </a>
+
+        <div class="sidebar-section">
+            Finance & Records
+        </div>
+
+        <a href="fees.html" class="sidebar-link">
+            <i class="bi bi-cash-stack"></i>
+            <span>Fees</span>
+        </a>
+
+        <a href="documents.html" class="sidebar-link">
+            <i class="bi bi-folder-fill"></i>
+            <span>Documents</span>
+        </a>
+
+        <a href="reports.html" class="sidebar-link">
+            <i class="bi bi-file-earmark-bar-graph-fill"></i>
+            <span>Reports</span>
+        </a>
+
+        <div class="sidebar-section">
+            Administration
+        </div>
+
+        <a href="users.html" class="sidebar-link">
+            <i class="bi bi-person-gear"></i>
+            <span>Users</span>
+        </a>
+
+        <a href="roles.html" class="sidebar-link">
+            <i class="bi bi-shield-lock-fill"></i>
+            <span>Roles</span>
+        </a>
+
+        <a href="permissions.html" class="sidebar-link">
+            <i class="bi bi-key-fill"></i>
+            <span>Permissions</span>
+        </a>
+
+        <a href="profile.html" class="sidebar-link">
+            <i class="bi bi-person-circle"></i>
+            <span>My Profile</span>
+        </a>
+
+        <a href="settings.html" class="sidebar-link">
+            <i class="bi bi-gear-fill"></i>
+            <span>Settings</span>
+        </a>
+
+    </aside>
+
+    <div class="main-wrapper">
+
+        <header class="topbar">
+
+            <div class="d-flex align-items-center gap-3">
+
+                <button id="sidebarToggle" class="btn btn-light d-lg-none" type="button"
+                    aria-label="Open navigation menu" aria-controls="sidebar" aria-expanded="false">
+
+                    <i class="bi bi-list fs-5"></i>
+
+                </button>
+
+                <div>
+                    <div class="fw-bold">
+                        Student Profile
+                    </div>
+
+                    <small class="text-muted">
+                        Complete student information and academic record.
+                    </small>
+                </div>
+
+            </div>
+
+            <a href="/pages/students.html" class="btn btn-outline-secondary btn-sm">
+
+                <i class="bi bi-arrow-left me-1"></i>
+                Back to Students
+
+            </a>
+
+        </header>
+
+        <main class="page-content">
+
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-3">
+
+                <div>
+                    <h1 class="h4 fw-bold mb-1">
+                        Student Profile
+                    </h1>
+
+                    <p class="text-muted mb-0 small">
+                        View and manage this student's complete school record.
+                    </p>
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+
+                    <button type="button" class="btn btn-primary btn-sm" id="editStudentButton">
+
+                        <i class="bi bi-pencil-square me-1"></i>
+                        Edit Student
+
+                    </button>
+
+                    <button type="button" class="btn btn-outline-danger btn-sm" id="deleteStudentButton">
+
+                        <i class="bi bi-trash3 me-1"></i>
+                        Delete
+
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div id="pageMessage" class="alert mb-4" role="alert" hidden>
+            </div>
+
+            <div id="profileLoading">
+
+                <div class="spinner-border text-primary mb-3" role="status" aria-label="Loading">
+                </div>
+
+                <div class="fw-semibold">
+                    Loading student profile...
+                </div>
+
+            </div>
+
+            <div id="profileError" hidden>
+
+                <div class="text-center">
+
+                    <i class="bi bi-exclamation-triangle text-danger" style="font-size: 42px;">
+                    </i>
+
+                    <h4 class="mt-3">
+                        Unable to Load Student
+                    </h4>
+
+                    <p id="profileErrorMessage" class="text-muted">
+                        Unable to load student profile.
+                    </p>
+
+                    <button id="retryButton" type="button" class="btn btn-primary btn-sm">
+
+                        <i class="bi bi-arrow-clockwise me-1"></i>
+                        Try Again
+
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div id="profileContent">
+
+                <!-- =========================================================
+                 STUDENT PROFILE HEADER
+                 ========================================================= -->
+
+                <div class="card profile-header mb-4">
+
+                    <div class="profile-header-body">
+
+                        <div class="profile-header-grid">
+
+                            <div class="student-photo-section">
+
+                                <div class="student-photo-frame">
+
+                                    <img id="studentPhoto" src="" alt="Student photograph">
+
+                                    <div id="studentInitials" hidden>
+                                        ST
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="profile-identity-content">
+
+                                <div id="studentName" class="profile-name">
+                                    Loading student...
+                                </div>
+
+                                <div class="profile-admission">
+
+                                    <i class="bi bi-person-vcard me-1"></i>
+
+                                    Admission Number:
+
+                                    <span id="studentAdmissionNumber">
+                                        —
+                                    </span>
+
+                                </div>
+
+                                <div class="profile-meta">
+
+                                    <span id="profileGender" class="meta-item">
+
+                                        <i class="bi bi-person"></i>
+                                        —
+
+                                    </span>
+
+                                    <span id="studentStatus" class="status status-active">
+                                        Active
+                                    </span>
+
+                                </div>
+
+                                <div class="profile-photo-action">
+
+                                    <a id="photoEditLink" href="#" class="btn btn-outline-primary btn-sm">
+
+                                        <i class="bi bi-camera me-1"></i>
+                                        Update Photograph
+
+                                    </a>
+
+                                    <div class="photo-caption">
+                                        Official student photograph
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="record-summary">
+
+                                <div class="record-summary-header">
+
+                                    <div class="record-summary-icon">
+                                        <i class="bi bi-database"></i>
+                                    </div>
+
+                                    <h2 class="record-summary-title">
+                                        Record Information
+                                    </h2>
+
+                                </div>
+
+                                <div class="record-summary-grid">
+
+                                    <div class="record-item">
+
+                                        <span class="record-label">
+                                            Student ID
+                                        </span>
+
+                                        <span id="profileStudentId" class="record-value">
+                                            —
+                                        </span>
+
+                                    </div>
+
+                                    <div class="record-item">
+
+                                        <span class="record-label">
+                                            Status
+                                        </span>
+
+                                        <span id="profileStatus" class="record-value">
+                                            —
+                                        </span>
+
+                                    </div>
+
+                                    <div class="record-item">
+
+                                        <span class="record-label">
+                                            Created
+                                        </span>
+
+                                        <span id="profileCreatedAt" class="record-value">
+                                            —
+                                        </span>
+
+                                    </div>
+
+                                    <div class="record-item">
+
+                                        <span class="record-label">
+                                            Last Updated
+                                        </span>
+
+                                        <span id="profileUpdatedAt" class="record-value">
+                                            —
+                                        </span>
+
+                                    </div>
+
+                                    <div class="record-item">
+
+                                        <span class="record-label">
+                                            Enrollment
+                                        </span>
+
+                                        <span id="profileEnrollmentStatus" class="record-value">
+                                            —
+                                        </span>
+
+                                    </div>
+
+                                    <div class="record-item">
+
+                                        <span class="record-label">
+                                            Enrollment Date
+                                        </span>
+
+                                        <span id="profileEnrollmentDate" class="record-value">
+                                            —
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- =========================================================
+                 PERSONAL + ACADEMIC INFORMATION
+                 ========================================================= -->
+
+                <div class="row g-4">
+
+                    <div class="col-lg-6">
+
+                        <div class="card content-card h-100">
+
+                            <div class="card-body p-4">
+
+                                <div class="card-title-row">
+
+                                    <div class="section-icon">
+                                        <i class="bi bi-person-fill"></i>
+                                    </div>
+
+                                    <h2>
+                                        Personal Information
+                                    </h2>
+
+                                </div>
+
+                                <div class="row g-4">
+
+                                    <div class="col-sm-6">
+                                        <div class="detail">
+                                            <span class="detail-label">
+                                                First Name
+                                            </span>
+
+                                            <span id="profileFirstName" class="detail-value">
+                                                —
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail">
+                                            <span class="detail-label">
+                                                Middle Name
+                                            </span>
+
+                                            <span id="profileMiddleName" class="detail-value">
+                                                —
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail">
+                                            <span class="detail-label">
+                                                Last Name
+                                            </span>
+
+                                            <span id="profileLastName" class="detail-value">
+                                                —
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail">
+                                            <span class="detail-label">
+                                                Gender
+                                            </span>
+
+                                            <span id="profileGenderPersonal" class="detail-value">
+                                                —
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail">
+                                            <span class="detail-label">
+                                                Date of Birth
+                                            </span>
+
+                                            <span id="profileDateOfBirth" class="detail-value">
+                                                —
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail">
+                                            <span class="detail-label">
+                                                Age
+                                            </span>
+
+                                            <span id="profileAge" class="detail-value">
+                                                —
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail">
+                                            <span class="detail-label">
+                                                Nationality
+                                            </span>
+
+                                            <span id="profileNationality" class="detail-value">
+                                                —
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail">
+                                            <span class="detail-label">
+                                                State of Origin
+                                            </span>
+
+                                            <span id="profileStateOfOrigin" class="detail-value">
+                                                —
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail">
+                                            <span class="detail-label">
+                                                Local Government
+                                            </span>
+
+                                            <span id="profileLga" class="detail-value">
+                                                —
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail">
+                                            <span class="detail-label">
+                                                Religion
+                                            </span>
+
+                                            <span id="profileReligion" class="detail-value">
+                                                —
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail">
+                                            <span class="detail-label">
+                                                Blood Group
+                                            </span>
+
+                                            <span id="profileBloodGroup" class="detail-value">
+                                                —
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail">
+                                            <span class="detail-label">
+                                                Genotype
+                                            </span>
+
+                                            <span id="profileGenotype" class="detail-value">
+                                                —
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-lg-6">
+
+                        <div class="card content-card h-100">
+
+                            <div class="card-body p-4">
+
+                                <div class="card-title-row">
+
+                                    <div class="section-icon">
+                                        <i class="bi bi-mortarboard-fill"></i>
+                                    </div>
+
+                                    <h2>
+                                        Academic Information
+                                    </h2>
+
+                                </div>
+
+                                <div class="row g-4">
+
+                                    <div class="col-sm-6">
+                                        <div class="detail">
+                                            <span class="detail-label">
+                                                Admission Number
+                                            </span>
+
+                                            <span id="profileAcademicAdmissionNumber" class="detail-value">
+                                                —
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail">
+                                            <span class="detail-label">
+                                                Academic Level
+                                            </span>
+
+                                            <span id="profileAcademicLevel" class="detail-value">
+                                                —
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail">
+                                            <span class="detail-label">
+                                                Class
+                                            </span>
+
+                                            <span id="profileClass" class="detail-value">
+                                                —
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail">
+                                            <span class="detail-label">
+                                                Class Arm
+                                            </span>
+
+                                            <span id="profileClassArm" class="detail-value">
+                                                —
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail">
+                                            <span class="detail-label">
+                                                Academic Session
+                                            </span>
+
+                                            <span id="profileSession" class="detail-value">
+                                                —
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail">
+                                            <span class="detail-label">
+                                                Department
+                                            </span>
+
+                                            <span id="profileDepartment" class="detail-value">
+                                                —
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail">
+                                            <span class="detail-label">
+                                                House
+                                            </span>
+
+                                            <span id="profileHouse" class="detail-value">
+                                                —
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail">
+                                            <span class="detail-label">
+                                                Admission Date
+                                            </span>
+
+                                            <span id="profileAdmissionDate" class="detail-value">
+                                                —
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- =====================================================
+                     CONTACT INFORMATION
+                     ===================================================== -->
+
+                    <div class="col-lg-6">
+
+                        <div class="card content-card h-100">
+
+                            <div class="card-body p-4">
+
+                                <div class="card-title-row">
+
+                                    <div class="section-icon">
+                                        <i class="bi bi-telephone-fill"></i>
+                                    </div>
+
+                                    <h2>
+                                        Contact Information
+                                    </h2>
+
+                                </div>
+
+                                <div class="row g-4">
+
+                                    <div class="col-sm-6">
+
+                                        <div class="detail">
+
+                                            <span class="detail-label">
+                                                Email
+                                            </span>
+
+                                            <span id="profileEmail" class="detail-value">
+                                                —
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="col-sm-6">
+
+                                        <div class="detail">
+
+                                            <span class="detail-label">
+                                                Phone
+                                            </span>
+
+                                            <span id="profilePhone" class="detail-value">
+                                                —
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="col-12">
+
+                                        <div class="detail">
+
+                                            <span class="detail-label">
+                                                Address
+                                            </span>
+
+                                            <span id="profileAddress" class="detail-value">
+                                                —
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- =====================================================
+                     GUARDIAN INFORMATION
+                     ===================================================== -->
+
+                    <div class="col-lg-6">
+
+                        <div class="card content-card h-100">
+
+                            <div class="card-body p-4">
+
+                                <div class="card-title-row">
+
+                                    <div class="section-icon">
+                                        <i class="bi bi-person-hearts"></i>
+                                    </div>
+
+                                    <div>
+                                        <h2>
+                                            Guardian Information
+                                        </h2>
+
+                                        <div class="text-muted small mt-1">
+                                            Automatically linked from the Guardian module.
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <div id="guardiansContainer">
+
+                                    <div class="record-loading">
+                                        Loading guardian information...
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- =====================================================
+                     ATTENDANCE
+                     ===================================================== -->
+
+                    <div class="col-lg-6">
+
+                        <div class="card content-card h-100">
+
+                            <div class="card-body p-4">
+
+                                <div class="card-title-row">
+
+                                    <div class="section-icon">
+                                        <i class="bi bi-calendar-check-fill"></i>
+                                    </div>
+
+                                    <div>
+                                        <h2>
+                                            Attendance
+                                        </h2>
+
+                                        <div class="text-muted small mt-1">
+                                            Automatically linked to this student.
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <div id="attendanceSummaryContainer">
+
+                                    <div class="record-loading">
+                                        Loading attendance information...
+                                    </div>
+
+                                </div>
+
+                                <div class="mt-3">
+
+                                    <a id="attendanceLink" class="btn btn-outline-primary btn-sm" href="#">
+
+                                        <i class="bi bi-calendar-check me-1"></i>
+                                        View Attendance
+
+                                    </a>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- =====================================================
+                     FEES & PAYMENTS
+                     ===================================================== -->
+
+                    <div class="col-lg-6">
+
+                        <div class="card content-card h-100">
+
+                            <div class="card-body p-4">
+
+                                <div class="card-title-row">
+
+                                    <div class="section-icon">
+                                        <i class="bi bi-cash-stack"></i>
+                                    </div>
+
+                                    <div>
+                                        <h2>
+                                            Fees & Payments
+                                        </h2>
+
+                                        <div class="text-muted small mt-1">
+                                            Automatically linked to this student's financial records.
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <div id="feesSummaryContainer">
+
+                                    <div class="record-loading">
+                                        Loading fee information...
+                                    </div>
+
+                                </div>
+
+                                <div class="mt-3">
+
+                                    <a id="feesLink" class="btn btn-outline-primary btn-sm" href="#">
+
+                                        <i class="bi bi-cash-stack me-1"></i>
+                                        View Fees & Payments
+
+                                    </a>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- =====================================================
+                     RESULTS
+                     ===================================================== -->
+
+                    <div class="col-lg-6">
+
+                        <div class="card content-card h-100">
+
+                            <div class="card-body p-4">
+
+                                <div class="card-title-row">
+
+                                    <div class="section-icon">
+                                        <i class="bi bi-bar-chart-fill"></i>
+                                    </div>
+
+                                    <div>
+                                        <h2>
+                                            Academic Results
+                                        </h2>
+
+                                        <div class="text-muted small mt-1">
+                                            Automatically linked to this student's result records.
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <div id="resultsContainer">
+
+                                    <div class="record-loading">
+                                        Loading academic results...
+                                    </div>
+
+                                </div>
+
+                                <div class="mt-3 d-flex gap-2 flex-wrap">
+
+                                    <a id="resultsLink" class="btn btn-outline-primary btn-sm" href="#">
+
+                                        <i class="bi bi-bar-chart-fill me-1"></i>
+                                        View Results
+
+                                    </a>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- =====================================================
+                     STUDENT RECORDS / QUICK ACTIONS
+                     ===================================================== -->
+
+                    <div class="col-lg-6">
+
+                        <div class="card content-card h-100">
+
+                            <div class="card-body p-4">
+
+                                <div class="card-title-row">
+
+                                    <div class="section-icon">
+                                        <i class="bi bi-folder2-open"></i>
+                                    </div>
+
+                                    <h2>
+                                        Student Records
+                                    </h2>
+
+                                </div>
+
+                                <div class="row g-3">
+
+                                    <div class="col-6">
+
+                                        <a id="attendanceQuickLink" class="quick-action" href="#">
+
+                                            <i class="bi bi-calendar-check"></i>
+
+                                            <span>
+                                                Attendance
+                                            </span>
+
+                                        </a>
+
+                                    </div>
+
+                                    <div class="col-6">
+
+                                        <a id="feesQuickLink" class="quick-action" href="#">
+
+                                            <i class="bi bi-cash-stack"></i>
+
+                                            <span>
+                                                Fees & Payments
+                                            </span>
+
+                                        </a>
+
+                                    </div>
+
+                                    <div class="col-6">
+
+                                        <a id="resultsQuickLink" class="quick-action" href="#">
+
+                                            <i class="bi bi-bar-chart-fill"></i>
+
+                                            <span>
+                                                Results
+                                            </span>
+
+                                        </a>
+
+                                    </div>
+
+                                    <div class="col-6">
+
+                                        <a id="editLink" class="quick-action" href="#">
+
+                                            <i class="bi bi-pencil-square"></i>
+
+                                            <span>
+                                                Edit Profile
+                                            </span>
+
+                                        </a>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- =====================================================
+                     DOCUMENTS
+                     ===================================================== -->
+
+                    <div class="col-lg-6">
+
+                        <div class="card content-card h-100">
+
+                            <div class="card-body p-4">
+
+                                <div class="card-title-row">
+
+                                    <div class="section-icon">
+                                        <i class="bi bi-folder-fill"></i>
+                                    </div>
+
+                                    <div>
+                                        <h2>
+                                            Student Documents
+                                        </h2>
+
+                                        <div class="text-muted small mt-1">
+                                            Documents associated with this student.
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <div id="documentsContainer">
+
+                                    <div class="record-loading">
+                                        Loading documents...
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- =====================================================
+                     EXPORT SERVICES
+                     ===================================================== -->
+
+                    <div class="col-12">
+
+                        <div class="card content-card">
+
+                            <div class="card-body p-4">
+
+                                <div class="card-title-row">
+
+                                    <div class="section-icon">
+                                        <i class="bi bi-download"></i>
+                                    </div>
+
+                                    <div>
+                                        <h2>
+                                            Student Profile Exports
+                                        </h2>
+
+                                        <div class="text-muted small mt-1">
+                                            Export the student's aggregated school records.
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <div class="row g-3">
+
+                                    <div class="col-md-6">
+
+                                        <div class="export-card h-100">
+
+                                            <div class="d-flex align-items-start gap-3">
+
+                                                <div class="export-card-icon">
+                                                    <i class="bi bi-file-earmark-spreadsheet"></i>
+                                                </div>
+
+                                                <div>
+
+                                                    <div class="export-card-title">
+                                                        Full Student Profile — Excel
+                                                    </div>
+
+                                                    <div class="export-card-description">
+                                                        Exports the available student information together with
+                                                        guardians, attendance, fees and payments, results,
+                                                        documents and other related records into a structured
+                                                        Excel workbook.
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+
+                                            <button id="exportProfileExcelButton" type="button"
+                                                class="btn btn-success btn-sm">
+
+                                                <i class="bi bi-file-earmark-excel me-1"></i>
+                                                Export Full Profile
+
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="col-md-6">
+
+                                        <div class="export-card h-100">
+
+                                            <div class="d-flex align-items-start gap-3">
+
+                                                <div class="export-card-icon">
+                                                    <i class="bi bi-file-earmark-pdf"></i>
+                                                </div>
+
+                                                <div>
+
+                                                    <div class="export-card-title">
+                                                        Report Card — PDF
+                                                    </div>
+
+                                                    <div class="export-card-description">
+                                                        Generates the student's professional academic report card
+                                                        from the result records, with school identity, student
+                                                        details, subjects, grades, totals and remarks.
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+
+                                            <button id="exportReportCardButton" type="button"
+                                                class="btn btn-danger btn-sm">
+
+                                                <i class="bi bi-file-earmark-pdf me-1"></i>
+                                                Export Report Card
+
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- =====================================================
+                     ADDITIONAL NOTES
+                     ===================================================== -->
+
+                    <div class="col-12">
+
+                        <div class="card content-card">
+
+                            <div class="card-body p-4">
+
+                                <div class="card-title-row">
+
+                                    <div class="section-icon">
+                                        <i class="bi bi-journal-text"></i>
+                                    </div>
+
+                                    <h2>
+                                        Additional Notes
+                                    </h2>
+
+                                </div>
+
+                                <div id="notes" class="detail-value">
+                                    —
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/student-profile.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            var attendanceLink = document.getElementById("attendanceLink");
+            var attendanceQuickLink = document.getElementById("attendanceQuickLink");
+
+            if (attendanceLink && attendanceQuickLink) {
+                attendanceQuickLink.addEventListener("click", function (event) {
+                    event.preventDefault();
+                    attendanceLink.click();
+                });
+            }
+
+            var feesLink = document.getElementById("feesLink");
+            var feesQuickLink = document.getElementById("feesQuickLink");
+
+            if (feesLink && feesQuickLink) {
+                feesQuickLink.addEventListener("click", function (event) {
+                    event.preventDefault();
+                    feesLink.click();
+                });
+            }
+
+            var resultsLink = document.getElementById("resultsLink");
+            var resultsQuickLink = document.getElementById("resultsQuickLink");
+
+            if (resultsLink && resultsQuickLink) {
+                resultsQuickLink.addEventListener("click", function (event) {
+                    event.preventDefault();
+                    resultsQuickLink.setAttribute(
+                        "href",
+                        resultsLink.getAttribute("href") || "#"
+                    );
+
+                    window.location.href =
+                        resultsQuickLink.getAttribute("href") || "#";
+                });
+            }
+
+        });
+    </script>
+    ```
+
+</body>
+
+</html>

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    ```
+    <title>Class Arm Form | School Management System</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+        body {
+            background: #f5f7fb;
+        }
+
+        .page-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 28px;
+        }
+
+        .page-header h1 {
+            font-size: 27px;
+            font-weight: 700;
+            color: #172033;
+            margin-bottom: 5px;
+        }
+
+        .page-header p {
+            color: #6b7280;
+            margin: 0;
+        }
+
+        .form-card {
+            border: 0;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 4px 20px rgba(15, 23, 42, .07);
+            overflow: hidden;
+        }
+
+        .card-header-custom {
+            padding: 22px 26px;
+            border-bottom: 1px solid #edf0f5;
+        }
+
+        .card-header-custom h2 {
+            font-size: 19px;
+            font-weight: 700;
+            color: #172033;
+            margin-bottom: 5px;
+        }
+
+        .card-header-custom p {
+            color: #6b7280;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .card-body-custom {
+            padding: 26px;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #374151;
+        }
+
+        .required {
+            color: #dc2626;
+        }
+
+        .form-control,
+        .form-select {
+            min-height: 44px;
+            border-color: #d8dee8;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 .2rem rgba(37, 99, 235, .1);
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .status-options {
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            gap: 22px;
+            flex-wrap: wrap;
+        }
+
+        .form-footer {
+            margin-top: 28px;
+            padding-top: 20px;
+            border-top: 1px solid #edf0f5;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .message {
+            display: none;
+            border-radius: 10px;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .message.success {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .message.error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 10px;
+            color: #64748b;
+        }
+
+        .back-link {
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .page-container {
+                padding: 18px 14px;
+            }
+
+            .page-header h1 {
+                font-size: 23px;
+            }
+
+            .card-body-custom,
+            .card-header-custom {
+                padding: 20px;
+            }
+
+            .form-footer {
+                flex-direction: column-reverse;
+            }
+
+            .form-footer .btn {
+                width: 100%;
+            }
+        }
+    </style>
+    ```
+
+</head>
+
+<body>
+
+    ```
+    <main class="page-container">
+
+        <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+
+            <div>
+                <h1 id="pageTitle">
+                    <i class="bi bi-diagram-3 me-2 text-primary"></i>
+                    Add Class Arm
+                </h1>
+
+                <p>
+                    Create and manage class arms for your school.
+                </p>
+            </div>
+
+            <a href="class-arms.html" class="btn btn-outline-primary back-link">
+                <i class="bi bi-arrow-left me-1"></i>
+                Back to Class Arms
+            </a>
+
+        </div>
+
+        <div class="form-card">
+
+            <div class="card-header-custom">
+
+                <h2 id="formTitle">
+                    Class Arm Information
+                </h2>
+
+                <p>
+                    Enter the information below to create or update a class arm.
+                </p>
+
+            </div>
+
+            <div class="card-body-custom">
+
+                <div id="message" class="message"></div>
+
+                <div id="loading" class="loading">
+                    <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                    Processing...
+                </div>
+
+                <form id="classArmForm" novalidate>
+
+                    <div class="row g-4">
+
+                        <div class="col-md-6">
+
+                            <label for="classId" class="form-label">
+                                Class <span class="required">*</span>
+                            </label>
+
+                            <select id="classId" name="classId" class="form-select" required>
+                                <option value="">Loading classes...</option>
+                            </select>
+
+                            <div class="help-text mt-1">
+                                Select the main class this arm belongs to.
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6">
+
+                            <label for="armName" class="form-label">
+                                Arm Name <span class="required">*</span>
+                            </label>
+
+                            <input type="text" id="armName" name="armName" class="form-control" placeholder="Example: A"
+                                maxlength="100" required>
+
+                            <div class="help-text mt-1">
+                                Example: A, B, C or Blue.
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6">
+
+                            <label for="armCode" class="form-label">
+                                Arm Code
+                            </label>
+
+                            <input type="text" id="armCode" name="armCode" class="form-control"
+                                placeholder="Example: JSS1-A" maxlength="50">
+
+                            <div class="help-text mt-1">
+                                Optional unique code for this class arm.
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6">
+
+                            <label for="capacity" class="form-label">
+                                Capacity
+                            </label>
+
+                            <input type="number" id="capacity" name="capacity" class="form-control"
+                                placeholder="Example: 40" min="1" max="1000">
+
+                            <div class="help-text mt-1">
+                                Maximum number of students allowed.
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6">
+
+                            <label for="classTeacherId" class="form-label">
+                                Class Teacher
+                            </label>
+
+                            <select id="classTeacherId" name="classTeacherId" class="form-select">
+                                <option value="">Loading teachers...</option>
+                            </select>
+
+                            <div class="help-text mt-1">
+                                Optional teacher responsible for this arm.
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6">
+
+                            <label class="form-label">
+                                Status
+                            </label>
+
+                            <div class="status-options">
+
+                                <div class="form-check">
+
+                                    <input class="form-check-input" type="radio" name="status" id="statusActive"
+                                        value="active" checked>
+
+                                    <label class="form-check-label" for="statusActive">
+                                        Active
+                                    </label>
+
+                                </div>
+
+                                <div class="form-check">
+
+                                    <input class="form-check-input" type="radio" name="status" id="statusInactive"
+                                        value="inactive">
+
+                                    <label class="form-check-label" for="statusInactive">
+                                        Inactive
+                                    </label>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-12">
+
+                            <label for="description" class="form-label">
+                                Description
+                            </label>
+
+                            <textarea id="description" name="description" class="form-control" rows="4" maxlength="500"
+                                placeholder="Enter any additional information about this class arm..."></textarea>
+
+                        </div>
+
+                    </div>
+
+                    <div class="form-footer">
+
+                        <a href="class-arms.html" class="btn btn-light border">
+                            Cancel
+                        </a>
+
+                        <button type="submit" class="btn btn-primary" id="submitButton">
+                            <i class="bi bi-check-lg me-1"></i>
+                            Save Class Arm
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="../js/api.js"></script>
+
+    <script src="../js/auth.js"></script>
+
+    <script src="../js/class-arm-form.js"></script>
+    ```
+
+</body>
+
+</html>

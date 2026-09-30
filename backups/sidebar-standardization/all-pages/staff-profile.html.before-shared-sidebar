@@ -1,0 +1,1933 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    ```
+    <title>Staff Profile | School Management System</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f5f7fb;
+            color: #1f2937;
+        }
+
+        .app-sidebar {
+            width: 260px;
+            min-height: 100vh;
+            background: #172033;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 1040;
+            overflow-y: auto;
+        }
+
+        .sidebar-brand {
+            padding: 22px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+        }
+
+        .sidebar-brand-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: #2563eb;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 21px;
+        }
+
+        .sidebar-section {
+            padding: 18px 15px 5px;
+            color: #7f8ba3;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 2px 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: #c7cfdd;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .sidebar-link:hover,
+        .sidebar-link.active {
+            background: #2563eb;
+            color: #fff;
+        }
+
+        .sidebar-link i {
+            width: 20px;
+            font-size: 16px;
+        }
+
+        .main-wrapper {
+            margin-left: 260px;
+            min-height: 100vh;
+        }
+
+        .topbar {
+            height: 70px;
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+        }
+
+        .page-content {
+            padding: 28px;
+            max-width: 1450px;
+            margin: auto;
+        }
+
+        .profile-card {
+            border: 0;
+            box-shadow: 0 4px 18px rgba(15, 23, 42, .06);
+        }
+
+        .profile-header {
+            background: linear-gradient(135deg, #1e3a8a, #2563eb);
+            color: #fff;
+            border-radius: 12px 12px 0 0;
+            padding: 30px;
+        }
+
+        .profile-photo {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .18);
+            border: 4px solid rgba(255, 255, 255, .55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+            font-size: 34px;
+            font-weight: 700;
+        }
+
+        .profile-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 11px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .status-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-on_leave {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .info-card {
+            border: 0;
+            box-shadow: 0 3px 15px rgba(15, 23, 42, .05);
+            height: 100%;
+        }
+
+        .info-card .card-header {
+            background: #fff;
+            border-bottom: 1px solid #eef0f4;
+            padding: 18px 20px;
+        }
+
+        .info-card .card-body {
+            padding: 20px;
+        }
+
+        .detail-label {
+            color: #6b7280;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            margin-bottom: 4px;
+        }
+
+        .detail-value {
+            color: #1f2937;
+            font-size: 14px;
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        .empty-value {
+            color: #9ca3af;
+        }
+
+        .modal-content {
+            border: 0;
+            border-radius: 14px;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, .18);
+        }
+
+        .modal-header {
+            border-bottom: 1px solid #eef0f4;
+        }
+
+        .modal-footer {
+            border-top: 1px solid #eef0f4;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .form-control,
+        .form-select {
+            border-color: #d9dee8;
+            min-height: 42px;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 .2rem rgba(37, 99, 235, .12);
+        }
+
+        #toast {
+            z-index: 2000;
+        }
+
+        #sidebarOverlay {
+            display: none;
+        }
+
+        @media (max-width: 991.98px) {
+            .app-sidebar {
+                transform: translateX(-100%);
+                transition: transform .25s ease;
+            }
+
+            .app-sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-wrapper {
+                margin-left: 0;
+            }
+
+            #sidebarOverlay.show {
+                display: block;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, .45);
+                z-index: 1035;
+            }
+
+            .page-content {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .topbar {
+                padding: 0 16px;
+            }
+
+            .page-content {
+                padding: 15px;
+            }
+
+            .profile-header {
+                padding: 22px;
+            }
+
+            .profile-main {
+                flex-direction: column;
+                align-items: flex-start !important;
+            }
+
+            .profile-photo {
+                width: 90px;
+                height: 90px;
+            }
+
+            .profile-actions {
+                width: 100%;
+            }
+
+            .profile-actions .btn {
+                width: 100%;
+                margin-bottom: 8px;
+            }
+        }
+    </style>
+    ```
+
+</head>
+
+<body>
+
+    ```
+    <div id="sidebarOverlay"></div>
+
+    <aside id="sidebar" class="app-sidebar">
+
+        <div class="sidebar-brand">
+            <div class="d-flex align-items-center gap-3">
+                <div class="sidebar-brand-icon">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
+
+                <div>
+                    <div class="text-white fw-bold">School Management</div>
+                    <small class="text-secondary">Administration System</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-section">Main</div>
+
+        <a href="dashboard.html" class="sidebar-link">
+            <i class="bi bi-grid-1x2-fill"></i>
+            <span>Dashboard</span>
+        </a>
+
+        <a href="students.html" class="sidebar-link">
+            <i class="bi bi-people-fill"></i>
+            <span>Students</span>
+        </a>
+
+        <a href="staff.html" class="sidebar-link active">
+            <i class="bi bi-person-badge-fill"></i>
+            <span>Staff</span>
+        </a>
+
+        <a href="guardians.html" class="sidebar-link">
+            <i class="bi bi-person-hearts"></i>
+            <span>Guardians</span>
+        </a>
+
+        <div class="sidebar-section">Academic</div>
+
+        <a href="classes.html" class="sidebar-link">
+            <i class="bi bi-building"></i>
+            <span>Classes</span>
+        </a>
+
+        <a href="class-arms.html" class="sidebar-link">
+            <i class="bi bi-diagram-3-fill"></i>
+            <span>Class Arms</span>
+        </a>
+
+        <a href="departments.html" class="sidebar-link">
+            <i class="bi bi-diagram-2-fill"></i>
+            <span>Departments</span>
+        </a>
+
+        <a href="subjects.html" class="sidebar-link">
+            <i class="bi bi-book-fill"></i>
+            <span>Subjects</span>
+        </a>
+
+        <a href="academic-sessions.html" class="sidebar-link">
+            <i class="bi bi-calendar3"></i>
+            <span>Sessions</span>
+        </a>
+
+        <a href="terms.html" class="sidebar-link">
+            <i class="bi bi-calendar-event"></i>
+            <span>Terms</span>
+        </a>
+
+        <a href="attendance.html" class="sidebar-link">
+            <i class="bi bi-calendar-check-fill"></i>
+            <span>Attendance</span>
+        </a>
+
+        <a href="results.html" class="sidebar-link">
+            <i class="bi bi-bar-chart-fill"></i>
+            <span>Results</span>
+        </a>
+
+        <div class="sidebar-section">Finance & Records</div>
+
+        <a href="fees.html" class="sidebar-link">
+            <i class="bi bi-cash-stack"></i>
+            <span>Fees</span>
+        </a>
+
+        <a href="documents.html" class="sidebar-link">
+            <i class="bi bi-folder-fill"></i>
+            <span>Documents</span>
+        </a>
+
+        <a href="reports.html" class="sidebar-link">
+            <i class="bi bi-file-earmark-bar-graph-fill"></i>
+            <span>Reports</span>
+        </a>
+
+        <div class="sidebar-section">Administration</div>
+
+        <a href="users.html" class="sidebar-link">
+            <i class="bi bi-person-gear"></i>
+            <span>Users</span>
+        </a>
+
+        <a href="roles.html" class="sidebar-link">
+            <i class="bi bi-shield-lock-fill"></i>
+            <span>Roles</span>
+        </a>
+
+        <a href="permissions.html" class="sidebar-link">
+            <i class="bi bi-key-fill"></i>
+            <span>Permissions</span>
+        </a>
+
+        <a href="profile.html" class="sidebar-link">
+            <i class="bi bi-person-circle"></i>
+            <span>My Profile</span>
+        </a>
+
+        <a href="settings.html" class="sidebar-link">
+            <i class="bi bi-gear-fill"></i>
+            <span>Settings</span>
+        </a>
+
+    </aside>
+
+    <div class="main-wrapper">
+
+        <header class="topbar">
+
+            <div class="d-flex align-items-center gap-3">
+
+                <button id="sidebarToggle" class="btn btn-light d-lg-none" type="button">
+                    <i class="bi bi-list fs-5"></i>
+                </button>
+
+                <div>
+                    <h1 class="h5 mb-0 fw-bold">Staff Profile</h1>
+
+                    <small class="text-muted">
+                        View and manage staff information
+                    </small>
+                </div>
+
+            </div>
+
+            <div>
+                <a href="staff.html" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Back to Staff
+                </a>
+            </div>
+
+        </header>
+
+        <main class="page-content">
+
+            <div id="errorMessage" class="alert alert-danger d-none">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <span></span>
+            </div>
+
+            <div id="loading" class="text-center py-5">
+
+                <div class="spinner-border text-primary mb-3" role="status"></div>
+
+                <div class="text-muted">
+                    Loading staff profile...
+                </div>
+
+            </div>
+
+            <div id="profileContainer" class="d-none">
+
+                <section class="card profile-card mb-4">
+
+                    <div class="profile-header">
+
+                        <div class="d-flex align-items-center justify-content-between gap-4 flex-wrap">
+
+                            <div class="profile-main d-flex align-items-center gap-4">
+
+                                <div id="profilePhoto" class="profile-photo">
+                                    <span id="initials">ST</span>
+                                </div>
+
+                                <div>
+
+                                    <h2 id="staffName" class="h3 fw-bold mb-2">
+                                        Staff Member
+                                    </h2>
+
+                                    <div id="staffNumber" class="mb-1 opacity-75">
+                                        Staff Number: —
+                                    </div>
+
+                                    <div id="staffPosition" class="mb-3 opacity-75">
+                                        Position: —
+                                    </div>
+
+                                    <span id="statusBadge" class="status-badge status-active">
+                                        <i class="bi bi-check-circle-fill"></i>
+                                        Active
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                            <div class="profile-actions d-flex gap-2 flex-wrap">
+
+                                <button class="btn btn-light" type="button" onclick="openEditModal()">
+                                    <i class="bi bi-pencil-square me-1"></i>
+                                    Edit Profile
+                                </button>
+
+                                <button id="activateButton" class="btn btn-success" type="button"
+                                    onclick="changeStatus('active')">
+                                    <i class="bi bi-check-circle me-1"></i>
+                                    Activate
+                                </button>
+
+                                <button id="deactivateButton" class="btn btn-danger" type="button"
+                                    onclick="changeStatus('inactive')">
+                                    <i class="bi bi-person-x me-1"></i>
+                                    Deactivate
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+                <div class="row g-4">
+
+                    <div class="col-lg-6">
+
+                        <section class="card info-card">
+
+                            <div class="card-header">
+                                <h3 class="h6 mb-0 fw-bold">
+                                    <i class="bi bi-person-vcard text-primary me-2"></i>
+                                    Personal Information
+                                </h3>
+                            </div>
+
+                            <div class="card-body">
+
+                                <div class="row g-4">
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">First Name</div>
+                                        <div id="firstName" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Last Name</div>
+                                        <div id="lastName" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Middle Name</div>
+                                        <div id="middleName" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Gender</div>
+                                        <div id="gender" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Date of Birth</div>
+                                        <div id="dateOfBirth" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Phone</div>
+                                        <div id="phone" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <div class="detail-label">Email</div>
+                                        <div id="email" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <div class="detail-label">Address</div>
+                                        <div id="address" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </section>
+
+                    </div>
+
+                    <div class="col-lg-6">
+
+                        <section class="card info-card">
+
+                            <div class="card-header">
+                                <h3 class="h6 mb-0 fw-bold">
+                                    <i class="bi bi-briefcase-fill text-primary me-2"></i>
+                                    Employment Information
+                                </h3>
+                            </div>
+
+                            <div class="card-body">
+
+                                <div class="row g-4">
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Staff Number</div>
+                                        <div id="employmentStaffNumber" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Position</div>
+                                        <div id="position" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Department</div>
+                                        <div id="department" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Employment Type</div>
+                                        <div id="employmentType" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Date Employed</div>
+                                        <div id="dateEmployed" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Qualification</div>
+                                        <div id="qualification" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="detail-label">Status</div>
+                                        <div id="employmentStatus" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </section>
+
+                    </div>
+
+                    <div class="col-12">
+
+                        <section class="card info-card">
+
+                            <div class="card-header">
+                                <h3 class="h6 mb-0 fw-bold">
+                                    <i class="bi bi-clock-history text-primary me-2"></i>
+                                    Record Information
+                                </h3>
+                            </div>
+
+                            <div class="card-body">
+
+                                <div class="row g-4">
+
+                                    <div class="col-md-6">
+                                        <div class="detail-label">Created</div>
+                                        <div id="createdAt" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="detail-label">Last Updated</div>
+                                        <div id="updatedAt" class="detail-value empty-value">—</div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </section>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+
+            <div class="modal-content">
+
+                <div class="modal-header">
+
+                    <div>
+                        <h2 id="editModalLabel" class="modal-title h5 fw-bold mb-1">
+                            Edit Staff Profile
+                        </h2>
+
+                        <small class="text-muted">
+                            Update staff information
+                        </small>
+                    </div>
+
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+                </div>
+
+                <form id="editForm">
+
+                    <div class="modal-body">
+
+                        <div id="editError" class="alert alert-danger d-none"></div>
+
+                        <div class="row g-3">
+
+                            <div class="col-md-4">
+                                <label for="editStaffNumber" class="form-label">
+                                    Staff Number
+                                </label>
+
+                                <input type="text" id="editStaffNumber" class="form-control" disabled>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="editFirstName" class="form-label">
+                                    First Name
+                                </label>
+
+                                <input type="text" id="editFirstName" class="form-control" required>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="editLastName" class="form-label">
+                                    Last Name
+                                </label>
+
+                                <input type="text" id="editLastName" class="form-control" required>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="editMiddleName" class="form-label">
+                                    Middle Name
+                                </label>
+
+                                <input type="text" id="editMiddleName" class="form-control">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="editGender" class="form-label">
+                                    Gender
+                                </label>
+
+                                <select id="editGender" class="form-select">
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="editDateOfBirth" class="form-label">
+                                    Date of Birth
+                                </label>
+
+                                <input type="date" id="editDateOfBirth" class="form-control">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="editPhone" class="form-label">
+                                    Phone
+                                </label>
+
+                                <input type="text" id="editPhone" class="form-control">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="editEmail" class="form-label">
+                                    Email
+                                </label>
+
+                                <input type="email" id="editEmail" class="form-control">
+                            </div>
+
+                            <div class="col-12">
+                                <label for="editAddress" class="form-label">
+                                    Address
+                                </label>
+
+                                <textarea id="editAddress" class="form-control" rows="3"></textarea>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="editPosition" class="form-label">
+                                    Position
+                                </label>
+
+                                <input type="text" id="editPosition" class="form-control">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="editEmploymentType" class="form-label">
+                                    Employment Type
+                                </label>
+
+                                <input type="text" id="editEmploymentType" class="form-control">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="editDateEmployed" class="form-label">
+                                    Date Employed
+                                </label>
+
+                                <input type="date" id="editDateEmployed" class="form-control">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="editQualification" class="form-label">
+                                    Qualification
+                                </label>
+
+                                <input type="text" id="editQualification" class="form-control">
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+
+                        <button id="saveChangesButton" type="submit" class="btn btn-primary">
+                            <i class="bi bi-check2-circle me-1"></i>
+                            Save Changes
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div id="toast" class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-4"
+        role="alert" aria-live="assertive" aria-atomic="true">
+
+        <div class="d-flex">
+
+            <div class="toast-body"></div>
+
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                aria-label="Close"></button>
+
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        "use strict";
+
+        const API_BASE = "/api";
+
+        let staffId = null;
+        let currentStaff = null;
+        let editModalInstance = null;
+
+        function getStaffId() {
+            const params = new URLSearchParams(window.location.search);
+
+            return (
+                params.get("id") ||
+                params.get("staffId")
+            );
+        }
+
+        function getToken() {
+            return (
+                localStorage.getItem("school_management_token") ||
+                sessionStorage.getItem("school_management_token") ||
+                localStorage.getItem("token") ||
+                localStorage.getItem("accessToken") ||
+                sessionStorage.getItem("token") ||
+                sessionStorage.getItem("accessToken")
+            );
+        }
+
+        function authHeaders() {
+            const token = getToken();
+
+            const headers = {
+                "Content-Type": "application/json"
+            };
+
+            if (token) {
+                headers.Authorization = `Bearer ${token}`;
+            }
+
+            return headers;
+        }
+
+        function getField(object, ...names) {
+            if (!object) {
+                return "";
+            }
+
+            for (const name of names) {
+                if (
+                    object[name] !== undefined &&
+                    object[name] !== null
+                ) {
+                    return object[name];
+                }
+            }
+
+            return "";
+        }
+
+        function displayValue(value) {
+            if (
+                value === null ||
+                value === undefined ||
+                String(value).trim() === ""
+            ) {
+                return "—";
+            }
+
+            return value;
+        }
+
+        function formatDate(value) {
+            if (!value) {
+                return "—";
+            }
+
+            const date = new Date(value);
+
+            if (Number.isNaN(date.getTime())) {
+                return displayValue(value);
+            }
+
+            return date.toLocaleDateString("en-NG", {
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+            });
+        }
+
+        function formatDateInput(value) {
+            if (!value) {
+                return "";
+            }
+
+            return String(value).substring(0, 10);
+        }
+
+        function getName(staff) {
+            const firstName = getField(
+                staff,
+                "first_name",
+                "firstName"
+            );
+
+            const middleName = getField(
+                staff,
+                "middle_name",
+                "middleName"
+            );
+
+            const lastName = getField(
+                staff,
+                "last_name",
+                "lastName"
+            );
+
+            return [
+                firstName,
+                middleName,
+                lastName
+            ]
+                .filter(Boolean)
+                .join(" ")
+                .trim();
+        }
+
+        function getInitials(name) {
+            if (!name) {
+                return "ST";
+            }
+
+            const parts = name
+                .trim()
+                .split(/\s+/)
+                .filter(Boolean);
+
+            if (parts.length === 1) {
+                return parts[0]
+                    .substring(0, 2)
+                    .toUpperCase();
+            }
+
+            return (
+                parts[0][0] +
+                parts[parts.length - 1][0]
+            ).toUpperCase();
+        }
+
+        function formatStatus(status) {
+            if (!status) {
+                return "Unknown";
+            }
+
+            return String(status)
+                .replace(/_/g, " ")
+                .replace(/\b\w/g, letter => letter.toUpperCase());
+        }
+
+        function getStatusClass(status) {
+            const normalized = String(status || "")
+                .toLowerCase()
+                .replace(/\s+/g, "_");
+
+            if (normalized === "inactive") {
+                return "status-inactive";
+            }
+
+            if (
+                normalized === "on_leave" ||
+                normalized === "onleave"
+            ) {
+                return "status-on_leave";
+            }
+
+            return "status-active";
+        }
+
+        function setText(id, value) {
+            const element = document.getElementById(id);
+
+            if (!element) {
+                return;
+            }
+
+            const finalValue = displayValue(value);
+
+            element.textContent = finalValue;
+
+            element.classList.toggle(
+                "empty-value",
+                finalValue === "—"
+            );
+        }
+
+        function showError(message) {
+            const element = document.getElementById("errorMessage");
+
+            if (!element) {
+                return;
+            }
+
+            element.querySelector("span").textContent =
+                message || "An error occurred.";
+
+            element.classList.remove("d-none");
+        }
+
+        function hideError() {
+            const element = document.getElementById("errorMessage");
+
+            if (element) {
+                element.classList.add("d-none");
+            }
+        }
+
+        function showEditError(message) {
+            const element = document.getElementById("editError");
+
+            if (!element) {
+                return;
+            }
+
+            element.textContent =
+                message || "Unable to save staff information.";
+
+            element.classList.remove("d-none");
+        }
+
+        function hideEditError() {
+            const element = document.getElementById("editError");
+
+            if (element) {
+                element.classList.add("d-none");
+            }
+        }
+
+        function showToast(message, type = "success") {
+            const toastElement = document.getElementById("toast");
+
+            if (!toastElement) {
+                return;
+            }
+
+            toastElement.classList.remove(
+                "text-bg-success",
+                "text-bg-danger"
+            );
+
+            toastElement.classList.add(
+                type === "error"
+                    ? "text-bg-danger"
+                    : "text-bg-success"
+            );
+
+            toastElement.querySelector(".toast-body").textContent =
+                message;
+
+            const toast =
+                bootstrap.Toast.getOrCreateInstance(
+                    toastElement,
+                    {
+                        delay: 3500
+                    }
+                );
+
+            toast.show();
+        }
+
+        function getResponseData(result) {
+            if (!result) {
+                return null;
+            }
+
+            if (result.data !== undefined) {
+                return result.data;
+            }
+
+            if (result.staff !== undefined) {
+                return result.staff;
+            }
+
+            return result;
+        }
+
+        function renderPhoto(staff, fullName) {
+            const photo = getField(
+                staff,
+                "photo_url",
+                "photoUrl",
+                "profile_photo",
+                "profilePhoto",
+                "photo"
+            );
+
+            const photoContainer =
+                document.getElementById("profilePhoto");
+
+            if (!photoContainer) {
+                return;
+            }
+
+            if (!photo) {
+                photoContainer.innerHTML =
+                    `<span id="initials">${getInitials(fullName)}</span>`;
+
+                return;
+            }
+
+            const safePhoto = String(photo)
+                .replace(/"/g, "&quot;");
+
+            const safeName = String(fullName)
+                .replace(/"/g, "&quot;");
+
+            photoContainer.innerHTML =
+                `<img src="${safePhoto}" alt="${safeName}">`;
+        }
+
+        function renderStatus(status) {
+            const finalStatus = status || "active";
+
+            const badge =
+                document.getElementById("statusBadge");
+
+            const activateButton =
+                document.getElementById("activateButton");
+
+            const deactivateButton =
+                document.getElementById("deactivateButton");
+
+            const normalizedStatus =
+                String(finalStatus)
+                    .toLowerCase()
+                    .replace(/\s+/g, "_");
+
+            badge.className =
+                `status-badge ${getStatusClass(finalStatus)}`;
+
+            badge.innerHTML =
+                normalizedStatus === "active"
+                    ? `<i class="bi bi-check-circle-fill"></i> Active`
+                    : `<i class="bi bi-info-circle-fill"></i> ${formatStatus(finalStatus)}`;
+
+            activateButton.style.display =
+                normalizedStatus === "active"
+                    ? "none"
+                    : "inline-block";
+
+            deactivateButton.style.display =
+                normalizedStatus === "inactive"
+                    ? "none"
+                    : "inline-block";
+        }
+
+        function renderProfile(staff) {
+            currentStaff = staff;
+
+            const fullName =
+                getName(staff) || "Staff Member";
+
+            const staffNumber =
+                getField(
+                    staff,
+                    "staff_number",
+                    "staffNumber"
+                );
+
+            const position =
+                getField(
+                    staff,
+                    "position"
+                );
+
+            const department =
+                getField(
+                    staff,
+                    "department_name",
+                    "departmentName",
+                    "department"
+                );
+
+            const status =
+                getField(
+                    staff,
+                    "status"
+                ) || "active";
+
+            setText("staffName", fullName);
+
+            setText(
+                "staffNumber",
+                staffNumber
+                    ? `Staff Number: ${staffNumber}`
+                    : "Staff Number: —"
+            );
+
+            setText(
+                "staffPosition",
+                position
+                    ? `Position: ${position}`
+                    : "Position: —"
+            );
+
+            setText(
+                "firstName",
+                getField(
+                    staff,
+                    "first_name",
+                    "firstName"
+                )
+            );
+
+            setText(
+                "lastName",
+                getField(
+                    staff,
+                    "last_name",
+                    "lastName"
+                )
+            );
+
+            setText(
+                "middleName",
+                getField(
+                    staff,
+                    "middle_name",
+                    "middleName"
+                )
+            );
+
+            setText(
+                "gender",
+                getField(staff, "gender")
+            );
+
+            setText(
+                "dateOfBirth",
+                formatDate(
+                    getField(
+                        staff,
+                        "date_of_birth",
+                        "dateOfBirth"
+                    )
+                )
+            );
+
+            setText(
+                "phone",
+                getField(
+                    staff,
+                    "phone"
+                )
+            );
+
+            setText(
+                "email",
+                getField(
+                    staff,
+                    "email"
+                )
+            );
+
+            setText(
+                "address",
+                getField(
+                    staff,
+                    "address"
+                )
+            );
+
+            setText(
+                "employmentStaffNumber",
+                staffNumber
+            );
+
+            setText(
+                "position",
+                position
+            );
+
+            setText(
+                "department",
+                department
+            );
+
+            setText(
+                "employmentType",
+                getField(
+                    staff,
+                    "employment_type",
+                    "employmentType"
+                )
+            );
+
+            setText(
+                "dateEmployed",
+                formatDate(
+                    getField(
+                        staff,
+                        "employment_date",
+                        "employmentDate",
+                        "date_employed",
+                        "dateEmployed"
+                    )
+                )
+            );
+
+            setText(
+                "qualification",
+                getField(
+                    staff,
+                    "qualification"
+                )
+            );
+
+            setText(
+                "employmentStatus",
+                formatStatus(status)
+            );
+
+            setText(
+                "createdAt",
+                formatDate(
+                    getField(
+                        staff,
+                        "created_at",
+                        "createdAt"
+                    )
+                )
+            );
+
+            setText(
+                "updatedAt",
+                formatDate(
+                    getField(
+                        staff,
+                        "updated_at",
+                        "updatedAt"
+                    )
+                )
+            );
+
+            renderPhoto(staff, fullName);
+            renderStatus(status);
+
+            document
+                .getElementById("loading")
+                .classList.add("d-none");
+
+            document
+                .getElementById("profileContainer")
+                .classList.remove("d-none");
+        }
+
+        async function loadStaff() {
+            hideError();
+
+            staffId = getStaffId();
+
+            if (!staffId) {
+                document
+                    .getElementById("loading")
+                    .classList.add("d-none");
+
+                showError(
+                    "No staff ID was provided."
+                );
+
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `${API_BASE}/staff/${encodeURIComponent(staffId)}`,
+                    {
+                        method: "GET",
+                        headers: authHeaders()
+                    }
+                );
+
+                if (response.status === 401) {
+                    throw new Error(
+                        "Your session has expired. Please log in again."
+                    );
+                }
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.message ||
+                        "Unable to load staff profile."
+                    );
+                }
+
+                const staff = getResponseData(result);
+
+                if (!staff || typeof staff !== "object") {
+                    throw new Error(
+                        "The server returned an invalid staff record."
+                    );
+                }
+
+                renderProfile(staff);
+
+            } catch (error) {
+                console.error(
+                    "Load staff profile error:",
+                    error
+                );
+
+                document
+                    .getElementById("loading")
+                    .classList.add("d-none");
+
+                showError(
+                    error.message ||
+                    "Unable to load staff profile."
+                );
+            }
+        }
+
+        function fillEditForm(staff) {
+            document.getElementById("editStaffNumber").value =
+                getField(
+                    staff,
+                    "staff_number",
+                    "staffNumber"
+                );
+
+            document.getElementById("editFirstName").value =
+                getField(
+                    staff,
+                    "first_name",
+                    "firstName"
+                );
+
+            document.getElementById("editLastName").value =
+                getField(
+                    staff,
+                    "last_name",
+                    "lastName"
+                );
+
+            document.getElementById("editMiddleName").value =
+                getField(
+                    staff,
+                    "middle_name",
+                    "middleName"
+                );
+
+            document.getElementById("editGender").value =
+                getField(
+                    staff,
+                    "gender"
+                );
+
+            document.getElementById("editDateOfBirth").value =
+                formatDateInput(
+                    getField(
+                        staff,
+                        "date_of_birth",
+                        "dateOfBirth"
+                    )
+                );
+
+            document.getElementById("editPhone").value =
+                getField(
+                    staff,
+                    "phone"
+                );
+
+            document.getElementById("editEmail").value =
+                getField(
+                    staff,
+                    "email"
+                );
+
+            document.getElementById("editAddress").value =
+                getField(
+                    staff,
+                    "address"
+                );
+
+            document.getElementById("editPosition").value =
+                getField(
+                    staff,
+                    "position"
+                );
+
+            document.getElementById("editEmploymentType").value =
+                getField(
+                    staff,
+                    "employment_type",
+                    "employmentType"
+                );
+
+            document.getElementById("editDateEmployed").value =
+                formatDateInput(
+                    getField(
+                        staff,
+                        "employment_date",
+                        "employmentDate",
+                        "date_employed",
+                        "dateEmployed"
+                    )
+                );
+
+            document.getElementById("editQualification").value =
+                getField(
+                    staff,
+                    "qualification"
+                );
+        }
+
+        function openEditModal() {
+            if (!currentStaff) {
+                showToast(
+                    "Staff profile is not loaded.",
+                    "error"
+                );
+
+                return;
+            }
+
+            hideEditError();
+
+            fillEditForm(currentStaff);
+
+            editModalInstance =
+                bootstrap.Modal.getOrCreateInstance(
+                    document.getElementById("editModal")
+                );
+
+            editModalInstance.show();
+        }
+
+        function closeEditModal() {
+            if (editModalInstance) {
+                editModalInstance.hide();
+            }
+        }
+
+        function setSavingState(isSaving) {
+            const button =
+                document.getElementById(
+                    "saveChangesButton"
+                );
+
+            if (!button) {
+                return;
+            }
+
+            button.disabled = isSaving;
+
+            button.innerHTML = isSaving
+                ? `<span class="spinner-border spinner-border-sm me-1" role="status"></span> Saving...`
+                : `<i class="bi bi-check2-circle me-1"></i> Save Changes`;
+        }
+
+        async function updateStaff(event) {
+            event.preventDefault();
+
+            if (!staffId) {
+                showEditError(
+                    "No staff ID was provided."
+                );
+
+                return;
+            }
+
+            hideEditError();
+            setSavingState(true);
+
+            const payload = {
+                firstName:
+                    document
+                        .getElementById("editFirstName")
+                        .value
+                        .trim(),
+
+                lastName:
+                    document
+                        .getElementById("editLastName")
+                        .value
+                        .trim(),
+
+                middleName:
+                    document
+                        .getElementById("editMiddleName")
+                        .value
+                        .trim(),
+
+                gender:
+                    document
+                        .getElementById("editGender")
+                        .value,
+
+                dateOfBirth:
+                    document
+                        .getElementById("editDateOfBirth")
+                        .value || null,
+
+                phone:
+                    document
+                        .getElementById("editPhone")
+                        .value
+                        .trim(),
+
+                email:
+                    document
+                        .getElementById("editEmail")
+                        .value
+                        .trim(),
+
+                address:
+                    document
+                        .getElementById("editAddress")
+                        .value
+                        .trim(),
+
+                position:
+                    document
+                        .getElementById("editPosition")
+                        .value
+                        .trim(),
+
+                employmentType:
+                    document
+                        .getElementById("editEmploymentType")
+                        .value
+                        .trim(),
+
+                employmentDate:
+                    document
+                        .getElementById("editDateEmployed")
+                        .value || null,
+
+                qualification:
+                    document
+                        .getElementById("editQualification")
+                        .value
+                        .trim()
+            };
+
+            if (!payload.firstName) {
+                showEditError(
+                    "First name is required."
+                );
+
+                setSavingState(false);
+
+                return;
+            }
+
+            if (!payload.lastName) {
+                showEditError(
+                    "Last name is required."
+                );
+
+                setSavingState(false);
+
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `${API_BASE}/staff/${encodeURIComponent(staffId)}`,
+                    {
+                        method: "PUT",
+                        headers: authHeaders(),
+                        body: JSON.stringify(payload)
+                    }
+                );
+
+                if (response.status === 401) {
+                    throw new Error(
+                        "Your session has expired. Please log in again."
+                    );
+                }
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.message ||
+                        "Unable to update staff profile."
+                    );
+                }
+
+                const updatedStaff =
+                    getResponseData(result);
+
+                if (
+                    updatedStaff &&
+                    typeof updatedStaff === "object"
+                ) {
+                    renderProfile(updatedStaff);
+                } else {
+                    await loadStaff();
+                }
+
+                closeEditModal();
+
+                showToast(
+                    "Staff profile updated successfully."
+                );
+
+            } catch (error) {
+                console.error(
+                    "Update staff profile error:",
+                    error
+                );
+
+                showEditError(
+                    error.message ||
+                    "Unable to update staff profile."
+                );
+
+            } finally {
+                setSavingState(false);
+            }
+        }
+
+        async function changeStatus(status) {
+            if (!staffId) {
+                return;
+            }
+
+            const action =
+                status === "active"
+                    ? "activate"
+                    : "deactivate";
+
+            const confirmed = window.confirm(
+                `Are you sure you want to ${action} this staff member?`
+            );
+
+            if (!confirmed) {
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `${API_BASE}/staff/${encodeURIComponent(staffId)}`,
+                    {
+                        method: "PUT",
+                        headers: authHeaders(),
+                        body: JSON.stringify({
+                            status
+                        })
+                    }
+                );
+
+                if (response.status === 401) {
+                    throw new Error(
+                        "Your session has expired. Please log in again."
+                    );
+                }
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.message ||
+                        `Unable to ${action} staff member.`
+                    );
+                }
+
+                const updatedStaff =
+                    getResponseData(result);
+
+                if (
+                    updatedStaff &&
+                    typeof updatedStaff === "object"
+                ) {
+                    renderProfile(updatedStaff);
+                } else {
+                    await loadStaff();
+                }
+
+                showToast(
+                    `Staff member ${action}d successfully.`
+                );
+
+            } catch (error) {
+                console.error(
+                    "Change staff status error:",
+                    error
+                );
+
+                showToast(
+                    error.message ||
+                    `Unable to ${action} staff member.`,
+                    "error"
+                );
+            }
+        }
+
+        function initialiseSidebar() {
+            const sidebar =
+                document.getElementById("sidebar");
+
+            const overlay =
+                document.getElementById("sidebarOverlay");
+
+            const toggle =
+                document.getElementById("sidebarToggle");
+
+            toggle.addEventListener(
+                "click",
+                function () {
+                    sidebar.classList.toggle("show");
+                    overlay.classList.toggle("show");
+                }
+            );
+
+            overlay.addEventListener(
+                "click",
+                function () {
+                    sidebar.classList.remove("show");
+                    overlay.classList.remove("show");
+                }
+            );
+        }
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+                initialiseSidebar();
+
+                document
+                    .getElementById("editForm")
+                    .addEventListener(
+                        "submit",
+                        updateStaff
+                    );
+
+                loadStaff();
+            }
+        );
+    </script>
+    ```
+
+</body>
+
+</html>

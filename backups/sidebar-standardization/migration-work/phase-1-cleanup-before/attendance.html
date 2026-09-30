@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Attendance | School Management System</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    <link rel="stylesheet" href="../css/students.css">
+
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --primary: #0d6efd;
+            --sidebar-bg: #111827;
+            --sidebar-hover: rgba(255, 255, 255, 0.09);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f5f7fb;
+            color: #172033;
+        }
+
+        /* =========================================================
+           SIDEBAR
+        ========================================================= */
+
+        .sms-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background:
+                linear-gradient(180deg,
+                    #111827 0%,
+                    #172033 100%);
+            color: #fff;
+            z-index: 1040;
+            overflow-y: auto;
+            box-shadow: 4px 0 18px rgba(15, 23, 42, 0.08);
+        }
+
+        .sidebar-brand {
+            min-height: 76px;
+            padding: 15px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(13, 110, 253, 0.18);
+            color: #60a5fa;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .brand-title {
+            line-height: 1.15;
+        }
+
+        .brand-title strong {
+            display: block;
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .brand-subtitle {
+            display: block;
+            margin-top: 3px;
+            font-size: 11px;
+            color: #94a3b8;
+        }
+
+        .sidebar-content {
+            padding: 18px 12px;
+        }
+
+        .sidebar-section {
+            margin-bottom: 20px;
+        }
+
+        .sidebar-section-title {
+            padding: 0 11px;
+            margin-bottom: 7px;
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 42px;
+            margin-bottom: 3px;
+            padding: 9px 11px;
+            border-radius: 8px;
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: 0.2s ease;
+        }
+
+        .sidebar-link i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .sidebar-link:hover {
+            background: var(--sidebar-hover);
+            color: #fff;
+        }
+
+        .sidebar-link.active {
+            background: rgba(13, 110, 253, 0.18);
+            color: #fff;
+        }
+
+        .sidebar-link.active i {
+            color: #60a5fa;
+        }
+
+        .sidebar-footer {
+            padding: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .logout-button {
+            width: 100%;
+            min-height: 42px;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: #cbd5e1;
+            text-align: left;
+            padding: 9px 11px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .logout-button:hover {
+            background: rgba(220, 53, 69, 0.12);
+            color: #fff;
+        }
+
+        /* =========================================================
+           MAIN
+        ========================================================= */
+
+        .main-content {
+            min-height: 100vh;
+            margin-left: var(--sidebar-width);
+        }
+
+        .topbar {
+            min-height: 76px;
+            padding: 14px 28px;
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .mobile-sidebar-toggle {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: 1px solid #dbe1ea;
+            border-radius: 8px;
+            background: #fff;
+            color: #334155;
+        }
+
+        .topbar-heading h1 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 700;
+            color: #172033;
+        }
+
+        .topbar-heading p {
+            margin: 3px 0 0;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .topbar-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e8f1ff;
+            color: #0d6efd;
+            font-weight: 700;
+        }
+
+        .user-details {
+            line-height: 1.2;
+        }
+
+        .user-details strong {
+            display: block;
+            color: #172033;
+            font-size: 13px;
+        }
+
+        .user-details small {
+            display: block;
+            margin-top: 3px;
+            color: #64748b;
+            font-size: 11px;
+        }
+
+        .sidebar-overlay {
+            display: none;
+        }
+
+        /* =========================================================
+           PAGE
+        ========================================================= */
+
+        .page-container {
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 28px;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 22px;
+        }
+
+        .page-header-left {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+        }
+
+        .page-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e8f1ff;
+            color: #0d6efd;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .page-header h2 {
+            margin: 0;
+            font-size: 27px;
+            font-weight: 700;
+            color: #172033;
+        }
+
+        .page-header p {
+            margin: 5px 0 0;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        /* =========================================================
+           ATTENDANCE MODE
+        ========================================================= */
+
+        .attendance-mode-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 18px;
+            box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
+        }
+
+        .mode-heading {
+            margin-bottom: 12px;
+        }
+
+        .mode-heading h3 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 700;
+            color: #172033;
+        }
+
+        .mode-heading p {
+            margin: 4px 0 0;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .attendance-mode-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .attendance-mode-button {
+            min-height: 42px;
+            padding: 9px 16px;
+            border: 1px solid #d8dee8;
+            border-radius: 8px;
+            background: #fff;
+            color: #475569;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .attendance-mode-button:hover {
+            border-color: #0d6efd;
+            color: #0d6efd;
+        }
+
+        .attendance-mode-button.active {
+            background: #0d6efd;
+            border-color: #0d6efd;
+            color: #fff;
+        }
+
+        /* =========================================================
+           BIOMETRIC STATUS
+        ========================================================= */
+
+        .biometric-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 18px;
+            box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
+        }
+
+        .biometric-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .biometric-left {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+        }
+
+        .biometric-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #eef2ff;
+            color: #4f46e5;
+            font-size: 21px;
+        }
+
+        .biometric-info h3 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 700;
+            color: #172033;
+        }
+
+        .biometric-info p {
+            margin: 4px 0 0;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .biometric-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 11px;
+            border-radius: 999px;
+            background: #f1f5f9;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .biometric-status i {
+            font-size: 9px;
+        }
+
+        /* =========================================================
+           MAIN ATTENDANCE CARD
+        ========================================================= */
+
+        .attendance-card {
+            background: #fff;
+            border: 0;
+            border-radius: 14px;
+            box-shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
+            overflow: hidden;
+        }
+
+        .controls {
+            padding: 20px;
+            border-bottom: 1px solid #edf0f5;
+        }
+
+        .form-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+        .form-control,
+        .form-select {
+            min-height: 44px;
+            border-color: #d8dee8;
+            border-radius: 8px;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.1);
+        }
+
+        .search-help {
+            margin-top: 5px;
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        /* =========================================================
+           SUMMARY
+        ========================================================= */
+
+        .attendance-summary {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .summary-item {
+            min-height: 70px;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 11px 13px;
+        }
+
+        .summary-item span {
+            display: block;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .summary-item strong {
+            display: block;
+            color: #172033;
+            font-size: 21px;
+            line-height: 1;
+        }
+
+        /* =========================================================
+           ACTION BAR
+        ========================================================= */
+
+        .action-bar {
+            padding: 15px 20px;
+            background: #f8fafc;
+            border-bottom: 1px solid #edf0f5;
+        }
+
+        .action-bar .btn {
+            min-height: 40px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        /* =========================================================
+           TABLE
+        ========================================================= */
+
+        .table-responsive {
+            min-height: 280px;
+        }
+
+        .attendance-table {
+            margin: 0;
+        }
+
+        .attendance-table thead th {
+            background: #f8fafc;
+            color: #475569;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            padding: 14px 18px;
+            white-space: nowrap;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .attendance-table tbody td {
+            padding: 14px 18px;
+            vertical-align: middle;
+            border-color: #edf0f5;
+            color: #475569;
+            font-size: 13px;
+        }
+
+        .attendance-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .student-name,
+        .person-name {
+            font-weight: 700;
+            color: #172033;
+        }
+
+        .person-type {
+            display: inline-block;
+            margin-top: 3px;
+            color: #64748b;
+            font-size: 11px;
+        }
+
+        .status-select {
+            min-width: 135px;
+        }
+
+        .remarks-input {
+            min-width: 180px;
+        }
+
+        .empty-state,
+        .loading-state {
+            padding: 55px 20px;
+            text-align: center;
+            color: #64748b;
+        }
+
+        .empty-state i {
+            font-size: 42px;
+            color: #94a3b8;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        /* =========================================================
+           NOTIFICATIONS
+        ========================================================= */
+
+        #notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            max-width: 380px;
+        }
+
+        /* =========================================================
+           RESPONSIVE
+        ========================================================= */
+
+        @media (max-width: 1100px) {
+            .attendance-summary {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .sms-sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.25s ease;
+            }
+
+            .sms-sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .mobile-sidebar-toggle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .sidebar-overlay.show {
+                display: block;
+                position: fixed;
+                inset: 0;
+                background: rgba(15, 23, 42, 0.45);
+                z-index: 1030;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .topbar {
+                padding: 12px 16px;
+            }
+
+            .user-details {
+                display: none;
+            }
+
+            .page-container {
+                padding: 18px 14px;
+            }
+
+            .page-header h2 {
+                font-size: 23px;
+            }
+
+            .attendance-summary {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .attendance-table thead th,
+            .attendance-table tbody td {
+                padding: 12px;
+            }
+
+            .remarks-input {
+                min-width: 150px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .attendance-summary {
+                grid-template-columns: 1fr;
+            }
+
+            .attendance-mode-buttons {
+                flex-direction: column;
+            }
+
+            .attendance-mode-button {
+                width: 100%;
+            }
+
+            .biometric-content {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="../css/sidebar.css">
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <aside id="smsSidebar" class="sms-sidebar">
+
+
+            <!-- =================================================
+             SIDEBAR BRAND
+        ================================================== -->
+
+            <div class="sidebar-brand">
+
+                <div class="brand-icon">
+
+                    <i class="bi bi-mortarboard-fill"></i>
+
+                </div>
+
+
+                <div>
+
+                    <div class="brand-title">
+                        School Management
+                    </div>
+
+                    <span class="brand-subtitle">
+                        Administration Portal
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+             SIDEBAR CONTENT
+        ================================================== -->
+
+            <div class="sidebar-content">
+
+
+                <!-- =================================================
+                 MAIN
+            ================================================== -->
+
+                <div class="sidebar-section">
+                    Main
+                </div>
+
+
+                <a href="/pages/dashboard.html" class="sidebar-link">
+
+                    <i class="bi bi-speedometer2"></i>
+
+                    <span>
+                        Dashboard
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/students.html" class="sidebar-link">
+
+                    <i class="bi bi-people"></i>
+
+                    <span>
+                        Students
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/staff.html" class="sidebar-link">
+
+                    <i class="bi bi-person-badge"></i>
+
+                    <span>
+                        Staff
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/guardians.html" class="sidebar-link">
+
+                    <i class="bi bi-person-hearts"></i>
+
+                    <span>
+                        Guardians
+                    </span>
+
+                </a>
+
+
+                <!-- =================================================
+                 ACADEMIC
+            ================================================== -->
+
+                <div class="sidebar-section">
+                    Academic
+                </div>
+
+
+                <a href="/pages/classes.html" class="sidebar-link">
+
+                    <i class="bi bi-building"></i>
+
+                    <span>
+                        Classes
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/class-arms.html" class="sidebar-link">
+
+                    <i class="bi bi-diagram-3"></i>
+
+                    <span>
+                        Class Arms
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/departments.html" class="sidebar-link">
+
+                    <i class="bi bi-diagram-2"></i>
+
+                    <span>
+                        Departments
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/subjects.html" class="sidebar-link">
+
+                    <i class="bi bi-book"></i>
+
+                    <span>
+                        Subjects
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/academic-sessions.html" class="sidebar-link">
+
+                    <i class="bi bi-calendar3"></i>
+
+                    <span>
+                        Academic Sessions
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/terms.html" class="sidebar-link">
+
+                    <i class="bi bi-calendar2-week"></i>
+
+                    <span>
+                        Terms
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/attendance.html" class="sidebar-link">
+
+                    <i class="bi bi-calendar-check"></i>
+
+                    <span>
+                        Attendance
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/results.html" class="sidebar-link">
+
+                    <i class="bi bi-bar-chart"></i>
+
+                    <span>
+                        Results
+                    </span>
+
+                </a>
+
+
+                <!-- =================================================
+                 FINANCE & RECORDS
+            ================================================== -->
+
+                <div class="sidebar-section">
+                    Finance &amp; Records
+                </div>
+
+
+                <a href="/pages/fees.html" class="sidebar-link">
+
+                    <i class="bi bi-cash-stack"></i>
+
+                    <span>
+                        Fees &amp; Payments
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/documents.html" class="sidebar-link">
+
+                    <i class="bi bi-folder2-open"></i>
+
+                    <span>
+                        Documents
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/reports.html" class="sidebar-link">
+
+                    <i class="bi bi-file-earmark-bar-graph"></i>
+
+                    <span>
+                        Reports
+                    </span>
+
+                </a>
+
+
+                <!-- =================================================
+                 ADMINISTRATION
+            ================================================== -->
+
+                <div class="sidebar-section">
+                    Administration
+                </div>
+
+
+                <a href="/pages/users.html" class="sidebar-link">
+
+                    <i class="bi bi-person-gear"></i>
+
+                    <span>
+                        Users
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/roles.html" class="sidebar-link">
+
+                    <i class="bi bi-shield-check"></i>
+
+                    <span>
+                        Roles
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/permissions.html" class="sidebar-link">
+
+                    <i class="bi bi-key"></i>
+
+                    <span>
+                        Permissions
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/profile.html" class="sidebar-link">
+
+                    <i class="bi bi-person-circle"></i>
+
+                    <span>
+                        My Profile
+                    </span>
+
+                </a>
+
+
+                <a href="/pages/settings.html" class="sidebar-link">
+
+                    <i class="bi bi-gear"></i>
+
+                    <span>
+                        Settings
+                    </span>
+
+                </a>
+
+            </div>
+
+        </aside>
+
+        <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+
+    <!-- MOBILE OVERLAY -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content sms-main">
+
+        <!-- TOPBAR -->
+        <header class="topbar">
+
+            <div class="topbar-left">
+
+                <button type="button" id="sidebarToggle" class="mobile-sidebar-toggle" aria-label="Open navigation"
+                    aria-controls="smsSidebar" aria-expanded="false">
+                    <i class="bi bi-list"></i>
+                </button>
+
+                <div class="topbar-heading">
+
+                    <h1>Attendance</h1>
+
+                    <p>
+                        Manage student, teacher and non-teaching staff attendance.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="topbar-user">
+
+                <div class="user-avatar" id="userAvatar">
+                    <i class="bi bi-person-fill"></i>
+                </div>
+
+                <div class="user-details">
+
+                    <strong id="userName">
+                        User
+                    </strong>
+
+                    <small data-user-role>
+                        Administrator
+                    </small>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+        <!-- PAGE -->
+        <div class="page-container">
+
+
+            <!-- PAGE HEADER -->
+            <section class="page-header">
+
+                <div class="page-header-left">
+
+                    <div class="page-icon">
+                        <i class="bi bi-calendar-check"></i>
+                    </div>
+
+                    <div>
+
+                        <h2>
+                            Attendance Management
+                        </h2>
+
+                        <p>
+                            Record attendance manually or connect a biometric attendance device.
+                            Attendance reports will also appear on each person's profile.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ATTENDANCE TYPE -->
+            <section class="attendance-mode-card">
+
+                <div class="mode-heading">
+
+                    <h3>
+                        Attendance Type
+                    </h3>
+
+                    <p>
+                        Select the group whose attendance you want to manage.
+                    </p>
+
+                </div>
+
+                <div class="attendance-mode-buttons">
+
+                    <button type="button" class="attendance-mode-button active" id="studentAttendanceMode"
+                        data-attendance-type="student">
+
+                        <i class="bi bi-mortarboard-fill me-1"></i>
+                        Student Attendance
+
+                    </button>
+
+
+                    <button type="button" class="attendance-mode-button" id="staffAttendanceMode"
+                        data-attendance-type="staff">
+
+                        <i class="bi bi-person-badge-fill me-1"></i>
+                        Staff Attendance
+
+                    </button>
+
+
+                    <button type="button" class="attendance-mode-button" id="allAttendanceMode"
+                        data-attendance-type="all">
+
+                        <i class="bi bi-people-fill me-1"></i>
+                        All Attendance
+
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <!-- BIOMETRIC STATUS -->
+            <section class="biometric-card">
+
+                <div class="biometric-content">
+
+                    <div class="biometric-left">
+
+                        <div class="biometric-icon">
+                            <i class="bi bi-fingerprint"></i>
+                        </div>
+
+                        <div class="biometric-info">
+
+                            <h3>
+                                Biometric Attendance
+                            </h3>
+
+                            <p>
+                                Fingerprint attendance can automatically identify students,
+                                teachers and non-teaching staff when a compatible device is connected.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="biometric-status" id="biometricStatus" data-biometric-status="disconnected">
+
+                        <i class="bi bi-circle-fill"></i>
+
+                        <span id="biometricStatusText">
+                            Device not connected
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ATTENDANCE CARD -->
+            <section class="attendance-card">
+
+                <!-- CONTROLS -->
+                <div class="controls">
+
+                    <div class="row g-3 align-items-end">
+
+
+                        <!-- ACADEMIC SESSION -->
+                        <div class="col-12 col-md-6 col-lg-3">
+
+                            <label for="sessionId" class="form-label">
+                                Academic Session
+                            </label>
+
+                            <select id="sessionId" name="session_id" class="form-select" required>
+
+                                <option value="">
+                                    Select Academic Session
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- TERM -->
+                        <div class="col-12 col-md-6 col-lg-3">
+
+                            <label for="termId" class="form-label">
+                                Term
+                            </label>
+
+                            <select id="termId" name="term_id" class="form-select" required>
+
+                                <option value="">
+                                    Select Term
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- ATTENDANCE DATE -->
+                        <div class="col-12 col-md-6 col-lg-3">
+
+                            <label for="attendanceDate" class="form-label">
+                                Attendance Date
+                            </label>
+
+                            <input type="date" id="attendanceDate" name="attendance_date" class="form-control" required>
+
+                        </div>
+
+
+                        <!-- CLASS -->
+                        <div class="col-12 col-md-6 col-lg-3" id="classFilterContainer">
+
+                            <label for="classId" class="form-label">
+                                Class
+                            </label>
+
+                            <select id="classId" name="class_id" class="form-select">
+
+                                <option value="">
+                                    All Classes
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- PERSON SEARCH -->
+                        <div class="col-12">
+
+                            <label for="attendanceSearch" class="form-label">
+
+                                <span id="attendanceSearchLabel">
+                                    Search Student
+                                </span>
+
+                            </label>
+
+                            <div class="input-group">
+
+                                <span class="input-group-text bg-white">
+                                    <i class="bi bi-search"></i>
+                                </span>
+
+                                <input type="search" id="attendanceSearch" name="search" class="form-control"
+                                    placeholder="Search by student name or LMC number..." autocomplete="off">
+
+                            </div>
+
+                            <div class="search-help" id="attendanceSearchHelp">
+
+                                Students can be located using their name or admission number
+                                such as LMC001, LMC098 or LMC1000.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- SUMMARY -->
+                    <div class="attendance-summary">
+
+                        <div class="summary-item">
+
+                            <span id="totalLabel">
+                                Students
+                            </span>
+
+                            <strong id="totalStudents">
+                                0
+                            </strong>
+
+                        </div>
+
+
+                        <div class="summary-item">
+
+                            <span>
+                                Present
+                            </span>
+
+                            <strong id="presentCount">
+                                0
+                            </strong>
+
+                        </div>
+
+
+                        <div class="summary-item">
+
+                            <span>
+                                Absent
+                            </span>
+
+                            <strong id="absentCount">
+                                0
+                            </strong>
+
+                        </div>
+
+
+                        <div class="summary-item">
+
+                            <span>
+                                Late
+                            </span>
+
+                            <strong id="lateCount">
+                                0
+                            </strong>
+
+                        </div>
+
+
+                        <div class="summary-item">
+
+                            <span>
+                                Excused
+                            </span>
+
+                            <strong id="excusedCount">
+                                0
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ACTION BAR -->
+                <div class="action-bar d-flex justify-content-end gap-2 flex-wrap">
+
+                    <button type="button" class="btn btn-outline-success" data-mark-all-present>
+
+                        <i class="bi bi-check2-all me-1"></i>
+
+                        Mark All Present
+
+                    </button>
+
+
+                    <button type="button" class="btn btn-outline-secondary" data-reset-attendance>
+
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>
+
+                        Reset
+
+                    </button>
+
+
+                    <button type="submit" form="attendanceForm" class="btn btn-primary" data-save-attendance>
+
+                        <i class="bi bi-cloud-arrow-up me-1"></i>
+
+                        Save Attendance
+
+                    </button>
+
+                </div>
+
+
+                <!-- ATTENDANCE FORM -->
+                <form id="attendanceForm" data-attendance-form autocomplete="off">
+
+                    <div class="table-responsive">
+
+                        <table class="table attendance-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        Person
+                                    </th>
+
+                                    <th>
+                                        ID / Admission No.
+                                    </th>
+
+                                    <th>
+                                        Class / Department
+                                    </th>
+
+                                    <th>
+                                        Status
+                                    </th>
+
+                                    <th>
+                                        Remarks
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody id="attendanceTableBody" data-attendance-body>
+
+                                <tr>
+
+                                    <td colspan="5">
+
+                                        <div class="loading-state">
+
+                                            <div class="spinner-border text-primary mb-3" role="status"
+                                                aria-hidden="true">
+                                            </div>
+
+                                            <p class="mb-0">
+                                                Loading attendance...
+                                            </p>
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </form>
+
+            </section>
+
+        </div>
+
+    </main>
+
+
+    <!-- NOTIFICATIONS -->
+    <div id="notification-container" aria-live="polite" aria-atomic="true">
+    </div>
+
+
+    <!-- JAVASCRIPT -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/app.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/attendance.js"></script>
+
+
+    <!-- SIDEBAR MOBILE BEHAVIOUR -->
+    
+
+    <script src="../js/sidebar.js"></script>
+</body>
+
+</html>
