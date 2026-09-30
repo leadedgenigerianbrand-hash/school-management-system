@@ -2,15 +2,19 @@
 
 const DOCUMENTS_API = "/api/documents";
 const STUDENTS_API = "/api/students";
-const LOGIN_PAGE = "/pages/login.html";
+const STUDENT_DOCUMENTS_LOGIN_PAGE = "/pages/login.html";
 const STUDENTS_PAGE = "/pages/students.html";
 
 let currentStudentId = null;
 let currentStudent = null;
 let currentDocuments = [];
+let studentDocumentSearchTimer = null;
+let studentDocumentSearchResults = [];
 
 function getToken() {
 return (
+localStorage.getItem("school_management_token") ||
+sessionStorage.getItem("school_management_token") ||
 localStorage.getItem("token") ||
 localStorage.getItem("authToken") ||
 localStorage.getItem("accessToken") ||
@@ -22,9 +26,10 @@ null
 }
 
 function getStudentId() {
-const params = new URLSearchParams(window.location.search);
+const params = new URLSearchParams(
+window.location.search
+);
 
-```
 return (
     params.get("id") ||
     params.get("studentId") ||
@@ -32,36 +37,37 @@ return (
     params.get("student") ||
     null
 );
-```
 
 }
 
 function normalizeId(value) {
-const id = Number(value);
-
-```
-if (!Number.isInteger(id) || id <= 0) {
-    return null;
+if (
+value === null ||
+value === undefined
+) {
+return null;
 }
 
-return id;
-```
+const id = String(value).trim();
+
+return id || null;
 
 }
 
 function escapeHtml(value) {
-if (value === null || value === undefined) {
+if (
+value === null ||
+value === undefined
+) {
 return "";
 }
 
-```
 return String(value)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
-```
 
 }
 
@@ -70,7 +76,6 @@ if (!payload) {
 return null;
 }
 
-```
 if (
     payload.data &&
     typeof payload.data === "object" &&
@@ -104,7 +109,6 @@ if (
 }
 
 return payload;
-```
 
 }
 
@@ -113,7 +117,6 @@ if (!payload) {
 return [];
 }
 
-```
 if (Array.isArray(payload)) {
     return payload;
 }
@@ -130,34 +133,48 @@ if (Array.isArray(payload.results)) {
     return payload.results;
 }
 
+if (Array.isArray(payload.students)) {
+    return payload.students;
+}
+
 return [];
-```
 
 }
 
-async function apiRequest(url, options = {}) {
+async function apiRequest(
+url,
+options = {}
+) {
 const token = getToken();
 
-```
 const headers = {
     Accept: "application/json",
     ...(options.headers || {})
 };
 
 if (token) {
-    headers.Authorization = `Bearer ${token}`;
+    headers.Authorization =
+        `Bearer ${token}`;
 }
 
-const response = await fetch(url, {
-    ...options,
-    headers
-});
+const response = await fetch(
+    url,
+    {
+        ...options,
+        headers
+    }
+);
 
 let payload = null;
 
-const contentType = response.headers.get("content-type") || "";
+const contentType =
+    response.headers.get("content-type") || "";
 
-if (contentType.includes("application/json")) {
+if (
+    contentType.includes(
+        "application/json"
+    )
+) {
     payload = await response.json();
 } else {
     const text = await response.text();
@@ -188,106 +205,169 @@ if (!response.ok) {
 }
 
 return payload;
-```
 
 }
 
-function showMessage(message, type = "info") {
-const element = document.getElementById("documentsMessage");
+function showMessage(
+message,
+type = "info"
+) {
+const element =
+document.getElementById(
+"documentsMessage"
+);
 
-```
 if (!element) {
     return;
 }
 
-element.className = `alert alert-${type}`;
+element.className =
+    `alert alert-${type}`;
+
 element.textContent = message;
+
 element.classList.remove("d-none");
-```
 
 }
 
 function hideMessage() {
-const element = document.getElementById("documentsMessage");
+const element =
+document.getElementById(
+"documentsMessage"
+);
 
-```
 if (!element) {
     return;
 }
 
 element.classList.add("d-none");
 element.textContent = "";
-```
+
 
 }
 
-function setPageLoading(isLoading) {
-const loading = document.getElementById("documentsLoading");
-const content = document.getElementById("documentsContent");
-const error = document.getElementById("documentsError");
+function setPageLoading(
+isLoading
+) {
+const loading =
+document.getElementById(
+"documentsLoading"
+);
 
-```
+
+const content =
+    document.getElementById(
+        "documentsContent"
+    );
+
+const error =
+    document.getElementById(
+        "documentsError"
+    );
+
 if (loading) {
-    loading.classList.toggle("d-none", !isLoading);
+    loading.classList.toggle(
+        "d-none",
+        !isLoading
+    );
 }
 
 if (isLoading) {
     if (content) {
-        content.classList.add("d-none");
+        content.classList.add(
+            "d-none"
+        );
     }
 
     if (error) {
-        error.classList.add("d-none");
+        error.classList.add(
+            "d-none"
+        );
     }
 }
-```
 
 }
 
 function showContent() {
-const loading = document.getElementById("documentsLoading");
-const content = document.getElementById("documentsContent");
-const error = document.getElementById("documentsError");
+const loading =
+document.getElementById(
+"documentsLoading"
+);
 
-```
+const content =
+    document.getElementById(
+        "documentsContent"
+    );
+
+const error =
+    document.getElementById(
+        "documentsError"
+    );
+
 if (loading) {
-    loading.classList.add("d-none");
+    loading.classList.add(
+        "d-none"
+    );
 }
 
 if (content) {
-    content.classList.remove("d-none");
+    content.classList.remove(
+        "d-none"
+    );
 }
 
 if (error) {
-    error.classList.add("d-none");
+    error.classList.add(
+        "d-none"
+    );
 }
-```
 
 }
 
 function showError(message) {
-const loading = document.getElementById("documentsLoading");
-const content = document.getElementById("documentsContent");
-const error = document.getElementById("documentsError");
-const errorMessage = document.getElementById("documentsErrorMessage");
+const loading =
+document.getElementById(
+"documentsLoading"
+);
 
-```
+
+const content =
+    document.getElementById(
+        "documentsContent"
+    );
+
+const error =
+    document.getElementById(
+        "documentsError"
+    );
+
+const errorMessage =
+    document.getElementById(
+        "documentsErrorMessage"
+    );
+
 if (loading) {
-    loading.classList.add("d-none");
+    loading.classList.add(
+        "d-none"
+    );
 }
 
 if (content) {
-    content.classList.add("d-none");
+    content.classList.add(
+        "d-none"
+    );
 }
 
 if (errorMessage) {
-    errorMessage.textContent = message;
+    errorMessage.textContent =
+        message;
 }
 
 if (error) {
-    error.classList.remove("d-none");
+    error.classList.remove(
+        "d-none"
+    );
 }
-```
 
 }
 
@@ -296,7 +376,7 @@ if (!student) {
 return "—";
 }
 
-```
+
 if (student.name) {
     return student.name;
 }
@@ -322,7 +402,6 @@ return [
     .filter(Boolean)
     .join(" ")
     .trim() || "—";
-```
 
 }
 
@@ -331,7 +410,6 @@ if (!student) {
 return "—";
 }
 
-```
 return (
     student.student_number ||
     student.studentNumber ||
@@ -339,7 +417,7 @@ return (
     student.admissionNumber ||
     "—"
 );
-```
+
 
 }
 
@@ -348,14 +426,12 @@ if (!student) {
 return "—";
 }
 
-```
 return (
     student.class_name ||
     student.className ||
     student.class ||
     "—"
 );
-```
 
 }
 
@@ -364,7 +440,6 @@ if (!student) {
 return "—";
 }
 
-```
 return (
     student.academic_session_name ||
     student.academicSessionName ||
@@ -374,7 +449,6 @@ return (
     student.academicSession ||
     "—"
 );
-```
 
 }
 
@@ -383,103 +457,196 @@ if (!value) {
 return "—";
 }
 
-```
 const date = new Date(value);
 
-if (Number.isNaN(date.getTime())) {
-    return escapeHtml(value);
+if (
+    Number.isNaN(
+        date.getTime()
+    )
+) {
+    return String(value);
 }
 
-return date.toLocaleDateString("en-NG", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric"
-});
-```
-
-}
-
-function getDocumentId(document) {
-return (
-document.id ||
-document.document_id ||
-document.documentId ||
-null
+return date.toLocaleDateString(
+    "en-NG",
+    {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+    }
 );
+
 }
 
-function getDocumentName(document) {
-return (
-document.document_name ||
-document.documentName ||
-document.file_name ||
-document.fileName ||
-document.name ||
-document.filename ||
-"Unnamed document"
+function renderStudentSummary(
+student
+) {
+const nameElement =
+document.getElementById(
+"studentName"
 );
+
+const numberElement =
+    document.getElementById(
+        "studentNumber"
+    );
+
+const classElement =
+    document.getElementById(
+        "studentClass"
+    );
+
+const sessionElement =
+    document.getElementById(
+        "studentSession"
+    );
+
+if (nameElement) {
+    nameElement.textContent =
+        getStudentName(student);
 }
 
-function getDocumentType(document) {
-return (
-document.document_type ||
-document.documentType ||
-document.type ||
-"Other"
-);
+if (numberElement) {
+    numberElement.textContent =
+        getStudentNumber(student);
 }
 
-function getDocumentDescription(document) {
-return (
-document.description ||
-document.notes ||
-"—"
-);
+if (classElement) {
+    classElement.textContent =
+        getStudentClass(student);
 }
 
-function getDocumentDate(document) {
-return (
-document.uploaded_at ||
-document.uploadedAt ||
-document.created_at ||
-document.createdAt ||
-document.document_date ||
-document.documentDate ||
-null
-);
+if (sessionElement) {
+    sessionElement.textContent =
+        getStudentSession(student);
 }
 
-function getUploadedBy(document) {
-return (
-document.uploaded_by_name ||
-document.uploadedByName ||
-document.uploaded_by ||
-document.uploadedBy ||
-document.created_by_name ||
-document.createdByName ||
-document.created_by ||
-document.createdBy ||
-"—"
-);
 }
 
-function getDocumentStatus(document) {
-return (
-document.status ||
-"Active"
-);
+function getDocumentId(documentRecord) {
+if (!documentRecord) {
+return null;
 }
 
-function getDocumentUrl(document) {
 return (
-document.file_url ||
-document.fileUrl ||
-document.url ||
-document.file_path ||
-document.filePath ||
-document.path ||
-null
+    documentRecord.id ||
+    documentRecord.document_id ||
+    documentRecord.documentId ||
+    null
 );
+
+}
+
+function getDocumentName(documentRecord) {
+if (!documentRecord) {
+return "Unnamed document";
+}
+
+return (
+    documentRecord.document_name ||
+    documentRecord.documentName ||
+    documentRecord.file_name ||
+    documentRecord.fileName ||
+    documentRecord.name ||
+    documentRecord.filename ||
+    "Unnamed document"
+);
+
+
+}
+
+function getDocumentType(documentRecord) {
+if (!documentRecord) {
+return "Other";
+}
+
+return (
+    documentRecord.document_type ||
+    documentRecord.documentType ||
+    documentRecord.type ||
+    "Other"
+);
+
+}
+
+function getDocumentDescription(
+documentRecord
+) {
+if (!documentRecord) {
+return "—";
+}
+
+return (
+    documentRecord.description ||
+    documentRecord.notes ||
+    "—"
+);
+
+}
+
+function getDocumentDate(documentRecord) {
+if (!documentRecord) {
+return null;
+}
+
+return (
+    documentRecord.uploaded_at ||
+    documentRecord.uploadedAt ||
+    documentRecord.created_at ||
+    documentRecord.createdAt ||
+    documentRecord.document_date ||
+    documentRecord.documentDate ||
+    null
+);
+
+}
+
+function getUploadedBy(documentRecord) {
+if (!documentRecord) {
+return "—";
+}
+
+return (
+    documentRecord.uploaded_by_name ||
+    documentRecord.uploadedByName ||
+    documentRecord.uploaded_by ||
+    documentRecord.uploadedBy ||
+    documentRecord.created_by_name ||
+    documentRecord.createdByName ||
+    documentRecord.created_by ||
+    documentRecord.createdBy ||
+    "—"
+);
+
+}
+
+function getDocumentStatus(documentRecord) {
+if (!documentRecord) {
+return "Active";
+}
+
+return (
+    documentRecord.status ||
+    "Active"
+);
+
+}
+
+function getDocumentUrl(documentRecord) {
+if (!documentRecord) {
+return null;
+}
+
+return (
+    documentRecord.file_url ||
+    documentRecord.fileUrl ||
+    documentRecord.url ||
+    documentRecord.file_path ||
+    documentRecord.filePath ||
+    documentRecord.path ||
+    null
+);
+
 }
 
 function isSafeDocumentUrl(url) {
@@ -487,8 +654,8 @@ if (!url) {
 return false;
 }
 
-```
-const value = String(url).trim();
+const value =
+    String(url).trim();
 
 if (!value) {
     return false;
@@ -503,7 +670,11 @@ if (
 }
 
 try {
-    const parsed = new URL(value, window.location.origin);
+    const parsed =
+        new URL(
+            value,
+            window.location.origin
+        );
 
     return (
         parsed.protocol === "http:" ||
@@ -512,49 +683,35 @@ try {
 } catch (error) {
     return false;
 }
-```
 
 }
 
-function renderStudentSummary(student) {
-const nameElement = document.getElementById("studentName");
-const numberElement = document.getElementById("studentNumber");
-const classElement = document.getElementById("studentClass");
-const sessionElement = document.getElementById("studentSession");
+function renderDocuments(
+documents
+) {
+const tableBody =
+document.getElementById(
+"documentsTableBody"
+);
 
-```
-if (nameElement) {
-    nameElement.textContent = getStudentName(student);
-}
+const emptyState =
+    document.getElementById(
+        "documentsEmpty"
+    );
 
-if (numberElement) {
-    numberElement.textContent = getStudentNumber(student);
-}
+const countElement =
+    document.getElementById(
+        "documentsCount"
+    );
 
-if (classElement) {
-    classElement.textContent = getStudentClass(student);
-}
-
-if (sessionElement) {
-    sessionElement.textContent = getStudentSession(student);
-}
-```
-
-}
-
-function renderDocuments(documents) {
-const tableBody = document.getElementById("documentsTableBody");
-const emptyState = document.getElementById("documentsEmpty");
-const countElement = document.getElementById("documentsCount");
-
-```
 if (!tableBody) {
     return;
 }
 
-currentDocuments = Array.isArray(documents)
-    ? documents
-    : [];
+currentDocuments =
+    Array.isArray(documents)
+        ? documents
+        : [];
 
 tableBody.innerHTML = "";
 
@@ -567,273 +724,817 @@ if (countElement) {
         }`;
 }
 
-if (currentDocuments.length === 0) {
+if (
+    currentDocuments.length === 0
+) {
     if (emptyState) {
-        emptyState.classList.remove("d-none");
+        emptyState.classList.remove(
+            "d-none"
+        );
     }
 
     return;
 }
 
 if (emptyState) {
-    emptyState.classList.add("d-none");
+    emptyState.classList.add(
+        "d-none"
+    );
 }
 
-currentDocuments.forEach((document, index) => {
-    const documentId = getDocumentId(document);
-    const documentName = getDocumentName(document);
-    const documentType = getDocumentType(document);
-    const description = getDocumentDescription(document);
-    const uploadedDate = getDocumentDate(document);
-    const uploadedBy = getUploadedBy(document);
-    const status = getDocumentStatus(document);
-    const documentUrl = getDocumentUrl(document);
+currentDocuments.forEach(
+    (documentRecord, index) => {
+        const documentId =
+            getDocumentId(
+                documentRecord
+            );
 
-    const row = document.createElement("tr");
+        const documentName =
+            getDocumentName(
+                documentRecord
+            );
 
-    const viewButton = isSafeDocumentUrl(documentUrl)
-        ? `
-            <button
-                type="button"
-                class="btn btn-sm btn-outline-primary"
-                data-action="view"
-                data-url="${escapeHtml(documentUrl)}"
-            >
-                View
-            </button>
-        `
-        : "";
+        const documentType =
+            getDocumentType(
+                documentRecord
+            );
 
-    const deleteButton = documentId
-        ? `
-            <button
-                type="button"
-                class="btn btn-sm btn-outline-danger"
-                data-action="delete"
-                data-document-id="${escapeHtml(documentId)}"
-            >
-                Delete
-            </button>
-        `
-        : "";
+        const description =
+            getDocumentDescription(
+                documentRecord
+            );
 
-    row.innerHTML = `
-        <td>${index + 1}</td>
+        const uploadedDate =
+            getDocumentDate(
+                documentRecord
+            );
 
-        <td>
-            <div class="document-name">
-                ${escapeHtml(documentName)}
-            </div>
-        </td>
+        const uploadedBy =
+            getUploadedBy(
+                documentRecord
+            );
 
-        <td>
-            ${escapeHtml(documentType)}
-        </td>
+        const status =
+            getDocumentStatus(
+                documentRecord
+            );
 
-        <td>
-            <div class="document-description">
-                ${escapeHtml(description)}
-            </div>
-        </td>
+        const documentUrl =
+            getDocumentUrl(
+                documentRecord
+            );
 
-        <td>
-            ${formatDate(uploadedDate)}
-        </td>
+        const row =
+            window.document.createElement(
+                "tr"
+            );
 
-        <td>
-            ${escapeHtml(uploadedBy)}
-        </td>
+        const viewButton =
+            isSafeDocumentUrl(
+                documentUrl
+            )
+                ? `
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-primary"
+                        data-action="view"
+                        data-url="${escapeHtml(documentUrl)}"
+                    >
+                        View
+                    </button>
+                `
+                : "";
 
-        <td>
-            <span class="badge bg-success">
-                ${escapeHtml(status)}
+        const deleteButton =
+            documentId
+                ? `
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-danger"
+                        data-action="delete"
+                        data-document-id="${escapeHtml(documentId)}"
+                    >
+                        Delete
+                    </button>
+                `
+                : "";
+
+        row.innerHTML = `
+            <td>${index + 1}</td>
+
+            <td>
+                <div class="document-name">
+                    ${escapeHtml(documentName)}
+                </div>
+            </td>
+
+            <td>
+                ${escapeHtml(documentType)}
+            </td>
+
+            <td>
+                <div class="document-description">
+                    ${escapeHtml(description)}
+                </div>
+            </td>
+
+            <td>
+                ${formatDate(uploadedDate)}
+            </td>
+
+            <td>
+                ${escapeHtml(uploadedBy)}
+            </td>
+
+            <td>
+                <span class="badge bg-success">
+                    ${escapeHtml(status)}
+                </span>
+            </td>
+
+            <td>
+                <div class="document-actions">
+                    ${viewButton}
+                    ${deleteButton}
+                </div>
+            </td>
+        `;
+
+        tableBody.appendChild(row);
+    }
+);
+
+}
+
+function getStudentSearchElement() {
+return document.getElementById(
+"studentDocumentSearch"
+);
+}
+
+function getStudentSearchResultsElement() {
+return document.getElementById(
+"studentDocumentSearchResults"
+);
+}
+
+function getStudentSearchStatusElement() {
+return document.getElementById(
+"studentDocumentSearchStatus"
+);
+}
+
+function getSearchStudentName(student) {
+if (!student) {
+return "Unnamed Student";
+}
+
+return (
+    student.full_name ||
+    student.fullName ||
+    student.name ||
+    [
+        student.first_name ||
+            student.firstName ||
+            "",
+        student.middle_name ||
+            student.middleName ||
+            "",
+        student.last_name ||
+            student.lastName ||
+            ""
+    ]
+        .filter(Boolean)
+        .join(" ")
+        .trim() ||
+    "Unnamed Student"
+);
+
+}
+
+function getSearchStudentNumber(student) {
+if (!student) {
+return "";
+}
+
+return (
+    student.student_number ||
+    student.studentNumber ||
+    student.admission_number ||
+    student.admissionNumber ||
+    ""
+);
+
+}
+
+function getSearchStudentId(student) {
+if (!student) {
+return "";
+}
+
+return normalizeId(
+    student.id ??
+    student.student_id ??
+    student.studentId
+);
+
+}
+
+function getSearchStudentClass(student) {
+if (!student) {
+return "";
+}
+
+return (
+    student.class_name ||
+    student.className ||
+    student.class ||
+    ""
+);
+
+}
+
+function normalizeStudentSearchResults(
+payload
+) {
+if (!payload) {
+return [];
+}
+
+if (Array.isArray(payload)) {
+    return payload;
+}
+
+if (Array.isArray(payload.data)) {
+    return payload.data;
+}
+
+if (Array.isArray(payload.students)) {
+    return payload.students;
+}
+
+if (Array.isArray(payload.results)) {
+    return payload.results;
+}
+
+return [];
+
+}
+
+function closeStudentSearchResults() {
+const resultsElement =
+getStudentSearchResultsElement();
+
+if (!resultsElement) {
+    return;
+}
+
+resultsElement.innerHTML = "";
+resultsElement.classList.add("d-none");
+
+}
+
+function setStudentSearchStatus(
+message
+) {
+const statusElement =
+getStudentSearchStatusElement();
+
+if (statusElement) {
+    statusElement.textContent =
+        message || "";
+}
+
+}
+
+function renderStudentSearchResults(
+students
+) {
+const resultsElement =
+getStudentSearchResultsElement();
+
+if (!resultsElement) {
+    return;
+}
+
+studentDocumentSearchResults =
+    Array.isArray(students)
+        ? students
+        : [];
+
+resultsElement.innerHTML = "";
+
+if (
+    studentDocumentSearchResults.length === 0
+) {
+    const empty =
+        document.createElement("div");
+
+    empty.className =
+        "student-document-search-empty";
+
+    empty.textContent =
+        "No students found.";
+
+    resultsElement.appendChild(
+        empty
+    );
+
+    resultsElement.classList.remove(
+        "d-none"
+    );
+
+    return;
+}
+
+studentDocumentSearchResults.forEach(
+    function (student) {
+        const button =
+            document.createElement("button");
+
+        button.type = "button";
+
+        button.className =
+            "student-document-search-result";
+
+        const name =
+            getSearchStudentName(
+                student
+            );
+
+        const number =
+            getSearchStudentNumber(
+                student
+            );
+
+        const studentClass =
+            getSearchStudentClass(
+                student
+            );
+
+        button.innerHTML = `
+            <span class="student-document-search-result-name">
+                ${escapeHtml(name)}
             </span>
-        </td>
 
-        <td>
-            <div class="document-actions">
-                ${viewButton}
-                ${deleteButton}
-            </div>
-        </td>
-    `;
+            <span class="student-document-search-result-meta">
+                ${escapeHtml(number || "No student number")}
+                ${
+                    studentClass
+                        ? " • " +
+                          escapeHtml(studentClass)
+                        : ""
+                }
+            </span>
+        `;
 
-    tableBody.appendChild(row);
-});
-```
+        button.addEventListener(
+            "click",
+            function () {
+                selectStudentForDocuments(
+                    student
+                );
+            }
+        );
+
+        resultsElement.appendChild(
+            button
+        );
+    }
+);
+
+resultsElement.classList.remove(
+    "d-none"
+);
+
+}
+
+async function searchStudentsForDocuments(
+searchTerm
+) {
+const term =
+String(searchTerm || "")
+.trim();
+
+if (!term) {
+    closeStudentSearchResults();
+
+    setStudentSearchStatus(
+        "Enter at least 2 characters to search."
+    );
+
+    return;
+}
+
+if (term.length < 2) {
+    closeStudentSearchResults();
+
+    setStudentSearchStatus(
+        "Enter at least 2 characters to search."
+    );
+
+    return;
+}
+
+setStudentSearchStatus(
+    "Searching students..."
+);
+
+try {
+    const response =
+        await apiRequest(
+            `/api/students/search?q=${encodeURIComponent(
+                term
+            )}`
+        );
+
+    const students =
+        normalizeStudentSearchResults(
+            response
+        );
+
+    renderStudentSearchResults(
+        students
+    );
+
+    setStudentSearchStatus(
+        students.length +
+        (
+            students.length === 1
+                ? " student found."
+                : " students found."
+        )
+    );
+} catch (error) {
+    console.error(
+        "Unable to search students:",
+        error
+    );
+
+    closeStudentSearchResults();
+
+    setStudentSearchStatus(
+        error.message ||
+        "Unable to search students."
+    );
+}
+
+}
+
+async function selectStudentForDocuments(
+student
+) {
+const studentId =
+getSearchStudentId(
+student
+);
+
+if (!studentId) {
+    setStudentSearchStatus(
+        "The selected student does not have a valid ID."
+    );
+
+    return;
+}
+
+currentStudentId =
+    studentId;
+
+currentStudent = null;
+currentDocuments = [];
+
+renderStudentSummary(null);
+renderDocuments([]);
+
+setStudentSearchStatus(
+    "Loading student information..."
+);
+
+closeStudentSearchResults();
+
+const searchElement =
+    getStudentSearchElement();
+
+if (searchElement) {
+    searchElement.value =
+        getSearchStudentName(
+            student
+        ) +
+        (
+            getSearchStudentNumber(
+                student
+            )
+                ? " — " +
+                  getSearchStudentNumber(
+                      student
+                  )
+                : ""
+        );
+}
+
+setPageLoading(true);
+
+try {
+    const loadedStudent =
+        await loadStudent();
+
+    currentStudent =
+        loadedStudent;
+
+    renderStudentSummary(
+        loadedStudent
+    );
+
+    const documents =
+        await loadDocuments();
+
+    currentDocuments =
+        documents;
+
+    renderDocuments(
+        documents
+    );
+
+    setStudentSearchStatus(
+        "Student selected."
+    );
+
+    showContent();
+} catch (error) {
+    console.error(
+        "Unable to load selected student:",
+        error
+    );
+
+    setStudentSearchStatus(
+        error.message ||
+        "Unable to load the selected student."
+    );
+
+    showError(
+        error.message ||
+        "Unable to load the selected student."
+    );
+}
+
+}
+
+function setupStudentDocumentSearch() {
+const searchElement =
+getStudentSearchElement();
+
+if (!searchElement) {
+    return;
+}
+
+searchElement.addEventListener(
+    "input",
+    function (event) {
+        const value =
+            String(
+                event.target.value ||
+                ""
+            ).trim();
+
+        if (
+            studentDocumentSearchTimer
+        ) {
+            clearTimeout(
+                studentDocumentSearchTimer
+            );
+        }
+
+        currentStudentId = null;
+        currentStudent = null;
+        currentDocuments = [];
+
+        renderStudentSummary(null);
+        renderDocuments([]);
+
+        setPageLoading(false);
+        showContent();
+
+        if (!value) {
+            closeStudentSearchResults();
+
+            setStudentSearchStatus(
+                "Enter at least 2 characters to search."
+            );
+
+            return;
+        }
+
+        if (value.length < 2) {
+            closeStudentSearchResults();
+
+            setStudentSearchStatus(
+                "Enter at least 2 characters to search."
+            );
+
+            return;
+        }
+
+        studentDocumentSearchTimer =
+            setTimeout(
+                function () {
+                    searchStudentsForDocuments(
+                        value
+                    );
+                },
+                350
+            );
+    }
+);
+
+searchElement.addEventListener(
+    "focus",
+    function () {
+        const value =
+            String(
+                searchElement.value ||
+                ""
+            ).trim();
+
+        if (value.length >= 2) {
+            searchStudentsForDocuments(
+                value
+            );
+        }
+    }
+);
+
+document.addEventListener(
+    "click",
+    function (event) {
+        const resultsElement =
+            getStudentSearchResultsElement();
+
+        if (
+            !resultsElement ||
+            resultsElement.classList.contains(
+                "d-none"
+            )
+        ) {
+            return;
+        }
+
+        if (
+            event.target === searchElement ||
+            searchElement.contains(
+                event.target
+            ) ||
+            resultsElement.contains(
+                event.target
+            )
+        ) {
+            return;
+        }
+
+        closeStudentSearchResults();
+    }
+);
 
 }
 
 async function loadStudent() {
-const response = await apiRequest(
-`${STUDENTS_API}/${encodeURIComponent(currentStudentId)}`
+if (!currentStudentId) {
+throw new Error(
+"A student must be selected before loading student information."
 );
+}
 
-```
-const student = normalizeObject(response);
+const response =
+    await apiRequest(
+        `${STUDENTS_API}/${encodeURIComponent(
+            currentStudentId
+        )}`
+    );
+
+const student =
+    normalizeObject(response);
 
 if (!student) {
-    throw new Error("Student record could not be found.");
+    throw new Error(
+        "Student record could not be found."
+    );
 }
 
 return student;
-```
 
 }
 
 async function loadDocuments() {
-const studentDocumentsUrl =
-`${STUDENTS_API}/${encodeURIComponent(currentStudentId)}/documents`;
-
-```
-try {
-    const response = await apiRequest(studentDocumentsUrl);
-
-    return normalizeArray(response);
-} catch (error) {
-    if (error.status !== 404) {
-        throw error;
-    }
+if (!currentStudentId) {
+return [];
 }
 
-const generalDocumentsUrl =
-    `${DOCUMENTS_API}?studentId=${encodeURIComponent(currentStudentId)}`;
+const url =
+    `${DOCUMENTS_API}/student/${encodeURIComponent(
+        currentStudentId
+    )}`;
 
-try {
-    const response = await apiRequest(generalDocumentsUrl);
+const response =
+    await apiRequest(url);
 
-    return normalizeArray(response);
-} catch (error) {
-    if (error.status === 404) {
-        return [];
-    }
-
-    throw error;
-}
-```
+return normalizeArray(response);
 
 }
 
 function getUploadFormData() {
-const form = document.getElementById("documentUploadForm");
+const form =
+document.getElementById(
+"documentUploadForm"
+);
 
-```
 if (!form) {
-    throw new Error("Document upload form was not found.");
+    throw new Error(
+        "Document upload form was not found."
+    );
 }
 
 const documentType =
-    document.getElementById("documentType")?.value?.trim() || "";
+    document.getElementById(
+        "documentType"
+    )?.value?.trim() || "";
 
 const description =
-    document.getElementById("documentDescription")?.value?.trim() || "";
+    document.getElementById(
+        "documentDescription"
+    )?.value?.trim() || "";
 
 const fileInput =
-    document.getElementById("documentFile");
+    document.getElementById(
+        "documentFile"
+    );
 
 if (!documentType) {
-    throw new Error("Please select a document type.");
+    throw new Error(
+        "Please select a document type."
+    );
 }
 
-if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-    throw new Error("Please select a document file.");
+if (
+    !fileInput ||
+    !fileInput.files ||
+    fileInput.files.length === 0
+) {
+    throw new Error(
+        "Please select a document file."
+    );
 }
 
-const file = fileInput.files[0];
+const file =
+    fileInput.files[0];
 
 if (!file) {
-    throw new Error("Please select a document file.");
+    throw new Error(
+        "Please select a document file."
+    );
 }
 
-const formData = new FormData();
-
-formData.append("studentId", currentStudentId);
-formData.append("student_id", currentStudentId);
-formData.append("documentType", documentType);
-formData.append("document_type", documentType);
-formData.append("description", description);
-formData.append("document", file);
-
-return formData;
-```
+return {
+    documentType,
+    description,
+    file
+};
 
 }
 
 async function uploadDocument() {
-const formData = getUploadFormData();
+getUploadFormData();
 
-```
-const token = getToken();
-
-const headers = {
-    Accept: "application/json"
-};
-
-if (token) {
-    headers.Authorization = `Bearer ${token}`;
-}
-
-const response = await fetch(
-    `${STUDENTS_API}/${encodeURIComponent(currentStudentId)}/documents`,
-    {
-        method: "POST",
-        headers,
-        body: formData
-    }
+throw new Error(
+    "Document upload storage is not connected yet. The student documents page is ready, but the server needs a persistent file-upload endpoint before a selected file can be uploaded safely."
 );
 
-let payload = null;
-
-const contentType =
-    response.headers.get("content-type") || "";
-
-if (contentType.includes("application/json")) {
-    payload = await response.json();
-} else {
-    const text = await response.text();
-
-    if (text) {
-        try {
-            payload = JSON.parse(text);
-        } catch (error) {
-            payload = {
-                message: text
-            };
-        }
-    }
 }
 
-if (!response.ok) {
-    const message =
-        payload?.message ||
-        payload?.error ||
-        `Document upload failed with status ${response.status}.`;
-
-    const error = new Error(message);
-
-    error.status = response.status;
-    error.payload = payload;
-
-    throw error;
-}
-
-return payload;
-```
-
-}
-
-async function handleUpload(event) {
+async function handleUpload(
+event
+) {
 event.preventDefault();
 
-```
+
 hideMessage();
 
+if (!currentStudentId) {
+    showMessage(
+        "Please select a student before uploading a document.",
+        "warning"
+    );
+
+    return;
+}
+
 const button =
-    document.getElementById("uploadDocumentButton");
+    document.getElementById(
+        "uploadDocumentButton"
+    );
 
 if (button) {
     button.disabled = true;
-    button.textContent = "Uploading...";
+    button.textContent =
+        "Uploading...";
 }
 
 try {
@@ -846,11 +1547,17 @@ try {
 
     resetUploadForm();
 
-    const documents = await loadDocuments();
+    const documents =
+        await loadDocuments();
 
-    renderDocuments(documents);
+    renderDocuments(
+        documents
+    );
 } catch (error) {
-    console.error("Document upload error:", error);
+    console.error(
+        "Document upload error:",
+        error
+    );
 
     showMessage(
         error.message ||
@@ -860,18 +1567,24 @@ try {
 } finally {
     if (button) {
         button.disabled = false;
-        button.textContent = "Upload Document";
+        button.textContent =
+            "Upload Document";
     }
 }
-```
 
 }
 
 function resetUploadForm() {
-const form = document.getElementById("documentUploadForm");
-const fileName = document.getElementById("selectedFileName");
+const form =
+document.getElementById(
+"documentUploadForm"
+);
 
-```
+const fileName =
+    document.getElementById(
+        "selectedFileName"
+    );
+
 if (form) {
     form.reset();
 }
@@ -879,55 +1592,73 @@ if (form) {
 if (fileName) {
     fileName.textContent = "";
 }
-```
 
 }
 
 function handleFileSelection() {
 const fileInput =
-document.getElementById("documentFile");
+document.getElementById(
+"documentFile"
+);
 
-```
+
 const fileName =
-    document.getElementById("selectedFileName");
+    document.getElementById(
+        "selectedFileName"
+    );
 
-if (!fileInput || !fileName) {
+if (
+    !fileInput ||
+    !fileName
+) {
     return;
 }
 
-if (!fileInput.files || fileInput.files.length === 0) {
+if (
+    !fileInput.files ||
+    fileInput.files.length === 0
+) {
     fileName.textContent = "";
     return;
 }
 
-const file = fileInput.files[0];
+const file =
+    fileInput.files[0];
 
 fileName.textContent =
     `Selected file: ${file.name}`;
-```
+
 
 }
 
 function openDocument(url) {
-if (!isSafeDocumentUrl(url)) {
+if (
+!isSafeDocumentUrl(url)
+) {
 showMessage(
 "This document does not have a valid file link.",
 "warning"
 );
 
-```
     return;
 }
 
-window.open(url, "_blank", "noopener,noreferrer");
-```
+window.open(
+    url,
+    "_blank",
+    "noopener,noreferrer"
+);
+
 
 }
 
-async function deleteDocument(documentId) {
-const id = normalizeId(documentId);
+async function deleteDocument(
+documentId
+) {
+const id =
+normalizeId(documentId);
 
-```
+
 if (!id) {
     showMessage(
         "A valid document ID is required.",
@@ -937,9 +1668,10 @@ if (!id) {
     return;
 }
 
-const confirmed = window.confirm(
-    "Are you sure you want to delete this student document?"
-);
+const confirmed =
+    window.confirm(
+        "Are you sure you want to delete this student document?"
+    );
 
 if (!confirmed) {
     return;
@@ -948,73 +1680,29 @@ if (!confirmed) {
 try {
     hideMessage();
 
-    const token = getToken();
-
-    const headers = {
-        Accept: "application/json"
-    };
-
-    if (token) {
-        headers.Authorization = `Bearer ${token}`;
-    }
-
-    let response = await fetch(
-        `${STUDENTS_API}/${encodeURIComponent(currentStudentId)}/documents/${encodeURIComponent(id)}`,
+    await apiRequest(
+        `${DOCUMENTS_API}/${encodeURIComponent(id)}`,
         {
-            method: "DELETE",
-            headers
+            method: "DELETE"
         }
     );
-
-    if (response.status === 404) {
-        response = await fetch(
-            `${DOCUMENTS_API}/${encodeURIComponent(id)}`,
-            {
-                method: "DELETE",
-                headers
-            }
-        );
-    }
-
-    let payload = null;
-
-    const contentType =
-        response.headers.get("content-type") || "";
-
-    if (contentType.includes("application/json")) {
-        payload = await response.json();
-    } else {
-        const text = await response.text();
-
-        if (text) {
-            try {
-                payload = JSON.parse(text);
-            } catch (error) {
-                payload = {
-                    message: text
-                };
-            }
-        }
-    }
-
-    if (!response.ok) {
-        throw new Error(
-            payload?.message ||
-            payload?.error ||
-            `Unable to delete document. Status ${response.status}.`
-        );
-    }
 
     showMessage(
         "Student document deleted successfully.",
         "success"
     );
 
-    const documents = await loadDocuments();
+    const documents =
+        await loadDocuments();
 
-    renderDocuments(documents);
+    renderDocuments(
+        documents
+    );
 } catch (error) {
-    console.error("Document deletion error:", error);
+    console.error(
+        "Document deletion error:",
+        error
+    );
 
     showMessage(
         error.message ||
@@ -1022,66 +1710,90 @@ try {
         "danger"
     );
 }
-```
 
 }
 
-function handleDocumentTableClick(event) {
-const button = event.target.closest("button[data-action]");
+function handleDocumentTableClick(
+event
+) {
+const button =
+event.target.closest(
+"button[data-action]"
+);
 
-```
 if (!button) {
     return;
 }
 
-const action = button.dataset.action;
+const action =
+    button.dataset.action;
 
 if (action === "view") {
-    openDocument(button.dataset.url);
+    openDocument(
+        button.dataset.url
+    );
+
     return;
 }
 
 if (action === "delete") {
-    deleteDocument(button.dataset.documentId);
+    deleteDocument(
+        button.dataset.documentId
+    );
 }
-```
+
 
 }
 
 function setupNavigation() {
 const backButton =
-document.getElementById("backToProfileButton");
+document.getElementById(
+"backToProfileButton"
+);
 
-```
 if (!backButton) {
     return;
 }
 
-backButton.addEventListener("click", () => {
-    if (currentStudentId) {
-        window.location.href =
-            `/pages/student-profile.html?id=${encodeURIComponent(currentStudentId)}`;
-    } else {
-        window.location.href = STUDENTS_PAGE;
+backButton.addEventListener(
+    "click",
+    () => {
+        if (currentStudentId) {
+            window.location.href =
+                `/pages/student-profile.html?id=${encodeURIComponent(
+                    currentStudentId
+                )}`;
+        } else {
+            window.location.href =
+                STUDENTS_PAGE;
+        }
     }
-});
-```
+);
 
 }
 
 function setupUploadForm() {
 const form =
-document.getElementById("documentUploadForm");
+document.getElementById(
+"documentUploadForm"
+);
 
-```
+
 const fileInput =
-    document.getElementById("documentFile");
+    document.getElementById(
+        "documentFile"
+    );
 
 const resetButton =
-    document.getElementById("resetDocumentButton");
+    document.getElementById(
+        "resetDocumentButton"
+    );
 
 if (form) {
-    form.addEventListener("submit", handleUpload);
+    form.addEventListener(
+        "submit",
+        handleUpload
+    );
 }
 
 if (fileInput) {
@@ -1096,23 +1808,28 @@ if (resetButton) {
         "click",
         () => {
             const fileName =
-                document.getElementById("selectedFileName");
+                document.getElementById(
+                    "selectedFileName"
+                );
 
             if (fileName) {
-                fileName.textContent = "";
+                fileName.textContent =
+                    "";
             }
         }
     );
 }
-```
+
 
 }
 
 function setupDocumentTable() {
 const tableBody =
-document.getElementById("documentsTableBody");
+document.getElementById(
+"documentsTableBody"
+);
 
-```
+
 if (!tableBody) {
     return;
 }
@@ -1121,71 +1838,112 @@ tableBody.addEventListener(
     "click",
     handleDocumentTableClick
 );
-```
+
 
 }
 
 function protectPage() {
-const token = getToken();
+const token =
+getToken();
 
-```
+
 if (!token) {
-    window.location.href = LOGIN_PAGE;
+    window.location.href =
+        STUDENT_DOCUMENTS_LOGIN_PAGE;
+
     return false;
 }
 
 return true;
-```
 
 }
 
 async function initialisePage() {
 hideMessage();
 
-```
-currentStudentId = normalizeId(getStudentId());
 
-if (!currentStudentId) {
-    showError("No valid student ID was supplied.");
+currentStudentId =
+    normalizeId(
+        getStudentId()
+    );
+
+if (!protectPage()) {
     return;
 }
 
-if (!protectPage()) {
+if (!currentStudentId) {
+    currentStudent = null;
+    currentDocuments = [];
+
+    renderStudentSummary(null);
+    renderDocuments([]);
+
+    setStudentSearchStatus(
+        "Search for a student to view their documents."
+    );
+
+    setPageLoading(false);
+    showContent();
+
     return;
 }
 
 setPageLoading(true);
 
 try {
-    const student = await loadStudent();
+    const student =
+        await loadStudent();
 
-    currentStudent = student;
+    currentStudent =
+        student;
 
-    renderStudentSummary(student);
+    renderStudentSummary(
+        student
+    );
 
-    const documents = await loadDocuments();
+    const documents =
+        await loadDocuments();
 
-    renderDocuments(documents);
+    currentDocuments =
+        documents;
 
+    renderDocuments(
+        documents
+    );
+
+    setStudentSearchStatus(
+        "Student selected."
+    );
+
+    setPageLoading(false);
     showContent();
 } catch (error) {
-    console.error("Student documents error:", error);
+    console.error(
+        "Student documents error:",
+        error
+    );
+
+    setPageLoading(false);
 
     showError(
         error.message ||
-        "Unable to load the student's documents."
+        "Unable to load student documents."
     );
 }
-```
+
 
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener(
+"DOMContentLoaded",
+() => {
 setupNavigation();
 setupUploadForm();
 setupDocumentTable();
+setupStudentDocumentSearch();
 initialisePage();
-});
+}
+);
 
 window.StudentDocumentsPage = {
 initialisePage,
